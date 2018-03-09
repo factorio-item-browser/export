@@ -1,0 +1,29 @@
+{
+  "name": "factorio-item-browser/export",
+  "description": "The scripts to export the data from the Factorio game to be used in the Factorio Item Browser.",
+  "homepage": "https://www.factorio-item-browser.com/",
+  "type": "project",
+  "keywords": ["Factorio Item Browser", "FIB", "export", "BluePsyduck"],
+  "license": "GPL-3.0-or-later",
+  "authors": [
+    {
+      "name": "BluePsyduck",
+      "email": "bluepsyduck@gmx.com"
+    }
+  ],
+  "minimum-stability": "alpha",
+  "require": {
+    "php": "^7.2",
+    "zendframework/zend-config-aggregator": "^1.0",
+    "zendframework/zend-servicemanager": "^3.3",
+    "zfcampus/zf-console": "^1.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "FactorioItemBrowser\\Export\\": "src"
+    }
+  },
+  "scripts": {
+    "run": "php bin/cli.php"
+  }
+}
