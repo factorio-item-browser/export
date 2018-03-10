@@ -19,6 +19,9 @@ return [
 
             Command\ListAllCommand::class => Command\ListAllCommandFactory::class,
             Command\ListMissingCommand::class => Command\ListMissingCommandFactory::class,
+            Command\ListUpdateCommand::class => Command\ListUpdateCommandFactory::class,
+
+            Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
         ],
     ]
 ];

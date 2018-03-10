@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
-use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Service\ExportDataService;
 use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\ColorInterface;
@@ -18,12 +17,6 @@ use ZF\Console\Route;
  */
 class ListAllCommand implements CommandInterface
 {
-    /**
-     * The mod manager.
-     * @var ModFileManager
-     */
-    protected $modFileManager;
-
     /**
      * The export data service.
      * @var ExportDataService
@@ -48,7 +41,7 @@ class ListAllCommand implements CommandInterface
     {
         foreach ($this->exportDataService->getMods() as $mod) {
             $console->write(str_pad($mod->getName() . ': ', 64, ' ', STR_PAD_LEFT));
-            $console->write(str_pad($mod->getVersion(), 16, ' ', STR_PAD_RIGHT), ColorInterface::GREEN);
+            $console->write(str_pad($mod->getVersion(), 10, ' ', STR_PAD_RIGHT), ColorInterface::GREEN);
             $console->writeLine();
         }
     }

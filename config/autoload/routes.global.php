@@ -22,5 +22,10 @@ return [
             'handler' => Command\ListMissingCommand::class,
             'short_description' => 'Lists missing mods which are dependencies of other mods.',
         ],
+        [
+            'name' => 'list update',
+            'handler' => Command\ListUpdateCommand::class,
+            'short_description' => 'Updates the list of mods from the zip files.',
+        ],
     ]
 ];
