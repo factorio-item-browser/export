@@ -4,8 +4,53 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "4c8ffdb867e5831cdd5f701d32c98d1c",
+    "content-hash": "70ac2b382273fdbf41e87af2c03881cf",
     "packages": [
+        {
+            "name": "bluepsyduck/common",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/BluePsyduck/Common.git",
+                "reference": "909897fdfbcd4b7c72b94f2b365f7df295814fc8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/BluePsyduck/Common/zipball/909897fdfbcd4b7c72b94f2b365f7df295814fc8",
+                "reference": "909897fdfbcd4b7c72b94f2b365f7df295814fc8",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~6.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "BluePsyduck\\Common\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "BluePsyduck",
+                    "email": "bluepsyduck@gmx.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Some classes commonly used in other projects.",
+            "homepage": "https://github.com/BluePsyduck/Common",
+            "keywords": [
+                "BluePsyduck",
+                "common"
+            ],
+            "time": "2018-02-16T20:20:50+00:00"
+        },
         {
             "name": "container-interop/container-interop",
             "version": "1.2.0",
@@ -36,6 +81,54 @@
             "description": "Promoting the interoperability of container objects (DIC, SL, etc.)",
             "homepage": "https://github.com/container-interop/container-interop",
             "time": "2017-02-14T19:40:03+00:00"
+        },
+        {
+            "name": "factorio-item-browser/export-data",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/factorio-item-browser/export-data.git",
+                "reference": "63fe9995140f609e9d1a966ad56b4a6257a1b50f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/63fe9995140f609e9d1a966ad56b4a6257a1b50f",
+                "reference": "63fe9995140f609e9d1a966ad56b4a6257a1b50f",
+                "shasum": ""
+            },
+            "require": {
+                "bluepsyduck/common": "~1.0",
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "mikey179/vfsstream": "~1.6",
+                "phpunit/phpunit": "~6.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FactorioItemBrowser\\ExportData\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "BluePsyduck",
+                    "email": "bluepsyduck@gmx.com"
+                }
+            ],
+            "description": "The export data structure of the Factorio Item Browser.",
+            "homepage": "https://www.factorio-item-browser.com/",
+            "keywords": [
+                "BluePsyduck",
+                "FIB",
+                "Factorio Item Browser",
+                "export"
+            ],
+            "time": "2018-03-01T19:36:11+00:00"
         },
         {
             "name": "psr/container",
@@ -362,7 +455,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "alpha",
-    "stability-flags": [],
+    "stability-flags": {
+        "factorio-item-browser/export-data": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

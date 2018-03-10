@@ -16,6 +16,11 @@ return [
             'name' => 'helloWorld',
             'route' => '',
             'handler' => Command\HelloWorldCommand::class
+        ],
+        [
+            'name' => 'show missing',
+            'handler' => Command\Show\ShowMissingCommand::class,
+            'short_description' => 'Shows a list of missing mods which are dependencies of other mods.'
         ]
     ]
 ];

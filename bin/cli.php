@@ -25,7 +25,7 @@ require(__DIR__ . '/../vendor/autoload.php');
     $dispatcher = new Dispatcher($container);
 
     $application = new Application(
-        'Factorio Item browser Export',
+        'Factorio Item Browser Export',
         'alpha',
         $config['routes'],
         Console::getInstance(),

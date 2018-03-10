@@ -1,2 +1,7 @@
 /.idea
 /vendor
+
+/factorio/*
+!/factorio/mods
+/factorio/mods/*
+!/factorio/mods/Dump_1.0.0
