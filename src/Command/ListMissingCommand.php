@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Command\Show;
+namespace FactorioItemBrowser\Export\Command;
 
-use FactorioItemBrowser\Export\Command\CommandInterface;
 use FactorioItemBrowser\Export\Utils\VersionUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Service\ExportDataService;
@@ -18,7 +17,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ShowMissingCommand implements CommandInterface
+class ListMissingCommand implements CommandInterface
 {
     /**
      * The export data service.

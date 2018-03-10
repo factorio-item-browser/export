@@ -13,14 +13,14 @@ namespace FactorioItemBrowser\Export;
 return [
     'routes' => [
         [
-            'name' => 'helloWorld',
-            'route' => '',
-            'handler' => Command\HelloWorldCommand::class
+            'name' => 'list all',
+            'handler' => Command\ListAllCommand::class,
+            'short_description' => 'Lists all available mods.',
         ],
         [
-            'name' => 'show missing',
-            'handler' => Command\Show\ShowMissingCommand::class,
-            'short_description' => 'Shows a list of missing mods which are dependencies of other mods.'
-        ]
+            'name' => 'list missing',
+            'handler' => Command\ListMissingCommand::class,
+            'short_description' => 'Lists missing mods which are dependencies of other mods.',
+        ],
     ]
 ];
