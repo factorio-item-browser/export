@@ -6,6 +6,7 @@ namespace FactorioItemBrowser\Export\Mod;
 
 use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\I18n\LocaleFileReader;
 use FactorioItemBrowser\Export\Utils\VersionUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Dependency;
@@ -48,14 +49,25 @@ class ModFileManager
     protected $exportDataService;
 
     /**
+     * The locale file reader.
+     * @var LocaleFileReader
+     */
+    protected $localeFileReader;
+
+    /**
      * Initializes the mod manager.
      * @param string $modDirectory
      * @param ExportDataService $exportDataService
+     * @param LocaleFileReader $localeFileReader
      */
-    public function __construct(string $modDirectory, ExportDataService $exportDataService)
-    {
+    public function __construct(
+        string $modDirectory,
+        ExportDataService $exportDataService,
+        LocaleFileReader $localeFileReader
+    ) {
         $this->modDirectory = $modDirectory;
         $this->exportDataService = $exportDataService;
+        $this->localeFileReader = $localeFileReader;
     }
 
     /**
@@ -76,7 +88,7 @@ class ModFileManager
         }
 
         foreach ($modFiles as $checksum => $modFileName) {
-            $mod = $this->readModFile($modFileName, (string) $checksum);
+            $mod = $this->readModFile($modFileName, (string)$checksum);
             $this->exportDataService->setMod($mod);
         }
 
@@ -171,7 +183,7 @@ class ModFileManager
         }
 
         foreach ($jsonData->getArray('dependencies') as $dependencyString) {
-            $mod->addDependency($this->parseDependency($mod, (string) $dependencyString));
+            $mod->addDependency($this->parseDependency($mod, (string)$dependencyString));
         }
         return $this;
     }
@@ -227,5 +239,49 @@ class ModFileManager
             ->setRequiredVersion(VersionUtils::normalize($match[3]))
             ->setIsMandatory($match[1] !== '?');
         return $dependency;
+    }
+
+    /**
+     * Returns the locale data of the specified mod, grouped by the locale.
+     * @param Mod $mod
+     * @return array|string[][]
+     */
+    public function getLocaleData(Mod $mod): array
+    {
+        $result = [];
+
+        $zipArchive = new ZipArchive();
+        $zipArchive->open($this->modDirectory . '/' . $mod->getFileName());
+        for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
+            $stats = $zipArchive->statIndex($i);
+            $fileName = substr($stats['name'], strlen($mod->getDirectoryName()));
+            if (preg_match(self::REGEXP_LOCALE_FILE, $fileName, $match)) {
+                $locale = $match[2];
+                $result[$locale] = array_merge(
+                    $result[$locale] ?? [],
+                    $this->localeFileReader->read($this->getFullFilePath($mod, $match[1]))
+                );
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Returns the mod with the specified name.
+     * @param string $modName
+     * @return Mod|null
+     */
+    public function getMod(string $modName): ?Mod
+    {
+        return $this->exportDataService->getMod($modName);
+    }
+
+    /**
+     * Returns all loaded mods.
+     * @return array|Mod[]
+     */
+    public function getMods(): array
+    {
+        return $this->exportDataService->getMods();
     }
 }
