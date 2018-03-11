@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\Export\Utils\RecipeUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient;
@@ -36,7 +37,7 @@ class RecipeParser extends AbstractParser
         foreach ($dumpData->getObjectArray(['recipes', 'expensive']) as $recipeData) {
             $recipe = $this->parseRecipe($recipeData, 'expensive');
             if (!isset($normalRecipes[$recipe->getName()])
-                || $this->calculateHash($recipe) !== $this->calculateHash($normalRecipes[$recipe->getName()])
+                || RecipeUtils::calculateHash($recipe) !== RecipeUtils::calculateHash($normalRecipes[$recipe->getName()])
             ) {
                 $combination->addRecipe($recipe);
             }
@@ -130,36 +131,5 @@ class RecipeParser extends AbstractParser
 
         $amount = ($product->getAmountMin() + $product->getAmountMax()) / 2 * $product->getProbability();
         return ($amount > 0) ? $product : null;
-    }
-
-    /**
-     * Calculates a hash fo the specified recipe.
-     * @param Recipe $recipe
-     * @return string
-     */
-    protected function calculateHash(Recipe $recipe): string
-    {
-        $data = [
-            $recipe->getCraftingTime()
-        ];
-        foreach ($recipe->getIngredients() as $ingredient) {
-            $data[] = implode('|', [
-                'i',
-                $ingredient->getType(),
-                $ingredient->getName(),
-                $ingredient->getAmount()
-            ]);
-        }
-        foreach ($recipe->getProducts() as $product) {
-            $data[] = implode('|', [
-                'p',
-                $product->getType(),
-                $product->getName(),
-                $product->getAmountMin(),
-                $product->getAmountMax(),
-                $product->getProbability()
-            ]);
-        }
-        return hash('crc32b', json_encode($data));
     }
 }

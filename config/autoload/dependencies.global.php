@@ -38,7 +38,10 @@ return [
             Parser\ParserManager::class => Parser\ParserManagerFactory::class,
             Parser\RecipeParser::class => Parser\AbstractParserFactory::class,
 
-            Reducer\ReducerManager::class => InvokableFactory::class,
+            Reducer\IconReducer::class => InvokableFactory::class,
+            Reducer\ItemReducer::class => InvokableFactory::class,
+            Reducer\RecipeReducer::class => InvokableFactory::class,
+            Reducer\ReducerManager::class => Reducer\ReducerManagerFactory::class,
         ],
     ]
 ];
