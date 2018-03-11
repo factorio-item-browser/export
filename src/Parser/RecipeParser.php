@@ -6,6 +6,8 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Export\Utils\RecipeUtils;
+use FactorioItemBrowser\ExportData\Entity\Item;
+use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient;
@@ -42,9 +44,9 @@ class RecipeParser extends AbstractParser
                 $combination->addRecipe($recipe);
             }
         }
+        $this->removeDuplicateTranslations($combination);
         return $this;
     }
-
 
     /**
      * Parses the recipe data into an entity.
@@ -131,5 +133,50 @@ class RecipeParser extends AbstractParser
 
         $amount = ($product->getAmountMin() + $product->getAmountMax()) / 2 * $product->getProbability();
         return ($amount > 0) ? $product : null;
+    }
+
+    /**
+     * Removes duplicate translations if the item are already providing them.
+     * @param Combination $combination
+     * @return $this
+     */
+    protected function removeDuplicateTranslations(Combination $combination)
+    {
+        foreach ($combination->getRecipes() as $recipe) {
+            /* @var Item[] $items */
+            $items = array_filter([
+                $combination->getItem('item', $recipe->getName()),
+                $combination->getItem('fluid', $recipe->getName())
+            ]);
+            foreach ($items as $item) {
+                if ($this->areLocalisedStringsIdentical($item->getLabels(), $recipe->getLabels())
+                    && $this->areLocalisedStringsIdentical($item->getDescriptions(), $recipe->getDescriptions())
+                ) {
+                    $recipe->getLabels()->readData(new DataContainer([]));
+                    $recipe->getDescriptions()->readData(new DataContainer([]));
+                    $item->setProvidesRecipeLocalisation(true);
+                    break;
+                }
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Checks whether the child string duplicates the parent one.
+     * @param LocalisedString $leftString
+     * @param LocalisedString $rightString
+     * @return bool
+     */
+    protected function areLocalisedStringsIdentical(LocalisedString $leftString, LocalisedString $rightString): bool
+    {
+        $result = true;
+        foreach ($leftString->getTranslations() as $locale => $translation) {
+            if (strlen($translation) > 0 && $translation !== $rightString->getTranslation($locale)) {
+                $result = false;
+                break;
+            }
+        }
+        return $result;
     }
 }
