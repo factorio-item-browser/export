@@ -31,6 +31,11 @@ return [
             I18n\LocaleFileReader::class => InvokableFactory::class,
             I18n\Translator::class => I18n\TranslatorFactory::class,
 
+            Merger\IconMerger::class => InvokableFactory::class,
+            Merger\ItemMerger::class => InvokableFactory::class,
+            Merger\MergerManager::class => Merger\MergerManagerFactory::class,
+            Merger\RecipeMerger::class => InvokableFactory::class,
+
             Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
 
             Parser\IconParser::class => Parser\AbstractParserFactory::class,
