@@ -6,6 +6,7 @@ namespace FactorioItemBrowser\Export\Command;
 
 use FactorioItemBrowser\Export\Factorio\FactorioManager;
 use FactorioItemBrowser\Export\Reducer\ReducerManager;
+use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Service\ExportDataService;
 use Interop\Container\ContainerInterface;
@@ -60,5 +61,13 @@ class TestCommand implements CommandInterface
         $reducerManager->reduce($combination, $exportDataService->loadCombination('base', 'base'));
 
         $exportDataService->saveCombination($combination);
+
+        /* @var IconRenderer $iconRenderer */
+        $iconRenderer = $this->container->get(IconRenderer::class);
+
+        foreach ($combination->getIcons() as $icon) {
+            $image = $iconRenderer->render($icon, 32, 32);
+            $exportDataService->saveIcon($icon->getIconHash(), $image);
+        }
     }
 }

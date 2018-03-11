@@ -42,6 +42,8 @@ return [
             Reducer\ItemReducer::class => InvokableFactory::class,
             Reducer\RecipeReducer::class => InvokableFactory::class,
             Reducer\ReducerManager::class => Reducer\ReducerManagerFactory::class,
+
+            Renderer\IconRenderer::class => Renderer\IconRendererFactory::class,
         ],
     ]
 ];
