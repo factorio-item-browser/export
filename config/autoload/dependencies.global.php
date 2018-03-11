@@ -23,10 +23,19 @@ return [
             Command\ListUpdateCommand::class => Command\ListUpdateCommandFactory::class,
             Command\TestCommand::class => Command\TestCommandFactory::class,
 
+            Factorio\DumpExtractor::class => InvokableFactory::class,
+            Factorio\FactorioManager::class => Factorio\FactorioManagerFactory::class,
+            Factorio\Instance::class => Factorio\InstanceFactory::class,
+            Factorio\Options::class => Factorio\OptionsFactory::class,
+
             I18n\LocaleFileReader::class => InvokableFactory::class,
             I18n\Translator::class => I18n\TranslatorFactory::class,
 
             Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
+
+            Parser\ParserManager::class => InvokableFactory::class,
+
+            Reducer\ReducerManager::class => InvokableFactory::class,
         ],
     ]
 ];

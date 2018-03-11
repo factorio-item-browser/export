@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
-use FactorioItemBrowser\Export\I18n\Translator;
-use FactorioItemBrowser\ExportData\Entity\LocalisedString;
+use FactorioItemBrowser\Export\Factorio\FactorioManager;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use Interop\Container\ContainerInterface;
 use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
@@ -18,18 +19,18 @@ use ZF\Console\Route;
 class TestCommand implements CommandInterface
 {
     /**
-     * The translator.
-     * @var Translator
+     * The container.
+     * @var ContainerInterface
      */
-    protected $translator;
+    protected $container;
 
     /**
      * TestCommand constructor.
-     * @param Translator $translator
+     * @param ContainerInterface $container
      */
-    public function __construct(Translator $translator)
+    public function __construct(ContainerInterface $container)
     {
-        $this->translator = $translator;
+        $this->container = $container;
     }
 
     /**
@@ -39,11 +40,14 @@ class TestCommand implements CommandInterface
      */
     public function __invoke(Route $route, AdapterInterface $console)
     {
-        $this->translator->setEnabledModNames(['base']);
+        $combination = new Combination();
+        $combination->setName('foo')
+                    ->setLoadedModNames(['base']);
 
-        $l = new LocalisedString();
-        $this->translator->addTranslations($l, 'name', ['item-description.copper-cable'], '');
+        /* @var FactorioManager $factorioManager */
+        $factorioManager = $this->container->get(FactorioManager::class);
 
-        var_dump($l);
+        $factorioManager->addCombination($combination);
+        $factorioManager->waitForAllCombinations();
     }
 }

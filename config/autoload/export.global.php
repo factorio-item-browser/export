@@ -15,6 +15,10 @@ return [
         'directory' => __DIR__ . '/../../data/export'
     ],
     'factorio' => [
-        'directory' => __DIR__ . '/../../factorio'
+        'factorioDirectory' => __DIR__ . '/../../factorio',
+        'modsDirectory' => __DIR__ . '/../../factorio/mods',
+        'instancesDirectory' => __DIR__ . '/../../factorio/instances',
+        'numberOfAttempts' => 2,
+        'numberOfInstances' => 4
     ]
 ];

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
-use FactorioItemBrowser\Export\I18n\Translator;
 use Interop\Container\ContainerInterface;
 
 /**
@@ -24,9 +23,6 @@ class TestCommandFactory
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        /* @var Translator $translator */
-        $translator = $container->get(Translator::class);
-
-        return new TestCommand($translator);
+        return new TestCommand($container);
     }
 }
