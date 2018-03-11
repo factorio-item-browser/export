@@ -6,6 +6,7 @@ namespace FactorioItemBrowser\Export\Command;
 
 use FactorioItemBrowser\Export\Factorio\FactorioManager;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Service\ExportDataService;
 use Interop\Container\ContainerInterface;
 use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
@@ -41,13 +42,17 @@ class TestCommand implements CommandInterface
     public function __invoke(Route $route, AdapterInterface $console)
     {
         $combination = new Combination();
-        $combination->setName('foo')
+        $combination->setName('base')
+                    ->setMainModName('base')
                     ->setLoadedModNames(['base']);
 
         /* @var FactorioManager $factorioManager */
         $factorioManager = $this->container->get(FactorioManager::class);
-
         $factorioManager->addCombination($combination);
         $factorioManager->waitForAllCombinations();
+
+        /* @var ExportDataService $exportDataService */
+        $exportDataService = $this->container->get(ExportDataService::class);
+        $exportDataService->saveCombination($combination);
     }
 }

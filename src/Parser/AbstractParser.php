@@ -9,12 +9,12 @@ use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 
 /**
- * The manager of the parser classes.
+ * The abstract class of the parsers.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ParserManager
+abstract class AbstractParser
 {
     /**
      * The translator.
@@ -23,20 +23,12 @@ class ParserManager
     protected $translator;
 
     /**
-     * The parsers to use.
-     * @var array|AbstractParser[]
-     */
-    protected $parsers;
-
-    /**
-     * Initializes the parser manager.
+     * TInitializes the parser.
      * @param Translator $translator
-     * @param array|AbstractParser[] $parsers
      */
-    public function __construct(Translator $translator, array $parsers)
+    public function __construct(Translator $translator)
     {
         $this->translator = $translator;
-        $this->parsers = $parsers;
     }
 
     /**
@@ -45,12 +37,5 @@ class ParserManager
      * @param DataContainer $dumpData
      * @return $this
      */
-    public function parse(Combination $combination, DataContainer $dumpData)
-    {
-        $this->translator->setEnabledModNames($combination->getLoadedModNames());
-        foreach ($this->parsers as $parser) {
-            $parser->parse($combination, $dumpData);
-        }
-        return $this;
-    }
+    abstract public function parse(Combination $combination, DataContainer $dumpData);
 }

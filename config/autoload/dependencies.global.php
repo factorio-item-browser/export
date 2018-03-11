@@ -33,7 +33,10 @@ return [
 
             Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
 
-            Parser\ParserManager::class => InvokableFactory::class,
+            Parser\IconParser::class => Parser\AbstractParserFactory::class,
+            Parser\ItemParser::class => Parser\AbstractParserFactory::class,
+            Parser\ParserManager::class => Parser\ParserManagerFactory::class,
+            Parser\RecipeParser::class => Parser\AbstractParserFactory::class,
 
             Reducer\ReducerManager::class => InvokableFactory::class,
         ],

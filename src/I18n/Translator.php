@@ -103,7 +103,7 @@ class Translator
                 ->setFallbackLocale('en');
 
             $value = $this->translate($type, $localisedString, $locale, true);
-            if (strlen($value) === 0 && strlen($fallbackLocalisedString) > 0) {
+            if (strlen($value) === 0 && !empty($fallbackLocalisedString)) {
                 $value = $this->translate($type, $fallbackLocalisedString, $locale, true);
             }
             if (strlen($value) > 0) {
