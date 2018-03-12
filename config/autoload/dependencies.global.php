@@ -36,6 +36,7 @@ return [
             Merger\MergerManager::class => Merger\MergerManagerFactory::class,
             Merger\RecipeMerger::class => InvokableFactory::class,
 
+            Mod\DependencyResolver::class => Mod\DependencyResolverFactory::class,
             Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
 
             Parser\IconParser::class => Parser\AbstractParserFactory::class,

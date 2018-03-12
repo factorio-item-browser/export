@@ -31,7 +31,14 @@ class ModFileManagerFactory implements FactoryInterface
         $exportDataService = $container->get(ExportDataService::class);
         /* @var LocaleFileReader $localeFileReader */
         $localeFileReader = $container->get(LocaleFileReader::class);
+        /* @var DependencyResolver $dependencyResolver */
+        $dependencyResolver = $container->get(DependencyResolver::class);
 
-        return new ModFileManager($config['factorio']['modsDirectory'], $exportDataService, $localeFileReader);
+        return new ModFileManager(
+            $config['factorio']['modsDirectory'],
+            $exportDataService,
+            $localeFileReader,
+            $dependencyResolver
+        );
     }
 }

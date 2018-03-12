@@ -55,19 +55,28 @@ class ModFileManager
     protected $localeFileReader;
 
     /**
+     * The dependency resolver.
+     * @var DependencyResolver
+     */
+    protected $dependencyResolver;
+
+    /**
      * Initializes the mod manager.
      * @param string $modDirectory
      * @param ExportDataService $exportDataService
      * @param LocaleFileReader $localeFileReader
+     * @param DependencyResolver $dependencyResolver
      */
     public function __construct(
         string $modDirectory,
         ExportDataService $exportDataService,
-        LocaleFileReader $localeFileReader
+        LocaleFileReader $localeFileReader,
+        DependencyResolver $dependencyResolver
     ) {
         $this->modDirectory = $modDirectory;
         $this->exportDataService = $exportDataService;
         $this->localeFileReader = $localeFileReader;
+        $this->dependencyResolver = $dependencyResolver;
     }
 
     /**
@@ -92,6 +101,7 @@ class ModFileManager
             $this->exportDataService->setMod($mod);
         }
 
+        $this->addOrderToMods();
         $this->exportDataService->saveMods();
         return $this;
     }
@@ -172,8 +182,7 @@ class ModFileManager
         $mod->getDescriptions()->setTranslation('en', $jsonData->getString('description'));
 
         // Always add the base dependency, because some mods forgot it.
-        if ($mod->getName() !== 'base') {
-            // @todo May duplicate an actual dependency
+        if ($mod->getName() !== 'base' && !$this->hasBaseDependency($mod)) {
             $baseDependency = new Dependency();
             $baseDependency
                 ->setRequiredModName('base')
@@ -239,6 +248,43 @@ class ModFileManager
             ->setRequiredVersion(VersionUtils::normalize($match[3]))
             ->setIsMandatory($match[1] !== '?');
         return $dependency;
+    }
+
+    /**
+     * Returns whether the specified mod has the base mod as dependency.
+     * @param Mod $mod
+     * @return bool
+     */
+    protected function hasBaseDependency(Mod $mod): bool
+    {
+        $result = false;
+        foreach ($mod->getDependencies() as $dependency) {
+            if ($dependency->getRequiredModName() === 'base') {
+                $dependency->setIsMandatory(true); // Let's make sure it is always required.
+                $result = true;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Adds the order values to the mods.
+     * @return $this
+     */
+    protected function addOrderToMods()
+    {
+        $modNames = array_keys($this->exportDataService->getMods());
+        $orderedModNames = $this->dependencyResolver->resolveMandatoryDependencies($modNames);
+
+        $order = 1;
+        foreach ($orderedModNames as $modName) {
+            $mod = $this->exportDataService->getMod($modName);
+            if ($mod instanceof Mod) {
+                $mod->setOrder($order);
+                ++$order;
+            }
+        }
+        return $this;
     }
 
     /**
