@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Merger;
 
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 
 /**
  * The abstract class of the mergers.
@@ -16,12 +16,12 @@ use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 abstract class AbstractMerger
 {
     /**
-     * Merges the source combination into the destination one.
-     * @param Combination $destination
-     * @param Combination $source
+     * Merges the source combination data into the destination one.
+     * @param CombinationData $destination
+     * @param CombinationData $source
      * @return $this
      */
-    abstract public function merge(Combination $destination, Combination $source);
+    abstract public function merge(CombinationData $destination, CombinationData $source);
 
     /**
      * Merges the source localised string into the destination one.

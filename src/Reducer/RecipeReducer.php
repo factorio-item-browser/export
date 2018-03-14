@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Reducer;
 
 use FactorioItemBrowser\Export\Utils\RecipeUtils;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 
 /**
@@ -17,12 +17,12 @@ use FactorioItemBrowser\ExportData\Entity\Recipe;
 class RecipeReducer extends AbstractReducer
 {
     /**
-     * Reduces the specified combination, removing any data which is identical in the parent combination.
-     * @param Combination $combination
-     * @param Combination $parentCombination
+     * Reduces the specified combination data, removing any data which is identical in the parent combination.
+     * @param CombinationData $combination
+     * @param CombinationData $parentCombination
      * @return $this
      */
-    public function reduce(Combination $combination, Combination $parentCombination)
+    public function reduce(CombinationData $combination, CombinationData $parentCombination)
     {
         foreach ($parentCombination->getRecipes() as $parentRecipe) {
             $recipe = $combination->getRecipe($parentRecipe->getName(), $parentRecipe->getMode());

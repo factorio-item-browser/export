@@ -49,7 +49,7 @@ class ParserManager
     {
         $this->translator->setEnabledModNames($combination->getLoadedModNames());
         foreach ($this->parsers as $parser) {
-            $parser->parse($combination, $dumpData);
+            $parser->parse($combination->getData(), $dumpData);
         }
         return $this;
     }

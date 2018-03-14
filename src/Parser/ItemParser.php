@@ -6,7 +6,7 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\ExportData\Entity\Item;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 
 /**
  * The class parsing the items of the dump.
@@ -18,17 +18,17 @@ class ItemParser extends AbstractParser
 {
     /**
      * Parses the dump data into the combination.
-     * @param Combination $combination
+     * @param CombinationData $combinationData
      * @param DataContainer $dumpData
      * @return $this
      */
-    public function parse(Combination $combination, DataContainer $dumpData)
+    public function parse(CombinationData $combinationData, DataContainer $dumpData)
     {
         foreach ($dumpData->getObjectArray('items') as $itemData) {
-            $combination->addItem($this->parseItem($itemData, 'item'));
+            $combinationData->addItem($this->parseItem($itemData, 'item'));
         }
         foreach ($dumpData->getObjectArray('fluids') as $fluidData) {
-            $combination->addItem($this->parseItem($fluidData, 'fluid'));
+            $combinationData->addItem($this->parseItem($fluidData, 'fluid'));
         }
         return $this;
     }

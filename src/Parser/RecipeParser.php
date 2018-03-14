@@ -8,7 +8,7 @@ use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Export\Utils\RecipeUtils;
 use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Product;
@@ -23,16 +23,16 @@ class RecipeParser extends AbstractParser
 {
     /**
      * Parses the dump data into the combination.
-     * @param Combination $combination
+     * @param CombinationData $combinationData
      * @param DataContainer $dumpData
      * @return $this
      */
-    public function parse(Combination $combination, DataContainer $dumpData)
+    public function parse(CombinationData $combinationData, DataContainer $dumpData)
     {
         $normalRecipes = [];
         foreach ($dumpData->getObjectArray(['recipes', 'normal']) as $recipeData) {
             $recipe = $this->parseRecipe($recipeData, 'normal');
-            $combination->addRecipe($recipe);
+            $combinationData->addRecipe($recipe);
             $normalRecipes[$recipe->getName()] = $recipe;
         }
 
@@ -41,10 +41,10 @@ class RecipeParser extends AbstractParser
             if (!isset($normalRecipes[$recipe->getName()])
                 || RecipeUtils::calculateHash($recipe) !== RecipeUtils::calculateHash($normalRecipes[$recipe->getName()])
             ) {
-                $combination->addRecipe($recipe);
+                $combinationData->addRecipe($recipe);
             }
         }
-        $this->removeDuplicateTranslations($combination);
+        $this->removeDuplicateTranslations($combinationData);
         return $this;
     }
 
@@ -137,16 +137,16 @@ class RecipeParser extends AbstractParser
 
     /**
      * Removes duplicate translations if the item are already providing them.
-     * @param Combination $combination
+     * @param CombinationData $combinationData
      * @return $this
      */
-    protected function removeDuplicateTranslations(Combination $combination)
+    protected function removeDuplicateTranslations(CombinationData $combinationData)
     {
-        foreach ($combination->getRecipes() as $recipe) {
+        foreach ($combinationData->getRecipes() as $recipe) {
             /* @var Item[] $items */
             $items = array_filter([
-                $combination->getItem('item', $recipe->getName()),
-                $combination->getItem('fluid', $recipe->getName())
+                $combinationData->getItem('item', $recipe->getName()),
+                $combinationData->getItem('fluid', $recipe->getName())
             ]);
             foreach ($items as $item) {
                 if ($this->areLocalisedStringsIdentical($item->getLabels(), $recipe->getLabels())

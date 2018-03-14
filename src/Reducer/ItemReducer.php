@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Reducer;
 
 use FactorioItemBrowser\ExportData\Entity\Item;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 
 /**
  * The class removing any items which did not change.
@@ -16,12 +16,12 @@ use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 class ItemReducer extends AbstractReducer
 {
     /**
-     * Reduces the specified combination, removing any data which is identical in the parent combination.
-     * @param Combination $combination
-     * @param Combination $parentCombination
+     * Reduces the specified combination data, removing any data which is identical in the parent combination.
+     * @param CombinationData $combination
+     * @param CombinationData $parentCombination
      * @return $this
      */
-    public function reduce(Combination $combination, Combination $parentCombination)
+    public function reduce(CombinationData $combination, CombinationData $parentCombination)
     {
         foreach ($parentCombination->getItems() as $parentItem) {
             $item = $combination->getItem($parentItem->getType(), $parentItem->getName());

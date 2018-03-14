@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Reducer;
 
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 
 /**
  *
@@ -30,7 +31,7 @@ class ReducerManager
     }
 
     // Temp
-    public function reduce(Combination $combination, Combination $parentCombination)
+    public function reduce(CombinationData $combination, CombinationData $parentCombination)
     {
         foreach ($this->reducers as $reducer) {
             $reducer->reduce($combination, $parentCombination);

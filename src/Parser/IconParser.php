@@ -8,7 +8,7 @@ use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Item;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Product;
 
@@ -22,11 +22,11 @@ class IconParser extends AbstractParser
 {
     /**
      * Parses the dump data into the combination.
-     * @param Combination $combination
+     * @param CombinationData $combinationData
      * @param DataContainer $dumpData
      * @return $this
      */
-    public function parse(Combination $combination, DataContainer $dumpData)
+    public function parse(CombinationData $combinationData, DataContainer $dumpData)
     {
         foreach ($dumpData->getObjectArray('icons') as $iconData) {
             $icon = $this->parseIcon($iconData);
@@ -36,29 +36,29 @@ class IconParser extends AbstractParser
             if ($type === 'recipe') {
                 /* @var Recipe[] $recipes */
                 $recipes = array_filter([
-                    $combination->getRecipe($name, 'normal'),
-                    $combination->getRecipe($name, 'expensive')
+                    $combinationData->getRecipe($name, 'normal'),
+                    $combinationData->getRecipe($name, 'expensive')
                 ]);
                 if (count($recipes) > 0) {
                     foreach ($recipes as $recipe) {
                         $recipe->setIconHash($icon->getIconHash());
                     }
-                    if (!$combination->getIcon($icon->getIconHash()) instanceof Icon) {
-                        $combination->addIcon($icon);
+                    if (!$combinationData->getIcon($icon->getIconHash()) instanceof Icon) {
+                        $combinationData->addIcon($icon);
                     }
                 }
             } else {
-                $item = $combination->getItem($type, $name);
+                $item = $combinationData->getItem($type, $name);
                 if ($item instanceof Item) {
                     $item->setIconHash($icon->getIconHash());
-                    if (!$combination->getIcon($icon->getIconHash()) instanceof Icon) {
-                        $combination->addIcon($icon);
+                    if (!$combinationData->getIcon($icon->getIconHash()) instanceof Icon) {
+                        $combinationData->addIcon($icon);
                     }
                 }
             }
         }
 
-        $this->addFallbackRecipeIcons($combination);
+        $this->addFallbackRecipeIcons($combinationData);
         return $this;
     }
 
@@ -114,17 +114,17 @@ class IconParser extends AbstractParser
 
     /**
      * Adds a fallback icon to the recipes if they do not have one assigned already.
-     * @param Combination $combination
+     * @param CombinationData $combinationcombinationData
      * @return $this
      */
-    protected function addFallbackRecipeIcons(Combination $combination)
+    protected function addFallbackRecipeIcons(CombinationData $combinationcombinationData)
     {
-        foreach ($combination->getRecipes() as $recipe) {
+        foreach ($combinationcombinationData->getRecipes() as $recipe) {
             if (strlen($recipe->getIconHash()) === 0) {
                 $products = $recipe->getProducts();
                 $firstProduct = reset($products);
                 if ($firstProduct instanceof Product) {
-                    $item = $combination->getItem($firstProduct->getType(), $firstProduct->getName());
+                    $item = $combinationcombinationData->getItem($firstProduct->getType(), $firstProduct->getName());
                     if ($item instanceof Item) {
                         $recipe->setIconHash($item->getIconHash());
                     }

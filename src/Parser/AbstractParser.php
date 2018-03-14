@@ -6,7 +6,7 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Export\I18n\Translator;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 
 /**
  * The abstract class of the parsers.
@@ -33,9 +33,9 @@ abstract class AbstractParser
 
     /**
      * Parses the dump data into the combination.
-     * @param Combination $combination
+     * @param CombinationData $combinationData
      * @param DataContainer $dumpData
      * @return $this
      */
-    abstract public function parse(Combination $combination, DataContainer $dumpData);
+    abstract public function parse(CombinationData $combinationData, DataContainer $dumpData);
 }

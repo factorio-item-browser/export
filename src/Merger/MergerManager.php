@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Merger;
 
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 
 /**
  * The class managing the mergers of combinations.
@@ -30,12 +30,12 @@ class MergerManager
     }
 
     /**
-     * Merges the source combination into the destination one.
-     * @param Combination $destination
-     * @param Combination $source
+     * Merges the source combination data into the destination one.
+     * @param CombinationData $destination
+     * @param CombinationData $source
      * @return $this
      */
-    public function merge(Combination $destination, Combination $source)
+    public function merge(CombinationData $destination, CombinationData $source)
     {
         foreach ($this->mergers as $merger) {
             $merger->merge($destination, $source);

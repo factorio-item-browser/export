@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Reducer;
 
 use FactorioItemBrowser\ExportData\Entity\Icon;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 
 /**
  * The class removing any icons which already exist in the parent combination.
@@ -16,12 +16,12 @@ use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 class IconReducer extends AbstractReducer
 {
     /**
-     * Reduces the specified combination, removing any data which is identical in the parent combination.
-     * @param Combination $combination
-     * @param Combination $parentCombination
+     * Reduces the specified combination data, removing any data which is identical in the parent combination.
+     * @param CombinationData $combination
+     * @param CombinationData $parentCombination
      * @return $this
      */
-    public function reduce(Combination $combination, Combination $parentCombination)
+    public function reduce(CombinationData $combination, CombinationData $parentCombination)
     {
         foreach ($parentCombination->getIcons() as $parentIcon) {
             if ($combination->getIcon($parentIcon->getIconHash()) instanceof Icon) {
