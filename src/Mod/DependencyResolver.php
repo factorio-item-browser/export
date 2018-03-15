@@ -87,7 +87,6 @@ class DependencyResolver
             }
             sort($requiredModNames, SORT_NATURAL | SORT_FLAG_CASE);
             foreach ($requiredModNames as $requiredModName) {
-                echo $modName . ' -> ' . $requiredModName . PHP_EOL;
                 $this->processMod($requiredModName, $isMandatory);
             }
             $this->resolvedModNames[$modName] = true;

@@ -13,6 +13,14 @@ namespace FactorioItemBrowser\Export;
 return [
     'routes' => [
         [
+            'name' => 'export mod <modName>',
+            'handler' => Command\ExportModCommand::class,
+            'short_description' => 'Exports all relevant combinations of the specified mod.',
+            'options_descriptions' => [
+                '<modName>' => 'The name of the mod to be exported.'
+            ],
+        ],
+        [
             'name' => 'list all',
             'handler' => Command\ListAllCommand::class,
             'short_description' => 'Lists all available mods.',
@@ -27,6 +35,7 @@ return [
             'handler' => Command\ListUpdateCommand::class,
             'short_description' => 'Updates the list of mods from the zip files.',
         ],
+
         [
             'name' => 'test',
             'handler' => Command\TestCommand::class,

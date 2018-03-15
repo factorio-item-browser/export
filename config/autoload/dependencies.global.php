@@ -18,6 +18,7 @@ return [
         'factories'  => [
             ExportDataService::class => ExportData\ExportDataServiceFactory::class,
 
+            Command\ExportModCommand::class => Command\ExportModCommandFactory::class,
             Command\ListAllCommand::class => Command\ListAllCommandFactory::class,
             Command\ListMissingCommand::class => Command\ListMissingCommandFactory::class,
             Command\ListUpdateCommand::class => Command\ListUpdateCommandFactory::class,
@@ -36,8 +37,10 @@ return [
             Merger\MergerManager::class => Merger\MergerManagerFactory::class,
             Merger\RecipeMerger::class => InvokableFactory::class,
 
+            Mod\CombinationCreator::class => Mod\CombinationCreatorFactory::class,
             Mod\DependencyResolver::class => Mod\DependencyResolverFactory::class,
             Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
+            Mod\ParentCombinationFinder::class => Mod\ParentCombinationFinderFactory::class,
 
             Parser\IconParser::class => Parser\AbstractParserFactory::class,
             Parser\ItemParser::class => Parser\AbstractParserFactory::class,

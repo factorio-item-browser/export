@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Factorio;
 
 use FactorioItemBrowser\Export\Parser\ParserManager;
+use FactorioItemBrowser\Export\Reducer\ReducerManager;
 use FactorioItemBrowser\ExportData\Service\ExportDataService;
 use Interop\Container\ContainerInterface;
 use Zend\Console\Console;
@@ -39,6 +40,8 @@ class InstanceFactory implements FactoryInterface
         $dumpExtractor = $container->get(DumpExtractor::class);
         /* @var ParserManager $parserManager */
         $parserManager = $container->get(ParserManager::class);
+        /* @var ReducerManager $reducerManager */
+        $reducerManager = $container->get(ReducerManager::class);
         /* @var Options $options */
         $options = $container->get(Options::class);
 
@@ -46,6 +49,7 @@ class InstanceFactory implements FactoryInterface
             $exportDataService,
             $dumpExtractor,
             $parserManager,
+            $reducerManager,
             Console::getInstance(),
             $options,
             self::$nextIndex++

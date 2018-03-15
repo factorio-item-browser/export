@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Reducer;
 
+use FactorioItemBrowser\Export\Entity\ExportCombination;
+use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Merger\MergerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 
 /**
- *
+ * The manager of the reducer classes.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
@@ -16,36 +18,115 @@ use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 class ReducerManager
 {
     /**
+     * The merger manager.
+     * @var MergerManager
+     */
+    protected $mergerManager;
+
+    /**
      * The reducers to use.
      * @var array|AbstractReducer[]
      */
     protected $reducers;
 
     /**
+     * The combinations which still need to be reduced.
+     * @var array|ExportCombination[]
+     */
+    protected $pendingCombinations = [];
+
+    /**
      * Initializes the reducer manager.
+     * @param MergerManager $mergerManager
      * @param array|AbstractReducer[] $reducers
      */
-    public function __construct(array $reducers)
+    public function __construct(MergerManager $mergerManager, array $reducers)
     {
+        $this->mergerManager = $mergerManager;
         $this->reducers = $reducers;
     }
 
-    // Temp
-    public function reduce(CombinationData $combination, CombinationData $parentCombination)
+    /**
+     * Adds the combination to be reduced as soon as all parent combinations are ready.
+     * @param ExportCombination $combination
+     * @return $this
+     */
+    public function addCombination(ExportCombination $combination)
     {
-        foreach ($this->reducers as $reducer) {
-            $reducer->reduce($combination, $parentCombination);
+        if (count($combination->getParentCombinations()) > 0) {
+            $this->pendingCombinations[] = $combination;
+            $this->checkForReducibleCombinations();
         }
         return $this;
     }
 
-    public function addCombination(Combination $combination)
+    /**
+     * Reduces all pending combinations.
+     * @return $this
+     */
+    public function reduceAllCombinations()
     {
+        while (count($this->pendingCombinations) > 0) {
+            $count = count($this->pendingCombinations);
+            $this->checkForReducibleCombinations();
+            if (count($this->pendingCombinations) === $count) {
+                throw new ExportException('Unable to reduce any more combinations.');
+            }
+        }
         return $this;
     }
 
-    public function reduceAllCombinations()
+    /**
+     * Checks for any combination which is currently reducible, and reduces them.
+     * @return $this
+     */
+    protected function checkForReducibleCombinations()
     {
+        foreach ($this->pendingCombinations as $key => $pendingCombination) {
+            if ($this->isCombinationReducible($pendingCombination)) {
+                $mergedCombination = $this->mergerManager->mergeParentCombinations($pendingCombination);
+
+                var_dump('PENDING', $pendingCombination->getData()->getItem('item', 'gem-ore'));
+                var_dump('MERGED', $mergedCombination->getData()->getItem('item', 'gem-ore'));
+
+                $this->reduce($pendingCombination, $mergedCombination);
+                var_dump('REDUCED', $pendingCombination->getData()->getItem('item', 'gem-ore'));
+
+                $pendingCombination->setIsReduced(true);
+                unset($this->pendingCombinations[$key]);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Checks whether the specified combination is currently reducible.
+     * @param ExportCombination $combination
+     * @return bool
+     */
+    protected function isCombinationReducible(ExportCombination $combination): bool
+    {
+        $result = true;
+        foreach ($combination->getParentCombinations() as $parentCombination) {
+            if ($parentCombination instanceof ExportCombination && !$parentCombination->getIsReduced()) {
+                $result = false;
+                break;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Reduces the specified combination with the parent one.
+     * @param Combination $combination
+     * @param Combination $parentCombination
+     * @return $this
+     */
+    protected function reduce(Combination $combination, Combination $parentCombination)
+    {
+        foreach ($this->reducers as $reducer) {
+            $reducer->reduce($combination->getData(), $parentCombination->getData());
+        }
         return $this;
     }
 }

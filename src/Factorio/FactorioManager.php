@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Factorio;
 
+use FactorioItemBrowser\Export\Entity\ExportCombination;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Reducer\ReducerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Service\ExportDataService;
 
 /**
@@ -43,7 +43,7 @@ class FactorioManager
 
     /**
      * The combinations waiting to be executed.
-     * @var array|Combination[]
+     * @var array|ExportCombination[]
      */
     protected $pendingCombinations = [];
 
@@ -104,11 +104,11 @@ class FactorioManager
 
     /**
      * Adds a combination to be executed.
-     * @param Combination $combination
+     * @param ExportCombination $combination
      * @return $this
      * @throws ExportException
      */
-    public function addCombination(Combination $combination)
+    public function addCombination(ExportCombination $combination)
     {
         $this->pendingCombinations[] = $combination;
         $this->executeNextPendingCombination();

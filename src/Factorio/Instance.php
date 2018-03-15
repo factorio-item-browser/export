@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Factorio;
 
+use FactorioItemBrowser\Export\Entity\ExportCombination;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Parser\ParserManager;
+use FactorioItemBrowser\Export\Reducer\ReducerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Service\ExportDataService;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -39,6 +40,12 @@ class Instance
      * @var ParserManager
      */
     protected $parserManager;
+
+    /**
+     * The reducer manager.
+     * @var ReducerManager
+     */
+    protected $reducerManager;
 
     /**
      * The console.
@@ -78,7 +85,7 @@ class Instance
 
     /**
      * The currently running export combination.
-     * @var Combination|null
+     * @var ExportCombination|null
      */
     protected $currentCombination = null;
 
@@ -99,6 +106,7 @@ class Instance
      * @param ExportDataService $exportDataService
      * @param DumpExtractor $dumpExtractor
      * @param ParserManager $parserManager
+     * @param ReducerManager $reducerManager
      * @param AdapterInterface $console
      * @param Options $options
      * @param int $index
@@ -107,6 +115,7 @@ class Instance
         ExportDataService $exportDataService,
         DumpExtractor $dumpExtractor,
         ParserManager $parserManager,
+        ReducerManager $reducerManager,
         AdapterInterface $console,
         Options $options,
         int $index
@@ -114,14 +123,13 @@ class Instance
         $this->exportDataService = $exportDataService;
         $this->dumpExtractor = $dumpExtractor;
         $this->parserManager = $parserManager;
+        $this->reducerManager = $reducerManager;
         $this->console = $console;
         $this->options = $options;
 
         $this->directory = $this->options->getInstancesDirectory() . '/instance' . $index;
         $this->index = $index;
         $this->tempFileName = tempnam(sys_get_temp_dir(), 'factorio_');
-
-
     }
 
     /**
@@ -227,11 +235,11 @@ class Instance
 
     /**
      * Executes the specified export.
-     * @param Combination $combination
+     * @param ExportCombination $combination
      * @return $this
      * @throws ExportException
      */
-    public function execute(Combination $combination)
+    public function execute(ExportCombination $combination)
     {
         if ($this->currentProcessId !== 0) {
             throw new ExportException('Tried to start export on currently busy instance #' . $this->index);
@@ -248,11 +256,11 @@ class Instance
 
     /**
      * Prepares the instance to execute the specified export combination.
-     * @param Combination $combination
+     * @param ExportCombination $combination
      * @return $this
      * @throws ExportException
      */
-    protected function prepareForCombination(Combination $combination)
+    protected function prepareForCombination(ExportCombination $combination)
     {
         $this->clearDirectory($this->directory . '/mods');
         foreach ($combination->getLoadedModNames() as $modName) {
@@ -269,11 +277,11 @@ class Instance
 
     /**
      * Executes the specified combination.
-     * @param Combination $combination
+     * @param ExportCombination $combination
      * @return $this
      * @throws ExportException
      */
-    protected function executeCombination(Combination $combination)
+    protected function executeCombination(ExportCombination $combination)
     {
         $this->console->writeLine(
             ' > Exporting combination ' . $combination->getName() . ' on instance #' . $this->index
@@ -312,12 +320,12 @@ class Instance
 
     /**
      * Processes the specified export combination.
-     * @param Combination $combination
+     * @param ExportCombination $combination
      * @param string $output
      * @return $this
      * @throws ExportException
      */
-    protected function processCombination(Combination $combination, string $output)
+    protected function processCombination(ExportCombination $combination, string $output)
     {
         try {
             $this->console->writeLine(
@@ -325,6 +333,7 @@ class Instance
             );
             $exportDump = $this->dumpExtractor->extract($output);
             $this->parserManager->parse($combination, $exportDump);
+            $this->reducerManager->addCombination($combination);
         } catch (ExportException $e) {
             $this->console->writeLine(str_pad('', $this->console->getWidth(), '-'), ColorInterface::LIGHT_RED);
             $this->console->writeLine('ExportException: ' . $e->getMessage(), 10);

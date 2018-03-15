@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Reducer;
 
+use FactorioItemBrowser\Export\Merger\MergerManager;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
@@ -33,11 +34,14 @@ class ReducerManagerFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+        /* @var MergerManager $mergerManager */
+        $mergerManager = $container->get(MergerManager::class);
+
         $reducers = [];
         foreach (self::REDUCER_CLASSES as $parserClass) {
             $reducers[] = $container->get($parserClass);
         }
 
-        return new ReducerManager($reducers);
+        return new ReducerManager($mergerManager, $reducers);
     }
 }
