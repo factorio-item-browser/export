@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command;
 
 use FactorioItemBrowser\Export\Factorio\FactorioManager;
+use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\Mod\CombinationCreator;
+use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\Service\ExportDataService;
 use Interop\Container\ContainerInterface;
 
@@ -32,7 +34,17 @@ class ExportModCommandFactory
         $combinationCreator = $container->get(CombinationCreator::class);
         /* @var FactorioManager $factorioManager */
         $factorioManager = $container->get(FactorioManager::class);
+        /* @var IconRenderer $iconRenderer */
+        $iconRenderer = $container->get(IconRenderer::class);
+        /* @var Translator $translator */
+        $translator = $container->get(Translator::class);
 
-        return new ExportModCommand($exportDataService, $combinationCreator, $factorioManager);
+        return new ExportModCommand(
+            $exportDataService,
+            $combinationCreator,
+            $factorioManager,
+            $iconRenderer,
+            $translator
+        );
     }
 }

@@ -85,13 +85,7 @@ class ReducerManager
         foreach ($this->pendingCombinations as $key => $pendingCombination) {
             if ($this->isCombinationReducible($pendingCombination)) {
                 $mergedCombination = $this->mergerManager->mergeParentCombinations($pendingCombination);
-
-                var_dump('PENDING', $pendingCombination->getData()->getItem('item', 'gem-ore'));
-                var_dump('MERGED', $mergedCombination->getData()->getItem('item', 'gem-ore'));
-
                 $this->reduce($pendingCombination, $mergedCombination);
-                var_dump('REDUCED', $pendingCombination->getData()->getItem('item', 'gem-ore'));
-
                 $pendingCombination->setIsReduced(true);
                 unset($this->pendingCombinations[$key]);
             }
