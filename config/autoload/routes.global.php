@@ -35,10 +35,5 @@ return [
             'handler' => Command\ListUpdateCommand::class,
             'short_description' => 'Updates the list of mods from the zip files.',
         ],
-
-        [
-            'name' => 'test',
-            'handler' => Command\TestCommand::class,
-        ],
     ]
 ];

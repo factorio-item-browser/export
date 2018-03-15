@@ -22,7 +22,6 @@ return [
             Command\ListAllCommand::class => Command\ListAllCommandFactory::class,
             Command\ListMissingCommand::class => Command\ListMissingCommandFactory::class,
             Command\ListUpdateCommand::class => Command\ListUpdateCommandFactory::class,
-            Command\TestCommand::class => Command\TestCommandFactory::class,
 
             Factorio\DumpExtractor::class => InvokableFactory::class,
             Factorio\FactorioManager::class => Factorio\FactorioManagerFactory::class,
