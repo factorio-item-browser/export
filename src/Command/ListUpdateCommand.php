@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
+use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Service\ExportDataService;
 use Zend\Console\Adapter\AdapterInterface;
@@ -31,14 +32,26 @@ class ListUpdateCommand implements CommandInterface
     protected $modFileManager;
 
     /**
+     * The translator.
+     * @var Translator
+     */
+    protected $translator;
+
+    /**
      * Initializes the command.
      * @param ExportDataService $exportDataService
      * @param ModFileManager $modFileManager
+     * @param Translator $translator
      */
-    public function __construct(ExportDataService $exportDataService, ModFileManager $modFileManager)
+    public function __construct(
+        ExportDataService $exportDataService,
+        ModFileManager $modFileManager,
+        Translator $translator
+    )
     {
         $this->exportDataService = $exportDataService;
         $this->modFileManager = $modFileManager;
+        $this->translator = $translator;
     }
 
     /**
@@ -67,5 +80,7 @@ class ListUpdateCommand implements CommandInterface
                 $console->writeLine();
             }
         }
+
+        $this->translator->clearLocaleDataCache();
     }
 }

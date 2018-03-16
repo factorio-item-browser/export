@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
+use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Service\ExportDataService;
 use Interop\Container\ContainerInterface;
@@ -29,7 +30,9 @@ class ListUpdateCommandFactory
         $exportDataService = $container->get(ExportDataService::class);
         /* @var ModFileManager $modFileManager */
         $modFileManager = $container->get(ModFileManager::class);
+        /* @var Translator $translator */
+        $translator = $container->get(Translator::class);
 
-        return new ListUpdateCommand($exportDataService, $modFileManager);
+        return new ListUpdateCommand($exportDataService, $modFileManager, $translator);
     }
 }

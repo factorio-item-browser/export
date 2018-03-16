@@ -96,6 +96,7 @@ class ExportModCommand implements CommandInterface
         }
 
         $combinations = $this->combinationCreator->createCombinations($mod);
+        $console->writeLine(' > Processing ' . count($combinations) . ' combination(s)...');
         foreach ($combinations as $combination) {
             $this->factorioManager->addCombination($combination);
         }

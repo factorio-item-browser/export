@@ -31,6 +31,8 @@ class TranslatorFactory implements FactoryInterface
         /* @var TranslatorInterface $translatorInterface */
         $translator = $container->get(TranslatorInterface::class);
 
-        return new Translator($modFileManager, $translator);
+        $config = $container->get('config');
+
+        return new Translator($modFileManager, $translator, $config['exportData']['localeCacheDirectory']);
     }
 }

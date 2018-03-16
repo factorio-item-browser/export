@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\I18n;
 
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use FactorioItemBrowser\ExportData\Entity\Mod;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Zend\I18n\Translator\Translator as ZendTranslator;
 use Zend\Stdlib\ArrayUtils;
 
@@ -15,8 +18,6 @@ use Zend\Stdlib\ArrayUtils;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- *
- * @todo Maybe cache the prepared translation to not always have to read and parse them again?
  */
 class Translator
 {
@@ -38,6 +39,12 @@ class Translator
     protected $placeholderTranslator;
 
     /**
+     * The directory used for caching the locale data.
+     * @var string
+     */
+    protected $cacheDirectory;
+
+    /**
      * The loaded translations of all mods. Keys are mod name, locale and the language key.
      * @var array|string[][][]
      */
@@ -53,11 +60,17 @@ class Translator
      * Initializes the translator.
      * @param ModFileManager $modFileManager
      * @param ZendTranslator $placeHolderTranslator
+     * @param string $cacheDirectory
      */
-    public function __construct(ModFileManager $modFileManager, ZendTranslator $placeHolderTranslator)
+    public function __construct(
+        ModFileManager $modFileManager,
+        ZendTranslator $placeHolderTranslator,
+        string $cacheDirectory
+    )
     {
         $this->modFileManager = $modFileManager;
         $this->placeholderTranslator = $placeHolderTranslator;
+        $this->cacheDirectory = $cacheDirectory;
 
         $this->setEnabledModNames(['base']);
     }
@@ -74,13 +87,36 @@ class Translator
             $mod = $this->modFileManager->getMod($modName);
             if ($mod instanceof Mod) {
                 if (!isset($this->allTranslations[$mod->getName()])) {
-                    $this->allTranslations[$mod->getName()] = $this->modFileManager->getLocaleData($mod);
+                    $this->allTranslations[$mod->getName()] = $this->loadLocaleDataOfMod($mod);
                 }
                 $translations = ArrayUtils::merge($translations, $this->allTranslations[$mod->getName()]);
             }
         }
         $this->translations = $translations;
         return $this;
+    }
+
+    /**
+     * Loads the locale data for the specified mod.
+     * @param Mod $mod
+     * @return array
+     */
+    protected function loadLocaleDataOfMod(Mod $mod): array
+    {
+        $cacheFile = $this->cacheDirectory . '/' . $mod->getName() . '.php';
+        if (file_exists($cacheFile)) {
+            $result = require ($cacheFile);
+        } else {
+            $result = $this->modFileManager->getLocaleData($mod);
+            if (!is_dir($this->cacheDirectory)) {
+                mkdir($this->cacheDirectory, 0777, true);
+            }
+            $success = file_put_contents($cacheFile, '<?php return ' . var_export($result, true) . ';');
+            if (!$success) {
+                throw new ExportException('Unable to cache locale data into file ' . $cacheFile);
+            }
+        }
+        return $result;
     }
 
     /**
@@ -183,5 +219,27 @@ class Translator
             }
         }
         return $string;
+    }
+
+    /**
+     * Clears the locale data cache.
+     * @return $this
+     */
+    public function clearLocaleDataCache()
+    {
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($this->cacheDirectory, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($files as $file) {
+            /* @var \SplFileInfo $file */
+            if ($file->isDir() && !$file->isLink()) {
+                rmdir($file->getPathname());
+            } else {
+                unlink($file->getPathname());
+            }
+        }
+        return $this;
     }
 }

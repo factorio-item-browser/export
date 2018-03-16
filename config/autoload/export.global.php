@@ -12,7 +12,8 @@ namespace FactorioItemBrowser\Export;
  */
 return [
     'exportData' => [
-        'directory' => __DIR__ . '/../../data/export'
+        'directory' => __DIR__ . '/../../data/export',
+        'localeCacheDirectory' => __DIR__ . '/../../data/cache/locale'
     ],
     'factorio' => [
         'factorioDirectory' => __DIR__ . '/../../factorio',
