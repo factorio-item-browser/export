@@ -18,6 +18,7 @@ return [
         'factories'  => [
             ExportDataService::class => ExportData\ExportDataServiceFactory::class,
 
+            Command\ExportAllCommand::class => Command\ExportAllCommandFactory::class,
             Command\ExportModCommand::class => Command\ExportModCommandFactory::class,
             Command\ListAllCommand::class => Command\ListAllCommandFactory::class,
             Command\ListMissingCommand::class => Command\ListMissingCommandFactory::class,
