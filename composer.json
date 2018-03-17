@@ -27,6 +27,9 @@
     }
   },
   "scripts": {
-    "run": "php bin/cli.php"
+    "run": "@php bin/cli.php",
+    "post-autoload-dump": [
+      "chmod 0777 data/cache data/export factorio/instances factorio/mods/Dump_1.0.0"
+    ]
   }
 }
