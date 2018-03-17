@@ -62,9 +62,9 @@ class ListMissingCommand implements CommandInterface
             }
         }
 
-        $this->printListOfMods($console, $missingMandatoryMods, 'MISSING ', ColorInterface::RED)
-             ->printListOfMods($console, $outdatedMods, 'OUTDATED', ColorInterface::YELLOW)
-             ->printListOfMods($console, $missingOptionalMods, 'OPTIONAL', ColorInterface::LIGHT_BLUE);
+        $this->printListOfMods($console, $missingMandatoryMods, 'MISSING ', ColorInterface::LIGHT_RED)
+             ->printListOfMods($console, $outdatedMods, 'OUTDATED', ColorInterface::LIGHT_YELLOW)
+             ->printListOfMods($console, $missingOptionalMods, 'OPTIONAL', ColorInterface::BLUE);
     }
 
     /**
