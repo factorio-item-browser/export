@@ -181,6 +181,10 @@ class ModFileManager
         $mod->getTitles()->setTranslation('en', $jsonData->getString('title'));
         $mod->getDescriptions()->setTranslation('en', $jsonData->getString('description'));
 
+        foreach ($jsonData->getArray('dependencies') as $dependencyString) {
+            $mod->addDependency($this->parseDependency($mod, (string)$dependencyString));
+        }
+
         // Always add the base dependency, because some mods forgot it.
         if ($mod->getName() !== 'base' && !$this->hasBaseDependency($mod)) {
             $baseDependency = new Dependency();
@@ -189,10 +193,6 @@ class ModFileManager
                 ->setIsMandatory(true)
                 ->setRequiredVersion(VersionUtils::normalize(''));
             $mod->addDependency($baseDependency);
-        }
-
-        foreach ($jsonData->getArray('dependencies') as $dependencyString) {
-            $mod->addDependency($this->parseDependency($mod, (string)$dependencyString));
         }
         return $this;
     }
@@ -262,6 +262,7 @@ class ModFileManager
             if ($dependency->getRequiredModName() === 'base') {
                 $dependency->setIsMandatory(true); // Let's make sure it is always required.
                 $result = true;
+                break;
             }
         }
         return $result;

@@ -88,21 +88,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-data.git",
-                "reference": "d3ef884c0cacf77d07ea6d3cdaed6882e1cb9f2a"
+                "reference": "8e31ead4e5556d57f009556166de31bc04748193"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/d3ef884c0cacf77d07ea6d3cdaed6882e1cb9f2a",
-                "reference": "d3ef884c0cacf77d07ea6d3cdaed6882e1cb9f2a",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/8e31ead4e5556d57f009556166de31bc04748193",
+                "reference": "8e31ead4e5556d57f009556166de31bc04748193",
                 "shasum": ""
             },
             "require": {
-                "bluepsyduck/common": "~1.0",
-                "php": ">=7.1"
+                "bluepsyduck/common": "^1.0",
+                "php": "^7.2"
             },
             "require-dev": {
-                "mikey179/vfsstream": "~1.6",
-                "phpunit/phpunit": "~6.0"
+                "mikey179/vfsstream": "^1.6",
+                "phpunit/phpunit": "^6.0"
             },
             "type": "library",
             "autoload": {
@@ -128,7 +128,7 @@
                 "Factorio Item Browser",
                 "export"
             ],
-            "time": "2018-03-13T20:28:15+00:00"
+            "time": "2018-03-17T17:57:33+00:00"
         },
         {
             "name": "psr/container",
