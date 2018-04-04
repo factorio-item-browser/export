@@ -171,8 +171,12 @@ class RecipeParser extends AbstractParser
     protected function areLocalisedStringsIdentical(LocalisedString $leftString, LocalisedString $rightString): bool
     {
         $result = true;
-        foreach ($leftString->getTranslations() as $locale => $translation) {
-            if (strlen($translation) > 0 && $translation !== $rightString->getTranslation($locale)) {
+        foreach ($leftString->getTranslations() as $locale => $leftTranslation) {
+            $rightTranslation = $rightString->getTranslation($locale);
+
+            if (strlen($leftTranslation) > 0 && strlen($rightTranslation) > 0
+                && $leftTranslation !== $rightTranslation
+            ) {
                 $result = false;
                 break;
             }
