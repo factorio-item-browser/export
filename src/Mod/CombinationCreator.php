@@ -131,7 +131,8 @@ class CombinationCreator
                             $combination->getLoadedOptionalModNames(),
                             [$optionalModName]
                         ));
-                        if ($numberOfOptionalMods === 1 || $this->hasDirectParentCombination($combination)) {
+
+                        if ($numberOfOptionalMods === 1 || $this->hasDirectParentCombination($newCombination)) {
                             $this->combinations[] = $newCombination;
                             $continueRecursion = true;
                         }
