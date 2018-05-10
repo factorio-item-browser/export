@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\I18n;
 
+use FactorioItemBrowser\Export\Cache\LocaleCache;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use Interop\Container\ContainerInterface;
 use Zend\I18n\Translator\TranslatorInterface;
@@ -26,13 +27,13 @@ class TranslatorFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+        /* @var LocaleCache $localeCache */
+        $localeCache = $container->get(LocaleCache::class);
         /* @var ModFileManager $modFileManager */
         $modFileManager = $container->get(ModFileManager::class);
         /* @var TranslatorInterface $translatorInterface */
         $translator = $container->get(TranslatorInterface::class);
 
-        $config = $container->get('config');
-
-        return new Translator($modFileManager, $translator, $config['exportData']['localeCacheDirectory']);
+        return new Translator($localeCache, $modFileManager, $translator);
     }
 }

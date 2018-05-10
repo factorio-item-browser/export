@@ -16,7 +16,7 @@ use Zend\ServiceManager\Factory\InvokableFactory;
 return [
     'dependencies' => [
         'factories'  => [
-            ExportDataService::class => ExportData\ExportDataServiceFactory::class,
+            Cache\LocaleCache::class => Cache\LocaleCacheFactory::class,
 
             Command\ExportAllCommand::class => Command\ExportAllCommandFactory::class,
             Command\ExportModCommand::class => Command\ExportModCommandFactory::class,
@@ -53,6 +53,9 @@ return [
             Reducer\ReducerManager::class => Reducer\ReducerManagerFactory::class,
 
             Renderer\IconRenderer::class => Renderer\IconRendererFactory::class,
+
+            // 3rd-party dependencies
+            ExportDataService::class => ExportData\ExportDataServiceFactory::class,
         ],
     ]
 ];

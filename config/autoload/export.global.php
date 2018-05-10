@@ -11,9 +11,13 @@ namespace FactorioItemBrowser\Export;
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
 return [
+    'cache' => [
+        'directory' => [
+            'locale' => __DIR__ . '/../../data/cache/locale',
+        ]
+    ],
     'exportData' => [
         'directory' => __DIR__ . '/../../data/export',
-        'localeCacheDirectory' => __DIR__ . '/../../data/cache/locale'
     ],
     'factorio' => [
         'factorioDirectory' => __DIR__ . '/../../factorio',
