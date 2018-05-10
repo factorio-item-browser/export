@@ -62,8 +62,8 @@ class LocaleFileReader
         if (!empty($line) && substr($line, 0, 1) !== ';') {
             if (preg_match(self::REGEXP_LOCALE, $line, $match) > 0) {
                 $key = trim($match[1]);
-                $value = trim($match[2]);
-                if (empty($this->currentSection)) {
+                $value = str_replace('\n', PHP_EOL, trim($match[2]));
+                if (strlen($this->currentSection) === 0) {
                     $this->translations[$key] = $value;
                 } else {
                     $this->translations[$this->currentSection . '.' . $key] = $value;
