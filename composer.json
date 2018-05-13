@@ -15,7 +15,7 @@
   "require": {
     "php": "^7.2",
     "bluepsyduck/common": "^1.0",
-    "factorio-item-browser/export-data": "dev-master",
+    "factorio-item-browser/export-data": "^1.1",
     "zendframework/zend-config-aggregator": "^1.0",
     "zendframework/zend-i18n": "^2.7",
     "zendframework/zend-servicemanager": "^3.3",

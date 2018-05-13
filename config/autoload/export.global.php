@@ -25,5 +25,7 @@ return [
         'instancesDirectory' => __DIR__ . '/../../factorio/instances',
         'numberOfAttempts' => 2,
         'numberOfInstances' => 4
-    ]
+    ],
+    'name' => 'Factorio Item Browser Export',
+    'version' => '1.0.0'
 ];
