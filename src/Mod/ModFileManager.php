@@ -24,7 +24,7 @@ class ModFileManager
     /**
      * The regular expression used for the dependencies.
      */
-    private const REGEXP_DEPENDENCY = '#^(\?)?\s*([a-zA-Z0-9\-_ ]+)\s*[<=>]*\s*([0-9.]*)$#';
+    private const REGEXP_DEPENDENCY = '#^(\?)?\s*([a-zA-Z0-9\-_ ]+)\s*([<=>]*)\s*([0-9.]*)$#';
 
     /**
      * The regular expression used for finding locale files.
@@ -181,9 +181,14 @@ class ModFileManager
         $mod->getTitles()->setTranslation('en', $jsonData->getString('title'));
         $mod->getDescriptions()->setTranslation('en', $jsonData->getString('description'));
 
+        $dependencies = [];
         foreach ($jsonData->getArray('dependencies') as $dependencyString) {
-            $mod->addDependency($this->parseDependency($mod, (string)$dependencyString));
+            $dependency = $this->parseDependency($mod, (string) $dependencyString);
+            if ($dependency instanceof Dependency) {
+                $dependencies[$dependency->getRequiredModName()] = $dependency;
+            }
         }
+        $mod->setDependencies($dependencies);
 
         // Always add the base dependency, because some mods forgot it.
         if ($mod->getName() !== 'base' && !$this->hasBaseDependency($mod)) {
@@ -231,10 +236,10 @@ class ModFileManager
      * Parses the specified dependency string.
      * @param Mod $mod
      * @param string $dependencyString
-     * @return Dependency
+     * @return Dependency|null
      * @throws ExportException
      */
-    protected function parseDependency(Mod $mod, string $dependencyString): Dependency
+    protected function parseDependency(Mod $mod, string $dependencyString): ?Dependency
     {
         if (preg_match(self::REGEXP_DEPENDENCY, trim($dependencyString), $match) === 0) {
             throw new ExportException(
@@ -242,11 +247,14 @@ class ModFileManager
             );
         }
 
-        $dependency = new Dependency();
-        $dependency
-            ->setRequiredModName(trim($match[2]))
-            ->setRequiredVersion(VersionUtils::normalize($match[3]))
-            ->setIsMandatory($match[1] !== '?');
+        $dependency = null;
+        if ($match[3] !== '<' && $match[3] !== '>') {
+            $dependency = new Dependency();
+            $dependency
+                ->setRequiredModName(trim($match[2]))
+                ->setRequiredVersion(VersionUtils::normalize($match[4]))
+                ->setIsMandatory($match[1] !== '?');
+        }
         return $dependency;
     }
 
