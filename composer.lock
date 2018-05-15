@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "a8988786a5d52517d09122af61a1711d",
+    "content-hash": "35b4346b0971cd2f9a2c672c4113de4c",
     "packages": [
         {
             "name": "bluepsyduck/common",
@@ -84,16 +84,16 @@
         },
         {
             "name": "factorio-item-browser/export-data",
-            "version": "1.1.0",
+            "version": "dev-feature/machines",
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-data.git",
-                "reference": "828248c8a86fb6637c0d04f1e025836b06bcb34c"
+                "reference": "8c9df1d4653e719378233d84f47d564f4267f27f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/828248c8a86fb6637c0d04f1e025836b06bcb34c",
-                "reference": "828248c8a86fb6637c0d04f1e025836b06bcb34c",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/8c9df1d4653e719378233d84f47d564f4267f27f",
+                "reference": "8c9df1d4653e719378233d84f47d564f4267f27f",
                 "shasum": ""
             },
             "require": {
@@ -102,7 +102,7 @@
             },
             "require-dev": {
                 "mikey179/vfsstream": "^1.6",
-                "phpunit/phpunit": "^6.0"
+                "phpunit/phpunit": "^7.1"
             },
             "type": "library",
             "autoload": {
@@ -128,7 +128,7 @@
                 "Factorio Item Browser",
                 "export"
             ],
-            "time": "2018-04-05T19:11:07+00:00"
+            "time": "2018-05-15T19:28:11+00:00"
         },
         {
             "name": "psr/container",
@@ -526,7 +526,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "factorio-item-browser/export-data": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

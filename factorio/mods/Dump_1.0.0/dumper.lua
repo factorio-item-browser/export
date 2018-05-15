@@ -80,6 +80,7 @@ local prepareRecipePrototype = function(recipe)
             description = recipe.localised_description
         },
         craftingTime = recipe.energy,
+        craftingCategory = recipe.category,
         ingredients = {},
         products = {}
     }

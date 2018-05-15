@@ -60,7 +60,8 @@ class RecipeParser extends AbstractParser
         $recipe
             ->setName($recipeData->getString('name'))
             ->setMode($mode)
-            ->setCraftingTime($recipeData->getFloat('craftingTime'));
+            ->setCraftingTime($recipeData->getFloat('craftingTime'))
+            ->setCraftingCategory($recipeData->getString('craftingCategory'));
 
         $this->translator->addTranslations(
             $recipe->getLabels(),
