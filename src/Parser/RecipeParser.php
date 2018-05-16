@@ -71,7 +71,7 @@ class RecipeParser extends AbstractParser
         );
         $this->translator->addTranslations(
             $recipe->getDescriptions(),
-            'name',
+            'description',
             $recipeData->get(['localised', 'description']),
             ''
         );

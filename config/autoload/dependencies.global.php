@@ -34,6 +34,7 @@ return [
 
             Merger\IconMerger::class => InvokableFactory::class,
             Merger\ItemMerger::class => InvokableFactory::class,
+            Merger\MachineMerger::class => InvokableFactory::class,
             Merger\MergerManager::class => Merger\MergerManagerFactory::class,
             Merger\RecipeMerger::class => InvokableFactory::class,
 
@@ -44,11 +45,13 @@ return [
 
             Parser\IconParser::class => Parser\AbstractParserFactory::class,
             Parser\ItemParser::class => Parser\AbstractParserFactory::class,
+            Parser\MachineParser::class => Parser\AbstractParserFactory::class,
             Parser\ParserManager::class => Parser\ParserManagerFactory::class,
             Parser\RecipeParser::class => Parser\AbstractParserFactory::class,
 
             Reducer\IconReducer::class => InvokableFactory::class,
             Reducer\ItemReducer::class => InvokableFactory::class,
+            Reducer\MachineReducer::class => InvokableFactory::class,
             Reducer\RecipeReducer::class => InvokableFactory::class,
             Reducer\ReducerManager::class => Reducer\ReducerManagerFactory::class,
 

@@ -22,6 +22,7 @@ class ReducerManagerFactory implements FactoryInterface
     const REDUCER_CLASSES = [
         ItemReducer::class,
         RecipeReducer::class,
+        MachineReducer::class,
         IconReducer::class,
     ];
 

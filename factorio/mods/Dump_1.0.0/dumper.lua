@@ -111,6 +111,25 @@ local prepareRecipePrototype = function(recipe)
     return result
 end
 
+-- Prepares the data of the specified machine entity prototype to be dumped.
+-- @param {LuaEntityPrototype}
+-- @return {table}
+local prepareMachinePrototype = function(machine)
+    local result = {
+        name = machine.name,
+        localised = {
+            name = machine.localised_name,
+            description = machine.localised_description
+        },
+        craftingCategories = machine.crafting_categories,
+        craftingSpeed = machine.crafting_speed,
+        numberOfIngredientSlots = machine.ingredient_count,
+        numberOfModuleSlots = machine.module_inventory_size,
+        energyUsage = defaultValue(machine.energy_usage, 0) * 60
+    }
+    return result
+end
+
 -- Dumps the specified data to the log.
 -- @param {string} name
 -- @param {table} data
@@ -123,5 +142,6 @@ return {
     prepareIcon = prepareIcon,
     prepareFluidPrototype = prepareFluidPrototype,
     prepareItemPrototype = prepareItemPrototype,
-    prepareRecipePrototype = prepareRecipePrototype
+    prepareRecipePrototype = prepareRecipePrototype,
+    prepareMachinePrototype = prepareMachinePrototype
 }
