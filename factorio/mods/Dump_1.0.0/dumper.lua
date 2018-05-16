@@ -22,13 +22,8 @@ local prepareIcon = function(prototype)
     end
 
     if (icons ~= nil) then
-        local type = prototype.type
-        if type ~= 'recipe' and type ~= 'fluid' and type ~= 'technology' then
-            type = 'item'
-        end
-
         result = {
-            type = type,
+            type = prototype.type,
             name = prototype.name,
             icons = icons
         }
