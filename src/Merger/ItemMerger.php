@@ -46,6 +46,9 @@ class ItemMerger extends AbstractMerger
             $destination->setIconHash($source->getIconHash());
         }
 
+        $destination->setProvidesRecipeLocalisation($source->getProvidesRecipeLocalisation())
+                    ->setProvidesMachineLocalisation($source->getProvidesMachineLocalisation());
+
         $this->mergeLocalisedString($destination->getLabels(), $source->getLabels());
         $this->mergeLocalisedString($destination->getDescriptions(), $source->getDescriptions());
         return $this;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\Machine;
 use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 
@@ -27,6 +28,8 @@ class MachineParser extends AbstractParser
         foreach ($dumpData->getObjectArray('machines') as $machineData) {
             $combinationData->addMachine($this->parseMachine($machineData));
         }
+
+        $this->removeDuplicateTranslations($combinationData);
         return $this;
     }
 
@@ -63,5 +66,26 @@ class MachineParser extends AbstractParser
             ''
         );
         return $machine;
+    }
+
+    /**
+     * Removes duplicate translations if the item are already providing them.
+     * @param CombinationData $combinationData
+     * @return $this
+     */
+    protected function removeDuplicateTranslations(CombinationData $combinationData)
+    {
+        foreach ($combinationData->getMachines() as $machine) {
+            $item = $combinationData->getItem('item', $machine->getName());
+            if ($item instanceof Item
+                && $this->areLocalisedStringsIdentical($item->getLabels(), $machine->getLabels())
+                && $this->areLocalisedStringsIdentical($item->getDescriptions(), $machine->getDescriptions())
+            ) {
+                $machine->getLabels()->readData(new DataContainer([]));
+                $machine->getDescriptions()->readData(new DataContainer([]));
+                $item->setProvidesMachineLocalisation(true);
+            }
+        }
+        return $this;
     }
 }
