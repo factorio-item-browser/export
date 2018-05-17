@@ -22,7 +22,7 @@ script.on_init(function()
 
     dump = {}
     for _, machine in pairs(game.entity_prototypes) do
-        if (machine.valid and (machine.crafting_categories ~= nil) and (machine.name ~= 'player')) then
+        if (machine.valid and (machine.crafting_categories ~= nil)) then
             local preparedMachine = dumper.prepareMachinePrototype(machine)
             dump[machine.name] = preparedMachine
         end

@@ -43,7 +43,7 @@ class MachineParser extends AbstractParser
         $machine = new Machine();
         $machine->setName($machineData->getString('name'))
                 ->setCraftingSpeed($machineData->getFloat('craftingSpeed', 1.))
-                ->setNumberOfIngredientSlots($machineData->getInteger('numberOfIngredientSlots', 1))
+                ->setNumberOfIngredientSlots($machineData->getInteger('numberOfIngredientSlots', 0))
                 ->setNumberOfModuleSlots($machineData->getInteger('numberOfModuleSlots', 0))
                 ->setEnergyUsage($machineData->getInteger('energyUsage', 0));
 
