@@ -122,6 +122,10 @@ local prepareMachinePrototype = function(machine)
         numberOfModuleSlots = machine.module_inventory_size,
         energyUsage = defaultValue(machine.energy_usage, 0) * 60
     }
+    if machine.type == 'furnace' then
+        -- Furnaces are forced to have exactly one ingredient slot, but it is not set in ingredient_count.
+        result.numberOfIngredientSlots = 1
+    end
     return result
 end
 
