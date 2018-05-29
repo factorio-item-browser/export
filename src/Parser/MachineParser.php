@@ -28,6 +28,12 @@ class MachineParser extends AbstractParser
         foreach ($dumpData->getObjectArray('machines') as $machineData) {
             $combinationData->addMachine($this->parseMachine($machineData));
         }
+        foreach ($dumpData->getObjectArray('fluidBoxes') as $fluidBoxData) {
+            $machine = $combinationData->getMachine($fluidBoxData->getString('name'));
+            if ($machine instanceof Machine) {
+                $this->parseFluidBox($machine, $fluidBoxData);
+            }
+        }
 
         $this->removeDuplicateTranslations($combinationData);
         return $this;
@@ -43,7 +49,7 @@ class MachineParser extends AbstractParser
         $machine = new Machine();
         $machine->setName($machineData->getString('name'))
                 ->setCraftingSpeed($machineData->getFloat('craftingSpeed', 1.))
-                ->setNumberOfIngredientSlots($machineData->getInteger('numberOfIngredientSlots', 0))
+                ->setNumberOfItemSlots($machineData->getInteger('numberOfItemSlots', 0))
                 ->setNumberOfModuleSlots($machineData->getInteger('numberOfModuleSlots', 0))
                 ->setEnergyUsage($machineData->getInteger('energyUsage', 0));
 
@@ -66,6 +72,19 @@ class MachineParser extends AbstractParser
             ''
         );
         return $machine;
+    }
+
+    /**
+     * Parses the fluid box data into the machine.
+     * @param Machine $machine
+     * @param DataContainer $fluidBoxData
+     * @return $this
+     */
+    protected function parseFluidBox(Machine $machine, DataContainer $fluidBoxData)
+    {
+        $machine->setNumberOfFluidInputSlots($fluidBoxData->getInteger('input'))
+                ->setNumberOfFluidOutputSlots($fluidBoxData->getInteger('output'));
+        return $this;
     }
 
     /**

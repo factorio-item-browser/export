@@ -88,12 +88,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-data.git",
-                "reference": "2a7a19e6984794dfa14e9246eb658907bfcc5d2b"
+                "reference": "65dd6eaf86a17c3edaee6aaf7831bad6df047a12"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/2a7a19e6984794dfa14e9246eb658907bfcc5d2b",
-                "reference": "2a7a19e6984794dfa14e9246eb658907bfcc5d2b",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/65dd6eaf86a17c3edaee6aaf7831bad6df047a12",
+                "reference": "65dd6eaf86a17c3edaee6aaf7831bad6df047a12",
                 "shasum": ""
             },
             "require": {
@@ -128,7 +128,7 @@
                 "Factorio Item Browser",
                 "export"
             ],
-            "time": "2018-05-17T16:53:51+00:00"
+            "time": "2018-05-28T19:09:54+00:00"
         },
         {
             "name": "psr/container",
