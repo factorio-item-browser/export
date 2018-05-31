@@ -41,7 +41,9 @@ class MachineReducer extends AbstractReducer
                     } else {
                         $machine->setCraftingCategories([])
                                 ->setCraftingSpeed(1.)
-                                ->setNumberOfIngredientSlots(1)
+                                ->setNumberOfItemSlots(0)
+                                ->setNumberOfFluidInputSlots(0)
+                                ->setNumberOfFluidOutputSlots(0)
                                 ->setNumberOfModuleSlots(0)
                                 ->setEnergyUsage(0);
                     }
@@ -66,7 +68,9 @@ class MachineReducer extends AbstractReducer
         $data = [
             'cc' => array_values($craftingCategories),
             'cs' => $machine->getCraftingSpeed(),
-            'ni' => $machine->getNumberOfIngredientSlots(),
+            'ni' => $machine->getNumberOfItemSlots(),
+            'fi' => $machine->getNumberOfFluidInputSlots(),
+            'fo' => $machine->getNumberOfFluidOutputSlots(),
             'nm' => $machine->getNumberOfModuleSlots(),
             'eu' => $machine->getEnergyUsage()
         ];

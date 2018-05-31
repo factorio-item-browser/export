@@ -48,7 +48,9 @@ class MachineMerger extends AbstractMerger
         if (count($source->getCraftingCategories()) > 0) {
             $destination->setCraftingCategories($source->getCraftingCategories())
                         ->setCraftingSpeed($source->getCraftingSpeed())
-                        ->setNumberOfIngredientSlots($source->getNumberOfIngredientSlots())
+                        ->setNumberOfItemSlots($source->getNumberOfItemSlots())
+                        ->setNumberOfFluidInputSlots($source->getNumberOfFluidInputSlots())
+                        ->setNumberOfFluidOutputSlots($source->getNumberOfFluidOutputSlots())
                         ->setNumberOfModuleSlots($source->getNumberOfModuleSlots())
                         ->setEnergyUsage($source->getEnergyUsage());
         }
