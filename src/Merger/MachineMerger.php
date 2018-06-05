@@ -52,7 +52,8 @@ class MachineMerger extends AbstractMerger
                         ->setNumberOfFluidInputSlots($source->getNumberOfFluidInputSlots())
                         ->setNumberOfFluidOutputSlots($source->getNumberOfFluidOutputSlots())
                         ->setNumberOfModuleSlots($source->getNumberOfModuleSlots())
-                        ->setEnergyUsage($source->getEnergyUsage());
+                        ->setEnergyUsage($source->getEnergyUsage())
+                        ->setEnergyUsageUnit($source->getEnergyUsageUnit());
         }
 
         $this->mergeLocalisedString($destination->getLabels(), $source->getLabels());

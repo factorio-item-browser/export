@@ -45,7 +45,8 @@ class MachineReducer extends AbstractReducer
                                 ->setNumberOfFluidInputSlots(0)
                                 ->setNumberOfFluidOutputSlots(0)
                                 ->setNumberOfModuleSlots(0)
-                                ->setEnergyUsage(0);
+                                ->setEnergyUsage(0)
+                                ->setEnergyUsageUnit('');
                     }
                 }
             }
@@ -72,7 +73,8 @@ class MachineReducer extends AbstractReducer
             'fi' => $machine->getNumberOfFluidInputSlots(),
             'fo' => $machine->getNumberOfFluidOutputSlots(),
             'nm' => $machine->getNumberOfModuleSlots(),
-            'eu' => $machine->getEnergyUsage()
+            'eu' => $machine->getEnergyUsage(),
+            'un' => $machine->getEnergyUsageUnit(),
         ];
         return hash('crc32b', json_encode($data));
     }

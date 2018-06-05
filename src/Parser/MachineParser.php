@@ -18,6 +18,11 @@ use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 class MachineParser extends AbstractParser
 {
     /**
+     * The units of the energy usage to use.
+     */
+    private const ENERGY_USAGE_UNITS = ['W', 'kW', 'MW', 'GW', 'TW', 'PW', 'EW', 'ZW', 'YW'];
+
+    /**
      * Parses the dump data into the combination.
      * @param CombinationData $combinationData
      * @param DataContainer $dumpData
@@ -50,14 +55,14 @@ class MachineParser extends AbstractParser
         $machine->setName($machineData->getString('name'))
                 ->setCraftingSpeed($machineData->getFloat('craftingSpeed', 1.))
                 ->setNumberOfItemSlots($machineData->getInteger('numberOfItemSlots', 0))
-                ->setNumberOfModuleSlots($machineData->getInteger('numberOfModuleSlots', 0))
-                ->setEnergyUsage($machineData->getInteger('energyUsage', 0));
+                ->setNumberOfModuleSlots($machineData->getInteger('numberOfModuleSlots', 0));
 
         foreach ($machineData->getArray('craftingCategories') as $craftingCategory => $isEnabled) {
             if ($isEnabled) {
                 $machine->addCraftingCategory($craftingCategory);
             }
         }
+        $this->parseEnergyUsage($machine, $machineData);
 
         $this->translator->addTranslations(
             $machine->getLabels(),
@@ -72,6 +77,29 @@ class MachineParser extends AbstractParser
             ''
         );
         return $machine;
+    }
+
+    /**
+     * Parses the energy usage into the specified machine.
+     * @param Machine $machine
+     * @param DataContainer $machineData
+     * @return $this
+     */
+    protected function parseEnergyUsage(Machine $machine, DataContainer $machineData)
+    {
+        $energyUsage = $machineData->getFloat('energyUsage', 0.); // Float because numbers may be bigger than 64bit
+        if ($energyUsage > 0) {
+            $units = self::ENERGY_USAGE_UNITS;
+            $currentUnit = array_shift($units);
+            while ($energyUsage >= 1000 && count($units) > 0) {
+                $energyUsage /= 1000;
+                $currentUnit = array_shift($units);
+            }
+
+            $machine->setEnergyUsage(round($energyUsage, 3))
+                    ->setEnergyUsageUnit($currentUnit);
+        }
+        return $this;
     }
 
     /**
