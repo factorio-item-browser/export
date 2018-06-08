@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "35b4346b0971cd2f9a2c672c4113de4c",
+    "content-hash": "9348a7a33032e93cbdd9e61fe475e57f",
     "packages": [
         {
             "name": "bluepsyduck/common",
@@ -84,16 +84,16 @@
         },
         {
             "name": "factorio-item-browser/export-data",
-            "version": "dev-feature/machines",
+            "version": "dev-develop",
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-data.git",
-                "reference": "a7eb0b3524c153188c750a5523195e03c2685a5e"
+                "reference": "b34b41fdfbf56958dbf9eeb739c13322e43a31fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/a7eb0b3524c153188c750a5523195e03c2685a5e",
-                "reference": "a7eb0b3524c153188c750a5523195e03c2685a5e",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/b34b41fdfbf56958dbf9eeb739c13322e43a31fb",
+                "reference": "b34b41fdfbf56958dbf9eeb739c13322e43a31fb",
                 "shasum": ""
             },
             "require": {
@@ -128,7 +128,7 @@
                 "Factorio Item Browser",
                 "export"
             ],
-            "time": "2018-06-05T15:24:54+00:00"
+            "time": "2018-06-08T15:51:26+00:00"
         },
         {
             "name": "psr/container",
