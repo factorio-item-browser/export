@@ -58,7 +58,7 @@ class MachineParser extends AbstractParser
                 ->setNumberOfModuleSlots($machineData->getInteger('numberOfModuleSlots', 0));
 
         foreach ($machineData->getArray('craftingCategories') as $craftingCategory => $isEnabled) {
-            if ($isEnabled) {
+            if ($isEnabled && strlen($craftingCategory) > 0) {
                 $machine->addCraftingCategory($craftingCategory);
             }
         }
