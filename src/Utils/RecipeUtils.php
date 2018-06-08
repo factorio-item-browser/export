@@ -24,7 +24,8 @@ class RecipeUtils
     static public function calculateHash(Recipe $recipe): string
     {
         $data = [
-            'ct' =>$recipe->getCraftingTime()
+            'ct' => $recipe->getCraftingTime(),
+            'cc' => $recipe->getCraftingCategory()
         ];
 
         $ingredients = $recipe->getIngredients();

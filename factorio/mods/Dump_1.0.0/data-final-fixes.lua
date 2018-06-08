@@ -1,20 +1,28 @@
 local dumper = require 'dumper'
-local dump = {}
+local dumpIcons = {}
+local dumpFluidBoxes = {}
 
-local function searchPrototypes(items)
-    if (type(items) == 'table') then
-        for _, item in pairs(items) do
-            if item.type ~= nil and item.name ~= nil then
-                local icons = dumper.prepareIcon(item)
-                if (icons ~= nil) then
-                    dump[icons.type .. '|' .. icons.name] = icons;
+-- Recursively searches for any prototypes to be dumped.
+-- @param {table} prototypes
+local function searchPrototypes(prototypes)
+    if (type(prototypes) == 'table') then
+        for _, prototype in pairs(prototypes) do
+            if prototype.type ~= nil and prototype.name ~= nil then
+                local icons = dumper.prepareIcon(prototype)
+                local fluidBoxes = dumper.prepareFluidBoxes(prototype)
+                if icons ~= nil then
+                    dumpIcons[icons.type .. '|' .. icons.name] = icons;
+                end
+                if fluidBoxes ~= nil then
+                    dumpFluidBoxes[fluidBoxes.type .. '|' .. fluidBoxes.name] = fluidBoxes;
                 end
             else
-                searchPrototypes(item)
+                searchPrototypes(prototype)
             end
         end
     end
 end
 
 searchPrototypes(data.raw)
-dumper.dump('ICONS', dump)
+dumper.dump('ICONS', dumpIcons)
+dumper.dump('FLUID_BOXES', dumpFluidBoxes)

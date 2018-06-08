@@ -126,7 +126,8 @@ class ExportModCommand implements CommandInterface
     {
         return count($combination->getData()->getItems()) === 0
             && count($combination->getData()->getRecipes()) === 0
-            && count($combination->getData()->getIcons()) === 0;
+            && count($combination->getData()->getIcons()) === 0
+            && count($combination->getData()->getMachines()) === 0;
     }
 
     /**

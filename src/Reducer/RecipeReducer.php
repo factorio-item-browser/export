@@ -43,7 +43,8 @@ class RecipeReducer extends AbstractReducer
                     } else {
                         $recipe->setIngredients([])
                                ->setProducts([])
-                               ->setCraftingTime(0.);
+                               ->setCraftingTime(0.)
+                               ->setCraftingCategory('');
                     }
                 }
             }

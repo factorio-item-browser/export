@@ -40,7 +40,9 @@ class DumpExtractor
                 'normal' => $this->extractDump($output, 'RECIPES_NORMAL'),
                 'expensive' => $this->extractDump($output, 'RECIPES_EXPENSIVE')
             ],
-            'icons' => $this->extractDump($output, 'ICONS')
+            'machines' => $this->extractDump($output, 'MACHINES'),
+            'icons' => $this->extractDump($output, 'ICONS'),
+            'fluidBoxes' => $this->extractDump($output, 'FLUID_BOXES')
         ]);
     }
 

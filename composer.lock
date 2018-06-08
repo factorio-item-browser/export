@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "a8988786a5d52517d09122af61a1711d",
+    "content-hash": "9348a7a33032e93cbdd9e61fe475e57f",
     "packages": [
         {
             "name": "bluepsyduck/common",
@@ -84,16 +84,16 @@
         },
         {
             "name": "factorio-item-browser/export-data",
-            "version": "1.1.0",
+            "version": "dev-develop",
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-data.git",
-                "reference": "828248c8a86fb6637c0d04f1e025836b06bcb34c"
+                "reference": "b34b41fdfbf56958dbf9eeb739c13322e43a31fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/828248c8a86fb6637c0d04f1e025836b06bcb34c",
-                "reference": "828248c8a86fb6637c0d04f1e025836b06bcb34c",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/b34b41fdfbf56958dbf9eeb739c13322e43a31fb",
+                "reference": "b34b41fdfbf56958dbf9eeb739c13322e43a31fb",
                 "shasum": ""
             },
             "require": {
@@ -102,7 +102,7 @@
             },
             "require-dev": {
                 "mikey179/vfsstream": "^1.6",
-                "phpunit/phpunit": "^6.0"
+                "phpunit/phpunit": "^7.1"
             },
             "type": "library",
             "autoload": {
@@ -128,7 +128,7 @@
                 "Factorio Item Browser",
                 "export"
             ],
-            "time": "2018-04-05T19:11:07+00:00"
+            "time": "2018-06-08T15:51:26+00:00"
         },
         {
             "name": "psr/container",
@@ -289,16 +289,16 @@
         },
         {
             "name": "zendframework/zend-i18n",
-            "version": "2.8.0",
+            "version": "2.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/zendframework/zend-i18n.git",
-                "reference": "cfdb658121e0d7eb969a498c2f67f1eacaab9c63"
+                "reference": "6d69af5a04e1a4de7250043cb1322f077a0cdb7f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/zendframework/zend-i18n/zipball/cfdb658121e0d7eb969a498c2f67f1eacaab9c63",
-                "reference": "cfdb658121e0d7eb969a498c2f67f1eacaab9c63",
+                "url": "https://api.github.com/repos/zendframework/zend-i18n/zipball/6d69af5a04e1a4de7250043cb1322f077a0cdb7f",
+                "reference": "6d69af5a04e1a4de7250043cb1322f077a0cdb7f",
                 "shasum": ""
             },
             "require": {
@@ -330,8 +330,8 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.8.x-dev",
-                    "dev-develop": "2.9.x-dev"
+                    "dev-master": "2.9.x-dev",
+                    "dev-develop": "2.10.x-dev"
                 },
                 "zf": {
                     "component": "Zend\\I18n",
@@ -353,7 +353,7 @@
                 "i18n",
                 "zf"
             ],
-            "time": "2018-04-25T19:32:43+00:00"
+            "time": "2018-05-16T16:39:13+00:00"
         },
         {
             "name": "zendframework/zend-servicemanager",
@@ -526,7 +526,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "factorio-item-browser/export-data": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

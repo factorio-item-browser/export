@@ -22,6 +22,7 @@ class ParserManagerFactory implements FactoryInterface
     const PARSER_CLASSES = [
         ItemParser::class,
         RecipeParser::class,
+        MachineParser::class,
         IconParser::class,
     ];
 
