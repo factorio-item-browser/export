@@ -79,18 +79,27 @@ class IconParser extends AbstractParser
     protected function parseLayer(DataContainer $layerData): Layer
     {
         $layer = new Layer();
-        $layer
-            ->setFileName($layerData->getString('icon'))
-            ->setOffsetX($layerData->getInteger(['shift', 0], 0))
-            ->setOffsetY($layerData->getInteger(['shift', 1], 0))
-            ->setScale($layerData->getFloat('scale', 1.));
+        $layer->setFileName($layerData->getString('icon'))
+              ->setOffsetX($layerData->getInteger(['shift', 0], 0))
+              ->setOffsetY($layerData->getInteger(['shift', 1], 0))
+              ->setScale($layerData->getFloat('scale', 1.));
 
         $layer->getTintColor()
-            ->setRed($layerData->getFloat(['tint', 'r'], 1.))
-            ->setGreen($layerData->getFloat(['tint', 'g'], 1.))
-            ->setBlue($layerData->getFloat(['tint', 'b'], 1.))
-            ->setAlpha($layerData->getFloat(['tint', 'a'], 1.));
+              ->setRed($this->convertColorValue($layerData->getFloat(['tint', 'r'], 1.)))
+              ->setGreen($this->convertColorValue($layerData->getFloat(['tint', 'g'], 1.)))
+              ->setBlue($this->convertColorValue($layerData->getFloat(['tint', 'b'], 1.)))
+              ->setAlpha($this->convertColorValue($layerData->getFloat(['tint', 'a'], 1.)));
         return $layer;
+    }
+
+    /**
+     * Converts the specified color value to the range between 0 and 1.
+     * @param float $value
+     * @return float
+     */
+    protected function convertColorValue(float $value): float
+    {
+        return ($value > 1) ? ($value / 255.) : $value;
     }
 
     /**
