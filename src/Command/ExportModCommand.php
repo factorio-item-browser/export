@@ -138,8 +138,8 @@ class ExportModCommand implements CommandInterface
     protected function renderIcons(Combination $combination)
     {
         foreach ($combination->getData()->getIcons() as $icon) {
-            $content = $this->iconRenderer->render($icon, 32, 32);
-            $this->exportDataService->saveIcon($icon->getIconHash(), $content);
+            $content = $this->iconRenderer->render($icon, 32);
+            $this->exportDataService->saveIcon($icon->getHash(), $content);
         }
         return $this;
     }

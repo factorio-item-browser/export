@@ -67,7 +67,8 @@ class IconParser extends AbstractParser
         foreach ($iconData->getObjectArray('icons') as $layerData) {
             $icon->addLayer($this->parseLayer($layerData));
         }
-        $icon->setIconHash($this->calculateHash($icon));
+        $icon->setSize($iconData->getInteger('iconSize', Icon::DEFAULT_SIZE))
+             ->setHash($this->calculateHash($icon));
         return $icon;
     }
 
@@ -112,6 +113,7 @@ class IconParser extends AbstractParser
         $data = array_map(function(Layer $layer): array {
             return $layer->writeData();
         }, $icon->getLayers());
+        $data[] = $icon->getSize();
         return hash('crc32b', json_encode($data));
     }
 
@@ -126,8 +128,8 @@ class IconParser extends AbstractParser
     protected function processIcon(CombinationData $combinationData, $entity, Icon $icon, bool $preferredMatch)
     {
         if (!is_null($entity) && ($preferredMatch || strlen($entity->getIconHash()) === 0)) {
-            $entity->setIconHash($icon->getIconHash());
-            if (!$combinationData->getIcon($icon->getIconHash()) instanceof Icon) {
+            $entity->setIconHash($icon->getHash());
+            if (!$combinationData->getIcon($icon->getHash()) instanceof Icon) {
                 $combinationData->addIcon($icon);
             }
         }
