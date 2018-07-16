@@ -24,8 +24,8 @@ class IconReducer extends AbstractReducer
     public function reduce(CombinationData $combination, CombinationData $parentCombination)
     {
         foreach ($parentCombination->getIcons() as $parentIcon) {
-            if ($combination->getIcon($parentIcon->getIconHash()) instanceof Icon) {
-                $combination->removeIcon($parentIcon->getIconHash());
+            if ($combination->getIcon($parentIcon->getHash()) instanceof Icon) {
+                $combination->removeIcon($parentIcon->getHash());
             }
         }
         $combination->setIcons(array_values($combination->getIcons()));

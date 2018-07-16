@@ -42,18 +42,18 @@ class IconRenderer
     /**
      * Renders the specified icon.
      * @param Icon $icon
-     * @param int $width
-     * @param int $height
+     * @param int $size
      * @return string
      * @throws ExportException
      */
-    public function render(Icon $icon, int $width, int $height): string
+    public function render(Icon $icon, int $size): string
     {
-        $image = $this->createTransparentLayer($width, $height);
+        $image = $this->createTransparentLayer($icon->getSize());
         try {
             foreach ($icon->getLayers() as $layer) {
-                $this->renderLayer($image, $layer, $width, $height);
+                $this->renderLayer($image, $layer, $icon->getSize());
             }
+            $image = $this->resizeImage($image, $icon->getSize(), $size);
             $imageContent = $this->getImageContents($image);
         } finally {
             imagedestroy($image);
@@ -63,16 +63,15 @@ class IconRenderer
 
     /**
      * Creates and returns a transparent layer ready to be drawn on.
-     * @param int $width
-     * @param int $height
+     * @param int $size
      * @return resource
      */
-    protected function createTransparentLayer(int $width, int $height)
+    protected function createTransparentLayer(int $size)
     {
-        $layer = imagecreatetruecolor($width, $height);
+        $layer = imagecreatetruecolor($size, $size);
         $transparent = imagecolorallocatealpha($layer, 255, 255, 255, 127);
         imagealphablending($layer, false);
-        imagefilledrectangle($layer, 0, 0, $width, $height, $transparent);
+        imagefilledrectangle($layer, 0, 0, $size, $size, $transparent);
         return $layer;
     }
 
@@ -80,16 +79,15 @@ class IconRenderer
      * Renders the specified layer to the image.
      * @param resource $image
      * @param Layer $layer
-     * @param int $width
-     * @param int $height
+     * @param int $size
      * @return $this
      * @throws ExportException
      */
-    protected function renderLayer($image, Layer $layer, int $width, int $height)
+    protected function renderLayer($image, Layer $layer, $size)
     {
-        $layerImage = $this->createdScaledLayerImage($layer, $width, $height);
+        $layerImage = $this->createdScaledLayerImage($layer, $size);
         try {
-            $this->applyTintedLayer($image, $layerImage, $layer->getTintColor(), $width, $height);
+            $this->applyTintedLayer($image, $layerImage, $layer->getTintColor(), $size);
         } finally {
             imagedestroy($layerImage);
         }
@@ -99,14 +97,13 @@ class IconRenderer
     /**
      * Creates the scaled image of the specified layer.
      * @param Layer $layer
-     * @param int $width
-     * @param int $height
+     * @param int $size
      * @return resource
      * @throws ExportException
      */
-    protected function createdScaledLayerImage(Layer $layer, int $width, int $height)
+    protected function createdScaledLayerImage(Layer $layer, int $size)
     {
-        $image = $this->createTransparentLayer($width, $height);
+        $image = $this->createTransparentLayer($size);
 
         $layerImageContents = $this->loadLayerImage($layer->getFileName());
         $layerImage = imagecreatefromstring($layerImageContents);
@@ -114,8 +111,8 @@ class IconRenderer
         $layerHeight = imagesy($layerImage);
 
         $scale = $layer->getScale();
-        $x = ($width - $layerWidth * $scale) / 2 + $layer->getOffsetX();
-        $y = ($height - $height * $scale) / 2 + $layer->getOffsetY();
+        $x = ($size - $layerWidth * $scale) / 2 + $layer->getOffsetX();
+        $y = ($size - $layerHeight * $scale) / 2 + $layer->getOffsetY();
 
         imagealphablending($image, true);
         imagecopyresampled(
@@ -158,15 +155,14 @@ class IconRenderer
      * @param resource $image
      * @param resource $layerImage
      * @param Color $tnt
-     * @param int $width
-     * @param int $height
+     * @param int $size
      * @return $this
      */
-    protected function applyTintedLayer($image, $layerImage, Color $tnt, int $width, int $height)
+    protected function applyTintedLayer($image, $layerImage, Color $tnt, int $size)
     {
         imagealphablending($image, false);
-        for ($x = 0; $x < $width; ++$x) {
-            for ($y = 0; $y < $height; ++$y) {
+        for ($x = 0; $x < $size; ++$x) {
+            for ($y = 0; $y < $size; ++$y) {
                 $dst = $this->createColorFromPixel($image, $x, $y);
                 $src = $this->createColorFromPixel($layerImage, $x, $y);
 
@@ -213,6 +209,36 @@ class IconRenderer
             ->setAlpha($color['alpha'], -127);
 
         return $result;
+    }
+
+    /**
+     * Resize the image to the specified size.
+     * @param resource $image
+     * @param int $originalSize
+     * @param int $requestedSize
+     * @return resource
+     */
+    protected function resizeImage($image, int $originalSize, int $requestedSize)
+    {
+        if ($originalSize !== $requestedSize) {
+            $newImage = $this->createTransparentLayer($requestedSize);
+            imagealphablending($newImage, true);
+            imagecopyresampled(
+                $newImage,
+                $image,
+                0,
+                0,
+                0,
+                0,
+                $requestedSize,
+                $requestedSize,
+                $originalSize,
+                $originalSize
+            );
+            imagedestroy($image);
+            $image = $newImage;
+        }
+        return $image;
     }
 
     /**

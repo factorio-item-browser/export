@@ -25,7 +25,8 @@ local prepareIcon = function(prototype)
         result = {
             type = prototype.type,
             name = prototype.name,
-            icons = icons
+            icons = icons,
+            iconSize = prototype.icon_size
         }
     end
     return result
