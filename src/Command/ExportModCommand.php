@@ -68,8 +68,7 @@ class ExportModCommand implements CommandInterface
         FactorioManager $factorioManager,
         IconRenderer $iconRenderer,
         Translator $translator
-    )
-    {
+    ) {
         $this->exportDataService = $exportDataService;
         $this->combinationCreator = $combinationCreator;
         $this->factorioManager = $factorioManager;

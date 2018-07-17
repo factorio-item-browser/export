@@ -110,7 +110,7 @@ class IconParser extends AbstractParser
      */
     protected function calculateHash(Icon $icon): string
     {
-        $data = array_map(function(Layer $layer): array {
+        $data = array_map(function (Layer $layer): array {
             return $layer->writeData();
         }, $icon->getLayers());
         $data[] = $icon->getSize();

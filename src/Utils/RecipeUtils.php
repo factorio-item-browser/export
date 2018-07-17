@@ -21,7 +21,7 @@ class RecipeUtils
      * @param Recipe $recipe
      * @return string
      */
-    static public function calculateHash(Recipe $recipe): string
+    public static function calculateHash(Recipe $recipe): string
     {
         $data = [
             'ct' => $recipe->getCraftingTime(),

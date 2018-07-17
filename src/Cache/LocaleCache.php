@@ -33,7 +33,7 @@ class LocaleCache extends AbstractCache
     {
         $result = [];
         if ($this->has($modName)) {
-            $result = require ($this->getCacheFileName($modName));
+            $result = require($this->getCacheFileName($modName));
         }
         return $result;
     }

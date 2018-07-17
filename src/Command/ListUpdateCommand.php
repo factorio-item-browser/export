@@ -47,8 +47,7 @@ class ListUpdateCommand implements CommandInterface
         ExportDataService $exportDataService,
         ModFileManager $modFileManager,
         array $caches
-    )
-    {
+    ) {
         $this->exportDataService = $exportDataService;
         $this->modFileManager = $modFileManager;
         $this->caches = $caches;

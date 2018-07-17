@@ -20,7 +20,7 @@ class VersionUtils
      * @param string $version
      * @return string
      */
-    static public function normalize($version)
+    public static function normalize($version)
     {
         return implode('.', self::splitVersion($version));
     }
@@ -31,7 +31,7 @@ class VersionUtils
      * @param string $rightVersion
      * @return int 1 if the left version is greater, -1 if the right one is greater, or 0 if they are equal.
      */
-    static public function compare($leftVersion, $rightVersion)
+    public static function compare($leftVersion, $rightVersion)
     {
         $leftParts = self::splitVersion($leftVersion);
         $rightParts = self::splitVersion($rightVersion);
@@ -48,7 +48,7 @@ class VersionUtils
      * @param string $version
      * @return array|int[]
      */
-    static protected function splitVersion($version)
+    protected static function splitVersion($version)
     {
         $defaultParts = array_fill(0, self::VERSION_PART_COUNT, 0);
         $parts = array_map('intval', explode('.', $version));
@@ -61,7 +61,7 @@ class VersionUtils
      * @param string $rightVersion
      * @return string
      */
-    static public function getGreater($leftVersion, $rightVersion)
+    public static function getGreater($leftVersion, $rightVersion)
     {
         return self::compare($leftVersion, $rightVersion) > 0 ? $leftVersion : $rightVersion;
     }

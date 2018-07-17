@@ -69,8 +69,7 @@ class CombinationCreator
         ExportDataService $exportDataService,
         DependencyResolver $dependencyResolver,
         ParentCombinationFinder $parentCombinationFinder
-    )
-    {
+    ) {
         $this->exportDataService = $exportDataService;
         $this->dependencyResolver = $dependencyResolver;
         $this->parentCombinationFinder = $parentCombinationFinder;

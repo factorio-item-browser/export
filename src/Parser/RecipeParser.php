@@ -38,7 +38,8 @@ class RecipeParser extends AbstractParser
         foreach ($dumpData->getObjectArray(['recipes', 'expensive']) as $recipeData) {
             $recipe = $this->parseRecipe($recipeData, 'expensive');
             if (!isset($normalRecipes[$recipe->getName()])
-                || RecipeUtils::calculateHash($recipe) !== RecipeUtils::calculateHash($normalRecipes[$recipe->getName()])
+                || RecipeUtils::calculateHash($recipe)
+                    !== RecipeUtils::calculateHash($normalRecipes[$recipe->getName()])
             ) {
                 $combinationData->addRecipe($recipe);
             }
