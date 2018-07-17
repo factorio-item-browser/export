@@ -30,9 +30,6 @@
     }
   },
   "scripts": {
-    "check": [
-      "@phpcs"
-    ],
     "install-factorio": "bin/install-factorio.sh",
     "run": "@php bin/cli.php",
     "phpcbf": "phpcbf -p --colors",
@@ -40,6 +37,9 @@
     "post-autoload-dump": [
       "mkdir -p data/cache data/export factorio/instances",
       "chmod 0777 data/cache data/export factorio/instances factorio/mods/Dump_1.0.0"
+    ],
+    "test": [
+      "@phpcs"
     ]
   }
 }
