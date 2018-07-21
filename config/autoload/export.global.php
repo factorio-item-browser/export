@@ -27,5 +27,5 @@ return [
         'numberOfInstances' => 4
     ],
     'name' => 'Factorio Item Browser Export',
-    'version' => '1.0.0'
+    'version' => '1.1.0'
 ];

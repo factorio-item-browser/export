@@ -64,8 +64,7 @@ class Translator
         LocaleCache $localeCache,
         ModFileManager $modFileManager,
         ZendTranslator $placeHolderTranslator
-    )
-    {
+    ) {
         $this->localeCache = $localeCache;
         $this->modFileManager = $modFileManager;
         $this->placeholderTranslator = $placeHolderTranslator;

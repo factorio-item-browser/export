@@ -68,8 +68,7 @@ class ExportModCommand implements CommandInterface
         FactorioManager $factorioManager,
         IconRenderer $iconRenderer,
         Translator $translator
-    )
-    {
+    ) {
         $this->exportDataService = $exportDataService;
         $this->combinationCreator = $combinationCreator;
         $this->factorioManager = $factorioManager;
@@ -126,7 +125,8 @@ class ExportModCommand implements CommandInterface
     {
         return count($combination->getData()->getItems()) === 0
             && count($combination->getData()->getRecipes()) === 0
-            && count($combination->getData()->getIcons()) === 0;
+            && count($combination->getData()->getIcons()) === 0
+            && count($combination->getData()->getMachines()) === 0;
     }
 
     /**
@@ -137,8 +137,8 @@ class ExportModCommand implements CommandInterface
     protected function renderIcons(Combination $combination)
     {
         foreach ($combination->getData()->getIcons() as $icon) {
-            $content = $this->iconRenderer->render($icon, 32, 32);
-            $this->exportDataService->saveIcon($icon->getIconHash(), $content);
+            $content = $this->iconRenderer->render($icon, 32);
+            $this->exportDataService->saveIcon($icon->getHash(), $content);
         }
         return $this;
     }

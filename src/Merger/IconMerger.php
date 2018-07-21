@@ -24,7 +24,7 @@ class IconMerger extends AbstractMerger
     public function merge(CombinationData $destination, CombinationData $source)
     {
         foreach ($source->getIcons() as $sourceIcon) {
-            if (!$destination->getIcon($sourceIcon->getIconHash()) instanceof Icon) {
+            if (!$destination->getIcon($sourceIcon->getHash()) instanceof Icon) {
                 $destination->addIcon(clone($sourceIcon));
             }
         }

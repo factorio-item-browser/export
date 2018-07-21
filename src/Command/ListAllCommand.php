@@ -41,7 +41,7 @@ class ListAllCommand implements CommandInterface
     public function __invoke(Route $route, AdapterInterface $console)
     {
         $mods = $this->exportDataService->getMods();
-        usort($mods, function(Mod $left, Mod $right): int {
+        usort($mods, function (Mod $left, Mod $right): int {
             return $left->getOrder() <=> $right->getOrder();
         });
 

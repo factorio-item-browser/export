@@ -7,7 +7,6 @@ namespace FactorioItemBrowser\Export\Parser;
 use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Export\Utils\RecipeUtils;
 use FactorioItemBrowser\ExportData\Entity\Item;
-use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient;
@@ -39,7 +38,8 @@ class RecipeParser extends AbstractParser
         foreach ($dumpData->getObjectArray(['recipes', 'expensive']) as $recipeData) {
             $recipe = $this->parseRecipe($recipeData, 'expensive');
             if (!isset($normalRecipes[$recipe->getName()])
-                || RecipeUtils::calculateHash($recipe) !== RecipeUtils::calculateHash($normalRecipes[$recipe->getName()])
+                || RecipeUtils::calculateHash($recipe)
+                    !== RecipeUtils::calculateHash($normalRecipes[$recipe->getName()])
             ) {
                 $combinationData->addRecipe($recipe);
             }
@@ -60,7 +60,8 @@ class RecipeParser extends AbstractParser
         $recipe
             ->setName($recipeData->getString('name'))
             ->setMode($mode)
-            ->setCraftingTime($recipeData->getFloat('craftingTime'));
+            ->setCraftingTime($recipeData->getFloat('craftingTime'))
+            ->setCraftingCategory($recipeData->getString('craftingCategory'));
 
         $this->translator->addTranslations(
             $recipe->getLabels(),
@@ -70,7 +71,7 @@ class RecipeParser extends AbstractParser
         );
         $this->translator->addTranslations(
             $recipe->getDescriptions(),
-            'name',
+            'description',
             $recipeData->get(['localised', 'description']),
             ''
         );
@@ -160,27 +161,5 @@ class RecipeParser extends AbstractParser
             }
         }
         return $this;
-    }
-
-    /**
-     * Checks whether the child string duplicates the parent one.
-     * @param LocalisedString $leftString
-     * @param LocalisedString $rightString
-     * @return bool
-     */
-    protected function areLocalisedStringsIdentical(LocalisedString $leftString, LocalisedString $rightString): bool
-    {
-        $result = true;
-        foreach ($leftString->getTranslations() as $locale => $leftTranslation) {
-            $rightTranslation = $rightString->getTranslation($locale);
-
-            if (strlen($leftTranslation) > 0 && strlen($rightTranslation) > 0
-                && $leftTranslation !== $rightTranslation
-            ) {
-                $result = false;
-                break;
-            }
-        }
-        return $result;
     }
 }

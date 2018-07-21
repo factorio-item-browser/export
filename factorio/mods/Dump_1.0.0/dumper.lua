@@ -8,7 +8,7 @@ local defaultValue = function(value, defaultValue)
     return result
 end
 
--- Adds an icon to be used later.
+-- Prepares the icon of the specified prototype.
 -- @param {table} prototype
 -- @return {table|nil}
 local prepareIcon = function(prototype)
@@ -22,20 +22,42 @@ local prepareIcon = function(prototype)
     end
 
     if (icons ~= nil) then
-        local type = prototype.type
-        if type ~= 'recipe' and type ~= 'fluid' and type ~= 'technology' then
-            type = 'item'
-        end
-
         result = {
-            type = type,
+            type = prototype.type,
             name = prototype.name,
-            icons = icons
+            icons = icons,
+            iconSize = prototype.icon_size
         }
     end
     return result
 end
 
+-- prepares the fluid boxes of the specified prototype.
+-- @param {table} prototype
+-- @return {table|nil}
+local prepareFluidBoxes = function(prototype)
+    local result
+
+    if type(prototype.fluid_boxes) == 'table' then
+        result = {
+            type = prototype.type,
+            name = prototype.name,
+            input = 0,
+            output = 0
+        }
+
+        for _, fluidBox in pairs(prototype.fluid_boxes) do
+            if (type(fluidBox) == 'table') then
+                if fluidBox.production_type == 'input' then
+                    result.input = result.input + 1
+                elseif fluidBox.production_type == 'output' then
+                    result.output = result.output + 1
+                end
+            end
+        end
+    end
+    return result
+end
 
 -- Prepares the data of the specified fluid prototype to be dumped as item.
 -- @param {LuaFluidPrototype} fluid
@@ -80,6 +102,7 @@ local prepareRecipePrototype = function(recipe)
             description = recipe.localised_description
         },
         craftingTime = recipe.energy,
+        craftingCategory = recipe.category,
         ingredients = {},
         products = {}
     }
@@ -110,6 +133,36 @@ local prepareRecipePrototype = function(recipe)
     return result
 end
 
+-- Prepares the data of the specified machine entity prototype to be dumped.
+-- @param {LuaEntityPrototype}
+-- @return {table}
+local prepareMachinePrototype = function(machine)
+    local result = {
+        name = machine.name,
+        localised = {
+            name = machine.localised_name,
+            description = machine.localised_description
+        },
+        craftingCategories = machine.crafting_categories,
+        craftingSpeed = machine.crafting_speed,
+        numberOfItemSlots = 0,
+        numberOfModuleSlots = machine.module_inventory_size,
+        energyUsage = defaultValue(machine.energy_usage, 0) * 60
+    }
+
+    if machine.type == 'furnace' then
+        -- Furnaces are forced to have exactly one ingredient slot, but it is not set in ingredient_count.
+        result.numberOfItemSlots = 1
+    elseif machine.ingredient_count == nil then
+        -- -1 means unlimited slots. Mostly only the player.
+        result.numberOfItemSlots = -1
+    else
+        result.numberOfItemSlots = machine.ingredient_count
+    end
+
+    return result
+end
+
 -- Dumps the specified data to the log.
 -- @param {string} name
 -- @param {table} data
@@ -120,7 +173,9 @@ end
 return {
     dump = dump,
     prepareIcon = prepareIcon,
+    prepareFluidBoxes = prepareFluidBoxes,
     prepareFluidPrototype = prepareFluidPrototype,
     prepareItemPrototype = prepareItemPrototype,
-    prepareRecipePrototype = prepareRecipePrototype
+    prepareRecipePrototype = prepareRecipePrototype,
+    prepareMachinePrototype = prepareMachinePrototype
 }

@@ -21,6 +21,19 @@ script.on_init(function()
 
 
     dump = {}
+    for _, machine in pairs(game.entity_prototypes) do
+        if (machine.valid and (machine.crafting_categories ~= nil)) then
+            -- Only allow the player called "player" and ignore all other pseudo-players
+            if (machine.type ~= 'player' or machine.name == 'player') then
+                local preparedMachine = dumper.prepareMachinePrototype(machine)
+                dump[machine.name] = preparedMachine
+            end
+        end
+    end
+    dumper.dump('MACHINES', dump)
+
+
+    dump = {}
     game.difficulty_settings.recipe_difficulty = defines.difficulty_settings.recipe_difficulty.normal
     for _, recipe in pairs(game.recipe_prototypes) do
         if (recipe.valid) then

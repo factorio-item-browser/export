@@ -47,7 +47,8 @@ class RecipeMerger extends AbstractMerger
             $destination
                 ->setIngredients($clonedSource->getIngredients())
                 ->setProducts($clonedSource->getProducts())
-                ->setCraftingTime($clonedSource->getCraftingTime());
+                ->setCraftingTime($clonedSource->getCraftingTime())
+                ->setCraftingCategory($clonedSource->getCraftingCategory());
         }
 
         if (strlen($source->getIconHash()) > 0) {

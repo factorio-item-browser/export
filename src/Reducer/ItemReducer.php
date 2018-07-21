@@ -36,6 +36,7 @@ class ItemReducer extends AbstractReducer
                     && count($item->getDescriptions()->getTranslations()) === 0
                     && strlen($item->getIconHash()) === 0
                     && $item->getProvidesRecipeLocalisation() === $parentItem->getProvidesRecipeLocalisation()
+                    && $item->getProvidesMachineLocalisation() === $parentItem->getProvidesMachineLocalisation()
                 ) {
                     $combination->removeItem($item->getType(), $item->getName());
                 }

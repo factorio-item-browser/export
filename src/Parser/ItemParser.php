@@ -53,7 +53,7 @@ class ItemParser extends AbstractParser
         );
         $this->translator->addTranslations(
             $item->getDescriptions(),
-            'name',
+            'description',
             $itemData->get(['localised', 'description']),
             $itemData->get(['localised', 'entityDescription'])
         );
