@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "cd3ddf4697be6d77cc7c0193d17b7dca",
+    "content-hash": "83205233a5871a8ec06cd9f1ffeba1bd",
     "packages": [
         {
             "name": "bluepsyduck/common",
@@ -85,16 +85,16 @@
         },
         {
             "name": "factorio-item-browser/export-data",
-            "version": "dev-develop",
+            "version": "1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-data.git",
-                "reference": "8f6b6bc1a4baf24283aa2f0d9a102ff42dd946fe"
+                "reference": "b53a72c611154832bd94a63a928572f3c3293077"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/8f6b6bc1a4baf24283aa2f0d9a102ff42dd946fe",
-                "reference": "8f6b6bc1a4baf24283aa2f0d9a102ff42dd946fe",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/b53a72c611154832bd94a63a928572f3c3293077",
+                "reference": "b53a72c611154832bd94a63a928572f3c3293077",
                 "shasum": ""
             },
             "require": {
@@ -130,7 +130,7 @@
                 "Factorio Item Browser",
                 "export"
             ],
-            "time": "2018-07-16T16:53:02+00:00"
+            "time": "2018-07-21T07:57:14+00:00"
         },
         {
             "name": "psr/container",
@@ -580,9 +580,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "factorio-item-browser/export-data": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
