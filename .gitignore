@@ -1,5 +1,6 @@
 /.idea
 /data/*
+/test/log
 /vendor
 
 /factorio/*

@@ -5,13 +5,18 @@ matrix:
   include:
     - php: 7.2
 
+cache:
+  directories:
+    - $HOME/.composer/cache/files
+
 install:
-  - composer update --no-interaction
+  - composer install --prefer-dist --no-interaction
 
 script:
+  - composer validate --strict
 #  - vendor/bin/phpunit --coverage-clover=coverage.xml
   - vendor/bin/phpcs -np --colors
+#  - vendor/bin/phpstan analyse --no-interaction
 
-#after_success:
+#after_script:
 #  - bash <(curl -s https://codecov.io/bash)
-
