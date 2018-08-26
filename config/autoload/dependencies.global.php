@@ -10,7 +10,6 @@ namespace FactorioItemBrowser\Export;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-use FactorioItemBrowser\ExportData\Service\ExportDataService;
 use Zend\ServiceManager\Factory\InvokableFactory;
 
 return [
@@ -23,6 +22,9 @@ return [
             Command\ListAllCommand::class => Command\ListAllCommandFactory::class,
             Command\ListMissingCommand::class => Command\ListMissingCommandFactory::class,
             Command\ListUpdateCommand::class => Command\ListUpdateCommandFactory::class,
+
+            ExportData\RawExportDataService::class => ExportData\RawExportDataServiceFactory::class,
+            ExportData\ReducedExportDataService::class => ExportData\ReducedExportDataServiceFactory::class,
 
             Factorio\DumpExtractor::class => InvokableFactory::class,
             Factorio\FactorioManager::class => Factorio\FactorioManagerFactory::class,
@@ -56,9 +58,6 @@ return [
             Reducer\ReducerManager::class => Reducer\ReducerManagerFactory::class,
 
             Renderer\IconRenderer::class => Renderer\IconRendererFactory::class,
-
-            // 3rd-party dependencies
-            ExportDataService::class => ExportData\ExportDataServiceFactory::class,
         ],
     ]
 ];

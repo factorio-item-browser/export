@@ -16,8 +16,13 @@ return [
             'locale' => __DIR__ . '/../../data/cache/locale',
         ]
     ],
-    'exportData' => [
-        'directory' => __DIR__ . '/../../data/export',
+    'export-data' => [
+        'raw' => [
+            'directory' => __DIR__ . '/../../data/export/raw',
+        ],
+        'reduced' => [
+            'directory' => __DIR__ . '/../../data/export/reduced',
+        ]
     ],
     'factorio' => [
         'factorioDirectory' => __DIR__ . '/../../factorio',
