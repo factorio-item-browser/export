@@ -26,6 +26,7 @@
     "zfcampus/zf-console": "^1.3"
   },
   "require-dev": {
+    "mikey179/vfsStream": "^1.6",
     "phpstan/phpstan": "^0.10",
     "phpstan/phpstan-phpunit": "^0.10",
     "phpstan/phpstan-strict-rules": "^0.10",
@@ -35,7 +36,11 @@
   },
   "autoload": {
     "psr-4": {
-      "FactorioItemBrowser\\Export\\": "src",
+      "FactorioItemBrowser\\Export\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
       "FactorioItemBrowserTest\\Export\\": "test/src"
     }
   },

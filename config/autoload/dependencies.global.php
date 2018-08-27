@@ -16,6 +16,9 @@ return [
     'dependencies' => [
         'factories'  => [
             Cache\LocaleCache::class => Cache\LocaleCacheFactory::class,
+            Cache\ModFileCache::class => Cache\ModFileCacheFactory::class,
+
+            Command\Clean\CleanCacheCommand::class => Command\Clean\CleanCacheCommandFactory::class,
 
             Command\ExportAllCommand::class => Command\ExportAllCommandFactory::class,
             Command\ExportModCommand::class => Command\ExportModCommandFactory::class,

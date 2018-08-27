@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\ExportData;
+namespace FactorioItemBrowserTest\Export\Cache;
 
-use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
-use FactorioItemBrowser\Export\ExportData\ReducedExportDataServiceFactory;
+use FactorioItemBrowser\Export\Cache\ModFileCache;
+use FactorioItemBrowser\Export\Cache\ModFileCacheFactory;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The PHPUnit test of the ReducedExportDataServiceFactory class.
+ * The PHPUnit test of the ModFileCacheFactory class.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\ExportData\ReducedExportDataServiceFactory
+ * @coversDefaultClass \FactorioItemBrowser\Export\Cache\ModFileCacheFactory
  */
-class ReducedExportDataServiceFactoryTest extends TestCase
+class ModFileCacheFactoryTest extends TestCase
 {
     /**
      * Tests the invoking.
@@ -26,8 +26,8 @@ class ReducedExportDataServiceFactoryTest extends TestCase
     public function testInvoke(): void
     {
         $config = [
-            'export-data' => [
-                'reduced' => [
+            'cache' => [
+                'mod-file' => [
                     'directory' => 'abc'
                 ]
             ]
@@ -42,7 +42,7 @@ class ReducedExportDataServiceFactoryTest extends TestCase
                   ->with('config')
                   ->willReturn($config);
 
-        $factory = new ReducedExportDataServiceFactory();
-        $factory($container, ReducedExportDataService::class);
+        $factory = new ModFileCacheFactory();
+        $factory($container, ModFileCache::class);
     }
 }

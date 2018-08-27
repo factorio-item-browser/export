@@ -58,7 +58,7 @@ class ListUpdateCommand implements CommandInterface
      * @param Route $route
      * @param AdapterInterface $console
      */
-    public function __invoke(Route $route, AdapterInterface $console)
+    public function __invoke(Route $route, AdapterInterface $console): int
     {
         $oldVersions = [];
         foreach ($this->exportDataService->getMods() as $mod) {

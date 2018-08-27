@@ -13,6 +13,18 @@ namespace FactorioItemBrowser\Export;
 return [
     'routes' => [
         [
+            'name' => 'clean cache [--mod=<modName>]',
+            'handler' => Command\Clean\CleanCacheCommand::class,
+            'short_description' => 'Cleans the caches.',
+            'options_description' => [
+                '--mod=<modName>' => 'The name of the mod to clean the cache for.'
+            ]
+        ],
+
+
+
+
+        [
             'name' => 'export mod <modName>',
             'handler' => Command\ExportModCommand::class,
             'short_description' => 'Exports all relevant combinations of the specified mod.',

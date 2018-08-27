@@ -25,7 +25,13 @@ class RawExportDataServiceFactoryTest extends TestCase
      */
     public function testInvoke(): void
     {
-        $config['export-data']['raw']['directory'] = 'abc';
+        $config = [
+            'export-data' => [
+                'raw' => [
+                    'directory' => 'abc'
+                ]
+            ]
+        ];
 
         /* @var ContainerInterface|MockObject $container */
         $container = $this->getMockBuilder(ContainerInterface::class)
@@ -37,7 +43,6 @@ class RawExportDataServiceFactoryTest extends TestCase
                   ->willReturn($config);
 
         $factory = new RawExportDataServiceFactory();
-        $result = $factory($container, RawExportDataService::class);
-        $this->assertInstanceOf(RawExportDataService::class, $result);
+        $factory($container, RawExportDataService::class);
     }
 }

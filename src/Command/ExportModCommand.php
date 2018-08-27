@@ -81,7 +81,7 @@ class ExportModCommand implements CommandInterface
      * @param Route $route
      * @param AdapterInterface $console
      */
-    public function __invoke(Route $route, AdapterInterface $console)
+    public function __invoke(Route $route, AdapterInterface $console): int
     {
         $modName = $route->getMatchedParam('modName');
 

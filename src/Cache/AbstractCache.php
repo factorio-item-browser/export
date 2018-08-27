@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Cache;
 
+use FactorioItemBrowser\Export\Exception\ExportException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -29,41 +30,121 @@ abstract class AbstractCache
     public function __construct(string $cacheDirectory)
     {
         $this->cacheDirectory = $cacheDirectory;
+    }
 
-        if (!is_dir($this->cacheDirectory)) {
-            mkdir($this->cacheDirectory, 0777, true);
+    /**
+     * Ensures the specified directory to be present and writable.
+     * @param string $directory
+     * @throws ExportException
+     */
+    protected function ensureDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            $success = mkdir($directory, 0775, true);
+            if (!$success) {
+                throw new ExportException('Unable to create directory ' . $directory . '.');
+            }
         }
+        if (!is_writable($directory)) {
+            throw new ExportException('Directory ' . $directory . ' is not writable.');
+        }
+
+        return;
     }
 
     /**
      * Returns the full file path of the specified filename.
+     * @param string $modName
      * @param string $fileName
      * @return string
      */
-    protected function getFullFilePath(string $fileName): string
+    protected function getFullFilePath(string $modName, string $fileName): string
     {
-        return $this->cacheDirectory . DIRECTORY_SEPARATOR . $fileName;
+        return implode(DIRECTORY_SEPARATOR, [
+            $this->cacheDirectory,
+            $modName,
+            $fileName
+        ]);
+    }
+
+    /**
+     * Writes content into the cache file.
+     * @param string $filePath
+     * @param string $content
+     * @throws ExportException
+     */
+    protected function writeFile(string $filePath, string $content): void
+    {
+        $this->ensureDirectory(dirname($filePath));
+
+        $success = false;
+        if (!file_exists($filePath) || is_writable($filePath)) {
+            $success = file_put_contents($filePath, $content);
+        }
+        if ($success === false) {
+            throw new ExportException('Unable to write cache file ' . $filePath);
+        }
+        return;
+    }
+
+    /**
+     * Reads the content of the specified cache file.
+     * @param string $filePath
+     * @return string|null
+     */
+    protected function readFile(string $filePath): ?string
+    {
+        $result = null;
+        if (file_exists($filePath) && is_readable($filePath)) {
+            $result = file_get_contents($filePath);
+        }
+        return is_string($result) ? $result : null;
     }
 
     /**
      * Clears all files in the cache.
-     * @return $this
      */
-    public function clear()
+    public function clear(): void
     {
-        /* @var SplFileInfo[] $files */
-        $files = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($this->cacheDirectory, RecursiveDirectoryIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::CHILD_FIRST
-        );
+        $this->clearDirectory($this->cacheDirectory);
+        return;
+    }
 
-        foreach ($files as $file) {
-            if ($file->isDir() && !$file->isLink()) {
-                rmdir($file->getPathname());
-            } else {
-                unlink($file->getPathname());
+    /**
+     * Clears the specified mod from the cache.
+     * @param string $modName
+     */
+    public function clearMod(string $modName): void
+    {
+        $directory = implode(DIRECTORY_SEPARATOR, [
+            $this->cacheDirectory,
+            $modName
+        ]);
+        $this->clearDirectory($directory);
+        return;
+    }
+
+    /**
+     * Clears the specified directory from the cache.
+     * @param string $directory
+     */
+    protected function clearDirectory(string $directory): void
+    {
+        if (is_dir($directory)) {
+            /* @var SplFileInfo[] $files */
+            $files = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::CHILD_FIRST
+            );
+
+            foreach ($files as $file) {
+                if ($file->isDir() && !$file->isLink()) {
+                    rmdir($file->getPathname());
+                } else {
+                    unlink($file->getPathname());
+                }
             }
         }
-        return $this;
+        return;
     }
 }

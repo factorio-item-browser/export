@@ -12,8 +12,11 @@ namespace FactorioItemBrowser\Export;
  */
 return [
     'cache' => [
-        'directory' => [
-            'locale' => __DIR__ . '/../../data/cache/locale',
+        'locale' => [
+            'directory' => __DIR__ . '/../../data/cache/locale',
+        ],
+        'mod-file' => [
+            'directory' => __DIR__ . '/../../data/cache/mod-file'
         ]
     ],
     'export-data' => [

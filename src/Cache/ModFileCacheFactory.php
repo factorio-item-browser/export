@@ -8,24 +8,24 @@ use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
 /**
- * The factory of the locale cache.
+ * The factory of the mod file cache.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class LocaleCacheFactory implements FactoryInterface
+class ModFileCacheFactory implements FactoryInterface
 {
     /**
-     * Creates the locale cache.
+     * Creates the mod file cache.
      * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  null|array $options
-     * @return LocaleCache
+     * @return ModFileCache
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $config = $container->get('config');
 
-        return new LocaleCache($config['cache']['locale']['directory']);
+        return new ModFileCache($config['cache']['mod-file']['directory']);
     }
 }
