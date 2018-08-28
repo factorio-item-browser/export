@@ -19,6 +19,7 @@ return [
             Cache\ModFileCache::class => Cache\ModFileCacheFactory::class,
 
             Command\Clean\CleanCacheCommand::class => Command\Clean\CleanCacheCommandFactory::class,
+            Command\Render\RenderIconCommand::class => Command\Render\RenderIconCommandFactory::class,
 
             Command\ExportAllCommand::class => Command\ExportAllCommandFactory::class,
             Command\ExportModCommand::class => Command\ExportModCommandFactory::class,
@@ -47,6 +48,8 @@ return [
             Mod\DependencyResolver::class => Mod\DependencyResolverFactory::class,
             Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
             Mod\ParentCombinationFinder::class => Mod\ParentCombinationFinderFactory::class,
+
+            ModFile\ModFileManager::class => ModFile\ModFileManagerFactory::class,
 
             Parser\IconParser::class => Parser\AbstractParserFactory::class,
             Parser\ItemParser::class => Parser\AbstractParserFactory::class,

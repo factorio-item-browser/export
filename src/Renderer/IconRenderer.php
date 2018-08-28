@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Renderer;
 
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\ModFile\ModFileManager;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Color;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Mod;
+use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 
 /**
  * The class rendering the layered icons to PNG images.
@@ -22,7 +23,13 @@ class IconRenderer
     /**
      * The regular expression to recognize the image files.
      */
-    private const REGEXP_LAYER_IMAGE = '#^__(.*)__/(.*)$#';
+    protected const REGEXP_LAYER_IMAGE = '#^__(.*)__/(.*)$#';
+
+    /**
+     * The mod registry.
+     * @var ModRegistry
+     */
+    protected $modRegistry;
 
     /**
      * The mod file manager.
@@ -32,10 +39,12 @@ class IconRenderer
 
     /**
      * Initializes the icon renderer.
+     * @param ModRegistry $modRegistry
      * @param ModFileManager $modFileManager
      */
-    public function __construct(ModFileManager $modFileManager)
+    public function __construct(ModRegistry $modRegistry, ModFileManager $modFileManager)
     {
+        $this->modRegistry = $modRegistry;
         $this->modFileManager = $modFileManager;
     }
 
@@ -65,10 +74,11 @@ class IconRenderer
      * Creates and returns a transparent layer ready to be drawn on.
      * @param int $size
      * @return resource
+     * @throws ExportException
      */
     protected function createTransparentLayer(int $size)
     {
-        $layer = imagecreatetruecolor($size, $size);
+        $layer = $this->verifyImageResource(imagecreatetruecolor($size, $size));
         $transparent = imagecolorallocatealpha($layer, 255, 255, 255, 127);
         imagealphablending($layer, false);
         imagefilledrectangle($layer, 0, 0, $size, $size, $transparent);
@@ -106,7 +116,7 @@ class IconRenderer
         $image = $this->createTransparentLayer($size);
 
         $layerImageContents = $this->loadLayerImage($layer->getFileName());
-        $layerImage = imagecreatefromstring($layerImageContents);
+        $layerImage = $this->verifyImageResource(imagecreatefromstring($layerImageContents));
         $layerWidth = imagesx($layerImage);
         $layerHeight = imagesy($layerImage);
 
@@ -124,8 +134,8 @@ class IconRenderer
             0,
             (int) ($layerWidth * $scale),
             (int) ($layerHeight * $scale),
-            (int) $layerWidth,
-            (int) $layerHeight
+            $layerWidth,
+            $layerHeight
         );
 
         return $image;
@@ -139,14 +149,16 @@ class IconRenderer
      */
     protected function loadLayerImage(string $layerFileName): string
     {
-        if (!preg_match(self::REGEXP_LAYER_IMAGE, $layerFileName, $match)) {
+        $count = (int) preg_match(self::REGEXP_LAYER_IMAGE, $layerFileName, $match);
+        if ($count === 0) {
             throw new ExportException('Unable to understand image file name: ' . $layerFileName);
         }
-        $mod = $this->modFileManager->getMod($match[1]);
+
+        $mod = $this->modRegistry->get($match[1]);
         if (!$mod instanceof Mod) {
             throw new ExportException('Mod not known: ' . $match[1]);
         }
-        return $this->modFileManager->getFileContents($mod, $match[2]);
+        return $this->modFileManager->getFile($mod, $match[2]);
     }
 
 
@@ -217,6 +229,7 @@ class IconRenderer
      * @param int $originalSize
      * @param int $requestedSize
      * @return resource
+     * @throws ExportException
      */
     protected function resizeImage($image, int $originalSize, int $requestedSize)
     {
@@ -253,6 +266,20 @@ class IconRenderer
 
         ob_start();
         imagepng($image);
-        return ob_get_clean();
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * Verifies that the passed parameter is indeed a resource.
+     * @param resource|false $resource
+     * @return resource
+     * @throws ExportException
+     */
+    protected function verifyImageResource($resource)
+    {
+        if (!is_resource($resource)) {
+            throw new ExportException('Rendering error: Missing resource.');
+        }
+        return $resource;
     }
 }

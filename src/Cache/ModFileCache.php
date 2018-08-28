@@ -29,12 +29,12 @@ class ModFileCache extends AbstractCache
      * Writes the translations to the cache.
      * @param string $modName
      * @param string $fileName
-     * @param string $contents
+     * @param string $content
      * @throws ExportException
      */
-    public function write(string $modName, string $fileName, string $contents): void
+    public function write(string $modName, string $fileName, string $content): void
     {
-        $this->writeFile($this->getFullFilePath($modName, $fileName), $contents);
+        $this->writeFile($this->getFullFilePath($modName, $fileName), $content);
         return;
     }
 }

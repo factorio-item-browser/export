@@ -20,6 +20,15 @@ return [
                 '--mod=<modName>' => 'The name of the mod to clean the cache for.'
             ]
         ],
+        [
+            'name' => 'render icon <hash>',
+            'handler' => Command\Render\RenderIconCommand::class,
+            'short_description' => 'Renders an icon.',
+            'options_description' => [
+                '<hash>' => 'The hash of the icon to render.'
+            ]
+        ],
+
 
 
 

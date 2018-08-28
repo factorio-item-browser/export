@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Renderer;
 
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\ExportData\RawExportDataService;
+use FactorioItemBrowser\Export\ModFile\ModFileManager;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
@@ -25,9 +26,11 @@ class IconRendererFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+        /* @var RawExportDataService $exportDataService */
+        $exportDataService = $container->get(RawExportDataService::class);
         /* @var ModFileManager $modFileManager */
         $modFileManager = $container->get(ModFileManager::class);
 
-        return new IconRenderer($modFileManager);
+        return new IconRenderer($exportDataService->getModRegistry(), $modFileManager);
     }
 }
