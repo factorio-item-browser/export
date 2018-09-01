@@ -8,6 +8,7 @@ use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Utils\VersionUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
+use FactorioItemBrowser\ExportData\Entity\Mod\Dependency;
 use ZipArchive;
 
 /**
@@ -18,6 +19,11 @@ use ZipArchive;
  */
 class ModFileReader
 {
+    /**
+     * The regular expression used for the dependencies.
+     */
+    protected const REGEXP_DEPENDENCY = '#^(\?)?\s*([a-zA-Z0-9\-_ ]+)\s*([<=>]*)\s*([0-9.]*)$#';
+
     /**
      * The mod file manager.
      * @var ModFileManager
@@ -114,7 +120,8 @@ class ModFileReader
 
         $mod->setName($info->getString('name'))
             ->setAuthor($info->getString('author'))
-            ->setVersion(VersionUtils::normalize($info->getString('version')));
+            ->setVersion(VersionUtils::normalize($info->getString('version')))
+            ->setDependencies($this->parseDependencies($info));
 
         $mod->getTitles()->setTranslation('en', $info->getString('title'));
         $mod->getDescriptions()->setTranslation('en', $info->getString('description'));
@@ -142,6 +149,64 @@ class ModFileReader
         if ($result === null) {
             throw new ExportException('Unable to parse info.json of mod ' . $mod->getFileName());
         }
+        return $result;
+    }
+
+    /**
+     * Parses the dependencies.
+     * @param DataContainer $infoJson
+     * @return array|Dependency[]
+     * @throws ExportException
+     */
+    protected function parseDependencies(DataContainer $infoJson): array
+    {
+        $result = [
+            'base' => $this->createDependency('base', '', true),
+        ];
+        foreach ($infoJson->getArray('dependencies') as $dependencyString) {
+            $dependency = $this->parseDependency($dependencyString);
+            if ($dependency instanceof Dependency) {
+                $result[$dependency->getRequiredModName()] = $dependency;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Parses the specified dependency string.
+     * @param string $dependencyString
+     * @return Dependency|null
+     * @throws ExportException
+     */
+    protected function parseDependency(string $dependencyString): ?Dependency
+    {
+        $result = null;
+        if (preg_match(self::REGEXP_DEPENDENCY, trim($dependencyString), $match) === 0) {
+            throw new ExportException(
+                'Unable to parse dependency: ' . $dependencyString
+            );
+        }
+
+        $dependency = null;
+        if ($match[3] !== '<') {
+            $dependency = $this->createDependency(trim($match[2]), $match[4], $match[1] !== '?');
+        }
+        return $dependency;
+    }
+
+    /**
+     * Creates a dependency entity.
+     * @param string $modName
+     * @param string $version
+     * @param bool $isMandatory
+     * @return Dependency
+     */
+    protected function createDependency(string $modName, string $version, bool $isMandatory): Dependency
+    {
+        $result = new Dependency();
+        $result->setRequiredModName($modName)
+               ->setRequiredVersion(VersionUtils::normalize($version))
+               ->setIsMandatory($isMandatory);
         return $result;
     }
 }
