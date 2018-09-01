@@ -17,16 +17,21 @@ return [
             'handler' => Command\Clean\CleanCacheCommand::class,
             'short_description' => 'Cleans the caches.',
             'options_description' => [
-                '--mod=<modName>' => 'The name of the mod to clean the cache for.'
-            ]
+                '--mod=<modName>' => 'The name of the mod to clean the cache for.',
+            ],
         ],
         [
             'name' => 'render icon <hash>',
             'handler' => Command\Render\RenderIconCommand::class,
             'short_description' => 'Renders an icon.',
             'options_description' => [
-                '<hash>' => 'The hash of the icon to render.'
-            ]
+                '<hash>' => 'The hash of the icon to render.',
+            ],
+        ],
+        [
+            'name' => 'update list',
+            'handler' => Command\Update\UpdateListCommand::class,
+            'short_description' => 'Updates the list of mods from the directory.',
         ],
 
 

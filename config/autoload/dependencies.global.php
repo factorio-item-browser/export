@@ -20,6 +20,7 @@ return [
 
             Command\Clean\CleanCacheCommand::class => Command\Clean\CleanCacheCommandFactory::class,
             Command\Render\RenderIconCommand::class => Command\Render\RenderIconCommandFactory::class,
+            Command\Update\UpdateListCommand::class => Command\Update\UpdateListCommandFactory::class,
 
             Command\ExportAllCommand::class => Command\ExportAllCommandFactory::class,
             Command\ExportModCommand::class => Command\ExportModCommandFactory::class,
@@ -50,6 +51,7 @@ return [
             Mod\ParentCombinationFinder::class => Mod\ParentCombinationFinderFactory::class,
 
             ModFile\ModFileManager::class => ModFile\ModFileManagerFactory::class,
+            ModFile\ModFileReader::class => ModFile\ModFileReaderFactory::class,
 
             Parser\IconParser::class => Parser\AbstractParserFactory::class,
             Parser\ItemParser::class => Parser\AbstractParserFactory::class,

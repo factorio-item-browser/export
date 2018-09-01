@@ -4,31 +4,29 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\ModFile;
 
-use FactorioItemBrowser\Export\Cache\ModFileCache;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
 /**
- * The factory of the mod file manager.
+ * The factory of the mod file reader.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ModFileManagerFactory implements FactoryInterface
+class ModFileReaderFactory implements FactoryInterface
 {
     /**
-     * Creates the mod file manager.
+     * Creates the mod file reader.
      * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  null|array $options
-     * @return ModFileManager
+     * @return ModFileReader
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        $config = $container->get('config');
-        /* @var ModFileCache $cache */
-        $cache = $container->get(ModFileCache::class);
+        /* @var ModFileManager $modFileManager */
+        $modFileManager = $container->get(ModFileManager::class);
 
-        return new ModFileManager($cache, $config['factorio']['modsDirectory']);
+        return new ModFileReader($modFileManager);
     }
 }

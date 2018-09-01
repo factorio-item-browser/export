@@ -17,6 +17,11 @@ use FactorioItemBrowser\ExportData\Entity\Mod;
 class ModFileManager
 {
     /**
+     * The regular expression used to detect the mods.
+     */
+    protected const REGEXP_MOD_FILE = '#^(.+)_([0-9.]+)\.zip$#';
+
+    /**
      * The cache to use.
      * @var ModFileCache
      */
@@ -82,5 +87,26 @@ class ModFileManager
     {
         return 'zip://' . $this->directory . '/' . $mod->getFileName()
             . '#' . $mod->getDirectoryName() . '/' . $fileName;
+    }
+
+    /**
+     * Returns the file names of all the mods in the directory.
+     * @return array|string[]
+     * @throws ExportException
+     */
+    public function getModFileNames(): array
+    {
+        $files = scandir($this->directory);
+        if ($files === false) {
+            throw new ExportException('Unable to scan the mods directory: ' . $this->directory);
+        }
+
+        $result = [];
+        foreach ($files as $file) {
+            if (preg_match(self::REGEXP_MOD_FILE, $file) > 0) {
+                $result[] = $this->directory . DIRECTORY_SEPARATOR . $file;
+            }
+        }
+        return $result;
     }
 }
