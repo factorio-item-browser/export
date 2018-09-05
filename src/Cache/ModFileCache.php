@@ -35,6 +35,5 @@ class ModFileCache extends AbstractCache
     public function write(string $modName, string $fileName, string $content): void
     {
         $this->writeFile($this->getFullFilePath($modName, $fileName), $content);
-        return;
     }
 }

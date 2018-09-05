@@ -48,8 +48,6 @@ abstract class AbstractCache
         if (!is_writable($directory)) {
             throw new ExportException('Directory ' . $directory . ' is not writable.');
         }
-
-        return;
     }
 
     /**
@@ -84,7 +82,6 @@ abstract class AbstractCache
         if ($success === false) {
             throw new ExportException('Unable to write cache file ' . $filePath);
         }
-        return;
     }
 
     /**
@@ -107,7 +104,6 @@ abstract class AbstractCache
     public function clear(): void
     {
         $this->clearDirectory($this->cacheDirectory);
-        return;
     }
 
     /**
@@ -121,7 +117,6 @@ abstract class AbstractCache
             $modName
         ]);
         $this->clearDirectory($directory);
-        return;
     }
 
     /**
@@ -145,6 +140,5 @@ abstract class AbstractCache
                 }
             }
         }
-        return;
     }
 }

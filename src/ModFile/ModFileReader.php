@@ -125,8 +125,6 @@ class ModFileReader
 
         $mod->getTitles()->setTranslation('en', $info->getString('title'));
         $mod->getDescriptions()->setTranslation('en', $info->getString('description'));
-
-        return;
     }
 
     /**
