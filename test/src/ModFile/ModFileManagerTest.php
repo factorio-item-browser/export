@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\ModFile;
 
+use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Cache\ModFileCache;
 use FactorioItemBrowser\Export\Exception\ExportException;
@@ -199,5 +200,49 @@ class ModFileManagerTest extends TestCase
 
         $result = $this->invokeMethod($manager, 'getFullFilePath', $mod, $fileName);
         $this->assertSame($expectedResult, $result);
+    }
+    
+    
+    /**
+     * Provides the data for the getInfoJson test.
+     * @return array
+     */
+    public function provideGetInfoJson(): array
+    {
+        return [
+            ['{"abc":"def"}', false, new DataContainer(['abc' => 'def'])],
+            ['"fail"', true, null],
+            [null, true, null],
+        ];
+    }
+
+    /**
+     * Tests the getInfoJson method.
+     * @param mixed $content
+     * @param bool $expectException
+     * @param DataContainer|null $expectedResult
+     * @throws ExportException
+     * @covers ::getInfoJson
+     * @dataProvider provideGetInfoJson
+     */
+    public function testGetInfoJson($content, bool $expectException, ?DataContainer $expectedResult): void
+    {
+        $mod = new Mod();
+        if ($expectException) {
+            $this->expectException(ExportException::class);
+        }
+
+        /* @var ModFileManager|MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileManager::class)
+                        ->setMethods(['readFile'])
+                        ->disableOriginalConstructor()
+                        ->getMock();
+        $manager->expects($this->once())
+                ->method('readFile')
+                ->with($mod, 'info.json')
+                ->willReturn($content);
+
+        $result = $manager->getInfoJson($mod);
+        $this->assertEquals($expectedResult, $result);
     }
 }

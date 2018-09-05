@@ -50,6 +50,7 @@ return [
             Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
             Mod\ParentCombinationFinder::class => Mod\ParentCombinationFinderFactory::class,
 
+            ModFile\DependencyReader::class => ModFile\DependencyReaderFactory::class,
             ModFile\ModFileManager::class => ModFile\ModFileManagerFactory::class,
             ModFile\ModFileReader::class => ModFile\ModFileReaderFactory::class,
 

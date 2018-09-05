@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\ModFile;
 
+use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Export\Cache\ModFileCache;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -87,6 +88,29 @@ class ModFileManager
     {
         return 'zip://' . $this->directory . '/' . $mod->getFileName()
             . '#' . $mod->getDirectoryName() . '/' . $fileName;
+    }
+
+    /**
+     * Returns the info.json file from the specified mod.
+     * @param Mod $mod
+     * @return DataContainer
+     * @throws ExportException
+     */
+    public function getInfoJson(Mod $mod): DataContainer
+    {
+        $result = null;
+        $content = $this->readFile($mod, 'info.json');
+        if (is_string($content)) {
+            $json = json_decode($content, true);
+            if (is_array($json)) {
+                $result = new DataContainer($json);
+            }
+        }
+
+        if ($result === null) {
+            throw new ExportException('Unable to parse info.json of mod ' . $mod->getFileName());
+        }
+        return $result;
     }
 
     /**
