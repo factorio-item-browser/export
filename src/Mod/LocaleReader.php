@@ -98,7 +98,7 @@ class LocaleReader
      */
     protected function readLocaleFile(Mod $mod, string $fileName): array
     {
-        return $this->parseLocaleFile($this->modFileManager->readFile($mod, $fileName));
+        return $this->parseLocaleFile((string) $this->modFileManager->readFile($mod, $fileName));
     }
 
     /**

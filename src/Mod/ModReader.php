@@ -87,7 +87,7 @@ class ModReader
             }
         }
         if ($result === '') {
-            throw new ExportException('Unable to locate info.json in mod ' . basename($fileName));
+            throw new ExportException('Unable to locate info.json in mod ' . $mod->getName());
         }
         return $result;
     }
