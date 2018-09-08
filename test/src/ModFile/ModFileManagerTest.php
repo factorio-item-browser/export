@@ -245,4 +245,52 @@ class ModFileManagerTest extends TestCase
         $result = $manager->getInfoJson($mod);
         $this->assertEquals($expectedResult, $result);
     }
+
+    /**
+     * Provides the data for the getModFileNames test.
+     * @return array
+     */
+    public function provideGetModFileNames(): array
+    {
+        return [
+            [true, false],
+            [false, true],
+        ];
+    }
+
+    /**
+     * Tests the getModFileNames method.
+     * @param bool $withDirectory
+     * @param bool $expectException
+     * @throws ExportException
+     * @covers ::getModFileNames
+     * @dataProvider provideGetModFileNames
+     */
+    public function testGetModFileNames(bool $withDirectory, bool $expectException): void
+    {
+        if ($withDirectory) {
+            vfsStream::setup('root', null, [
+                'abc' => [
+                    'foo_1.2.3.zip' => 'def',
+                    'bar' => 'ghi'
+                ]
+            ]);
+            $expectedResult = [vfsStream::url('root/abc/foo_1.2.3.zip')];
+        } else {
+            vfsStream::setup('root');
+            $expectedResult = null;
+        }
+
+        if ($expectException) {
+            $this->expectException(ExportException::class);
+        }
+
+        $directory = vfsStream::url('root/abc');
+        /* @var ModFileCache $modFileCache */
+        $modFileCache = $this->createMock(ModFileCache::class);
+
+        $manager = new ModFileManager($modFileCache, $directory);
+        $result = $manager->getModFileNames();
+        $this->assertSame($expectedResult, $result);
+    }
 }

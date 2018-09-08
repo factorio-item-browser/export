@@ -142,6 +142,42 @@ class ModFileReaderTest extends TestCase
     }
 
     /**
+     * Provides the data for the detectDirectoryName test.
+     * @return array
+     */
+    public function provideDetectDirectoryName(): array
+    {
+        return [
+            [__DIR__ . '/../../asset/mod/test_1.2.3.zip', 'test_1.2.3', false],
+            [__DIR__ . '/../../asset/mod/test_invalid_1.2.3.zip', null, true],
+            [__DIR__ . '/../../asset/mod/not_a_zip.zip', null, true],
+        ];
+    }
+
+    /**
+     * Tests the detectDirectoryName method.
+     * @param string $fileName
+     * @param null|string $expectedResult
+     * @param bool $expectException
+     * @throws ReflectionException
+     * @covers ::detectDirectoryName
+     * @dataProvider provideDetectDirectoryName
+     */
+    public function testDetectDirectoryName(string $fileName, ?string $expectedResult, bool $expectException): void
+    {
+        /* @var ModFileManager $modFileManager */
+        $modFileManager = $this->createMock(ModFileManager::class);
+
+        if ($expectException) {
+            $this->expectException(ExportException::class);
+        }
+
+        $reader = new ModFileReader($modFileManager);
+        $result = $this->invokeMethod($reader, 'detectDirectoryName', $fileName);
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
      * Tests the parseInfoJson method.
      * @covers ::parseInfoJson
      * @throws ReflectionException

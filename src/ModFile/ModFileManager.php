@@ -120,7 +120,7 @@ class ModFileManager
      */
     public function getModFileNames(): array
     {
-        $files = scandir($this->directory);
+        $files = @scandir($this->directory);
         if ($files === false) {
             throw new ExportException('Unable to scan the mods directory: ' . $this->directory);
         }

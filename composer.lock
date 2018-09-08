@@ -89,12 +89,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-data.git",
-                "reference": "3d6111d0d9e9cc3966918be95f0d02d0a0d71599"
+                "reference": "8b0af1c344d3afe6fb67d487e5f164bf33049859"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/3d6111d0d9e9cc3966918be95f0d02d0a0d71599",
-                "reference": "3d6111d0d9e9cc3966918be95f0d02d0a0d71599",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/8b0af1c344d3afe6fb67d487e5f164bf33049859",
+                "reference": "8b0af1c344d3afe6fb67d487e5f164bf33049859",
                 "shasum": ""
             },
             "require": {
@@ -135,7 +135,7 @@
                 "Factorio Item Browser",
                 "export"
             ],
-            "time": "2018-09-01T07:56:15+00:00"
+            "time": "2018-09-05T16:31:32+00:00"
         },
         {
             "name": "psr/container",
@@ -2182,16 +2182,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "7.3.2",
+            "version": "7.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "34705f81bddc3f505b9599a2ef96e2b4315ba9b8"
+                "reference": "0356331bf62896dc56e3a15030b23b73f38b2935"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/34705f81bddc3f505b9599a2ef96e2b4315ba9b8",
-                "reference": "34705f81bddc3f505b9599a2ef96e2b4315ba9b8",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/0356331bf62896dc56e3a15030b23b73f38b2935",
+                "reference": "0356331bf62896dc56e3a15030b23b73f38b2935",
                 "shasum": ""
             },
             "require": {
@@ -2262,7 +2262,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2018-08-22T06:39:21+00:00"
+            "time": "2018-09-05T09:58:53+00:00"
         },
         {
             "name": "psr/log",
