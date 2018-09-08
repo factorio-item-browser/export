@@ -77,6 +77,7 @@ class UpdateListCommand implements CommandInterface
         $this->printChangesToConsole($console, $newMods, $currentMods);
 
         $this->runSubCommand('update dependencies', [], $console);
+        $this->runSubCommand('update order', [], $console);
 
         $console->writeLine('Done.');
         return 0;

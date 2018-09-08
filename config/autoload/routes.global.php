@@ -44,6 +44,11 @@ return [
             'handler' => Command\Update\UpdateListCommand::class,
             'short_description' => 'Updates the list of mods from the directory.',
         ],
+        [
+            'name' => 'update order',
+            'handler' => Command\Update\UpdateOrderCommand::class,
+            'short_description' => 'Updates the absolute order of the mods.',
+        ],
 
 
 
@@ -72,11 +77,6 @@ return [
             'name' => 'list missing',
             'handler' => Command\ListMissingCommand::class,
             'short_description' => 'Lists missing mods which are dependencies of other mods.',
-        ],
-        [
-            'name' => 'list update',
-            'handler' => Command\ListUpdateCommand::class,
-            'short_description' => 'Updates the list of mods from the zip files.',
         ],
     ]
 ];

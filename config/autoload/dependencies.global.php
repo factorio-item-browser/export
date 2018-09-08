@@ -22,12 +22,12 @@ return [
             Command\Render\RenderIconCommand::class => Command\Render\RenderIconCommandFactory::class,
             Command\Update\UpdateDependenciesCommand::class => Command\Update\UpdateDependenciesCommandFactory::class,
             Command\Update\UpdateListCommand::class => Command\Update\UpdateListCommandFactory::class,
+            Command\Update\UpdateOrderCommand::class => Command\Update\UpdateOrderCommandFactory::class,
 
             Command\ExportAllCommand::class => Command\ExportAllCommandFactory::class,
             Command\ExportModCommand::class => Command\ExportModCommandFactory::class,
             Command\ListAllCommand::class => Command\ListAllCommandFactory::class,
             Command\ListMissingCommand::class => Command\ListMissingCommandFactory::class,
-            Command\ListUpdateCommand::class => Command\ListUpdateCommandFactory::class,
 
             ExportData\RawExportDataService::class => ExportData\RawExportDataServiceFactory::class,
             ExportData\ReducedExportDataService::class => ExportData\ReducedExportDataServiceFactory::class,

@@ -47,9 +47,10 @@ class DependencyReader
     {
         $infoJson = $this->modFileManager->getInfoJson($mod);
 
-        $result = [
-            'base' => $this->createDependency('base', '', true),
-        ];
+        $result = [];
+        if ($mod->getName() !== 'base') {
+            $result['base'] = $this->createDependency('base', '', true);
+        }
         foreach ($infoJson->getArray('dependencies') as $dependencyString) {
             $dependency = $this->parseDependency($dependencyString);
             if ($dependency instanceof Dependency) {
