@@ -99,7 +99,7 @@ class ModFileManager
     public function getInfoJson(Mod $mod): DataContainer
     {
         $result = null;
-        $content = $this->readFile($mod, 'info.json');
+        $content = $this->getFile($mod, 'info.json');
         if (is_string($content)) {
             $json = json_decode($content, true);
             if (is_array($json)) {

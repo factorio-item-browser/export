@@ -20,6 +20,7 @@ return [
 
             Command\Clean\CleanCacheCommand::class => Command\Clean\CleanCacheCommandFactory::class,
             Command\Render\RenderIconCommand::class => Command\Render\RenderIconCommandFactory::class,
+            Command\Update\UpdateDependenciesCommand::class => Command\Update\UpdateDependenciesCommandFactory::class,
             Command\Update\UpdateListCommand::class => Command\Update\UpdateListCommandFactory::class,
 
             Command\ExportAllCommand::class => Command\ExportAllCommandFactory::class,

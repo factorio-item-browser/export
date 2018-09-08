@@ -13,7 +13,8 @@ namespace FactorioItemBrowser\Export;
 return [
     'routes' => [
         [
-            'name' => 'clean cache [--mod=<modName>]',
+            'name' => 'clean cache',
+            'route' => '[--mod=]',
             'handler' => Command\Clean\CleanCacheCommand::class,
             'short_description' => 'Cleans the caches.',
             'options_description' => [
@@ -21,11 +22,21 @@ return [
             ],
         ],
         [
-            'name' => 'render icon <hash>',
+            'name' => 'render icon',
+            'route' => '<hash>',
             'handler' => Command\Render\RenderIconCommand::class,
             'short_description' => 'Renders an icon.',
             'options_description' => [
                 '<hash>' => 'The hash of the icon to render.',
+            ],
+        ],
+        [
+            'name' => 'update dependencies',
+            'route' => '[--mod=]',
+            'handler' => Command\Update\UpdateDependenciesCommand::class,
+            'short_description' => 'Updates the dependencies of the mods.',
+            'options_description' => [
+                '--mod=<modName>' => 'The name of the mod to update the dependencies for.',
             ],
         ],
         [
