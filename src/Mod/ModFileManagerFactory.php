@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Mod;
 
-use FactorioItemBrowser\Export\I18n\LocaleFileReader;
-use FactorioItemBrowser\ExportData\Service\ExportDataService;
+use FactorioItemBrowser\Export\Cache\ModFileCache;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
@@ -27,18 +26,9 @@ class ModFileManagerFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $config = $container->get('config');
-        /* @var ExportDataService $exportDataService */
-        $exportDataService = $container->get(ExportDataService::class);
-        /* @var LocaleFileReader $localeFileReader */
-        $localeFileReader = $container->get(LocaleFileReader::class);
-        /* @var DependencyResolver $dependencyResolver */
-        $dependencyResolver = $container->get(DependencyResolver::class);
+        /* @var ModFileCache $cache */
+        $cache = $container->get(ModFileCache::class);
 
-        return new ModFileManager(
-            $config['factorio']['modsDirectory'],
-            $exportDataService,
-            $localeFileReader,
-            $dependencyResolver
-        );
+        return new ModFileManager($cache, $config['factorio']['modsDirectory']);
     }
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Renderer;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
-use FactorioItemBrowser\Export\ModFile\ModFileManager;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 

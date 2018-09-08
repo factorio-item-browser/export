@@ -6,7 +6,7 @@ namespace FactorioItemBrowser\Export\Command\Update;
 
 use FactorioItemBrowser\Export\Command\CommandInterface;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\ModFile\DependencyReader;
+use FactorioItemBrowser\Export\Mod\DependencyReader;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;

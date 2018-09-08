@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\ModFile;
+namespace FactorioItemBrowser\Export\Mod;
 
 use FactorioItemBrowser\Export\Cache\LocaleCache;
 use FactorioItemBrowser\Export\Exception\ExportException;

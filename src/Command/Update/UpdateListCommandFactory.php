@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\Update;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
-use FactorioItemBrowser\Export\ModFile\ModFileManager;
-use FactorioItemBrowser\Export\ModFile\ModReader;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Mod\ModReader;
 use Interop\Container\ContainerInterface;
 
 /**

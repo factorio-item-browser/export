@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\ModFile;
+namespace FactorioItemBrowserTest\Export\Mod;
 
 use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\ModFile\ModFileManager;
-use FactorioItemBrowser\Export\ModFile\ModReader;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Mod\ModReader;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -20,7 +20,7 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\ModFile\ModReader
+ * @coversDefaultClass \FactorioItemBrowser\Export\Mod\ModReader
  */
 class ModReaderTest extends TestCase
 {
@@ -110,7 +110,7 @@ class ModReaderTest extends TestCase
                ->willReturn($mod);
         $reader->expects($this->once())
                ->method('detectDirectoryName')
-               ->with($fileName)
+               ->with($mod)
                ->willReturn($directoryName);
         $reader->expects($this->once())
                ->method('parseInfoJson')
@@ -148,32 +148,43 @@ class ModReaderTest extends TestCase
     public function provideDetectDirectoryName(): array
     {
         return [
-            [__DIR__ . '/../../asset/mod/test_1.2.3.zip', 'test_1.2.3', false],
-            [__DIR__ . '/../../asset/mod/test_invalid_1.2.3.zip', null, true],
-            [__DIR__ . '/../../asset/mod/not_a_zip.zip', null, true],
+            [['foo.json', 'bar_1.2.3/info.json'], 'bar_1.2.3', false],
+            [['foo.json', 'bar'], null, true],
         ];
     }
 
     /**
      * Tests the detectDirectoryName method.
-     * @param string $fileName
+     * @param array $resultFileNames
      * @param null|string $expectedResult
      * @param bool $expectException
      * @throws ReflectionException
      * @covers ::detectDirectoryName
      * @dataProvider provideDetectDirectoryName
      */
-    public function testDetectDirectoryName(string $fileName, ?string $expectedResult, bool $expectException): void
-    {
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
+    public function testDetectDirectoryName(
+        array $resultFileNames,
+        ?string $expectedResult,
+        bool $expectException
+    ): void {
+        $mod = new Mod();
+
+        /* @var ModFileManager|MockObject $modFileManager */
+        $modFileManager = $this->getMockBuilder(ModFileManager::class)
+                               ->setMethods(['getAllFileNamesOfMod'])
+                               ->disableOriginalConstructor()
+                               ->getMock();
+        $modFileManager->expects($this->once())
+                       ->method('getAllFileNamesOfMod')
+                       ->with($mod)
+                       ->willReturn($resultFileNames);
 
         if ($expectException) {
             $this->expectException(ExportException::class);
         }
 
         $reader = new ModReader($modFileManager);
-        $result = $this->invokeMethod($reader, 'detectDirectoryName', $fileName);
+        $result = $this->invokeMethod($reader, 'detectDirectoryName', $mod);
         $this->assertSame($expectedResult, $result);
     }
 

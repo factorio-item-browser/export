@@ -7,7 +7,7 @@ namespace FactorioItemBrowserTest\Export\Command\Update;
 use FactorioItemBrowser\Export\Command\Update\UpdateDependenciesCommand;
 use FactorioItemBrowser\Export\Command\Update\UpdateDependenciesCommandFactory;
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
-use FactorioItemBrowser\Export\ModFile\DependencyReader;
+use FactorioItemBrowser\Export\Mod\DependencyReader;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;

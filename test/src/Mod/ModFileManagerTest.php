@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\ModFile;
+namespace FactorioItemBrowserTest\Export\Mod;
 
 use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Cache\ModFileCache;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\ModFile\ModFileManager;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -20,7 +20,7 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\ModFile\ModFileManager
+ * @coversDefaultClass \FactorioItemBrowser\Export\Mod\ModFileManager
  */
 class ModFileManagerTest extends TestCase
 {

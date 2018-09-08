@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Renderer;
 
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\ModFile\ModFileManager;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Color;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;

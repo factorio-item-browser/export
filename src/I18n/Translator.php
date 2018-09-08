@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\I18n;
 
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\ModFile\LocaleReader;
+use FactorioItemBrowser\Export\Mod\LocaleReader;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
@@ -130,7 +130,7 @@ class Translator
             $result = $localisedString;
         } elseif (is_array($localisedString)) {
             $key = array_shift($localisedString);
-            if (empty($key)) { // @todo What is the meaning of this?
+            if ($key === '') {
                 $result = strval(array_shift($localisedString));
             } else {
                 $parameters = [];

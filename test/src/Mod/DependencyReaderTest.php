@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\ModFile;
+namespace FactorioItemBrowserTest\Export\Mod;
 
 use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\ModFile\DependencyReader;
-use FactorioItemBrowser\Export\ModFile\ModFileManager;
+use FactorioItemBrowser\Export\Mod\DependencyReader;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Dependency;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -20,7 +20,7 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\ModFile\DependencyReader
+ * @coversDefaultClass \FactorioItemBrowser\Export\Mod\DependencyReader
  */
 class DependencyReaderTest extends TestCase
 {

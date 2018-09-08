@@ -46,14 +46,12 @@ return [
             Merger\RecipeMerger::class => InvokableFactory::class,
 
             Mod\CombinationCreator::class => Mod\CombinationCreatorFactory::class,
+            Mod\DependencyReader::class => Mod\DependencyReaderFactory::class,
             Mod\DependencyResolver::class => Mod\DependencyResolverFactory::class,
+            Mod\LocaleReader::class => Mod\LocaleReaderFactory::class,
             Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
+            Mod\ModReader::class => Mod\ModReaderFactory::class,
             Mod\ParentCombinationFinder::class => Mod\ParentCombinationFinderFactory::class,
-
-            ModFile\DependencyReader::class => ModFile\DependencyReaderFactory::class,
-            ModFile\LocaleReader::class => ModFile\LocaleReaderFactory::class,
-            ModFile\ModFileManager::class => ModFile\ModFileManagerFactory::class,
-            ModFile\ModReader::class => ModFile\ModReaderFactory::class,
 
             Parser\IconParser::class => Parser\AbstractParserFactory::class,
             Parser\ItemParser::class => Parser\AbstractParserFactory::class,

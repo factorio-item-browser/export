@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\I18n;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
-use FactorioItemBrowser\Export\ModFile\LocaleReader;
+use FactorioItemBrowser\Export\Mod\LocaleReader;
 use Interop\Container\ContainerInterface;
 use Zend\I18n\Translator\TranslatorInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;

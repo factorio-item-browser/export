@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\ModFile;
+namespace FactorioItemBrowserTest\Export\Mod;
 
 use FactorioItemBrowser\Export\Cache\ModFileCache;
-use FactorioItemBrowser\Export\ModFile\ModFileManager;
-use FactorioItemBrowser\Export\ModFile\ModFileManagerFactory;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Mod\ModFileManagerFactory;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\ModFile\ModFileManagerFactory
+ * @coversDefaultClass \FactorioItemBrowser\Export\Mod\ModFileManagerFactory
  */
 class ModFileManagerFactoryTest extends TestCase
 {

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\ModFile;
+namespace FactorioItemBrowserTest\Export\Mod;
 
-use FactorioItemBrowser\Export\ModFile\DependencyReader;
-use FactorioItemBrowser\Export\ModFile\DependencyReaderFactory;
-use FactorioItemBrowser\Export\ModFile\ModFileManager;
+use FactorioItemBrowser\Export\Mod\DependencyReader;
+use FactorioItemBrowser\Export\Mod\DependencyReaderFactory;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\ModFile\DependencyReaderFactory
+ * @coversDefaultClass \FactorioItemBrowser\Export\Mod\DependencyReaderFactory
  */
 class DependencyReaderFactoryTest extends TestCase
 {

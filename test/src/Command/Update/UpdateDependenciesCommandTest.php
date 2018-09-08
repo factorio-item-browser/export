@@ -7,7 +7,7 @@ namespace FactorioItemBrowserTest\Export\Command\Update;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Update\UpdateDependenciesCommand;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\ModFile\DependencyReader;
+use FactorioItemBrowser\Export\Mod\DependencyReader;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Dependency;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;

@@ -2,34 +2,31 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\ModFile;
+namespace FactorioItemBrowser\Export\Mod;
 
-use FactorioItemBrowser\Export\Cache\LocaleCache;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
 /**
- * The factory of the locale reader.
+ * The factory of the mod file reader.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class LocaleReaderFactory implements FactoryInterface
+class ModReaderFactory implements FactoryInterface
 {
     /**
-     * Creates the locale reader.
+     * Creates the mod file reader.
      * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  null|array $options
-     * @return LocaleReader
+     * @return ModReader
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        /* @var LocaleCache $localeCache */
-        $localeCache = $container->get(LocaleCache::class);
         /* @var ModFileManager $modFileManager */
         $modFileManager = $container->get(ModFileManager::class);
 
-        return new LocaleReader($localeCache, $modFileManager);
+        return new ModReader($modFileManager);
     }
 }

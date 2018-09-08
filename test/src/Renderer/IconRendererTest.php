@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Renderer;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
-use FactorioItemBrowser\Export\ModFile\ModFileManager;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use PHPUnit\Framework\TestCase;

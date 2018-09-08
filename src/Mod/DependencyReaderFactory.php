@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\ModFile;
+namespace FactorioItemBrowser\Export\Mod;
 
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
