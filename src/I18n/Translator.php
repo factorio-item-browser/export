@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\I18n;
 
-use FactorioItemBrowser\Export\Cache\LocaleCache;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\ModFile\LocaleReader;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use FactorioItemBrowser\ExportData\Entity\Mod;
+use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Zend\I18n\Translator\Translator as ZendTranslator;
 use Zend\Stdlib\ArrayUtils;
 
@@ -22,19 +23,19 @@ class Translator
     /**
      * The regular expression used to detect references to other translations.
      */
-    private const REGEXP_REFERENCE = '#__(.+?)__(.+?)__#';
+    protected const REGEXP_REFERENCE = '#__(.+?)__(.+?)__#';
 
     /**
-     * The locale cache.
-     * @var LocaleCache
+     * The locale reader.
+     * @var LocaleReader
      */
-    protected $localeCache;
+    protected $localeReader;
 
     /**
-     * The mod file manager.
-     * @var ModFileManager
+     * The mod registry.
+     * @var ModRegistry
      */
-    protected $modFileManager;
+    protected $modRegistry;
 
     /**
      * The translator used for the placeholders.
@@ -43,70 +44,44 @@ class Translator
     protected $placeholderTranslator;
 
     /**
-     * The loaded translations of all mods. Keys are mod name, locale and the language key.
-     * @var array|string[][][]
-     */
-    protected $allTranslations;
-
-    /**
      * The translations of the currently active mods.
      * @var string[][]
      */
-    protected $translations;
+    protected $translations = [];
 
     /**
      * Initializes the translator.
-     * @param LocaleCache $localeCache
-     * @param ModFileManager $modFileManager
-     * @param ZendTranslator $placeHolderTranslator
+     * @param LocaleReader $localeReader
+     * @param ModRegistry $modRegistry
+     * @param ZendTranslator $placeholderTranslator
      */
     public function __construct(
-        LocaleCache $localeCache,
-        ModFileManager $modFileManager,
-        ZendTranslator $placeHolderTranslator
+        LocaleReader $localeReader,
+        ModRegistry $modRegistry,
+        ZendTranslator $placeholderTranslator
     ) {
-        $this->localeCache = $localeCache;
-        $this->modFileManager = $modFileManager;
-        $this->placeholderTranslator = $placeHolderTranslator;
-
-        $this->setEnabledModNames(['base']);
+        $this->localeReader = $localeReader;
+        $this->modRegistry = $modRegistry;
+        $this->placeholderTranslator = $placeholderTranslator;
     }
 
     /**
-     * Sets the mods to be enabled in the translator.
-     * @param array|string[] $enabledModNames
-     * @return $this
+     * Loads the translations from the specified mod names.
+     * @param array|string[] $modNames
+     * @throws ExportException
      */
-    public function setEnabledModNames(array $enabledModNames)
+    public function loadFromModNames(array $modNames): void
     {
-        $translations = [];
-        foreach ($enabledModNames as $modName) {
-            $mod = $this->modFileManager->getMod($modName);
+        $this->translations = [];
+        foreach ($modNames as $modName) {
+            $mod = $this->modRegistry->get($modName);
             if ($mod instanceof Mod) {
-                if (!isset($this->allTranslations[$mod->getName()])) {
-                    $this->allTranslations[$mod->getName()] = $this->loadLocaleDataOfMod($mod);
-                }
-                $translations = ArrayUtils::merge($translations, $this->allTranslations[$mod->getName()]);
+                $this->translations = ArrayUtils::merge(
+                    $this->translations,
+                    $this->localeReader->read($mod)
+                );
             }
         }
-        $this->translations = $translations;
-        return $this;
-    }
-
-    /**
-     * Loads the locale data for the specified mod.
-     * @param Mod $mod
-     * @return array
-     */
-    protected function loadLocaleDataOfMod(Mod $mod): array
-    {
-        if ($this->localeCache->has($mod->getName())) {
-            $result = $this->localeCache->read($mod->getName());
-        } else {
-            $result = $this->modFileManager->getLocaleData($mod);
-            $this->localeCache->write($mod->getName(), $result);
-        }
-        return $result;
     }
 
     /**
@@ -114,22 +89,22 @@ class Translator
      * @param LocalisedString $entity The entity to add the translations to.
      * @param string $type The type of string to translate.
      * @param string|array $localisedString The raw localised string to translate.
-     * @param string|array $fallbackLocalisedString The fallback localised string to use.
+     * @param string|array|null $fallbackLocalisedString The fallback localised string to use.
      * @return $this
      */
-    public function addTranslations(
+    public function addTranslationsToEntity(
         LocalisedString $entity,
         string $type,
         $localisedString,
-        $fallbackLocalisedString
+        $fallbackLocalisedString = null
     ) {
-        foreach (array_keys($this->allTranslations['base']) as $locale) {
+        foreach (array_keys($this->translations['base'] ?? []) as $locale) {
             $this->placeholderTranslator
-                ->setLocale($locale)
-                ->setFallbackLocale('en');
+                 ->setLocale($locale)
+                 ->setFallbackLocale('en');
 
             $value = $this->translate($type, $localisedString, $locale, true);
-            if (strlen($value) === 0 && !empty($fallbackLocalisedString)) {
+            if (strlen($value) === 0 && $fallbackLocalisedString !== null) {
                 $value = $this->translate($type, $fallbackLocalisedString, $locale, true);
             }
             if (strlen($value) > 0) {
@@ -155,7 +130,7 @@ class Translator
             $result = $localisedString;
         } elseif (is_array($localisedString)) {
             $key = array_shift($localisedString);
-            if (empty($key)) {
+            if (empty($key)) { // @todo What is the meaning of this?
                 $result = strval(array_shift($localisedString));
             } else {
                 $parameters = [];

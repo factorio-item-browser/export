@@ -8,6 +8,7 @@ use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Export\Cache\ModFileCache;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
+use ZipArchive;
 
 /**
  * The manager class of the mod files.
@@ -110,6 +111,30 @@ class ModFileManager
         if ($result === null) {
             throw new ExportException('Unable to parse info.json of mod ' . $mod->getFileName());
         }
+        return $result;
+    }
+
+    /**
+     * Returns all file names of all directories of the specified mod.
+     * @param Mod $mod
+     * @return array|string[]
+     * @throws ExportException
+     */
+    public function getAllFileNamesOfMod(Mod $mod): array
+    {
+        $result = [];
+
+        $zipArchive = new ZipArchive();
+        $success = $zipArchive->open($this->directory . '/' . $mod->getFileName());
+        if ($success !== true) {
+            throw new ExportException('Unable to open zip archive ' . $mod->getFileName());
+        }
+
+        for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
+            $stats = $zipArchive->statIndex($i);
+            $result[] = ltrim(str_replace($mod->getDirectoryName(), '', $stats['name']), '/');
+        }
+
         return $result;
     }
 

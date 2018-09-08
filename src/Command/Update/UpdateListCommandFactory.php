@@ -6,7 +6,7 @@ namespace FactorioItemBrowser\Export\Command\Update;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\ModFile\ModFileManager;
-use FactorioItemBrowser\Export\ModFile\ModFileReader;
+use FactorioItemBrowser\Export\ModFile\ModReader;
 use Interop\Container\ContainerInterface;
 
 /**
@@ -28,8 +28,8 @@ class UpdateListCommandFactory
     {
         /* @var ModFileManager $modFileManager */
         $modFileManager = $container->get(ModFileManager::class);
-        /* @var ModFileReader $modFileReader */
-        $modFileReader = $container->get(ModFileReader::class);
+        /* @var ModReader $modFileReader */
+        $modFileReader = $container->get(ModReader::class);
         /* @var RawExportDataService $exportDataService */
         $exportDataService = $container->get(RawExportDataService::class);
 

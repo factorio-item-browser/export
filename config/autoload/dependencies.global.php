@@ -37,7 +37,6 @@ return [
             Factorio\Instance::class => Factorio\InstanceFactory::class,
             Factorio\Options::class => Factorio\OptionsFactory::class,
 
-            I18n\LocaleFileReader::class => InvokableFactory::class,
             I18n\Translator::class => I18n\TranslatorFactory::class,
 
             Merger\IconMerger::class => InvokableFactory::class,
@@ -52,8 +51,9 @@ return [
             Mod\ParentCombinationFinder::class => Mod\ParentCombinationFinderFactory::class,
 
             ModFile\DependencyReader::class => ModFile\DependencyReaderFactory::class,
+            ModFile\LocaleReader::class => ModFile\LocaleReaderFactory::class,
             ModFile\ModFileManager::class => ModFile\ModFileManagerFactory::class,
-            ModFile\ModFileReader::class => ModFile\ModFileReaderFactory::class,
+            ModFile\ModReader::class => ModFile\ModReaderFactory::class,
 
             Parser\IconParser::class => Parser\AbstractParserFactory::class,
             Parser\ItemParser::class => Parser\AbstractParserFactory::class,

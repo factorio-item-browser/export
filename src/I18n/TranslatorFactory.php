@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\I18n;
 
-use FactorioItemBrowser\Export\Cache\LocaleCache;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\ExportData\RawExportDataService;
+use FactorioItemBrowser\Export\ModFile\LocaleReader;
 use Interop\Container\ContainerInterface;
 use Zend\I18n\Translator\TranslatorInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
@@ -27,13 +27,13 @@ class TranslatorFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        /* @var LocaleCache $localeCache */
-        $localeCache = $container->get(LocaleCache::class);
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $container->get(ModFileManager::class);
+        /* @var LocaleReader $localeReader */
+        $localeReader = $container->get(LocaleReader::class);
+        /* @var RawExportDataService $rawExportDataService */
+        $rawExportDataService = $container->get(RawExportDataService::class);
         /* @var TranslatorInterface $translatorInterface */
         $translator = $container->get(TranslatorInterface::class);
 
-        return new Translator($localeCache, $modFileManager, $translator);
+        return new Translator($localeReader, $rawExportDataService->getModRegistry(), $translator);
     }
 }

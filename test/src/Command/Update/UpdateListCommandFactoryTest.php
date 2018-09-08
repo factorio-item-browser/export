@@ -8,7 +8,7 @@ use FactorioItemBrowser\Export\Command\Update\UpdateListCommand;
 use FactorioItemBrowser\Export\Command\Update\UpdateListCommandFactory;
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\ModFile\ModFileManager;
-use FactorioItemBrowser\Export\ModFile\ModFileReader;
+use FactorioItemBrowser\Export\ModFile\ModReader;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -50,12 +50,12 @@ class UpdateListCommandFactoryTest extends TestCase
                   ->method('get')
                   ->withConsecutive(
                       [ModFileManager::class],
-                      [ModFileReader::class],
+                      [ModReader::class],
                       [RawExportDataService::class]
                   )
                   ->willReturnOnConsecutiveCalls(
                       $this->createMock(ModFileManager::class),
-                      $this->createMock(ModFileReader::class),
+                      $this->createMock(ModReader::class),
                       $rawExportDataService
                   );
 

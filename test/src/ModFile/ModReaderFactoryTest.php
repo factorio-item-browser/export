@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\ModFile;
 
 use FactorioItemBrowser\Export\ModFile\ModFileManager;
-use FactorioItemBrowser\Export\ModFile\ModFileReaderFactory;
+use FactorioItemBrowser\Export\ModFile\ModReaderFactory;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -15,9 +15,9 @@ use PHPUnit\Framework\TestCase;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\ModFile\ModFileReaderFactory
+ * @coversDefaultClass \FactorioItemBrowser\Export\ModFile\ModReaderFactory
  */
-class ModFileReaderFactoryTest extends TestCase
+class ModReaderFactoryTest extends TestCase
 {
     /**
      * Tests the invoking.
@@ -34,7 +34,7 @@ class ModFileReaderFactoryTest extends TestCase
                   ->with(ModFileManager::class)
                   ->willReturn($this->createMock(ModFileManager::class));
 
-        $factory = new ModFileReaderFactory();
+        $factory = new ModReaderFactory();
         $factory($container, ModFileManager::class);
     }
 }

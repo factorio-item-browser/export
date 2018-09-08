@@ -13,20 +13,20 @@ use Zend\ServiceManager\Factory\FactoryInterface;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ModFileReaderFactory implements FactoryInterface
+class ModReaderFactory implements FactoryInterface
 {
     /**
      * Creates the mod file reader.
      * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  null|array $options
-     * @return ModFileReader
+     * @return ModReader
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         /* @var ModFileManager $modFileManager */
         $modFileManager = $container->get(ModFileManager::class);
 
-        return new ModFileReader($modFileManager);
+        return new ModReader($modFileManager);
     }
 }

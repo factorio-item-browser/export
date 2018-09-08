@@ -8,7 +8,7 @@ use FactorioItemBrowser\Export\Command\CommandInterface;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\ModFile\ModFileManager;
-use FactorioItemBrowser\Export\ModFile\ModFileReader;
+use FactorioItemBrowser\Export\ModFile\ModReader;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Zend\Console\Adapter\AdapterInterface;
@@ -34,7 +34,7 @@ class UpdateListCommand implements CommandInterface
 
     /**
      * The mod file reader.
-     * @var ModFileReader
+     * @var ModReader
      */
     protected $modFileReader;
 
@@ -47,10 +47,10 @@ class UpdateListCommand implements CommandInterface
     /**
      * Initializes the command.
      * @param ModFileManager $modFileManager
-     * @param ModFileReader $modFileReader
+     * @param ModReader $modFileReader
      * @param ModRegistry $modRegistry
      */
-    public function __construct(ModFileManager $modFileManager, ModFileReader $modFileReader, ModRegistry $modRegistry)
+    public function __construct(ModFileManager $modFileManager, ModReader $modFileReader, ModRegistry $modRegistry)
     {
         $this->modFileManager = $modFileManager;
         $this->modFileReader = $modFileReader;
@@ -152,6 +152,7 @@ class UpdateListCommand implements CommandInterface
             $result = $currentModsByChecksum[$checksum];
         } else {
             $result = $this->modFileReader->read($modFileName, $checksum);
+            $this->runSubCommand('clean cache', ['mod' => $result->getName()]);
         }
         return $result;
     }

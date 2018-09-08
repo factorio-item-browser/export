@@ -7,15 +7,14 @@ namespace FactorioItemBrowser\Export\ModFile;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Utils\VersionUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
-use ZipArchive;
 
 /**
- * The reader of the actual mod file and its meta data.
+ * The reader of the meta data of the mods.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ModFileReader
+class ModReader
 {
     /**
      * The mod file manager.
@@ -52,7 +51,7 @@ class ModFileReader
     public function read(string $fileName, string $checksum): Mod
     {
         $mod = $this->createEntity($fileName, $checksum);
-        $mod->setDirectoryName($this->detectDirectoryName($fileName));
+        $mod->setDirectoryName($this->detectDirectoryName($mod));
 
         $this->parseInfoJson($mod);
         return $mod;
@@ -74,27 +73,19 @@ class ModFileReader
 
     /**
      * Detects the directory within the mod file.
-     * @param string $fileName
+     * @param Mod $mod
      * @return string
      * @throws ExportException
      */
-    protected function detectDirectoryName(string $fileName): string
+    protected function detectDirectoryName(Mod $mod): string
     {
-        $zipArchive = new ZipArchive();
-        $success = $zipArchive->open($fileName);
-        if ($success !== true) {
-            throw new ExportException('Unable to open zip archive ' . basename($fileName));
-        }
-
         $result = '';
-        for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
-            $stats = $zipArchive->statIndex($i);
-            if (substr($stats['name'], -10) === '/info.json') {
-                $result = substr($stats['name'], 0, -10);
+        foreach ($this->modFileManager->getAllFileNamesOfMod($mod) as $fileName) {
+            if (substr($fileName, -10) === '/info.json') {
+                $result = substr($fileName, 0, -10);
                 break;
             }
         }
-
         if ($result === '') {
             throw new ExportException('Unable to locate info.json in mod ' . basename($fileName));
         }

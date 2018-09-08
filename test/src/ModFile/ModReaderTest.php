@@ -8,7 +8,7 @@ use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\ModFile\ModFileManager;
-use FactorioItemBrowser\Export\ModFile\ModFileReader;
+use FactorioItemBrowser\Export\ModFile\ModReader;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -20,9 +20,9 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\ModFile\ModFileReader
+ * @coversDefaultClass \FactorioItemBrowser\Export\ModFile\ModReader
  */
-class ModFileReaderTest extends TestCase
+class ModReaderTest extends TestCase
 {
     use ReflectionTrait;
 
@@ -36,7 +36,7 @@ class ModFileReaderTest extends TestCase
         /* @var ModFileManager $modFileManager */
         $modFileManager = $this->createMock(ModFileManager::class);
 
-        $reader = new ModFileReader($modFileManager);
+        $reader = new ModReader($modFileManager);
         $this->assertSame($modFileManager, $this->extractProperty($reader, 'modFileManager'));
     }
 
@@ -72,7 +72,7 @@ class ModFileReaderTest extends TestCase
         /* @var ModFileManager $modFileManager */
         $modFileManager = $this->createMock(ModFileManager::class);
 
-        $reader = new ModFileReader($modFileManager);
+        $reader = new ModReader($modFileManager);
         $result = $reader->calculateChecksum($fileName);
         $this->assertSame($expectedResult, $result);
     }
@@ -99,8 +99,8 @@ class ModFileReaderTest extends TestCase
             ->willReturnSelf();
 
 
-        /* @var ModFileReader|MockObject $reader */
-        $reader = $this->getMockBuilder(ModFileReader::class)
+        /* @var ModReader|MockObject $reader */
+        $reader = $this->getMockBuilder(ModReader::class)
                        ->setMethods(['createEntity', 'detectDirectoryName', 'parseInfoJson'])
                        ->disableOriginalConstructor()
                        ->getMock();
@@ -136,7 +136,7 @@ class ModFileReaderTest extends TestCase
         /* @var ModFileManager $modFileManager */
         $modFileManager = $this->createMock(ModFileManager::class);
 
-        $reader = new ModFileReader($modFileManager);
+        $reader = new ModReader($modFileManager);
         $result = $this->invokeMethod($reader, 'createEntity', $fileName, $checksum);
         $this->assertEquals($expectedResult, $result);
     }
@@ -172,7 +172,7 @@ class ModFileReaderTest extends TestCase
             $this->expectException(ExportException::class);
         }
 
-        $reader = new ModFileReader($modFileManager);
+        $reader = new ModReader($modFileManager);
         $result = $this->invokeMethod($reader, 'detectDirectoryName', $fileName);
         $this->assertSame($expectedResult, $result);
     }
@@ -211,7 +211,7 @@ class ModFileReaderTest extends TestCase
                        ->with($mod)
                        ->willReturn($infoJson);
 
-        $reader = new ModFileReader($modFileManager);
+        $reader = new ModReader($modFileManager);
 
         $this->invokeMethod($reader, 'parseInfoJson', $mod);
         $this->assertEquals($expectedMod, $mod);
