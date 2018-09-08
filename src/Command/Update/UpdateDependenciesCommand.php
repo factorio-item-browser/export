@@ -51,6 +51,8 @@ class UpdateDependenciesCommand implements CommandInterface
      */
     public function __invoke(Route $route, AdapterInterface $console): int
     {
+        $console->writeLine('Updating dependencies...');
+
         $modNames = $this->getModNames($route);
         foreach ($modNames as $modName) {
             $this->updateDependenciesOfMod($modName);

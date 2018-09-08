@@ -108,7 +108,7 @@ class ModFileReader
      */
     protected function parseInfoJson(Mod $mod): void
     {
-        $infoJson = $this->modFileManager->getInfoJson($mod);
+        $infoJson = $this->modFileManager->getInfoJson($mod, true);
 
         $mod->setName($infoJson->getString('name'))
             ->setAuthor($infoJson->getString('author'))

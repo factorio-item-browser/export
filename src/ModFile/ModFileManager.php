@@ -49,12 +49,13 @@ class ModFileManager
      * Returns the specified file from the mod. Throws an exception if the file is not found.
      * @param Mod $mod
      * @param string $fileName
+     * @param bool $ignoreCache
      * @return string
      * @throws ExportException
      */
-    public function getFile(Mod $mod, string $fileName): string
+    public function getFile(Mod $mod, string $fileName, bool $ignoreCache = false): string
     {
-        $result = $this->cache->read($mod->getName(), $fileName);
+        $result = $ignoreCache ? null : $this->cache->read($mod->getName(), $fileName);
         if ($result === null) {
             $result = $this->readFile($mod, $fileName);
             if ($result === null) {
@@ -93,18 +94,17 @@ class ModFileManager
     /**
      * Returns the info.json file from the specified mod.
      * @param Mod $mod
+     * @param bool $ignoreCache
      * @return DataContainer
      * @throws ExportException
      */
-    public function getInfoJson(Mod $mod): DataContainer
+    public function getInfoJson(Mod $mod, bool $ignoreCache = false): DataContainer
     {
         $result = null;
-        $content = $this->getFile($mod, 'info.json');
-        if (is_string($content)) {
-            $json = json_decode($content, true);
-            if (is_array($json)) {
-                $result = new DataContainer($json);
-            }
+        $content = $this->getFile($mod, 'info.json', $ignoreCache);
+        $json = json_decode($content, true);
+        if (is_array($json)) {
+            $result = new DataContainer($json);
         }
 
         if ($result === null) {

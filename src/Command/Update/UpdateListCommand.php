@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\Update;
 
 use FactorioItemBrowser\Export\Command\CommandInterface;
+use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\ModFile\ModFileManager;
 use FactorioItemBrowser\Export\ModFile\ModFileReader;
@@ -23,6 +24,8 @@ use ZF\Console\Route;
  */
 class UpdateListCommand implements CommandInterface
 {
+    use SubCommandTrait;
+
     /**
      * The mod file manager.
      * @var ModFileManager
@@ -69,11 +72,11 @@ class UpdateListCommand implements CommandInterface
         $console->writeLine('Hashing mod files...');
         $newMods = $this->detectNewMods($modFileNames, $currentMods);
 
-        // @todo Re-order new mods
-
         $console->writeLine('Persisting mods...');
         $this->setModsToRegistry($newMods, $this->modRegistry);
         $this->printChangesToConsole($console, $newMods, $currentMods);
+
+        $this->runSubCommand('update dependencies', [], $console);
 
         $console->writeLine('Done.');
         return 0;

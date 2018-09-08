@@ -49,35 +49,17 @@ class ModFileManagerTest extends TestCase
     public function provideGetFile(): array
     {
         return [
-            [
-                'abc',
-                false,
-                null,
-                false,
-                false,
-                'abc',
-            ],
-            [
-                null,
-                true,
-                'abc',
-                true,
-                false,
-                'abc',
-            ],
-            [
-                null,
-                true,
-                null,
-                false,
-                true,
-                ''
-            ],
+            [true, 'abc', false, null, false, false, 'abc'],
+            [true, null, true, 'abc', true, false, 'abc'],
+            [true, null, true, null, false, true, ''],
+            [false, null, true, 'abc', true, false, 'abc'],
+            [false, null, true, null, false, true, ''],
         ];
     }
 
     /**
      * Tests the getFile method.
+     * @param bool $withCache
      * @param null|string $resultRead
      * @param bool $expectReadFile
      * @param null|string $resultReadFile
@@ -89,6 +71,7 @@ class ModFileManagerTest extends TestCase
      * @dataProvider provideGetFile
      */
     public function testGetFile(
+        bool $withCache,
         ?string $resultRead,
         bool $expectReadFile,
         ?string $resultReadFile,
@@ -112,7 +95,7 @@ class ModFileManagerTest extends TestCase
                       ->setMethods(['read', 'write'])
                       ->disableOriginalConstructor()
                       ->getMock();
-        $cache->expects($this->once())
+        $cache->expects($withCache ? $this->once() : $this->never())
               ->method('read')
               ->with($modName, $fileName)
               ->willReturn($resultRead);
@@ -130,7 +113,7 @@ class ModFileManagerTest extends TestCase
                 ->with($mod, $fileName)
                 ->willReturn($resultReadFile);
 
-        $result = $manager->getFile($mod, $fileName);
+        $result = $manager->getFile($mod, $fileName, !$withCache);
         $this->assertSame($expectedResult, $result);
     }
 
@@ -212,7 +195,6 @@ class ModFileManagerTest extends TestCase
         return [
             ['{"abc":"def"}', false, new DataContainer(['abc' => 'def'])],
             ['"fail"', true, null],
-            [null, true, null],
         ];
     }
 
@@ -227,6 +209,7 @@ class ModFileManagerTest extends TestCase
      */
     public function testGetInfoJson($content, bool $expectException, ?DataContainer $expectedResult): void
     {
+        $ignoreCache = true;
         $mod = new Mod();
         if ($expectException) {
             $this->expectException(ExportException::class);
@@ -234,15 +217,15 @@ class ModFileManagerTest extends TestCase
 
         /* @var ModFileManager|MockObject $manager */
         $manager = $this->getMockBuilder(ModFileManager::class)
-                        ->setMethods(['readFile'])
+                        ->setMethods(['getFile'])
                         ->disableOriginalConstructor()
                         ->getMock();
         $manager->expects($this->once())
-                ->method('readFile')
-                ->with($mod, 'info.json')
+                ->method('getFile')
+                ->with($mod, 'info.json', $ignoreCache)
                 ->willReturn($content);
 
-        $result = $manager->getInfoJson($mod);
+        $result = $manager->getInfoJson($mod, $ignoreCache);
         $this->assertEquals($expectedResult, $result);
     }
 
