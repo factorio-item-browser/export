@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
-use FactorioItemBrowser\Export\Utils\RecipeUtils;
-use FactorioItemBrowser\ExportData\Entity\Item;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\Export\I18n\Translator;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Product;
+use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 
 /**
  * The class parsing the recipes of the dump.
@@ -18,34 +18,46 @@ use FactorioItemBrowser\ExportData\Entity\Recipe\Product;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class RecipeParser extends AbstractParser
+class RecipeParser implements ParserInterface
 {
     /**
-     * Parses the dump data into the combination.
-     * @param CombinationData $combinationData
-     * @param DataContainer $dumpData
-     * @return $this
+     * The recipe registry.
+     * @var EntityRegistry
      */
-    public function parse(CombinationData $combinationData, DataContainer $dumpData)
+    protected $recipeRegistry;
+
+    /**
+     * The translator.
+     * @var Translator
+     */
+    protected $translator;
+
+    /**
+     * Initializes the parser.
+     * @param EntityRegistry $recipeRegistry
+     * @param Translator $translator
+     */
+    public function __construct(EntityRegistry $recipeRegistry, Translator $translator)
     {
-        $normalRecipes = [];
+        $this->recipeRegistry = $recipeRegistry;
+        $this->translator = $translator;
+    }
+    
+    /**
+     * Parses the dump data into the combination.
+     * @param Combination $combination
+     * @param DataContainer $dumpData
+     */
+    public function parse(Combination $combination, DataContainer $dumpData): void
+    {
         foreach ($dumpData->getObjectArray(['recipes', 'normal']) as $recipeData) {
             $recipe = $this->parseRecipe($recipeData, 'normal');
-            $combinationData->addRecipe($recipe);
-            $normalRecipes[$recipe->getName()] = $recipe;
+            $combination->addRecipeHash($this->recipeRegistry->set($recipe));
         }
-
         foreach ($dumpData->getObjectArray(['recipes', 'expensive']) as $recipeData) {
             $recipe = $this->parseRecipe($recipeData, 'expensive');
-            if (!isset($normalRecipes[$recipe->getName()])
-                || RecipeUtils::calculateHash($recipe)
-                    !== RecipeUtils::calculateHash($normalRecipes[$recipe->getName()])
-            ) {
-                $combinationData->addRecipe($recipe);
-            }
+            $combination->addRecipeHash($this->recipeRegistry->set($recipe));
         }
-        $this->removeDuplicateTranslations($combinationData);
-        return $this;
     }
 
     /**
@@ -57,23 +69,20 @@ class RecipeParser extends AbstractParser
     protected function parseRecipe(DataContainer $recipeData, string $mode): Recipe
     {
         $recipe = new Recipe();
-        $recipe
-            ->setName($recipeData->getString('name'))
-            ->setMode($mode)
-            ->setCraftingTime($recipeData->getFloat('craftingTime'))
-            ->setCraftingCategory($recipeData->getString('craftingCategory'));
+        $recipe->setName(strtolower($recipeData->getString('name')))
+               ->setMode($mode)
+               ->setCraftingTime($recipeData->getFloat('craftingTime'))
+               ->setCraftingCategory($recipeData->getString('craftingCategory'));
 
-        $this->translator->addTranslations(
+        $this->translator->addTranslationsToEntity(
             $recipe->getLabels(),
             'name',
-            $recipeData->get(['localised', 'name']),
-            ''
+            $recipeData->get(['localised', 'name'])
         );
-        $this->translator->addTranslations(
+        $this->translator->addTranslationsToEntity(
             $recipe->getDescriptions(),
             'description',
-            $recipeData->get(['localised', 'description']),
-            ''
+            $recipeData->get(['localised', 'description'])
         );
 
         $order = 1;
@@ -106,11 +115,10 @@ class RecipeParser extends AbstractParser
     protected function parseIngredient(DataContainer $ingredientData, int $order): ?Ingredient
     {
         $ingredient = new Ingredient();
-        $ingredient
-            ->setType($ingredientData->getString('type'))
-            ->setName($ingredientData->getString('name'))
-            ->setAmount($ingredientData->getFloat('amount'))
-            ->setOrder($order);
+        $ingredient->setType($ingredientData->getString('type'))
+                   ->setName(strtolower($ingredientData->getString('name')))
+                   ->setAmount($ingredientData->getFloat('amount'))
+                   ->setOrder($order);
 
         return ($ingredient->getAmount() > 0) ? $ingredient : null;
     }
@@ -124,42 +132,14 @@ class RecipeParser extends AbstractParser
     protected function parseProduct(DataContainer $productData, int $order): ?Product
     {
         $product = new Product();
-        $product
-            ->setType($productData->getString('type'))
-            ->setName($productData->getString('name'))
-            ->setAmountMin($productData->getFloat('amountMin'))
-            ->setAmountMax($productData->getFloat('amountMax'))
-            ->setProbability($productData->getFloat('probability'))
-            ->setOrder($order);
+        $product->setType($productData->getString('type'))
+                ->setName(strtolower($productData->getString('name')))
+                ->setAmountMin($productData->getFloat('amountMin'))
+                ->setAmountMax($productData->getFloat('amountMax'))
+                ->setProbability($productData->getFloat('probability'))
+                ->setOrder($order);
 
         $amount = ($product->getAmountMin() + $product->getAmountMax()) / 2 * $product->getProbability();
         return ($amount > 0) ? $product : null;
-    }
-
-    /**
-     * Removes duplicate translations if the item are already providing them.
-     * @param CombinationData $combinationData
-     * @return $this
-     */
-    protected function removeDuplicateTranslations(CombinationData $combinationData)
-    {
-        foreach ($combinationData->getRecipes() as $recipe) {
-            /* @var Item[] $items */
-            $items = array_filter([
-                $combinationData->getItem('item', $recipe->getName()),
-                $combinationData->getItem('fluid', $recipe->getName())
-            ]);
-            foreach ($items as $item) {
-                if ($this->areLocalisedStringsIdentical($item->getLabels(), $recipe->getLabels())
-                    && $this->areLocalisedStringsIdentical($item->getDescriptions(), $recipe->getDescriptions())
-                ) {
-                    $recipe->getLabels()->readData(new DataContainer([]));
-                    $recipe->getDescriptions()->readData(new DataContainer([]));
-                    $item->setProvidesRecipeLocalisation(true);
-                    break;
-                }
-            }
-        }
-        return $this;
     }
 }

@@ -4,46 +4,33 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
+use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\I18n\Translator;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
 /**
- * The factory of the parser manager.
+ * The factory of the recipe parser.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ParserManagerFactory implements FactoryInterface
+class RecipeParserFactory implements FactoryInterface
 {
     /**
-     * The parser classes to use.
-     */
-    protected const PARSER_CLASSES = [
-        IconParser::class,
-
-        ItemParser::class,
-        MachineParser::class,
-        RecipeParser::class,
-    ];
-
-    /**
-     * Creates the parser manager.
+     * Creates the parser.
      * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  null|array $options
-     * @return ParserManager
+     * @return RecipeParser
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+        /* @var RawExportDataService $rawExportDataService */
+        $rawExportDataService = $container->get(RawExportDataService::class);
         /* @var Translator $translator */
         $translator = $container->get(Translator::class);
 
-        $parsers = [];
-        foreach (self::PARSER_CLASSES as $parserClass) {
-            $parsers[] = $container->get($parserClass);
-        }
-
-        return new ParserManager($translator, $parsers);
+        return new RecipeParser($rawExportDataService->getRecipeRegistry(), $translator);
     }
 }

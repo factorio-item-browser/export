@@ -53,11 +53,11 @@ return [
             Mod\ModReader::class => Mod\ModReaderFactory::class,
             Mod\ParentCombinationFinder::class => Mod\ParentCombinationFinderFactory::class,
 
-            Parser\IconParser::class => Parser\AbstractParserFactory::class,
-            Parser\ItemParser::class => Parser\AbstractParserFactory::class,
-            Parser\MachineParser::class => Parser\AbstractParserFactory::class,
+            Parser\IconParser::class => Parser\IconParserFactory::class,
+            Parser\ItemParser::class => Parser\ItemParserFactory::class,
+            Parser\MachineParser::class => Parser\MachineParserFactory::class,
             Parser\ParserManager::class => Parser\ParserManagerFactory::class,
-            Parser\RecipeParser::class => Parser\AbstractParserFactory::class,
+            Parser\RecipeParser::class => Parser\RecipeParserFactory::class,
 
             Reducer\IconReducer::class => InvokableFactory::class,
             Reducer\ItemReducer::class => InvokableFactory::class,

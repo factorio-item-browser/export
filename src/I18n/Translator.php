@@ -98,7 +98,7 @@ class Translator
         $localisedString,
         $fallbackLocalisedString = null
     ) {
-        foreach (array_keys($this->translations['base'] ?? []) as $locale) {
+        foreach (array_keys($this->translations) as $locale) {
             $this->placeholderTranslator->setLocale($locale)
                                         ->setFallbackLocale('en');
 

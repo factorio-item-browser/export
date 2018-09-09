@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
-use FactorioItemBrowser\ExportData\Entity\Item;
+use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\ExportData\Entity\Machine;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 
 /**
  * The class parsing the machines of the dump.
@@ -15,33 +16,57 @@ use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class MachineParser extends AbstractParser
+class MachineParser implements ParserInterface
 {
     /**
      * The units of the energy usage to use.
      */
-    private const ENERGY_USAGE_UNITS = ['W', 'kW', 'MW', 'GW', 'TW', 'PW', 'EW', 'ZW', 'YW'];
+    protected const ENERGY_USAGE_UNITS = ['W', 'kW', 'MW', 'GW', 'TW', 'PW', 'EW', 'ZW', 'YW'];
+
+    /**
+     * The machine registry.
+     * @var EntityRegistry
+     */
+    protected $machineRegistry;
+
+    /**
+     * The translator.
+     * @var Translator
+     */
+    protected $translator;
+
+    /**
+     * Initializes the parser.
+     * @param EntityRegistry $machineRegistry
+     * @param Translator $translator
+     */
+    public function __construct(EntityRegistry $machineRegistry, Translator $translator)
+    {
+        $this->machineRegistry = $machineRegistry;
+        $this->translator = $translator;
+    }
 
     /**
      * Parses the dump data into the combination.
-     * @param CombinationData $combinationData
+     * @param Combination $combination
      * @param DataContainer $dumpData
-     * @return $this
      */
-    public function parse(CombinationData $combinationData, DataContainer $dumpData)
+    public function parse(Combination $combination, DataContainer $dumpData): void
     {
+        $machines = [];
         foreach ($dumpData->getObjectArray('machines') as $machineData) {
-            $combinationData->addMachine($this->parseMachine($machineData));
+            $machine = $this->parseMachine($machineData);
+            $machines[$machine->getName()] = $machine;
         }
         foreach ($dumpData->getObjectArray('fluidBoxes') as $fluidBoxData) {
-            $machine = $combinationData->getMachine($fluidBoxData->getString('name'));
-            if ($machine instanceof Machine) {
-                $this->parseFluidBox($machine, $fluidBoxData);
+            $name = strtolower($fluidBoxData->getString('name'));
+            if (isset($machines[$name])) {
+                $this->parseFluidBox($machines[$name], $fluidBoxData);
             }
         }
-
-        $this->removeDuplicateTranslations($combinationData);
-        return $this;
+        foreach ($machines as $machine) {
+            $combination->addMachineHash($this->machineRegistry->set($machine));
+        }
     }
 
     /**
@@ -52,29 +77,27 @@ class MachineParser extends AbstractParser
     protected function parseMachine(DataContainer $machineData): Machine
     {
         $machine = new Machine();
-        $machine->setName($machineData->getString('name'))
+        $machine->setName(strtolower($machineData->getString('name')))
                 ->setCraftingSpeed($machineData->getFloat('craftingSpeed', 1.))
                 ->setNumberOfItemSlots($machineData->getInteger('numberOfItemSlots', 0))
                 ->setNumberOfModuleSlots($machineData->getInteger('numberOfModuleSlots', 0));
 
         foreach ($machineData->getArray('craftingCategories') as $craftingCategory => $isEnabled) {
-            if ($isEnabled && strlen($craftingCategory) > 0) {
+            if ((bool) $isEnabled && strlen($craftingCategory) > 0) {
                 $machine->addCraftingCategory($craftingCategory);
             }
         }
         $this->parseEnergyUsage($machine, $machineData);
 
-        $this->translator->addTranslations(
+        $this->translator->addTranslationsToEntity(
             $machine->getLabels(),
             'name',
-            $machineData->get(['localised', 'name']),
-            ''
+            $machineData->get(['localised', 'name'])
         );
-        $this->translator->addTranslations(
+        $this->translator->addTranslationsToEntity(
             $machine->getDescriptions(),
             'description',
-            $machineData->get(['localised', 'description']),
-            ''
+            $machineData->get(['localised', 'description'])
         );
         return $machine;
     }
@@ -83,9 +106,8 @@ class MachineParser extends AbstractParser
      * Parses the energy usage into the specified machine.
      * @param Machine $machine
      * @param DataContainer $machineData
-     * @return $this
      */
-    protected function parseEnergyUsage(Machine $machine, DataContainer $machineData)
+    protected function parseEnergyUsage(Machine $machine, DataContainer $machineData): void
     {
         $energyUsage = $machineData->getFloat('energyUsage', 0.); // Float because numbers may be bigger than 64bit
         if ($energyUsage > 0) {
@@ -99,40 +121,16 @@ class MachineParser extends AbstractParser
             $machine->setEnergyUsage(round($energyUsage, 3))
                     ->setEnergyUsageUnit($currentUnit);
         }
-        return $this;
     }
 
     /**
      * Parses the fluid box data into the machine.
      * @param Machine $machine
      * @param DataContainer $fluidBoxData
-     * @return $this
      */
-    protected function parseFluidBox(Machine $machine, DataContainer $fluidBoxData)
+    protected function parseFluidBox(Machine $machine, DataContainer $fluidBoxData): void
     {
         $machine->setNumberOfFluidInputSlots($fluidBoxData->getInteger('input'))
                 ->setNumberOfFluidOutputSlots($fluidBoxData->getInteger('output'));
-        return $this;
-    }
-
-    /**
-     * Removes duplicate translations if the item are already providing them.
-     * @param CombinationData $combinationData
-     * @return $this
-     */
-    protected function removeDuplicateTranslations(CombinationData $combinationData)
-    {
-        foreach ($combinationData->getMachines() as $machine) {
-            $item = $combinationData->getItem('item', $machine->getName());
-            if ($item instanceof Item
-                && $this->areLocalisedStringsIdentical($item->getLabels(), $machine->getLabels())
-                && $this->areLocalisedStringsIdentical($item->getDescriptions(), $machine->getDescriptions())
-            ) {
-                $machine->getLabels()->readData(new DataContainer([]));
-                $machine->getDescriptions()->readData(new DataContainer([]));
-                $item->setProvidesMachineLocalisation(true);
-            }
-        }
-        return $this;
     }
 }

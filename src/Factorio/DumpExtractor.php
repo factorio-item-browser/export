@@ -18,12 +18,12 @@ class DumpExtractor
     /**
      * The placeholder marking the begin of a dump.
      */
-    private const PLACEHOLDER_BEGIN = '%name%>>>---';
+    protected const PLACEHOLDER_BEGIN = '%name%>>>---';
 
     /**
      * The placeholder marking the end of a dump.
      */
-    private const PLACEHOLDER_END = '---<<<%name%';
+    protected const PLACEHOLDER_END = '---<<<%name%';
 
     /**
      * Extracts all dumps from the specified output.
@@ -58,9 +58,20 @@ class DumpExtractor
         $placeHolderBegin = str_replace('%name%', $dumpName, self::PLACEHOLDER_BEGIN);
         $placeHolderEnd = str_replace('%name%', $dumpName, self::PLACEHOLDER_END);
 
-        $posBegin = strpos($output, $placeHolderBegin) + strlen($placeHolderBegin);
-        $posEnd = strpos($output, $placeHolderEnd, $posBegin);
-        if ($posBegin === false || $posEnd === false) {
+        $isValid = true;
+        $posBegin = strpos($output, $placeHolderBegin);
+        $posEnd = false;
+        if ($posBegin === false) {
+            $isValid = false;
+        } else {
+            $posBegin += strlen($placeHolderBegin);
+            $posEnd = strpos($output, $placeHolderEnd, $posBegin);
+            if ($posEnd === false) {
+                $isValid = false;
+            }
+        }
+
+        if (!$isValid) {
             $lines = explode(PHP_EOL, $output);
             $lastLines = implode(PHP_EOL, array_slice($lines, -5));
 
@@ -69,6 +80,8 @@ class DumpExtractor
             );
         }
 
+        $posBegin = (int) $posBegin;
+        $posEnd = (int) $posEnd;
         $dump = substr($output, $posBegin, $posEnd - $posBegin);
         $result = json_decode($dump, true);
         if (!is_array($result)) {

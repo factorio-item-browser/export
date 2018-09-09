@@ -7,11 +7,8 @@ namespace FactorioItemBrowser\Export\Parser;
 use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
-use FactorioItemBrowser\ExportData\Entity\Item;
-use FactorioItemBrowser\ExportData\Entity\Machine;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
-use FactorioItemBrowser\ExportData\Entity\Recipe;
-use FactorioItemBrowser\ExportData\Entity\Recipe\Product;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 
 /**
  * The class parsing the icons of the dump data.
@@ -19,15 +16,35 @@ use FactorioItemBrowser\ExportData\Entity\Recipe\Product;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class IconParser extends AbstractParser
+class IconParser implements ParserInterface
 {
     /**
-     * Parses the dump data into the combination.
-     * @param CombinationData $combinationData
-     * @param DataContainer $dumpData
-     * @return $this
+     * The icon registry.
+     * @var EntityRegistry
      */
-    public function parse(CombinationData $combinationData, DataContainer $dumpData)
+    protected $iconRegistry;
+
+    /**
+     * The parsed icons.
+     * @var array|Icon[]
+     */
+    protected $icons;
+
+    /**
+     * Initializes the parser.
+     * @param EntityRegistry $iconRegistry
+     */
+    public function __construct(EntityRegistry $iconRegistry)
+    {
+        $this->iconRegistry = $iconRegistry;
+    }
+
+    /**
+     * Parses the dump data into the combination.
+     * @param Combination $combination
+     * @param DataContainer $dumpData
+     */
+    public function parse(Combination $combination, DataContainer $dumpData): void
     {
         foreach ($dumpData->getObjectArray('icons') as $iconData) {
             $icon = $this->parseIcon($iconData);
@@ -35,25 +52,18 @@ class IconParser extends AbstractParser
             $name = $iconData->getString('name');
             $type = $iconData->getString('type');
             switch ($type) {
-                case 'recipe':
-                    $this->processIcon($combinationData, $combinationData->getRecipe('normal', $name), $icon, true);
-                    $this->processIcon($combinationData, $combinationData->getRecipe('expensive', $name), $icon, true);
-                    break;
-
-                case 'item':
                 case 'fluid':
-                    $this->processIcon($combinationData, $combinationData->getItem($type, $name), $icon, true);
+                case 'item':
+                case 'recipe':
+                    $this->icons[$this->buildArrayKey($type, $name)] = $icon;
                     break;
 
                 default:
-                    $this->processIcon($combinationData, $combinationData->getItem('item', $name), $icon, false);
-                    $this->processIcon($combinationData, $combinationData->getMachine($name), $icon, false);
+                    $this->icons[$this->buildArrayKey('item', $name)] = $icon;
+                    $this->icons[$this->buildArrayKey('machine',  $name)] = $icon;
                     break;
             }
         }
-
-        $this->addFallbackRecipeIcons($combinationData);
-        return $this;
     }
 
     /**
@@ -67,8 +77,7 @@ class IconParser extends AbstractParser
         foreach ($iconData->getObjectArray('icons') as $layerData) {
             $icon->addLayer($this->parseLayer($layerData));
         }
-        $icon->setSize($iconData->getInteger('iconSize', Icon::DEFAULT_SIZE))
-             ->setHash($this->calculateHash($icon));
+        $icon->setSize($iconData->getInteger('iconSize', Icon::DEFAULT_SIZE));
         return $icon;
     }
 
@@ -81,15 +90,14 @@ class IconParser extends AbstractParser
     {
         $layer = new Layer();
         $layer->setFileName($layerData->getString('icon'))
-              ->setOffsetX($layerData->getInteger(['shift', 0], 0))
-              ->setOffsetY($layerData->getInteger(['shift', 1], 0))
+              ->setOffsetX($layerData->getInteger(['shift', '0'], 0))
+              ->setOffsetY($layerData->getInteger(['shift', '1'], 0))
               ->setScale($layerData->getFloat('scale', 1.));
 
-        $layer->getTintColor()
-              ->setRed($this->convertColorValue($layerData->getFloat(['tint', 'r'], 1.)))
-              ->setGreen($this->convertColorValue($layerData->getFloat(['tint', 'g'], 1.)))
-              ->setBlue($this->convertColorValue($layerData->getFloat(['tint', 'b'], 1.)))
-              ->setAlpha($this->convertColorValue($layerData->getFloat(['tint', 'a'], 1.)));
+        $layer->getTintColor()->setRed($this->convertColorValue($layerData->getFloat(['tint', 'r'], 1.)))
+                              ->setGreen($this->convertColorValue($layerData->getFloat(['tint', 'g'], 1.)))
+                              ->setBlue($this->convertColorValue($layerData->getFloat(['tint', 'b'], 1.)))
+                              ->setAlpha($this->convertColorValue($layerData->getFloat(['tint', 'a'], 1.)));
         return $layer;
     }
 
@@ -104,57 +112,31 @@ class IconParser extends AbstractParser
     }
 
     /**
-     * Calculates the hash of the specified icon.
-     * @param Icon $icon
+     * Returns the icon hash for the specified entity, if available.
+     * @param Combination $combination
+     * @param string $type
+     * @param string $name
+     * @return string|null
+     */
+    public function getIconHashForEntity(Combination $combination, string $type, string $name): ?string
+    {
+        $result = null;
+        $key = $this->buildArrayKey($type, $name);
+        if (isset($this->icons[$key])) {
+            $result = $this->iconRegistry->set($this->icons[$key]);
+            $combination->addIconHash($result);
+        }
+        return $result;
+    }
+
+    /**
+     * Returns the key used in the array.
+     * @param string $type
+     * @param string $name
      * @return string
      */
-    protected function calculateHash(Icon $icon): string
+    protected function buildArrayKey(string $type, string $name): string
     {
-        $data = array_map(function (Layer $layer): array {
-            return $layer->writeData();
-        }, $icon->getLayers());
-        $data[] = $icon->getSize();
-        return hash('crc32b', json_encode($data));
-    }
-
-    /**
-     * Processes the specified icon.
-     * @param CombinationData $combinationData
-     * @param Item|Recipe|Machine|null $entity
-     * @param Icon $icon
-     * @param bool $preferredMatch
-     * @return $this
-     */
-    protected function processIcon(CombinationData $combinationData, $entity, Icon $icon, bool $preferredMatch)
-    {
-        if (!is_null($entity) && ($preferredMatch || strlen($entity->getIconHash()) === 0)) {
-            $entity->setIconHash($icon->getHash());
-            if (!$combinationData->getIcon($icon->getHash()) instanceof Icon) {
-                $combinationData->addIcon($icon);
-            }
-        }
-        return $this;
-    }
-
-    /**
-     * Adds a fallback icon to the recipes if they do not have one assigned already.
-     * @param CombinationData $combinationData
-     * @return $this
-     */
-    protected function addFallbackRecipeIcons(CombinationData $combinationData)
-    {
-        foreach ($combinationData->getRecipes() as $recipe) {
-            if (strlen($recipe->getIconHash()) === 0) {
-                $products = $recipe->getProducts();
-                $firstProduct = reset($products);
-                if ($firstProduct instanceof Product) {
-                    $item = $combinationData->getItem($firstProduct->getType(), $firstProduct->getName());
-                    if ($item instanceof Item) {
-                        $recipe->setIconHash($item->getIconHash());
-                    }
-                }
-            }
-        }
-        return $this;
+        return $type . '|' . $name;
     }
 }

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\ExportData\Entity\Item;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 
 /**
  * The class parsing the items of the dump.
@@ -14,23 +16,65 @@ use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ItemParser extends AbstractParser
+class ItemParser implements ParserInterface
 {
     /**
-     * Parses the dump data into the combination.
-     * @param CombinationData $combinationData
-     * @param DataContainer $dumpData
-     * @return $this
+     * The icon parser.
+     * @var IconParser
      */
-    public function parse(CombinationData $combinationData, DataContainer $dumpData)
+    protected $iconParser;
+
+    /**
+     * The item registry.
+     * @var EntityRegistry
+     */
+    protected $itemRegistry;
+
+    /**
+     * The translator.
+     * @var Translator
+     */
+    protected $translator;
+
+    /**
+     * Initializes the parser.
+     * @param IconParser $iconParser
+     * @param EntityRegistry $itemRegistry
+     * @param Translator $translator
+     */
+    public function __construct(IconParser $iconParser, EntityRegistry $itemRegistry, Translator $translator)
+    {
+        $this->iconParser = $iconParser;
+        $this->itemRegistry = $itemRegistry;
+        $this->translator = $translator;
+    }
+
+    /**
+     * Parses the dump data into the combination.
+     * @param Combination $combination
+     * @param DataContainer $dumpData
+     */
+    public function parse(Combination $combination, DataContainer $dumpData): void
     {
         foreach ($dumpData->getObjectArray('items') as $itemData) {
-            $combinationData->addItem($this->parseItem($itemData, 'item'));
+            $this->processItem($combination, $itemData, 'item');
         }
-        foreach ($dumpData->getObjectArray('fluids') as $fluidData) {
-            $combinationData->addItem($this->parseItem($fluidData, 'fluid'));
+        foreach ($dumpData->getObjectArray('fluids') as $itemData) {
+            $this->processItem($combination, $itemData, 'fluid');
         }
-        return $this;
+    }
+
+    /**
+     * Processes the specified item data.
+     * @param Combination $combination
+     * @param DataContainer $itemData
+     * @param string $type
+     */
+    protected function processItem(Combination $combination, DataContainer $itemData, string $type): void
+    {
+        $item = $this->parseItem($itemData, $type);
+        $this->assignIconHash($combination, $item);
+        $combination->addItemHash($this->itemRegistry->set($item));
     }
 
     /**
@@ -43,20 +87,33 @@ class ItemParser extends AbstractParser
     {
         $item = new Item();
         $item->setType($type)
-             ->setName($itemData->getString('name'));
+             ->setName(strtolower($itemData->getString('name')));
 
-        $this->translator->addTranslations(
+        $this->translator->addTranslationsToEntity(
             $item->getLabels(),
             'name',
             $itemData->get(['localised', 'name']),
             $itemData->get(['localised', 'entityName'])
         );
-        $this->translator->addTranslations(
+        $this->translator->addTranslationsToEntity(
             $item->getDescriptions(),
             'description',
             $itemData->get(['localised', 'description']),
             $itemData->get(['localised', 'entityDescription'])
         );
         return $item;
+    }
+
+    /**
+     * Assigns the icon hash to the specified item.
+     * @param Combination $combination
+     * @param Item $item
+     */
+    protected function assignIconHash(Combination $combination, Item $item): void
+    {
+        $iconHash = $this->iconParser->getIconHashForEntity($combination, $item->getType(), $item->getName());
+        if ($iconHash !== null) {
+            $item->setIconHash($iconHash);
+        }
     }
 }
