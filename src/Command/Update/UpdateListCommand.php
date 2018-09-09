@@ -9,6 +9,7 @@ use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Mod\ModReader;
+use FactorioItemBrowser\Export\Utils\ConsoleUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Zend\Console\Adapter\AdapterInterface;
@@ -197,11 +198,10 @@ class UpdateListCommand implements CommandInterface
             }
 
             if ($hasChanged) {
-                $console->write(str_pad($newMod->getName() . ': ', 64, ' ', STR_PAD_LEFT));
-                $console->write(str_pad($currentVersion, 10, ' ', STR_PAD_LEFT));
+                $console->write(ConsoleUtils::formatModName($newMod->getName(), ': '));
+                $console->write(ConsoleUtils::formatVersion($currentVersion, true));
                 $console->write(' -> ');
-                $console->write(str_pad($newMod->getVersion(), 10, ' ', STR_PAD_RIGHT));
-                $console->writeLine();
+                $console->write(ConsoleUtils::formatVersion($newMod->getVersion(), false));
             }
         }
     }

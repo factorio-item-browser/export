@@ -22,6 +22,11 @@ return [
             ],
         ],
         [
+            'name' => 'list',
+            'handler' => Command\Lists\ListCommand::class,
+            'short_description' => 'Lists all available mods.',
+        ],
+        [
             'name' => 'render icon',
             'route' => '<hash>',
             'handler' => Command\Render\RenderIconCommand::class,
@@ -66,12 +71,6 @@ return [
             'name' => 'export all',
             'handler' => Command\ExportAllCommand::class,
             'short_description' => 'Exports ALL mods. Takes hours!',
-        ],
-
-        [
-            'name' => 'list all',
-            'handler' => Command\ListAllCommand::class,
-            'short_description' => 'Lists all available mods.',
         ],
         [
             'name' => 'list missing',

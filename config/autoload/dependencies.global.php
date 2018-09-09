@@ -19,6 +19,7 @@ return [
             Cache\ModFileCache::class => Cache\ModFileCacheFactory::class,
 
             Command\Clean\CleanCacheCommand::class => Command\Clean\CleanCacheCommandFactory::class,
+            Command\Lists\ListCommand::class => Command\Lists\ListCommandFactory::class,
             Command\Render\RenderIconCommand::class => Command\Render\RenderIconCommandFactory::class,
             Command\Update\UpdateDependenciesCommand::class => Command\Update\UpdateDependenciesCommandFactory::class,
             Command\Update\UpdateListCommand::class => Command\Update\UpdateListCommandFactory::class,
@@ -26,7 +27,6 @@ return [
 
             Command\ExportAllCommand::class => Command\ExportAllCommandFactory::class,
             Command\ExportModCommand::class => Command\ExportModCommandFactory::class,
-            Command\ListAllCommand::class => Command\ListAllCommandFactory::class,
             Command\ListMissingCommand::class => Command\ListMissingCommandFactory::class,
 
             ExportData\RawExportDataService::class => ExportData\RawExportDataServiceFactory::class,
