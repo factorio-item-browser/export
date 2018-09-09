@@ -60,7 +60,7 @@ class IconParser implements ParserInterface
 
                 default:
                     $this->icons[$this->buildArrayKey('item', $name)] = $icon;
-                    $this->icons[$this->buildArrayKey('machine',  $name)] = $icon;
+                    $this->icons[$this->buildArrayKey('machine', $name)] = $icon;
                     break;
             }
         }

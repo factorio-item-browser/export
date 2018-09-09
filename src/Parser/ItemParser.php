@@ -73,6 +73,7 @@ class ItemParser implements ParserInterface
     protected function processItem(Combination $combination, DataContainer $itemData, string $type): void
     {
         $item = $this->parseItem($itemData, $type);
+        $this->addTranslations($item, $itemData);
         $this->assignIconHash($combination, $item);
         $combination->addItemHash($this->itemRegistry->set($item));
     }
@@ -89,6 +90,16 @@ class ItemParser implements ParserInterface
         $item->setType($type)
              ->setName(strtolower($itemData->getString('name')));
 
+        return $item;
+    }
+
+    /**
+     * Adds the translation to the item.
+     * @param Item $item
+     * @param DataContainer $itemData
+     */
+    protected function addTranslations(Item $item, DataContainer $itemData): void
+    {
         $this->translator->addTranslationsToEntity(
             $item->getLabels(),
             'name',
@@ -101,7 +112,6 @@ class ItemParser implements ParserInterface
             $itemData->get(['localised', 'description']),
             $itemData->get(['localised', 'entityDescription'])
         );
-        return $item;
     }
 
     /**

@@ -13,10 +13,11 @@ install:
   - composer install --prefer-dist --no-interaction
 
 script:
-  - composer validate --strict
-#  - vendor/bin/phpunit --coverage-clover=coverage.xml
+#  - composer validate --strict
+  - vendor/bin/phpunit --coverage-clover=coverage.xml
+#  - vendor/bin/coverage-check coverage.xml 100
   - vendor/bin/phpcs -np --colors
 #  - vendor/bin/phpstan analyse --no-interaction
 
-#after_script:
-#  - bash <(curl -s https://codecov.io/bash)
+after_script:
+  - bash <(curl -s https://codecov.io/bash)
