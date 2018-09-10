@@ -26,11 +26,13 @@ class RecipeParserFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+        /* @var IconParser $iconParser */
+        $iconParser = $container->get(IconParser::class);
         /* @var RawExportDataService $rawExportDataService */
         $rawExportDataService = $container->get(RawExportDataService::class);
         /* @var Translator $translator */
         $translator = $container->get(Translator::class);
 
-        return new RecipeParser($rawExportDataService->getRecipeRegistry(), $translator);
+        return new RecipeParser($iconParser, $rawExportDataService->getRecipeRegistry(), $translator);
     }
 }

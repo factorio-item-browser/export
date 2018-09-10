@@ -21,6 +21,12 @@ use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 class RecipeParser implements ParserInterface
 {
     /**
+     * The icon parser.
+     * @var IconParser
+     */
+    protected $iconParser;
+
+    /**
      * The recipe registry.
      * @var EntityRegistry
      */
@@ -34,11 +40,13 @@ class RecipeParser implements ParserInterface
 
     /**
      * Initializes the parser.
+     * @param IconParser $iconParser
      * @param EntityRegistry $recipeRegistry
      * @param Translator $translator
      */
-    public function __construct(EntityRegistry $recipeRegistry, Translator $translator)
+    public function __construct(IconParser $iconParser, EntityRegistry $recipeRegistry, Translator $translator)
     {
+        $this->iconParser = $iconParser;
         $this->recipeRegistry = $recipeRegistry;
         $this->translator = $translator;
     }
@@ -51,13 +59,25 @@ class RecipeParser implements ParserInterface
     public function parse(Combination $combination, DataContainer $dumpData): void
     {
         foreach ($dumpData->getObjectArray(['recipes', 'normal']) as $recipeData) {
-            $recipe = $this->parseRecipe($recipeData, 'normal');
-            $combination->addRecipeHash($this->recipeRegistry->set($recipe));
+            $this->processRecipe($combination, $recipeData, 'normal');
         }
         foreach ($dumpData->getObjectArray(['recipes', 'expensive']) as $recipeData) {
-            $recipe = $this->parseRecipe($recipeData, 'expensive');
-            $combination->addRecipeHash($this->recipeRegistry->set($recipe));
+            $this->processRecipe($combination, $recipeData, 'expensive');
         }
+    }
+
+    /**
+     * Processes the specified recipe data.
+     * @param Combination $combination
+     * @param DataContainer $recipeData
+     * @param string $mode
+     */
+    protected function processRecipe(Combination $combination, DataContainer $recipeData, string $mode): void
+    {
+        $recipe = $this->parseRecipe($recipeData, $mode);
+        $this->addTranslations($recipe, $recipeData);
+        $this->assignIconHash($combination, $recipe);
+        $combination->addRecipeHash($this->recipeRegistry->set($recipe));
     }
 
     /**
@@ -72,8 +92,96 @@ class RecipeParser implements ParserInterface
         $recipe->setName(strtolower($recipeData->getString('name')))
                ->setMode($mode)
                ->setCraftingTime($recipeData->getFloat('craftingTime'))
-               ->setCraftingCategory($recipeData->getString('craftingCategory'));
+               ->setCraftingCategory($recipeData->getString('craftingCategory'))
+               ->setIngredients($this->parseIngredients($recipeData))
+               ->setProducts($this->parseProducts($recipeData));
 
+        return $recipe;
+    }
+
+    /**
+     * Parses the ingredients of the recipe.
+     * @param DataContainer $recipeData
+     * @return array|Ingredient[]
+     */
+    protected function parseIngredients(DataContainer $recipeData): array
+    {
+        $ingredients = [];
+        $order = 1;
+        foreach ($recipeData->getObjectArray('ingredients') as $ingredientData) {
+            $ingredient = $this->parseIngredient($ingredientData);
+            if ($ingredient instanceof Ingredient) {
+                $ingredient->setOrder($order);
+                ++$order;
+
+                $ingredients[] = $ingredient;
+            }
+        }
+        return $ingredients;
+    }
+
+    /**
+     * Parses the ingredient data into an entity.
+     * @param DataContainer $ingredientData
+     * @return Ingredient|null
+     */
+    protected function parseIngredient(DataContainer $ingredientData): ?Ingredient
+    {
+        $ingredient = new Ingredient();
+        $ingredient->setType($ingredientData->getString('type'))
+                   ->setName(strtolower($ingredientData->getString('name')))
+                   ->setAmount($ingredientData->getFloat('amount'));
+
+        return ($ingredient->getAmount() > 0) ? $ingredient : null;
+    }
+    
+    /**
+     * Parses the products of the recipe.
+     * @param DataContainer $recipeData
+     * @return array|Product[]
+     */
+    protected function parseProducts(DataContainer $recipeData): array
+    {
+        $products = [];
+        $order = 1;
+        foreach ($recipeData->getObjectArray('products') as $productData) {
+            $product = $this->parseProduct($productData);
+            if ($product instanceof Product) {
+                $product->setOrder($order);
+                ++$order;
+
+                $products[] = $product;
+            }
+        }
+        return $products;
+    }
+
+    /**
+     * Parses the product data into an entity.
+     * @param DataContainer $productData
+     * @param int $order
+     * @return Product|null
+     */
+    protected function parseProduct(DataContainer $productData): ?Product
+    {
+        $product = new Product();
+        $product->setType($productData->getString('type'))
+                ->setName(strtolower($productData->getString('name')))
+                ->setAmountMin($productData->getFloat('amountMin'))
+                ->setAmountMax($productData->getFloat('amountMax'))
+                ->setProbability($productData->getFloat('probability'));
+
+        $amount = ($product->getAmountMin() + $product->getAmountMax()) / 2 * $product->getProbability();
+        return ($amount > 0) ? $product : null;
+    }
+
+    /**
+     * Adds the translations to the recipe.
+     * @param Recipe $recipe
+     * @param DataContainer $recipeData
+     */
+    protected function addTranslations(Recipe $recipe, DataContainer $recipeData): void
+    {
         $this->translator->addTranslationsToEntity(
             $recipe->getLabels(),
             'name',
@@ -84,62 +192,26 @@ class RecipeParser implements ParserInterface
             'description',
             $recipeData->get(['localised', 'description'])
         );
-
-        $order = 1;
-        foreach ($recipeData->getObjectArray('ingredients') as $ingredientData) {
-            $ingredient = $this->parseIngredient($ingredientData, $order);
-            if ($ingredient instanceof Ingredient) {
-                $recipe->addIngredient($ingredient);
-                ++$order;
-            }
-        }
-
-        $order = 1;
-        foreach ($recipeData->getObjectArray('products') as $productData) {
-            $product = $this->parseProduct($productData, $order);
-            if ($product instanceof Product) {
-                $recipe->addProduct($product);
-                ++$order;
-            }
-        }
-
-        return $recipe;
     }
 
     /**
-     * Parses the ingredient data into an entity.
-     * @param DataContainer $ingredientData
-     * @param int $order
-     * @return Ingredient|null
+     * Assigns the icon hash to the specified recipe.
+     * @param Combination $combination
+     * @param Recipe $recipe
      */
-    protected function parseIngredient(DataContainer $ingredientData, int $order): ?Ingredient
+    protected function assignIconHash(Combination $combination, Recipe $recipe): void
     {
-        $ingredient = new Ingredient();
-        $ingredient->setType($ingredientData->getString('type'))
-                   ->setName(strtolower($ingredientData->getString('name')))
-                   ->setAmount($ingredientData->getFloat('amount'))
-                   ->setOrder($order);
-
-        return ($ingredient->getAmount() > 0) ? $ingredient : null;
-    }
-
-    /**
-     * Parses the product data into an entity.
-     * @param DataContainer $productData
-     * @param int $order
-     * @return Product|null
-     */
-    protected function parseProduct(DataContainer $productData, int $order): ?Product
-    {
-        $product = new Product();
-        $product->setType($productData->getString('type'))
-                ->setName(strtolower($productData->getString('name')))
-                ->setAmountMin($productData->getFloat('amountMin'))
-                ->setAmountMax($productData->getFloat('amountMax'))
-                ->setProbability($productData->getFloat('probability'))
-                ->setOrder($order);
-
-        $amount = ($product->getAmountMin() + $product->getAmountMax()) / 2 * $product->getProbability();
-        return ($amount > 0) ? $product : null;
+        $iconHash = $this->iconParser->getIconHashForEntity($combination, 'recipe', $recipe->getName());
+        $firstProduct = reset($recipe->getProducts());
+        if ($iconHash === null && $firstProduct instanceof Product) {
+            $iconHash = $this->iconParser->getIconHashForEntity(
+                $combination,
+                $firstProduct->getType(),
+                $firstProduct->getName()
+            );
+        }
+        if ($iconHash !== null) {
+            $recipe->setIconHash($iconHash);
+        }
     }
 }

@@ -19,7 +19,7 @@
     "ext-PDO": "*",
     "ext-zip": "*",
     "bluepsyduck/common": "^1.0",
-    "bluepsyduck/symfony-process-manager": "dev-master",
+    "bluepsyduck/symfony-process-manager": "^1.0",
     "factorio-item-browser/export-data": "dev-feature/refactor",
     "symfony/process": "^4.1",
     "zendframework/zend-config-aggregator": "^1.0",

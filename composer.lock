@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ce6bbd7e8321b121eb901157b8428e4b",
+    "content-hash": "41117448b9d66e1488982670a5ebeaa9",
     "packages": [
         {
             "name": "bluepsyduck/common",
@@ -54,16 +54,16 @@
         },
         {
             "name": "bluepsyduck/symfony-process-manager",
-            "version": "dev-master",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/BluePsyduck/symfony-process-manager.git",
-                "reference": "a616e9d952766fe55467a78a6aef3547f7d78c0c"
+                "reference": "46b1234a4943bf2832e7dd1093ba0c477f6c1989"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/BluePsyduck/symfony-process-manager/zipball/a616e9d952766fe55467a78a6aef3547f7d78c0c",
-                "reference": "a616e9d952766fe55467a78a6aef3547f7d78c0c",
+                "url": "https://api.github.com/repos/BluePsyduck/symfony-process-manager/zipball/46b1234a4943bf2832e7dd1093ba0c477f6c1989",
+                "reference": "46b1234a4943bf2832e7dd1093ba0c477f6c1989",
                 "shasum": ""
             },
             "require": {
@@ -103,7 +103,7 @@
                 "process",
                 "symfony"
             ],
-            "time": "2018-09-08T09:34:31+00:00"
+            "time": "2018-09-10T14:52:27+00:00"
         },
         {
             "name": "container-interop/container-interop",
@@ -2284,16 +2284,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "7.3.4",
+            "version": "7.3.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "0356331bf62896dc56e3a15030b23b73f38b2935"
+                "reference": "7b331efabbb628c518c408fdfcaf571156775de2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/0356331bf62896dc56e3a15030b23b73f38b2935",
-                "reference": "0356331bf62896dc56e3a15030b23b73f38b2935",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/7b331efabbb628c518c408fdfcaf571156775de2",
+                "reference": "7b331efabbb628c518c408fdfcaf571156775de2",
                 "shasum": ""
             },
             "require": {
@@ -2364,7 +2364,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2018-09-05T09:58:53+00:00"
+            "time": "2018-09-08T15:14:29+00:00"
         },
         {
             "name": "psr/log",
@@ -3339,7 +3339,6 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "bluepsyduck/symfony-process-manager": 20,
         "factorio-item-browser/export-data": 20
     },
     "prefer-stable": false,
