@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\Lists;
 
-use FactorioItemBrowser\Export\Command\CommandInterface;
+use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Utils\ConsoleUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
@@ -17,7 +18,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ListCommand implements CommandInterface
+class ListCommand extends AbstractCommand
 {
     /**
      * The mod registry containing the available mods.
@@ -43,18 +44,17 @@ class ListCommand implements CommandInterface
     }
 
     /**
-     * Invokes the command.
+     * Executes the command.
      * @param Route $route
      * @param AdapterInterface $console
-     * @return int
+     * @throws ExportException
      */
-    public function __invoke(Route $route, AdapterInterface $console): int
+    protected function execute(Route $route, AdapterInterface $console): void
     {
         $mods = $this->getOrderedMods();
         foreach ($mods as $mod) {
             $this->printMod($console, $mod, $this->exportedModRegistry->get($mod->getName()));
         }
-        return 0;
     }
 
     /**

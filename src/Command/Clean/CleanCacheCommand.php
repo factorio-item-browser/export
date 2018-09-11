@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\Clean;
 
 use FactorioItemBrowser\Export\Cache\AbstractCache;
-use FactorioItemBrowser\Export\Command\CommandInterface;
+use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
@@ -15,7 +16,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class CleanCacheCommand implements CommandInterface
+class CleanCacheCommand extends AbstractCommand
 {
     /**
      * The caches to clear.
@@ -33,12 +34,12 @@ class CleanCacheCommand implements CommandInterface
     }
 
     /**
-     * Invokes the command.
+     * Executes the command.
      * @param Route $route
      * @param AdapterInterface $console
-     * @return int
+     * @throws ExportException
      */
-    public function __invoke(Route $route, AdapterInterface $console): int
+    protected function execute(Route $route, AdapterInterface $console): void
     {
         $modName = $route->getMatchedParam('modName', '');
         foreach ($this->caches as $cache) {
@@ -48,6 +49,5 @@ class CleanCacheCommand implements CommandInterface
                 $cache->clear();
             }
         }
-        return 0;
     }
 }

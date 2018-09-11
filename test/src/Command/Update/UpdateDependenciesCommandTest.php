@@ -46,11 +46,11 @@ class UpdateDependenciesCommandTest extends TestCase
     }
 
     /**
-     * Tests the invoking.
-     * @covers ::__invoke
-     * @throws ExportException
+     * Tests the execute() method.
+     * @throws ReflectionException
+     * @covers ::execute
      */
-    public function testInvoke(): void
+    public function testExecute(): void
     {
         /* @var Route $route */
         $route = $this->createMock(Route::class);
@@ -89,8 +89,7 @@ class UpdateDependenciesCommandTest extends TestCase
                     ['def']
                 );
 
-        $result = $command($route, $console);
-        $this->assertSame(0, $result);
+        $this->invokeMethod($command, 'execute', $route, $console);
     }
 
     /**

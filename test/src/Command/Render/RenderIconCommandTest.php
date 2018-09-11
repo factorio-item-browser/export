@@ -6,7 +6,7 @@ namespace FactorioItemBrowserTest\Export\Command\Render;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Render\RenderIconCommand;
-use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Registry\ContentRegistry;
@@ -15,7 +15,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use Zend\Console\Adapter\AdapterInterface;
-use Zend\Console\ColorInterface;
 use ZF\Console\Route;
 
 /**
@@ -50,69 +49,31 @@ class RenderIconCommandTest extends TestCase
     }
 
     /**
-     * Provides the data for the invoke test.
+     * Provides the data for the execute test.
      * @return array
      */
-    public function provideInvoke(): array
+    public function provideExecute(): array
     {
         return [
-            [
-                'abc',
-                new Icon(),
-                true,
-                null,
-                'def',
-                ['Rendering icon #abc...'],
-                [null],
-                0,
-            ],
-            [
-                'abc',
-                new Icon(),
-                true,
-                new ExportException('def'),
-                null,
-                ['Rendering icon #abc...', 'Failed to render icon #abc: def'],
-                [null, ColorInterface::RED],
-                500,
-            ],
-            [
-                'abc',
-                null,
-                false,
-                null,
-                null,
-                ['Cannot find icon #abc.'],
-                [ColorInterface::RED],
-                404,
-            ]
+            [new Icon(), true, false],
+            [null, false, true],
         ];
     }
 
-
     /**
-     * Tests the invoking.
-     * @param string $hash
+     * Tests the execute method.
      * @param Icon|null $icon
      * @param bool $expectRender
-     * @param ExportException|null $thrownException
-     * @param null|string $renderedIcon
-     * @param array $expectedConsoleOutputs
-     * @param array $expectedConsoleOutputColors
-     * @param int $expectedResult
-     * @covers ::__invoke
-     * @dataProvider provideInvoke
+     * @param bool $expectException
+     * @throws ReflectionException
+     * @covers ::execute
+     * @dataProvider provideExecute
      */
-    public function testInvoke(
-        string $hash,
-        ?Icon $icon,
-        bool $expectRender,
-        ?ExportException $thrownException,
-        ?string $renderedIcon,
-        array $expectedConsoleOutputs,
-        array $expectedConsoleOutputColors,
-        int $expectedResult
-    ): void {
+    public function testExecute(?Icon $icon, bool $expectRender, bool $expectException): void
+    {
+        $hash = 'abc';
+        $renderedIcon = 'def';
+
         /* @var Route|MockObject $route */
         $route = $this->getMockBuilder(Route::class)
                       ->setMethods(['getMatchedParam'])
@@ -122,16 +83,6 @@ class RenderIconCommandTest extends TestCase
               ->method('getMatchedParam')
               ->with('hash', '')
               ->willReturn($hash);
-
-        /* @var AdapterInterface|MockObject $console */
-        $console = $this->getMockBuilder(AdapterInterface::class)
-                        ->setMethods(['writeLine'])
-                        ->getMockForAbstractClass();
-        foreach ($expectedConsoleOutputs as $index => $expectedConsoleOutput) {
-            $console->expects($this->at($index))
-                    ->method('writeLine')
-                    ->with($expectedConsoleOutput, $expectedConsoleOutputColors[$index] ?? null);
-        }
 
         /* @var EntityRegistry|MockObject $iconRegistry */
         $iconRegistry = $this->getMockBuilder(EntityRegistry::class)
@@ -143,40 +94,38 @@ class RenderIconCommandTest extends TestCase
                      ->with($hash)
                      ->willReturn($icon);
 
+        /* @var AdapterInterface|MockObject $console */
+        $console = $this->getMockBuilder(AdapterInterface::class)
+                        ->setMethods(['writeLine'])
+                        ->getMockForAbstractClass();
+        $console->expects($expectRender ? $this->once() : $this->never())
+                ->method('writeLine')
+                ->with('Rendering icon #abc...');
+
         /* @var IconRenderer|MockObject $iconRenderer */
         $iconRenderer = $this->getMockBuilder(IconRenderer::class)
                              ->setMethods(['render'])
                              ->disableOriginalConstructor()
                              ->getMock();
-
-        if ($expectRender) {
-            if ($thrownException === null) {
-                $iconRenderer->expects($this->once())
-                             ->method('render')
-                             ->with($icon, 32)
-                             ->willReturn($renderedIcon);
-            } else {
-                $iconRenderer->expects($this->once())
-                             ->method('render')
-                             ->with($icon, 32)
-                             ->willThrowException($thrownException);
-            }
-        } else {
-            $iconRenderer->expects($this->never())
-                         ->method('render');
-        }
+        $iconRenderer->expects($expectRender ? $this->once() : $this->never())
+                     ->method('render')
+                     ->with($icon)
+                     ->willReturn($renderedIcon);
 
         /* @var ContentRegistry|MockObject $renderedIconRegistry */
         $renderedIconRegistry = $this->getMockBuilder(ContentRegistry::class)
                                      ->setMethods(['set'])
                                      ->disableOriginalConstructor()
                                      ->getMock();
-        $renderedIconRegistry->expects($renderedIcon === null ? $this->never() : $this->once())
+        $renderedIconRegistry->expects($expectRender ? $this->once() : $this->never())
                              ->method('set')
                              ->with($hash, $renderedIcon);
 
+        if ($expectException) {
+            $this->expectException(CommandException::class);
+        }
+
         $command = new RenderIconCommand($iconRegistry, $renderedIconRegistry, $iconRenderer);
-        $result = $command($route, $console);
-        $this->assertSame($expectedResult, $result);
+        $this->invokeMethod($command, 'execute', $route, $console);
     }
 }

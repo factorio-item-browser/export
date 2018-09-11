@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\Update;
 
-use FactorioItemBrowser\Export\Command\CommandInterface;
+use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\DependencyReader;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
@@ -17,7 +18,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class UpdateDependenciesCommand implements CommandInterface
+class UpdateDependenciesCommand extends AbstractCommand
 {
     /**
      * The dependency reader.
@@ -43,13 +44,12 @@ class UpdateDependenciesCommand implements CommandInterface
     }
 
     /**
-     * Invokes the command.
+     * Executes the command.
      * @param Route $route
      * @param AdapterInterface $console
-     * @return int
      * @throws ExportException
      */
-    public function __invoke(Route $route, AdapterInterface $console): int
+    protected function execute(Route $route, AdapterInterface $console): void
     {
         $console->writeLine('Updating dependencies...');
 
@@ -59,7 +59,6 @@ class UpdateDependenciesCommand implements CommandInterface
         }
 
         $this->modRegistry->saveMods();
-        return 0;
     }
 
     /**
@@ -88,7 +87,7 @@ class UpdateDependenciesCommand implements CommandInterface
     {
         $mod = $this->modRegistry->get($modName);
         if ($mod === null) {
-            throw new ExportException('Mod not known: ' . $modName);
+            throw new CommandException('Mod not known: ' . $modName, 404);
         }
 
         $dependencies = $this->dependencyReader->read($mod);

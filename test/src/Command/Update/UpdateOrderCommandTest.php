@@ -42,12 +42,13 @@ class UpdateOrderCommandTest extends TestCase
         $this->assertSame($dependencyResolver, $this->extractProperty($command, 'dependencyResolver'));
         $this->assertSame($modRegistry, $this->extractProperty($command, 'modRegistry'));
     }
-    
+
     /**
-     * Tests the invoking.
-     * @covers ::__invoke
+     * Tests the execute() method.
+     * @throws ReflectionException
+     * @covers ::execute
      */
-    public function testInvoke(): void
+    public function testExecute(): void
     {
         $modNames = ['abc', 'def'];
         
@@ -74,8 +75,7 @@ class UpdateOrderCommandTest extends TestCase
                 ->method('assignModOrder')
                 ->with($modNames);
         
-        $result = $command($route, $console);
-        $this->assertSame(0, $result);
+        $this->invokeMethod($command, 'execute', $route, $console);
     }
 
     /**

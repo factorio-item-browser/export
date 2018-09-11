@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\Update;
 
-use FactorioItemBrowser\Export\Command\CommandInterface;
+use FactorioItemBrowser\Export\Command\AbstractCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
@@ -23,7 +23,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class UpdateListCommand implements CommandInterface
+class UpdateListCommand extends AbstractCommand
 {
     use SubCommandTrait;
 
@@ -59,13 +59,12 @@ class UpdateListCommand implements CommandInterface
     }
 
     /**
-     * Invokes the command.
+     * Executes the command.
      * @param Route $route
      * @param AdapterInterface $console
-     * @return int
      * @throws ExportException
      */
-    public function __invoke(Route $route, AdapterInterface $console): int
+    protected function execute(Route $route, AdapterInterface $console): void
     {
         $currentMods = $this->getModsFromRegistry($this->modRegistry);
         $modFileNames = $this->modFileManager->getModFileNames();
@@ -81,7 +80,6 @@ class UpdateListCommand implements CommandInterface
         $this->runSubCommand('update order', [], $console);
 
         $console->writeLine('Done.');
-        return 0;
     }
 
     /**

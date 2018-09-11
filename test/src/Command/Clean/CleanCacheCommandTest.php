@@ -55,13 +55,14 @@ class CleanCacheCommandTest extends TestCase
     }
 
     /**
-     * Tests the invoking.
+     * Tests the execute() method.
      * @param string $modName
      * @param string $expectedMethod
-     * @covers ::__invoke
+     * @throws ReflectionException
+     * @covers ::execute
      * @dataProvider provideInvoke
      */
-    public function testInvoke(string $modName, string $expectedMethod): void
+    public function testExecute(string $modName, string $expectedMethod): void
     {
         /* @var Route|MockObject $route */
         $route = $this->getMockBuilder(Route::class)
@@ -88,7 +89,6 @@ class CleanCacheCommandTest extends TestCase
         $console = $this->createMock(AdapterInterface::class);
 
         $command = new CleanCacheCommand([$cache]);
-        $result = $command($route, $console);
-        $this->assertSame(0, $result);
+        $this->invokeMethod($command, 'execute', $route, $console);
     }
 }

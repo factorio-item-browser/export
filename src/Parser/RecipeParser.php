@@ -160,7 +160,6 @@ class RecipeParser implements ParserInterface
     /**
      * Parses the product data into an entity.
      * @param DataContainer $productData
-     * @param int $order
      * @return Product|null
      */
     protected function parseProduct(DataContainer $productData): ?Product
@@ -203,7 +202,8 @@ class RecipeParser implements ParserInterface
     protected function assignIconHash(Combination $combination, Recipe $recipe): void
     {
         $iconHash = $this->iconParser->getIconHashForEntity($combination, 'recipe', $recipe->getName());
-        $firstProduct = reset($recipe->getProducts());
+        $products = $recipe->getProducts();
+        $firstProduct = reset($products);
         if ($iconHash === null && $firstProduct instanceof Product) {
             $iconHash = $this->iconParser->getIconHashForEntity(
                 $combination,

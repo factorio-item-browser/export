@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\Update;
 
-use FactorioItemBrowser\Export\Command\CommandInterface;
+use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\DependencyResolver;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
@@ -17,7 +18,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class UpdateOrderCommand implements CommandInterface
+class UpdateOrderCommand extends AbstractCommand
 {
     /**
      * The dependency resolver.
@@ -43,19 +44,17 @@ class UpdateOrderCommand implements CommandInterface
     }
 
     /**
-     * Invokes the command.
+     * Executes the command.
      * @param Route $route
      * @param AdapterInterface $console
-     * @return int
+     * @throws ExportException
      */
-    public function __invoke(Route $route, AdapterInterface $console): int
+    protected function execute(Route $route, AdapterInterface $console): void
     {
         $console->writeLine('Updating order...');
 
         $orderedModNames = $this->getOrderedModNames();
         $this->assignModOrder($orderedModNames);
-
-        return 0;
     }
 
     /**

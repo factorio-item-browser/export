@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\Export;
 
-use FactorioItemBrowser\Export\Command\CommandInterface;
+use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Factorio\Instance;
 use FactorioItemBrowser\Export\Parser\ParserManager;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use Zend\Console\Adapter\AdapterInterface;
-use Zend\Console\ColorInterface;
 use ZF\Console\Route;
 
 /**
- *
+ * The command for exporting a combination.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ExportCombinationCommand implements CommandInterface
+class ExportCombinationCommand extends AbstractCommand
 {
     /**
      * The combination registry.
@@ -54,13 +54,12 @@ class ExportCombinationCommand implements CommandInterface
     }
 
     /**
-     * Invokes the command.
+     * Executes the command.
      * @param Route $route
      * @param AdapterInterface $console
-     * @return int
      * @throws ExportException
      */
-    public function __invoke(Route $route, AdapterInterface $console): int
+    protected function execute(Route $route, AdapterInterface $console): void
     {
         $combinationHash = $route->getMatchedParam('combinationHash', '');
         $combination = $this->combinationRegistry->get($combinationHash);
@@ -71,12 +70,8 @@ class ExportCombinationCommand implements CommandInterface
             $dumpData = $this->instance->run($combination);
             $this->parserManager->parse($combination, $dumpData);
             $this->combinationRegistry->set($combination);
-
-            $exitCode = 0;
         } else {
-            $console->writeLine('Combination with hash #' . $combinationHash . ' not found.', ColorInterface::RED);
-            $exitCode = 404;
+            throw new CommandException('Combination with hash #' . $combinationHash . ' not found.', 404);
         }
-        return $exitCode;
     }
 }

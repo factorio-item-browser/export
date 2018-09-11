@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\Render;
 
-use FactorioItemBrowser\Export\Command\CommandInterface;
+use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Registry\ContentRegistry;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use Zend\Console\Adapter\AdapterInterface;
-use Zend\Console\ColorInterface;
 use ZF\Console\Route;
 
 /**
@@ -20,7 +20,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class RenderIconCommand implements CommandInterface
+class RenderIconCommand extends AbstractCommand
 {
     /**
      * The size to render the icons in.
@@ -62,29 +62,22 @@ class RenderIconCommand implements CommandInterface
     }
 
     /**
-     * Invokes the command.
+     * Executes the command.
      * @param Route $route
      * @param AdapterInterface $console
-     * @return int
+     * @throws ExportException
      */
-    public function __invoke(Route $route, AdapterInterface $console): int
+    protected function execute(Route $route, AdapterInterface $console): void
     {
         $hash = $route->getMatchedParam('hash', '');
         $icon = $this->iconRegistry->get($hash);
-        if ($icon instanceof Icon) {
-            $console->writeLine('Rendering icon #' . $hash . '...');
-            try {
-                $renderedIcon = $this->iconRenderer->render($icon, self::ICON_SIZE);
-                $this->renderedIconRegistry->set($hash, $renderedIcon);
-                $result = 0;
-            } catch (ExportException $e) {
-                $console->writeLine('Failed to render icon #' . $hash . ': ' . $e->getMessage(), ColorInterface::RED);
-                $result = 500;
-            }
-        } else {
-            $console->writeLine('Cannot find icon #' . $hash . '.', ColorInterface::RED);
-            $result = 404;
+
+        if (!$icon instanceof Icon) {
+            throw new CommandException('Icon with hash #' . $hash . ' not found.', 404);
         }
-        return $result;
+
+        $console->writeLine('Rendering icon #' . $hash . '...');
+        $renderedIcon = $this->iconRenderer->render($icon, self::ICON_SIZE);
+        $this->renderedIconRegistry->set($hash, $renderedIcon);
     }
 }
