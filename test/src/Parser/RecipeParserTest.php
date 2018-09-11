@@ -57,7 +57,6 @@ class RecipeParserTest extends TestCase
      */
     public function testParse(): void
     {
-        $combination = new Combination();
         $dumpData = new DataContainer([
             'recipes' => [
                 'normal' => [
@@ -70,6 +69,15 @@ class RecipeParserTest extends TestCase
                 ],
             ],
         ]);
+
+        /* @var Combination|MockObject $combination */
+        $combination = $this->getMockBuilder(Combination::class)
+                            ->setMethods(['setRecipeHashes'])
+                            ->disableOriginalConstructor()
+                            ->getMock();
+        $combination->expects($this->once())
+                    ->method('setRecipeHashes')
+                    ->with([]);
 
         /* @var RecipeParser|MockObject $parser */
         $parser = $this->getMockBuilder(RecipeParser::class)
@@ -457,4 +465,90 @@ class RecipeParserTest extends TestCase
         $this->invokeMethod($parser, 'addTranslations', $recipe, $recipeData);
     }
 
+    /**
+     * Provides the data for the assignIconHash test.
+     * @return array
+     */
+    public function provideAssignIconHash(): array
+    {
+        return [
+            [true, false, 'abc', null, 'abc'],
+            [true, true, null, 'abc', 'abc'],
+            [false, false, null, null, null],
+        ];
+    }
+
+    /**
+     * Tests the assignIconHash method.
+     * @param bool $withProducts
+     * @param bool $expectSecondHash
+     * @param null|string $resultHash1
+     * @param null|string $resultHash2
+     * @param null|string $expectedHash
+     * @throws ReflectionException
+     * @covers ::assignIconHash
+     * @dataProvider provideAssignIconHash
+     */
+    public function testAssignIconHash(
+        bool $withProducts,
+        bool $expectSecondHash,
+        ?string $resultHash1,
+        ?string $resultHash2,
+        ?string $expectedHash
+    ): void {
+        $name = 'abc';
+        $productType = 'def';
+        $productName = 'ghi';
+        $combination = new Combination();
+
+        $products = [];
+        if ($withProducts) {
+            $product = new Product();
+            $product->setType($productType)
+                    ->setName($productName);
+            $products = [
+                $product,
+                new Product(),
+            ];
+        }
+
+        /* @var Recipe|MockObject $recipe */
+        $recipe = $this->getMockBuilder(Recipe::class)
+                       ->setMethods(['getName', 'getProducts', 'setIconHash'])
+                       ->disableOriginalConstructor()
+                       ->getMock();
+        $recipe->expects($this->once())
+               ->method('getName')
+               ->willReturn($name);
+        $recipe->expects($this->once())
+               ->method('getProducts')
+               ->willReturn($products);
+        $recipe->expects($expectedHash === null ? $this->never() : $this->once())
+               ->method('setIconHash')
+               ->with($expectedHash);
+
+        /* @var IconParser|MockObject $iconParser */
+        $iconParser = $this->getMockBuilder(IconParser::class)
+                           ->setMethods(['getIconHashForEntity'])
+                           ->disableOriginalConstructor()
+                           ->getMock();
+        $iconParser->expects($this->exactly($expectSecondHash ? 2 : 1))
+                   ->method('getIconHashForEntity')
+                   ->withConsecutive(
+                       [$combination, 'recipe', $name],
+                       [$combination, $productType, $productName]
+                   )
+                   ->willReturnOnConsecutiveCalls(
+                       $resultHash1,
+                       $resultHash2
+                   );
+
+        /* @var EntityRegistry $recipeRegistry */
+        $recipeRegistry = $this->createMock(EntityRegistry::class);
+        /* @var Translator $translator */
+        $translator = $this->createMock(Translator::class);
+
+        $parser = new RecipeParser($iconParser, $recipeRegistry, $translator);
+        $this->invokeMethod($parser, 'assignIconHash', $combination, $recipe);
+    }
 }

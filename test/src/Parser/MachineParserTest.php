@@ -79,9 +79,12 @@ class MachineParserTest extends TestCase
 
         /* @var Combination|MockObject $combination */
         $combination = $this->getMockBuilder(Combination::class)
-                            ->setMethods(['addMachineHash'])
+                            ->setMethods(['setMachineHashes', 'addMachineHash'])
                             ->disableOriginalConstructor()
                             ->getMock();
+        $combination->expects($this->once())
+                    ->method('setMachineHashes')
+                    ->with([]);
         $combination->expects($this->exactly(2))
                     ->method('addMachineHash')
                     ->withConsecutive(

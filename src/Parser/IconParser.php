@@ -46,6 +46,7 @@ class IconParser implements ParserInterface
      */
     public function parse(Combination $combination, DataContainer $dumpData): void
     {
+        $combination->setIconHashes([]);
         foreach ($dumpData->getObjectArray('icons') as $iconData) {
             $icon = $this->parseIcon($iconData);
 

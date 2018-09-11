@@ -58,6 +58,7 @@ class RecipeParser implements ParserInterface
      */
     public function parse(Combination $combination, DataContainer $dumpData): void
     {
+        $combination->setRecipeHashes([]);
         foreach ($dumpData->getObjectArray(['recipes', 'normal']) as $recipeData) {
             $this->processRecipe($combination, $recipeData, 'normal');
         }

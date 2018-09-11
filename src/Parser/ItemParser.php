@@ -56,6 +56,7 @@ class ItemParser implements ParserInterface
      */
     public function parse(Combination $combination, DataContainer $dumpData): void
     {
+        $combination->setItemHashes([]);
         foreach ($dumpData->getObjectArray('items') as $itemData) {
             $this->processItem($combination, $itemData, 'item');
         }

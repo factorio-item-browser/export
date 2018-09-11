@@ -21,11 +21,23 @@ return [
                 '--mod=<modName>' => 'The name of the mod to clean the cache for.',
             ],
         ],
+
+        [
+            'name' => 'export combination',
+            'route' => '<combinationHash>',
+            'handler' => Command\Export\ExportCombinationCommand::class,
+            'short_description' => 'Exports a combination of mods running the Factorio game.',
+            'options_description' => [
+                '<combinationHash>' => 'The hash of the combination to export.',
+            ],
+        ],
+
         [
             'name' => 'list',
             'handler' => Command\Lists\ListCommand::class,
             'short_description' => 'Lists all available mods.',
         ],
+
         [
             'name' => 'render icon',
             'route' => '<hash>',
@@ -35,6 +47,7 @@ return [
                 '<hash>' => 'The hash of the icon to render.',
             ],
         ],
+
         [
             'name' => 'update dependencies',
             'route' => '[--mod=]',

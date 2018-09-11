@@ -47,7 +47,6 @@ class IconParserTest extends TestCase
      */
     public function testParse(): void
     {
-        $combination = new Combination();
         $icon1 = (new Icon())->setSize(12);
         $icon2 = (new Icon())->setSize(23);
         $icon3 = (new Icon())->setSize(34);
@@ -68,6 +67,15 @@ class IconParserTest extends TestCase
             'item|jkl' => $icon4,
             'machine|jkl' => $icon4,
         ];
+
+        /* @var Combination|MockObject $combination */
+        $combination = $this->getMockBuilder(Combination::class)
+                            ->setMethods(['setIconHashes'])
+                            ->disableOriginalConstructor()
+                            ->getMock();
+        $combination->expects($this->once())
+                    ->method('setIconHashes')
+                    ->with([]);
 
         /* @var IconParser|MockObject $parser */
         $parser = $this->getMockBuilder(IconParser::class)

@@ -61,6 +61,7 @@ class MachineParser implements ParserInterface
      */
     public function parse(Combination $combination, DataContainer $dumpData): void
     {
+        $combination->setMachineHashes([]);
         $machines = $this->parseMachines($dumpData);
         $this->parseFluidBoxes($dumpData, $machines);
 

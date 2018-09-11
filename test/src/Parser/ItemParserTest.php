@@ -54,7 +54,6 @@ class ItemParserTest extends TestCase
      */
     public function testParse(): void
     {
-        $combination = new Combination();
         $dumpData = new DataContainer([
             'items' => [
                 ['abc' => 'def'],
@@ -65,6 +64,15 @@ class ItemParserTest extends TestCase
                 ['stu' => 'vwx'],
             ],
         ]);
+
+        /* @var Combination|MockObject $combination */
+        $combination = $this->getMockBuilder(Combination::class)
+                            ->setMethods(['setItemHashes'])
+                            ->disableOriginalConstructor()
+                            ->getMock();
+        $combination->expects($this->once())
+                    ->method('setItemHashes')
+                    ->with([]);
 
         /* @var ItemParser|MockObject $parser */
         $parser = $this->getMockBuilder(ItemParser::class)
