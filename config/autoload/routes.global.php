@@ -67,28 +67,5 @@ return [
             'handler' => Command\Update\UpdateOrderCommand::class,
             'short_description' => 'Updates the absolute order of the mods.',
         ],
-
-
-
-
-
-        [
-            'name' => 'export mod <modName>',
-            'handler' => Command\ExportModCommand::class,
-            'short_description' => 'Exports all relevant combinations of the specified mod.',
-            'options_descriptions' => [
-                '<modName>' => 'The name of the mod to be exported.'
-            ],
-        ],
-        [
-            'name' => 'export all',
-            'handler' => Command\ExportAllCommand::class,
-            'short_description' => 'Exports ALL mods. Takes hours!',
-        ],
-        [
-            'name' => 'list missing',
-            'handler' => Command\ListMissingCommand::class,
-            'short_description' => 'Lists missing mods which are dependencies of other mods.',
-        ],
     ]
 ];

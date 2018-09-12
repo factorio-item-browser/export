@@ -26,10 +26,6 @@ return [
             Command\Update\UpdateListCommand::class => Command\Update\UpdateListCommandFactory::class,
             Command\Update\UpdateOrderCommand::class => Command\Update\UpdateOrderCommandFactory::class,
 
-            Command\ExportAllCommand::class => Command\ExportAllCommandFactory::class,
-            Command\ExportModCommand::class => Command\ExportModCommandFactory::class,
-            Command\ListMissingCommand::class => Command\ListMissingCommandFactory::class,
-
             ExportData\RawExportDataService::class => ExportData\RawExportDataServiceFactory::class,
             ExportData\ReducedExportDataService::class => ExportData\ReducedExportDataServiceFactory::class,
 
