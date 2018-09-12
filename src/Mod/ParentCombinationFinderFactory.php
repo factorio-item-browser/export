@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Mod;
 
-use FactorioItemBrowser\ExportData\Service\ExportDataService;
+use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use Interop\Container\ContainerInterface;
 
 /**
@@ -24,9 +24,12 @@ class ParentCombinationFinderFactory
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        /* @var ExportDataService $exportDataService */
-        $exportDataService = $container->get(ExportDataService::class);
+        /* @var RawExportDataService $rawExportDataService */
+        $rawExportDataService = $container->get(RawExportDataService::class);
 
-        return new ParentCombinationFinder($exportDataService);
+        return new ParentCombinationFinder(
+            $rawExportDataService->getCombinationRegistry(),
+            $rawExportDataService->getModRegistry()
+        );
     }
 }

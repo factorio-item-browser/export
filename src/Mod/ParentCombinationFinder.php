@@ -6,7 +6,8 @@ namespace FactorioItemBrowser\Export\Mod;
 
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Service\ExportDataService;
+use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
+use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 
 /**
  * The class able to find parent combinations of a certain one.
@@ -17,25 +18,124 @@ use FactorioItemBrowser\ExportData\Service\ExportDataService;
 class ParentCombinationFinder
 {
     /**
-     * The export data service.
-     * @var ExportDataService
+     * The combination registry.
+     * @var EntityRegistry
      */
-    protected $exportDataService;
+    protected $combinationRegistry;
 
     /**
-     * The orders of the mods.
-     * @var array|int
+     * The mod registry.
+     * @var ModRegistry
      */
-    protected $modOrders;
+    protected $modRegistry;
 
     /**
      * Initializes the parent combination finder.
-     * @param ExportDataService $exportDataService
+     * @param ModRegistry $modRegistry
+     * @param EntityRegistry $combinationRegistry
      */
-    public function __construct(ExportDataService $exportDataService)
+    public function __construct(EntityRegistry $combinationRegistry, ModRegistry $modRegistry)
     {
-        $this->exportDataService =  $exportDataService;
-        $this->modOrders = $this->getModOrders();
+        $this->combinationRegistry = $combinationRegistry;
+        $this->modRegistry = $modRegistry;
+    }
+
+    /**
+     * Finds and returns the parent combinations.
+     * @param Combination $combination
+     * @return array|Combination[]
+     */
+    public function find(Combination $combination): array
+    {
+        $parentCombinations = $this->findParentCombinations($combination);
+        return $this->sortCombinations($parentCombinations);
+    }
+
+    /**
+     * Finds the parent combinations.
+     * @param Combination $combination
+     * @return array|Combination[]
+     */
+    protected function findParentCombinations(Combination $combination): array
+    {
+        $result = [];
+        foreach ($combination->getLoadedModNames() as $modName) {
+            $mod = $this->modRegistry->get($modName);
+            if ($mod instanceof Mod) {
+                $result = array_merge(
+                    $result,
+                    $this->findParentCombinationsOfMod($combination, $mod)
+                );
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Finds the parent combinations of the specified mod.
+     * @param Combination $combination
+     * @param Mod $mod
+     * @return array|Combination[]
+     */
+    protected function findParentCombinationsOfMod(Combination $combination, Mod $mod): array
+    {
+        $result = [];
+        foreach ($mod->getCombinationHashes() as $combinationHash) {
+            $possibleCombination = $this->combinationRegistry->get($combinationHash);
+            if ($possibleCombination instanceof Combination
+                && $this->isValidParentCombination($combination, $possibleCombination)
+            ) {
+                $result[$possibleCombination->getName()] = $possibleCombination;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Returns whether the combination is a valid parent combination.
+     * @param Combination $combination
+     * @param Combination $parentCombination
+     * @return bool
+     */
+    protected function isValidParentCombination(Combination $combination, Combination $parentCombination): bool
+    {
+        $result = true;
+        foreach ($parentCombination->getLoadedModNames() as $modName) {
+            if (!in_array($modName, $combination->getLoadedModNames(), true)) {
+                $result = false;
+                break;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Sorts the specified combinations.
+     * @param array|Combination[] $combinations
+     * @return array|Combination[]
+     */
+    protected function sortCombinations(array $combinations): array
+    {
+        $modOrders = $this->getModOrders();
+        $combinationOrders = $this->getCombinationOrders($combinations, $modOrders);
+
+        uasort(
+            $combinations,
+            static function (Combination $left, Combination $right) use ($modOrders, $combinationOrders): int {
+                $result = $modOrders[$left->getMainModName()] <=> $modOrders[$right->getMainModName()];
+                if ($result === 0) {
+                    $leftOrders = $combinationOrders[$left->getName()];
+                    $rightOrders = $combinationOrders[$right->getName()];
+                    $result = count($leftOrders) <=> count($rightOrders);
+                    while ($result === 0 && count($leftOrders) > 0) {
+                        $result = array_shift($leftOrders) <=> array_shift($rightOrders);
+                    }
+                }
+                return $result;
+            }
+        );
+
+        return $combinations;
     }
 
     /**
@@ -45,111 +145,32 @@ class ParentCombinationFinder
     protected function getModOrders(): array
     {
         $result = [];
-        foreach ($this->exportDataService->getMods() as $mod) {
-            $result[$mod->getName()] = $mod->getOrder();
-        }
-        return $result;
-    }
-
-    /**
-     * Finds any parent combination to the specified one.
-     * @param Combination $combination
-     * @param array|Combination[] $additionalCombinations Additional combinations to check which are not saved yet.
-     * @return array|Combination[]
-     */
-    public function findParentCombinations(Combination $combination, array $additionalCombinations): array
-    {
-        $parentCombinations = [];
-        foreach ($combination->getLoadedModNames() as $modName) {
-            if ($modName !== $combination->getMainModName()) {
-                $mod = $this->exportDataService->getMod($modName);
-                if ($mod instanceof Mod) {
-                    $parentCombinations = array_merge(
-                        $parentCombinations,
-                        $this->checkForParentCombinations($combination, $mod->getCombinations())
-                    );
-                }
-            }
-        }
-        $parentCombinations = array_merge(
-            $parentCombinations,
-            $this->checkForParentCombinations($combination, $additionalCombinations)
-        );
-
-        $parentCombinations = $this->sortCombinations($parentCombinations);
-        return $parentCombinations;
-    }
-
-    /**
-     * @param Combination $combination
-     * @param array|Combination[] $possibleParentCombinations
-     * @return array
-     */
-    protected function checkForParentCombinations(Combination $combination, array $possibleParentCombinations): array
-    {
-        $result = [];
-        foreach ($possibleParentCombinations as $possibleParentCombination) {
-            if ($possibleParentCombination->getName() !== $combination->getName()
-                && $this->isValidParentCombination($combination, $possibleParentCombination)
-            ) {
-                $result[$possibleParentCombination->getName()] = $possibleParentCombination;
+        foreach ($this->modRegistry->getAllNames() as $modName) {
+            $mod = $this->modRegistry->get($modName);
+            if ($mod instanceof Mod) {
+                $result[$mod->getName()] = $mod->getOrder();
             }
         }
         return $result;
     }
 
     /**
-     * Returns whether the parent combination is valid.
-     * @param Combination $combination
-     * @param Combination $parentCombination
-     * @return bool
-     */
-    protected function isValidParentCombination(Combination $combination, Combination $parentCombination): bool
-    {
-        $result = true;
-        foreach ($parentCombination->getLoadedModNames() as $modName) {
-            if (!in_array($modName, $combination->getLoadedModNames())) {
-                $result = false;
-                break;
-            }
-        }
-        return $result;
-    }
-
-    /**
-     * Sorts the combinations.
+     * Returns the orders of the combinations.
      * @param array|Combination[] $combinations
-     * @return array|Combination[]
+     * @param array|int[] $modOrders
+     * @return array|int[][]
      */
-    protected function sortCombinations(array $combinations): array
-    {
-        uasort($combinations, function (Combination $left, Combination $right): int {
-            $result = $this->modOrders[$left->getMainModName()] <=> $this->modOrders[$right->getMainModName()];
-            if ($result === 0) {
-                $leftOrders = $this->mapModNamesToOrders($left->getLoadedModNames());
-                $rightOrders = $this->mapModNamesToOrders($right->getLoadedModNames());
-                $result = count($leftOrders) <=> count($rightOrders);
-                while ($result === 0 && !empty($leftOrders)) {
-                    $result = array_shift($leftOrders) <=> array_shift($rightOrders);
-                }
-            }
-            return $result;
-        });
-        return $combinations;
-    }
-
-    /**
-     * Maps the mod names to their orders.
-     * @param array|string[] $modNames
-     * @return array|int[]
-     */
-    protected function mapModNamesToOrders(array $modNames): array
+    protected function getCombinationOrders(array $combinations, array $modOrders): array
     {
         $result = [];
-        foreach ($modNames as $modName) {
-            $result[] = $this->modOrders[$modName];
+        foreach ($combinations as $combination) {
+            $orders = [];
+            foreach ($combination->getLoadedModNames() as $modName) {
+                $orders[] = $modOrders[$modName];
+            }
+            sort($orders);
+            $result[$combination->getName()] = $orders;
         }
-        sort($result);
         return $result;
     }
 }
