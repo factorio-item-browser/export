@@ -31,10 +31,7 @@ class ConsoleUtils
      */
     public static function formatVersion(string $version, bool $padLeft = false): string
     {
-        $result = '';
-        if ($version !== '') {
-            $result = str_pad(VersionUtils::normalize($version), 10, ' ', $padLeft ? STR_PAD_LEFT :STR_PAD_RIGHT);
-        }
-        return $result;
+        $version = $version === '' ? '' : VersionUtils::normalize($version);
+        return str_pad($version, 10, ' ', $padLeft ? STR_PAD_LEFT : STR_PAD_RIGHT);
     }
 }

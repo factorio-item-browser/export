@@ -37,7 +37,7 @@ class UpdateListCommand extends AbstractCommand
      * The mod file reader.
      * @var ModReader
      */
-    protected $modFileReader;
+    protected $modReader;
 
     /**
      * The mod registry.
@@ -48,13 +48,13 @@ class UpdateListCommand extends AbstractCommand
     /**
      * Initializes the command.
      * @param ModFileManager $modFileManager
-     * @param ModReader $modFileReader
+     * @param ModReader $modReader
      * @param ModRegistry $modRegistry
      */
-    public function __construct(ModFileManager $modFileManager, ModReader $modFileReader, ModRegistry $modRegistry)
+    public function __construct(ModFileManager $modFileManager, ModReader $modReader, ModRegistry $modRegistry)
     {
         $this->modFileManager = $modFileManager;
-        $this->modFileReader = $modFileReader;
+        $this->modReader = $modReader;
         $this->modRegistry = $modRegistry;
     }
 
@@ -147,11 +147,11 @@ class UpdateListCommand extends AbstractCommand
     protected function checkModFile(string $modFileName, array $currentModsByChecksum): ?Mod
     {
         $result = null;
-        $checksum = $this->modFileReader->calculateChecksum($modFileName);
+        $checksum = $this->modReader->calculateChecksum($modFileName);
         if (isset($currentModsByChecksum[$checksum])) {
             $result = $currentModsByChecksum[$checksum];
         } else {
-            $result = $this->modFileReader->read($modFileName, $checksum);
+            $result = $this->modReader->read($modFileName, $checksum);
             $this->runSubCommand('clean cache', ['mod' => $result->getName()]);
         }
         return $result;

@@ -52,19 +52,19 @@ class DependencyResolver
     }
 
     /**
-     * Resolves all optional mods of the specified mod names.
+     * Resolves all optional dependencies of the specified mod names.
      * @param array|string[] $modNames
      * @return array|string[]
      */
-    public function resolveOptionalMods(array $modNames): array
+    public function resolveOptionalDependencies(array $modNames): array
     {
-        $modNames = $this->resolveMandatoryDependencies($modNames);
+        $mandatoryModNames = $this->resolveMandatoryDependencies($modNames);
 
         $this->resolvedModNames = [];
-        foreach ($modNames as $modName) {
+        foreach ($this->sortModNames($modNames) as $modName) {
             $this->processMod($modNames, $modName, false);
         }
-        return array_values(array_diff(array_keys($this->resolvedModNames), $modNames));
+        return array_values(array_diff(array_keys($this->resolvedModNames), $mandatoryModNames));
     }
 
     /**
