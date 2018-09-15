@@ -133,6 +133,7 @@ class LocaleReader
         $result = [];
 
         foreach (explode(PHP_EOL, $content) as $line) {
+            $line = trim($line);
             if (preg_match(self::REGEXP_LOCALE, $line, $match) > 0) {
                 $key = ltrim($currentSection . '.' . trim($match[1]), '.');
                 $value = str_replace('\n', PHP_EOL, trim($match[2]));

@@ -85,13 +85,9 @@ class DependencyResolverTest extends TestCase
 
         /* @var DependencyResolver|MockObject $resolver */
         $resolver = $this->getMockBuilder(DependencyResolver::class)
-                         ->setMethods(['resolveMandatoryDependencies', 'sortModNames', 'processMod'])
+                         ->setMethods(['sortModNames', 'processMod'])
                          ->disableOriginalConstructor()
                          ->getMock();
-        $resolver->expects($this->once())
-                 ->method('resolveMandatoryDependencies')
-                 ->with($modNames)
-                 ->willReturn($mandatoryModNames);
         $resolver->expects($this->once())
                  ->method('sortModNames')
                  ->with($modNames)
@@ -108,7 +104,7 @@ class DependencyResolverTest extends TestCase
                      $this->injectProperty($resolver, 'resolvedModNames', $modNames);
                  });
 
-        $result = $resolver->resolveOptionalDependencies($modNames);
+        $result = $resolver->resolveOptionalDependencies($modNames, $mandatoryModNames);
         $this->assertEquals($expectedResult, $result);
     }
 

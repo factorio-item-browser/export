@@ -200,6 +200,7 @@ class UpdateListCommand extends AbstractCommand
                 $console->write(ConsoleUtils::formatVersion($currentVersion, true));
                 $console->write(' -> ');
                 $console->write(ConsoleUtils::formatVersion($newMod->getVersion(), false));
+                $console->writeLine();
             }
         }
     }

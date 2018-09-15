@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\Mod;
+namespace FactorioItemBrowserTest\Export\Combination;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
-use FactorioItemBrowser\Export\Mod\ParentCombinationFinder;
-use FactorioItemBrowser\Export\Mod\ParentCombinationFinderFactory;
+use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
+use FactorioItemBrowser\Export\Combination\ParentCombinationFinderFactory;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Interop\Container\ContainerInterface;
@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Mod\ParentCombinationFinderFactory
+ * @coversDefaultClass \FactorioItemBrowser\Export\Combination\ParentCombinationFinderFactory
  */
 class ParentCombinationFinderFactoryTest extends TestCase
 {

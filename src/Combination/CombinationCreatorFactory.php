@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Mod;
+namespace FactorioItemBrowser\Export\Combination;
 
-use FactorioItemBrowser\ExportData\Service\ExportDataService;
+use FactorioItemBrowser\Export\Mod\DependencyResolver;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
@@ -25,13 +25,9 @@ class CombinationCreatorFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        /* @var ExportDataService $exportDataService */
-        $exportDataService = $container->get(ExportDataService::class);
         /* @var DependencyResolver $dependencyResolver */
         $dependencyResolver = $container->get(DependencyResolver::class);
-        /* @var ParentCombinationFinder $parentCombinationFinder */
-        $parentCombinationFinder = $container->get(ParentCombinationFinder::class);
 
-        return new CombinationCreator($exportDataService, $dependencyResolver, $parentCombinationFinder);
+        return new CombinationCreator($dependencyResolver);
     }
 }

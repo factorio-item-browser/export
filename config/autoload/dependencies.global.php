@@ -18,10 +18,15 @@ return [
             Cache\LocaleCache::class => Cache\LocaleCacheFactory::class,
             Cache\ModFileCache::class => Cache\ModFileCacheFactory::class,
 
+            Combination\CombinationCreator::class => Combination\CombinationCreatorFactory::class,
+            Combination\ParentCombinationFinder::class => Combination\ParentCombinationFinderFactory::class,
+
             Command\Clean\CleanCacheCommand::class => Command\Clean\CleanCacheCommandFactory::class,
             Command\Export\ExportCombinationCommand::class => Command\Export\ExportCombinationCommandFactory::class,
+            Command\Export\ExportReduceCommand::class => Command\Export\ExportReduceCommandFactory::class,
             Command\Lists\ListCommand::class => Command\Lists\ListCommandFactory::class,
             Command\Render\RenderIconCommand::class => Command\Render\RenderIconCommandFactory::class,
+            Command\Render\RenderModIconsCommand::class => Command\Render\RenderModIconsCommandFactory::class,
             Command\Update\UpdateDependenciesCommand::class => Command\Update\UpdateDependenciesCommandFactory::class,
             Command\Update\UpdateListCommand::class => Command\Update\UpdateListCommandFactory::class,
             Command\Update\UpdateOrderCommand::class => Command\Update\UpdateOrderCommandFactory::class,
@@ -42,13 +47,11 @@ return [
             Merger\MergerManager::class => Merger\MergerManagerFactory::class,
             Merger\RecipeMerger::class => InvokableFactory::class,
 
-            Mod\CombinationCreator::class => Mod\CombinationCreatorFactory::class,
             Mod\DependencyReader::class => Mod\DependencyReaderFactory::class,
             Mod\DependencyResolver::class => Mod\DependencyResolverFactory::class,
             Mod\LocaleReader::class => Mod\LocaleReaderFactory::class,
             Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
             Mod\ModReader::class => Mod\ModReaderFactory::class,
-            Mod\ParentCombinationFinder::class => Mod\ParentCombinationFinderFactory::class,
 
             Parser\IconParser::class => Parser\IconParserFactory::class,
             Parser\ItemParser::class => Parser\ItemParserFactory::class,
@@ -56,8 +59,8 @@ return [
             Parser\ParserManager::class => Parser\ParserManagerFactory::class,
             Parser\RecipeParser::class => Parser\RecipeParserFactory::class,
 
-            Reducer\IconReducer::class => InvokableFactory::class,
-            Reducer\ItemReducer::class => InvokableFactory::class,
+            Reducer\IconReducer::class => Reducer\IconReducerFactory::class,
+            Reducer\ItemReducer::class => Reducer\ItemReducerFactory::class,
             Reducer\MachineReducer::class => InvokableFactory::class,
             Reducer\RecipeReducer::class => InvokableFactory::class,
             Reducer\ReducerManager::class => Reducer\ReducerManagerFactory::class,

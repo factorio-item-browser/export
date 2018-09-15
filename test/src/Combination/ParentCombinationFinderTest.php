@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\Mod;
+namespace FactorioItemBrowserTest\Export\Combination;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
-use FactorioItemBrowser\Export\Mod\ParentCombinationFinder;
+use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -19,7 +19,7 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Mod\ParentCombinationFinder
+ * @coversDefaultClass \FactorioItemBrowser\Export\Combination\ParentCombinationFinder
  */
 class ParentCombinationFinderTest extends TestCase
 {
