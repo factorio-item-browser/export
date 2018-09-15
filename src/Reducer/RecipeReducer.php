@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Reducer;
 
-use FactorioItemBrowser\Export\Utils\RecipeUtils;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\Export\Exception\ReducerException;
+use FactorioItemBrowser\ExportData\Entity\EntityInterface;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
+use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient;
+use FactorioItemBrowser\ExportData\Entity\Recipe\Product;
+use FactorioItemBrowser\ExportData\Utils\EntityUtils;
 
 /**
  * The class removing recipes which did not change.
@@ -14,43 +18,101 @@ use FactorioItemBrowser\ExportData\Entity\Recipe;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class RecipeReducer extends AbstractReducer
+class RecipeReducer extends AbstractIdentifiedEntityReducer
 {
-    /**
-     * Reduces the specified combination data, removing any data which is identical in the parent combination.
-     * @param CombinationData $combination
-     * @param CombinationData $parentCombination
-     * @return $this
-     */
-    public function reduce(CombinationData $combination, CombinationData $parentCombination)
-    {
-        foreach ($parentCombination->getRecipes() as $parentRecipe) {
-            $recipe = $combination->getRecipe($parentRecipe->getName(), $parentRecipe->getMode());
-            if ($recipe instanceof Recipe) {
-                $this->reduceLocalisedString($recipe->getLabels(), $parentRecipe->getLabels());
-                $this->reduceLocalisedString($recipe->getDescriptions(), $parentRecipe->getDescriptions());
-                if ($recipe->getIconHash() === $parentRecipe->getIconHash()) {
-                    $recipe->setIconHash('');
-                }
-                $recipeHash = RecipeUtils::calculateHash($recipe);
-                $parentRecipeHash = RecipeUtils::calculateHash($parentRecipe);
-                if ($recipeHash === $parentRecipeHash) {
-                    if (count($recipe->getLabels()->getTranslations()) === 0
-                        && count($recipe->getDescriptions()->getTranslations()) === 0
-                        && strlen($recipe->getIconHash()) === 0
-                    ) {
-                        $combination->removeRecipe($recipe->getName(), $recipe->getMode());
-                    } else {
-                        $recipe->setIngredients([])
-                               ->setProducts([])
-                               ->setCraftingTime(0.)
-                               ->setCraftingCategory('');
-                    }
-                }
-            }
-        }
+    use LocalisedStringReducerTrait;
 
-        $combination->setRecipes(array_values($combination->getRecipes()));
-        return $this;
+    /**
+     * Returns the hashes to use from the specified combination.
+     * @param Combination $combination
+     * @return array|string[]
+     */
+    protected function getHashesFromCombination(Combination $combination): array
+    {
+        return $combination->getRecipeHashes();
+    }
+
+    /**
+     * Reduces the entity against its parent.
+     * @param EntityInterface $entity
+     * @param EntityInterface $parentEntity
+     * @throws ReducerException
+     */
+    protected function reduceEntity(EntityInterface $entity, EntityInterface $parentEntity): void
+    {
+        if (!$entity instanceof Recipe || !$parentEntity instanceof Recipe) {
+            throw new ReducerException('Internal type error.');
+        }
+        
+        $this->reduceDataOfRecipe($entity, $parentEntity);
+        $this->reduceTranslationsOfRecipe($entity, $parentEntity);
+        $this->reduceIconOfRecipe($entity, $parentEntity);
+    }
+
+    /**
+     * Reduces the data of the recipe.
+     * @param Recipe $recipe
+     * @param Recipe $parentRecipe
+     */
+    protected function reduceDataOfRecipe(Recipe $recipe, Recipe $parentRecipe): void
+    {
+        if ($this->calculateDataHash($recipe) === $this->calculateDataHash($parentRecipe)) {
+            $recipe->setIngredients([])
+                   ->setProducts([])
+                   ->setCraftingTime(0.)
+                   ->setCraftingCategory('');
+        }
+    }
+
+    /**
+     * Calculates a data hash of the specified recipe.
+     * @param Recipe $recipe
+     * @return string
+     */
+    protected function calculateDataHash(Recipe $recipe): string
+    {
+        return EntityUtils::calculateHashOfArray([
+            array_map(function (Ingredient $ingredient): string {
+                return $ingredient->calculateHash();
+            }, $recipe->getIngredients()),
+            array_map(function (Product $product): string {
+                return $product->calculateHash();
+            }, $recipe->getProducts()),
+            $recipe->getCraftingTime(),
+            $recipe->getCraftingCategory(),
+        ]);
+    }
+
+    /**
+     * Reduces the translations of the recipe.
+     * @param Recipe $recipe
+     * @param Recipe $parentRecipe
+     */
+    protected function reduceTranslationsOfRecipe(Recipe $recipe, Recipe $parentRecipe): void
+    {
+        $this->reduceLocalisedString($recipe->getLabels(), $parentRecipe->getLabels());
+        $this->reduceLocalisedString($recipe->getDescriptions(), $parentRecipe->getDescriptions());
+    }
+
+    /**
+     * Reduces the icon of the recipe.
+     * @param Recipe $recipe
+     * @param Recipe $parentRecipe
+     */
+    protected function reduceIconOfRecipe(Recipe $recipe, Recipe $parentRecipe): void
+    {
+        if ($recipe->getIconHash() === $parentRecipe->getIconHash()) {
+            $recipe->setIconHash('');
+        }
+    }
+    
+    /**
+     * Sets the hashes to the combination.
+     * @param Combination $combination
+     * @param array|string[] $hashes
+     */
+    protected function setHashesToCombination(Combination $combination, array $hashes): void
+    {
+        $combination->setRecipeHashes($hashes);
     }
 }

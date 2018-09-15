@@ -14,7 +14,7 @@ use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
 /**
- *
+ * The command for reducing an exported combination.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
@@ -65,16 +65,43 @@ class ExportReduceCommand extends AbstractCommand
     protected function execute(Route $route, AdapterInterface $console): void
     {
         $combinationHash = $route->getMatchedParam('combinationHash', '');
-        /* @var Combination $combination */
+        $combination = $this->fetchCombination($combinationHash);
+        $reducedCombination = $this->reducerManager->reduce($combination);
+        if ($this->isCombinationEmpty($reducedCombination)) {
+            $this->reducedCombinationRegistry->remove($combinationHash);
+        } else {
+            $this->reducedCombinationRegistry->set($combinationHash);
+        }
+
+        // @todo Set Combination to reduced mod
+    }
+
+    /**
+     * Fetches the combination with the specified hash.
+     * @param string $combinationHash
+     * @return Combination
+     * @throws CommandException
+     */
+    protected function fetchCombination(string $combinationHash): Combination
+    {
         $combination = $this->rawCombinationRegistry->get($combinationHash);
+        if (!$combination instanceof Combination) {
+            throw new CommandException('Cannot find combination with hash #' . $combinationHash);
+        }
 
-//        $parentCombination = new Combination();
-        $parentCombination = $this->rawCombinationRegistry->get('8260d4c484fb17ee'); // base
+        return $combination;
+    }
 
-        $reducedCombination = clone($combination);
-        $this->reducerManager->reduceCombination($reducedCombination, $parentCombination);
-        $this->reducedCombinationRegistry->set($reducedCombination);
-        var_dump(count($combination->getItemHashes()), count($reducedCombination->getItemHashes()));
-        var_dump(count($combination->getIconHashes()), count($reducedCombination->getIconHashes()));
+    /**
+     * Checks whether the specified combination is empty.
+     * @param Combination $combination
+     * @return bool
+     */
+    protected function isCombinationEmpty(Combination $combination): bool
+    {
+        return count($combination->getIconHashes()) === 0
+            && count($combination->getItemHashes()) === 0
+            && count($combination->getMachineHashes()) === 0
+            && count($combination->getRecipeHashes()) === 0;
     }
 }

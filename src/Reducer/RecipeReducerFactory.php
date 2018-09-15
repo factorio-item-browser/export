@@ -2,26 +2,27 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Combination;
+namespace FactorioItemBrowser\Export\Reducer;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
 use Interop\Container\ContainerInterface;
+use Zend\ServiceManager\Factory\FactoryInterface;
 
 /**
- * The factory of the parent combination finder.
+ * The factory of the recipe reducer.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ParentCombinationFinderFactory
+class RecipeReducerFactory implements FactoryInterface
 {
     /**
-     * Creates the parent combination finder.
+     * Creates the reducer.
      * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  null|array $options
-     * @return ParentCombinationFinder
+     * @return RecipeReducer
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
@@ -30,9 +31,9 @@ class ParentCombinationFinderFactory
         /* @var ReducedExportDataService $reducedExportDataService */
         $reducedExportDataService = $container->get(ReducedExportDataService::class);
 
-        return new ParentCombinationFinder(
-            $reducedExportDataService->getCombinationRegistry(),
-            $rawExportDataService->getModRegistry()
+        return new RecipeReducer(
+            $rawExportDataService->getRecipeRegistry(),
+            $reducedExportDataService->getRecipeRegistry()
         );
     }
 }

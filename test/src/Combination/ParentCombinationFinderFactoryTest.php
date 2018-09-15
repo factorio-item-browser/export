@@ -7,6 +7,7 @@ namespace FactorioItemBrowserTest\Export\Combination;
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinderFactory;
+use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Interop\Container\ContainerInterface;
@@ -35,25 +36,36 @@ class ParentCombinationFinderFactoryTest extends TestCase
 
         /* @var RawExportDataService|MockObject $rawExportDataService */
         $rawExportDataService = $this->getMockBuilder(RawExportDataService::class)
-                                     ->setMethods(['getCombinationRegistry', 'getModRegistry'])
+                                     ->setMethods(['getModRegistry'])
                                      ->disableOriginalConstructor()
                                      ->getMock();
         $rawExportDataService->expects($this->once())
-                             ->method('getCombinationRegistry')
-                             ->willReturn($combinationRegistry);
-        $rawExportDataService->expects($this->once())
                              ->method('getModRegistry')
                              ->willReturn($modRegistry);
-
+        
+        /* @var ReducedExportDataService|MockObject $reducedExportDataService */
+        $reducedExportDataService = $this->getMockBuilder(ReducedExportDataService::class)
+                                         ->setMethods(['getCombinationRegistry'])
+                                         ->disableOriginalConstructor()
+                                         ->getMock();
+        $reducedExportDataService->expects($this->once())
+                                 ->method('getCombinationRegistry')
+                                 ->willReturn($combinationRegistry);
 
         /* @var ContainerInterface|MockObject $container */
         $container = $this->getMockBuilder(ContainerInterface::class)
                           ->setMethods(['get'])
                           ->getMockForAbstractClass();
-        $container->expects($this->once())
+        $container->expects($this->exactly(2))
                   ->method('get')
-                  ->with(RawExportDataService::class)
-                  ->willReturn($rawExportDataService);
+                  ->withConsecutive(
+                      [RawExportDataService::class],
+                      [ReducedExportDataService::class]
+                  )
+                  ->willReturnOnConsecutiveCalls(
+                      $rawExportDataService,
+                      $reducedExportDataService
+                  );
 
         $factory = new ParentCombinationFinderFactory();
         $factory($container, ParentCombinationFinder::class);

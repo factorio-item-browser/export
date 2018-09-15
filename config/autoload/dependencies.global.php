@@ -61,8 +61,8 @@ return [
 
             Reducer\IconReducer::class => Reducer\IconReducerFactory::class,
             Reducer\ItemReducer::class => Reducer\ItemReducerFactory::class,
-            Reducer\MachineReducer::class => InvokableFactory::class,
-            Reducer\RecipeReducer::class => InvokableFactory::class,
+            Reducer\MachineReducer::class => Reducer\MachineReducerFactory::class,
+            Reducer\RecipeReducer::class => Reducer\RecipeReducerFactory::class,
             Reducer\ReducerManager::class => Reducer\ReducerManagerFactory::class,
 
             Renderer\IconRenderer::class => Renderer\IconRendererFactory::class,

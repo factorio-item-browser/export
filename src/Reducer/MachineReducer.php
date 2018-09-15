@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Reducer;
 
+use FactorioItemBrowser\Export\Exception\ReducerException;
+use FactorioItemBrowser\ExportData\Entity\EntityInterface;
 use FactorioItemBrowser\ExportData\Entity\Machine;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Utils\EntityUtils;
 
 /**
  * The class removing any machines which did not change.
@@ -13,60 +16,67 @@ use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class MachineReducer extends AbstractReducer
+class MachineReducer extends AbstractIdentifiedEntityReducer
 {
+    use LocalisedStringReducerTrait;
+    
     /**
-     * Reduces the specified combination data, removing any data which is identical in the parent combination.
-     * @param CombinationData $combination
-     * @param CombinationData $parentCombination
-     * @return $this
+     * Returns the hashes to use from the specified combination.
+     * @param Combination $combination
+     * @return array|string[]
      */
-    public function reduce(CombinationData $combination, CombinationData $parentCombination)
+    protected function getHashesFromCombination(Combination $combination): array
     {
-        foreach ($parentCombination->getMachines() as $parentMachine) {
-            $machine = $combination->getMachine($parentMachine->getName());
-            if ($machine instanceof Machine) {
-                $this->reduceLocalisedString($machine->getLabels(), $parentMachine->getLabels());
-                $this->reduceLocalisedString($machine->getDescriptions(), $parentMachine->getDescriptions());
-                if ($machine->getIconHash() === $parentMachine->getIconHash()) {
-                    $machine->setIconHash('');
-                }
-
-                if ($this->calculateHash($machine) === $this->calculateHash($parentMachine)) {
-                    if (count($machine->getLabels()->getTranslations()) === 0
-                        && count($machine->getDescriptions()->getTranslations()) === 0
-                        && strlen($machine->getIconHash()) === 0
-                    ) {
-                        $combination->removeMachine($machine->getName());
-                    } else {
-                        $machine->setCraftingCategories([])
-                                ->setCraftingSpeed(1.)
-                                ->setNumberOfItemSlots(0)
-                                ->setNumberOfFluidInputSlots(0)
-                                ->setNumberOfFluidOutputSlots(0)
-                                ->setNumberOfModuleSlots(0)
-                                ->setEnergyUsage(0)
-                                ->setEnergyUsageUnit('');
-                    }
-                }
-            }
-        }
-
-        $combination->setMachines(array_values($combination->getMachines()));
-        return $this;
+        return $combination->getMachineHashes();
     }
 
     /**
-     * Calculates a hash of the specified machine.
+     * Reduces the entity against its parent.
+     * @param EntityInterface $entity
+     * @param EntityInterface $parentEntity
+     * @throws ReducerException
+     */
+    protected function reduceEntity(EntityInterface $entity, EntityInterface $parentEntity): void
+    {
+        if (!$entity instanceof Machine || !$parentEntity instanceof Machine) {
+            throw new ReducerException('Internal type error.');
+        }
+
+        $this->reduceDataOfMachine($entity, $parentEntity);
+        $this->reduceTranslationsOfMachine($entity, $parentEntity);
+        $this->reduceIconOfMachine($entity, $parentEntity);
+    }
+
+    /**
+     * Reduces the data of the machine.
+     * @param Machine $machine
+     * @param Machine $parentMachine
+     */
+    protected function reduceDataOfMachine(Machine $machine, Machine $parentMachine): void
+    {
+        if ($this->calculateDataHash($machine) === $this->calculateDataHash($parentMachine)) {
+            $machine->setCraftingCategories([])
+                    ->setCraftingSpeed(1.)
+                    ->setNumberOfItemSlots(0)
+                    ->setNumberOfFluidInputSlots(0)
+                    ->setNumberOfFluidOutputSlots(0)
+                    ->setNumberOfModuleSlots(0)
+                    ->setEnergyUsage(0)
+                    ->setEnergyUsageUnit('');
+        }
+    }
+
+    /**
+     * Calculates a data hash of the specified machine.
      * @param Machine $machine
      * @return string
      */
-    protected function calculateHash(Machine $machine): string
+    protected function calculateDataHash(Machine $machine): string
     {
         $craftingCategories = $machine->getCraftingCategories();
         sort($craftingCategories);
 
-        $data = [
+        return EntityUtils::calculateHashOfArray([
             'cc' => array_values($craftingCategories),
             'cs' => $machine->getCraftingSpeed(),
             'ni' => $machine->getNumberOfItemSlots(),
@@ -75,7 +85,39 @@ class MachineReducer extends AbstractReducer
             'nm' => $machine->getNumberOfModuleSlots(),
             'eu' => $machine->getEnergyUsage(),
             'un' => $machine->getEnergyUsageUnit(),
-        ];
-        return hash('crc32b', json_encode($data));
+        ]);
+    }
+
+    /**
+     * Reduces the translations of the machine.
+     * @param Machine $machine
+     * @param Machine $parentMachine
+     */
+    protected function reduceTranslationsOfMachine(Machine $machine, Machine $parentMachine): void
+    {
+        $this->reduceLocalisedString($machine->getLabels(), $parentMachine->getLabels());
+        $this->reduceLocalisedString($machine->getDescriptions(), $parentMachine->getDescriptions());
+    }
+
+    /**
+     * Reduces the icon of the machine.
+     * @param Machine $machine
+     * @param Machine $parentMachine
+     */
+    protected function reduceIconOfMachine(Machine $machine, Machine $parentMachine): void
+    {
+        if ($machine->getIconHash() === $parentMachine->getIconHash()) {
+            $machine->setIconHash('');
+        }
+    }
+
+    /**
+     * Sets the hashes to the combination.
+     * @param Combination $combination
+     * @param array|string[] $hashes
+     */
+    protected function setHashesToCombination(Combination $combination, array $hashes): void
+    {
+        $combination->setMachineHashes($hashes);
     }
 }

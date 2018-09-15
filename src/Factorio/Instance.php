@@ -175,7 +175,7 @@ class Instance
      */
     protected function copy(string $directoryOrFile): void
     {
-        $target = realpath($this->factorioDirectory. '/' . $directoryOrFile);
+        $target = (string) realpath($this->factorioDirectory . '/' . $directoryOrFile);
         $destination = $this->instanceDirectory . '/' . $directoryOrFile;
         copy($target, $destination);
         chmod($destination, 0755);
@@ -187,7 +187,7 @@ class Instance
      */
     protected function createSymlink(string $directoryOrFile): void
     {
-        $target = realpath($this->factorioDirectory . '/' . $directoryOrFile);
+        $target = (string) realpath($this->factorioDirectory . '/' . $directoryOrFile);
         $link = $this->instanceDirectory . '/' . $directoryOrFile;
 
         symlink($target, $link);

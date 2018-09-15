@@ -26,7 +26,7 @@ class CombinationCreator
 
     /**
      * The mod to create combinations for.
-     * @var Mod|null
+     * @var Mod
      */
     protected $mod;
 
