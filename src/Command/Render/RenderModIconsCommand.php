@@ -12,7 +12,6 @@ use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
-use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
 /**
@@ -51,17 +50,16 @@ class RenderModIconsCommand extends AbstractCommand
     /**
      * Executes the command.
      * @param Route $route
-     * @param AdapterInterface $console
      * @throws ExportException
      * @throws CommandException
      */
-    protected function execute(Route $route, AdapterInterface $console): void
+    protected function execute(Route $route): void
     {
         $modName = $route->getMatchedParam('modName', '');
         $iconHashes = $this->fetchIconHashesOfMod($modName);
 
-        $console->writeLine('Rendering ' . count($iconHashes) . ' icons...');
-        $this->renderIconsWithHashes($console, $iconHashes);
+        $this->console->writeLine('Rendering ' . count($iconHashes) . ' icons...');
+        $this->renderIconsWithHashes($iconHashes);
     }
 
     /**
@@ -102,12 +100,11 @@ class RenderModIconsCommand extends AbstractCommand
 
     /**
      * Renders the icons with the specified hashes.
-     * @param AdapterInterface $console
      * @param array|string[] $iconHashes
      */
-    protected function renderIconsWithHashes(AdapterInterface $console, array $iconHashes): void
+    protected function renderIconsWithHashes(array $iconHashes): void
     {
-        $processManager = $this->createProcessManager($console);
+        $processManager = $this->createProcessManager($this->console);
         foreach ($iconHashes as $iconHash) {
             $processManager->addProcess($this->createProcessForSubCommand('render icon', [$iconHash]));
         }

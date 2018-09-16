@@ -11,7 +11,6 @@ use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Registry\ContentRegistry;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
-use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
 /**
@@ -64,10 +63,9 @@ class RenderIconCommand extends AbstractCommand
     /**
      * Executes the command.
      * @param Route $route
-     * @param AdapterInterface $console
      * @throws ExportException
      */
-    protected function execute(Route $route, AdapterInterface $console): void
+    protected function execute(Route $route): void
     {
         $hash = $route->getMatchedParam('hash', '');
         $icon = $this->iconRegistry->get($hash);
@@ -76,7 +74,7 @@ class RenderIconCommand extends AbstractCommand
             throw new CommandException('Icon with hash #' . $hash . ' not found.', 404);
         }
 
-        $console->writeLine('Rendering icon #' . $hash . '...');
+        $this->console->writeLine('Rendering icon #' . $hash . '...');
         $renderedIcon = $this->iconRenderer->render($icon, self::ICON_SIZE);
         $this->renderedIconRegistry->set($hash, $renderedIcon);
     }

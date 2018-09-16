@@ -8,6 +8,7 @@ use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinderFactory;
 use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
+use FactorioItemBrowser\Export\Merger\MergerManager;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Interop\Container\ContainerInterface;
@@ -56,13 +57,15 @@ class ParentCombinationFinderFactoryTest extends TestCase
         $container = $this->getMockBuilder(ContainerInterface::class)
                           ->setMethods(['get'])
                           ->getMockForAbstractClass();
-        $container->expects($this->exactly(2))
+        $container->expects($this->exactly(3))
                   ->method('get')
                   ->withConsecutive(
+                      [MergerManager::class],
                       [RawExportDataService::class],
                       [ReducedExportDataService::class]
                   )
                   ->willReturnOnConsecutiveCalls(
+                      $this->createMock(MergerManager::class),
                       $rawExportDataService,
                       $reducedExportDataService
                   );

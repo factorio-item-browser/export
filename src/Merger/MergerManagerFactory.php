@@ -35,8 +35,8 @@ class MergerManagerFactory implements FactoryInterface
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $mergers = [];
-        foreach (self::MERGER_CLASSES as $parserClass) {
-            $mergers[] = $container->get($parserClass);
+        foreach (self::MERGER_CLASSES as $mergerClass) {
+            $mergers[] = $container->get($mergerClass);
         }
 
         return new MergerManager($mergers);

@@ -6,8 +6,6 @@ namespace FactorioItemBrowser\Export\Command\Clean;
 
 use FactorioItemBrowser\Export\Cache\AbstractCache;
 use FactorioItemBrowser\Export\Command\AbstractCommand;
-use FactorioItemBrowser\Export\Exception\ExportException;
-use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
 /**
@@ -36,10 +34,8 @@ class CleanCacheCommand extends AbstractCommand
     /**
      * Executes the command.
      * @param Route $route
-     * @param AdapterInterface $console
-     * @throws ExportException
      */
-    protected function execute(Route $route, AdapterInterface $console): void
+    protected function execute(Route $route): void
     {
         $modName = $route->getMatchedParam('modName', '');
         foreach ($this->caches as $cache) {

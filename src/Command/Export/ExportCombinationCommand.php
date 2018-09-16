@@ -11,7 +11,6 @@ use FactorioItemBrowser\Export\Factorio\Instance;
 use FactorioItemBrowser\Export\Parser\ParserManager;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
-use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
 /**
@@ -56,16 +55,15 @@ class ExportCombinationCommand extends AbstractCommand
     /**
      * Executes the command.
      * @param Route $route
-     * @param AdapterInterface $console
      * @throws ExportException
      */
-    protected function execute(Route $route, AdapterInterface $console): void
+    protected function execute(Route $route): void
     {
         $combinationHash = $route->getMatchedParam('combinationHash', '');
         $combination = $this->combinationRegistry->get($combinationHash);
 
         if ($combination instanceof Combination) {
-            $console->writeLine('Exporting combination ' . $combination->getName() . '...');
+            $this->console->writeLine('Exporting combination ' . $combination->getName() . '...');
 
             $dumpData = $this->instance->run($combination);
             $this->parserManager->parse($combination, $dumpData);

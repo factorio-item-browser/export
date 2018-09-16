@@ -134,6 +134,7 @@ class ExportCombinationCommandTest extends TestCase
         }
 
         $command = new ExportCombinationCommand($combinationRegistry, $instance, $parserManager);
-        $this->invokeMethod($command, 'execute', $route, $console);
+        $this->injectProperty($command, 'console', $console);
+        $this->invokeMethod($command, 'execute', $route);
     }
 }

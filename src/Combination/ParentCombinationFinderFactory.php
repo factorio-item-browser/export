@@ -6,6 +6,7 @@ namespace FactorioItemBrowser\Export\Combination;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
+use FactorioItemBrowser\Export\Merger\MergerManager;
 use Interop\Container\ContainerInterface;
 
 /**
@@ -25,6 +26,8 @@ class ParentCombinationFinderFactory
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+        /* @var MergerManager $mergerManager */
+        $mergerManager = $container->get(MergerManager::class);
         /* @var RawExportDataService $rawExportDataService */
         $rawExportDataService = $container->get(RawExportDataService::class);
         /* @var ReducedExportDataService $reducedExportDataService */
@@ -32,6 +35,7 @@ class ParentCombinationFinderFactory
 
         return new ParentCombinationFinder(
             $reducedExportDataService->getCombinationRegistry(),
+            $mergerManager,
             $rawExportDataService->getModRegistry()
         );
     }

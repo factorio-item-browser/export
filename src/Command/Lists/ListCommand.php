@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\Lists;
 
 use FactorioItemBrowser\Export\Command\AbstractCommand;
-use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Utils\ConsoleUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
-use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
 /**
@@ -46,14 +44,12 @@ class ListCommand extends AbstractCommand
     /**
      * Executes the command.
      * @param Route $route
-     * @param AdapterInterface $console
-     * @throws ExportException
      */
-    protected function execute(Route $route, AdapterInterface $console): void
+    protected function execute(Route $route): void
     {
         $mods = $this->getOrderedMods();
         foreach ($mods as $mod) {
-            $this->printMod($console, $mod, $this->exportedModRegistry->get($mod->getName()));
+            $this->printMod($mod, $this->exportedModRegistry->get($mod->getName()));
         }
     }
 
@@ -80,17 +76,16 @@ class ListCommand extends AbstractCommand
 
     /**
      * Prints the mod to the console.
-     * @param AdapterInterface $console
      * @param Mod $availableMod
      * @param Mod|null $exportedMod
      */
-    protected function printMod(AdapterInterface $console, Mod $availableMod, ?Mod $exportedMod): void
+    protected function printMod(Mod $availableMod, ?Mod $exportedMod): void
     {
-        $console->write(ConsoleUtils::formatModName($availableMod->getName(), ': '));
-        $console->write(ConsoleUtils::formatVersion($availableMod->getVersion(), true));
+        $this->console->write(ConsoleUtils::formatModName($availableMod->getName(), ': '));
+        $this->console->write(ConsoleUtils::formatVersion($availableMod->getVersion(), true));
         if ($exportedMod instanceof Mod) {
-            $console->write(ConsoleUtils::formatVersion($exportedMod->getVersion()));
+            $this->console->write(ConsoleUtils::formatVersion($exportedMod->getVersion()));
         }
-        $console->writeLine();
+        $this->console->writeLine();
     }
 }

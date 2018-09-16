@@ -89,7 +89,8 @@ class UpdateDependenciesCommandTest extends TestCase
                     ['def']
                 );
 
-        $this->invokeMethod($command, 'execute', $route, $console);
+        $this->injectProperty($command, 'console', $console);
+        $this->invokeMethod($command, 'execute', $route);
     }
 
     /**

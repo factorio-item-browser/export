@@ -10,7 +10,6 @@ use FactorioItemBrowser\Export\Command\Clean\CleanCacheCommand;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
-use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
 /**
@@ -85,10 +84,7 @@ class CleanCacheCommandTest extends TestCase
         $cache->expects($expectedMethod === 'clear' ? $this->once() : $this->never())
               ->method('clear');
 
-        /* @var AdapterInterface $console */
-        $console = $this->createMock(AdapterInterface::class);
-
         $command = new CleanCacheCommand([$cache]);
-        $this->invokeMethod($command, 'execute', $route, $console);
+        $this->invokeMethod($command, 'execute', $route);
     }
 }

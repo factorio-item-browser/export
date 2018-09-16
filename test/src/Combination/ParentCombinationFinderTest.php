@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Combination;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
+use FactorioItemBrowser\Export\Merger\MergerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -34,10 +35,12 @@ class ParentCombinationFinderTest extends TestCase
     {
         /* @var EntityRegistry $combinationRegistry */
         $combinationRegistry = $this->createMock(EntityRegistry::class);
+        /* @var MergerManager $mergerManager */
+        $mergerManager = $this->createMock(MergerManager::class);
         /* @var ModRegistry $modRegistry */
         $modRegistry = $this->createMock(ModRegistry::class);
 
-        $finder = new ParentCombinationFinder($combinationRegistry, $modRegistry);
+        $finder = new ParentCombinationFinder($combinationRegistry, $mergerManager, $modRegistry);
         $this->assertSame($combinationRegistry, $this->extractProperty($finder, 'combinationRegistry'));
         $this->assertSame($modRegistry, $this->extractProperty($finder, 'modRegistry'));
     }
@@ -120,11 +123,13 @@ class ParentCombinationFinderTest extends TestCase
 
         /* @var EntityRegistry $combinationRegistry */
         $combinationRegistry = $this->createMock(EntityRegistry::class);
+        /* @var MergerManager $mergerManager */
+        $mergerManager = $this->createMock(MergerManager::class);
 
         /* @var ParentCombinationFinder|MockObject $finder */
         $finder = $this->getMockBuilder(ParentCombinationFinder::class)
                        ->setMethods(['findParentCombinationsOfMod'])
-                       ->setConstructorArgs([$combinationRegistry, $modRegistry])
+                       ->setConstructorArgs([$combinationRegistry, $mergerManager, $modRegistry])
                        ->getMock();
         $finder->expects($this->exactly(2))
                ->method('findParentCombinationsOfMod')
@@ -181,13 +186,15 @@ class ParentCombinationFinderTest extends TestCase
                                 $combination3
                             );
 
+        /* @var MergerManager $mergerManager */
+        $mergerManager = $this->createMock(MergerManager::class);
         /* @var ModRegistry $modRegistry */
         $modRegistry = $this->createMock(ModRegistry::class);
 
         /* @var ParentCombinationFinder|MockObject $finder */
         $finder = $this->getMockBuilder(ParentCombinationFinder::class)
                        ->setMethods(['isValidParentCombination'])
-                       ->setConstructorArgs([$combinationRegistry, $modRegistry])
+                       ->setConstructorArgs([$combinationRegistry, $mergerManager, $modRegistry])
                        ->getMock();
         $finder->expects($this->exactly(3))
                ->method('isValidParentCombination')
@@ -243,10 +250,12 @@ class ParentCombinationFinderTest extends TestCase
     ): void {
         /* @var EntityRegistry $combinationRegistry */
         $combinationRegistry = $this->createMock(EntityRegistry::class);
+        /* @var MergerManager $mergerManager */
+        $mergerManager = $this->createMock(MergerManager::class);
         /* @var ModRegistry $modRegistry */
         $modRegistry = $this->createMock(ModRegistry::class);
 
-        $finder = new ParentCombinationFinder($combinationRegistry, $modRegistry);
+        $finder = new ParentCombinationFinder($combinationRegistry, $mergerManager, $modRegistry);
         $result = $this->invokeMethod($finder, 'isValidParentCombination', $combination, $parentCombination);
         $this->assertSame($expectedResult, $result);
     }
@@ -290,8 +299,10 @@ class ParentCombinationFinderTest extends TestCase
 
         /* @var EntityRegistry $combinationRegistry */
         $combinationRegistry = $this->createMock(EntityRegistry::class);
+        /* @var MergerManager $mergerManager */
+        $mergerManager = $this->createMock(MergerManager::class);
 
-        $finder = new ParentCombinationFinder($combinationRegistry, $modRegistry);
+        $finder = new ParentCombinationFinder($combinationRegistry, $mergerManager, $modRegistry);
         $result = $this->invokeMethod($finder, 'getModOrders');
         $this->assertEquals($expectedResult, $result);
     }
@@ -322,10 +333,12 @@ class ParentCombinationFinderTest extends TestCase
 
         /* @var EntityRegistry $combinationRegistry */
         $combinationRegistry = $this->createMock(EntityRegistry::class);
+        /* @var MergerManager $mergerManager */
+        $mergerManager = $this->createMock(MergerManager::class);
         /* @var ModRegistry $modRegistry */
         $modRegistry = $this->createMock(ModRegistry::class);
 
-        $finder = new ParentCombinationFinder($combinationRegistry, $modRegistry);
+        $finder = new ParentCombinationFinder($combinationRegistry, $mergerManager, $modRegistry);
         $result = $this->invokeMethod($finder, 'getCombinationOrders', $combinations, $modOrders);
         $this->assertEquals($expectedResult, $result);
     }

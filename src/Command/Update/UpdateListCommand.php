@@ -12,7 +12,6 @@ use FactorioItemBrowser\Export\Mod\ModReader;
 use FactorioItemBrowser\Export\Utils\ConsoleUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
-use Zend\Console\Adapter\AdapterInterface;
 use Zend\ProgressBar\Adapter\Console;
 use Zend\ProgressBar\ProgressBar;
 use ZF\Console\Route;
@@ -61,25 +60,24 @@ class UpdateListCommand extends AbstractCommand
     /**
      * Executes the command.
      * @param Route $route
-     * @param AdapterInterface $console
      * @throws ExportException
      */
-    protected function execute(Route $route, AdapterInterface $console): void
+    protected function execute(Route $route): void
     {
         $currentMods = $this->getModsFromRegistry($this->modRegistry);
         $modFileNames = $this->modFileManager->getModFileNames();
 
-        $console->writeLine('Hashing mod files...');
+        $this->console->writeLine('Hashing mod files...');
         $newMods = $this->detectNewMods($modFileNames, $currentMods);
 
-        $console->writeLine('Persisting mods...');
+        $this->console->writeLine('Persisting mods...');
         $this->setModsToRegistry($newMods, $this->modRegistry);
-        $this->printChangesToConsole($console, $newMods, $currentMods);
+        $this->printChangesToConsole($newMods, $currentMods);
 
-        $this->runSubCommand('update dependencies', [], $console);
-        $this->runSubCommand('update order', [], $console);
+        $this->runSubCommand('update dependencies', [], $this->console);
+        $this->runSubCommand('update order', [], $this->console);
 
-        $console->writeLine('Done.');
+        $this->console->writeLine('Done.');
     }
 
     /**
@@ -180,11 +178,10 @@ class UpdateListCommand extends AbstractCommand
 
     /**
      * Prints all changed mods to the console.
-     * @param AdapterInterface $console
      * @param array|Mod[] $newMods
      * @param array|Mod[] $currentMods
      */
-    protected function printChangesToConsole(AdapterInterface $console, array $newMods, array $currentMods): void
+    protected function printChangesToConsole(array $newMods, array $currentMods): void
     {
         foreach ($newMods as $newMod) {
             $currentMod = $currentMods[$newMod->getName()] ?? null;
@@ -196,11 +193,11 @@ class UpdateListCommand extends AbstractCommand
             }
 
             if ($hasChanged) {
-                $console->write(ConsoleUtils::formatModName($newMod->getName(), ': '));
-                $console->write(ConsoleUtils::formatVersion($currentVersion, true));
-                $console->write(' -> ');
-                $console->write(ConsoleUtils::formatVersion($newMod->getVersion(), false));
-                $console->writeLine();
+                $this->console->write(ConsoleUtils::formatModName($newMod->getName(), ': '));
+                $this->console->write(ConsoleUtils::formatVersion($currentVersion, true));
+                $this->console->write(' -> ');
+                $this->console->write(ConsoleUtils::formatVersion($newMod->getVersion(), false));
+                $this->console->writeLine();
             }
         }
     }

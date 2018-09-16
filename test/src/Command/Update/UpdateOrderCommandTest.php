@@ -75,7 +75,8 @@ class UpdateOrderCommandTest extends TestCase
                 ->method('assignModOrder')
                 ->with($modNames);
         
-        $this->invokeMethod($command, 'execute', $route, $console);
+        $this->injectProperty($command, 'console', $console);
+        $this->invokeMethod($command, 'execute', $route);
     }
 
     /**

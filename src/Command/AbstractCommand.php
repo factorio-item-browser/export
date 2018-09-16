@@ -19,6 +19,12 @@ use ZF\Console\Route;
 abstract class AbstractCommand implements CommandInterface
 {
     /**
+     * The console to use for printing information.
+     * @var AdapterInterface
+     */
+    protected $console;
+
+    /**
      * Invokes the command.
      * @param Route $route
      * @param AdapterInterface $console
@@ -26,8 +32,9 @@ abstract class AbstractCommand implements CommandInterface
      */
     public function __invoke(Route $route, AdapterInterface $console): int
     {
+        $this->console = $console;
         try {
-            $this->execute($route, $console);
+            $this->execute($route);
             $exitCode = 0;
         } catch (CommandException $e) {
             $console->writeLine(str_pad('', $console->getWidth(), '-'), ColorInterface::YELLOW);
@@ -46,9 +53,8 @@ abstract class AbstractCommand implements CommandInterface
     /**
      * Executes the command.
      * @param Route $route
-     * @param AdapterInterface $console
      * @throws ExportException
      * @throws CommandException
      */
-    abstract protected function execute(Route $route, AdapterInterface $console): void;
+    abstract protected function execute(Route $route): void;
 }

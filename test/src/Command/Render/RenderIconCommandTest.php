@@ -126,6 +126,7 @@ class RenderIconCommandTest extends TestCase
         }
 
         $command = new RenderIconCommand($iconRegistry, $renderedIconRegistry, $iconRenderer);
-        $this->invokeMethod($command, 'execute', $route, $console);
+        $this->injectProperty($command, 'console', $console);
+        $this->invokeMethod($command, 'execute', $route);
     }
 }

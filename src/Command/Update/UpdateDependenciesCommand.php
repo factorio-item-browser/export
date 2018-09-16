@@ -9,7 +9,6 @@ use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\DependencyReader;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
-use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
 /**
@@ -46,12 +45,11 @@ class UpdateDependenciesCommand extends AbstractCommand
     /**
      * Executes the command.
      * @param Route $route
-     * @param AdapterInterface $console
      * @throws ExportException
      */
-    protected function execute(Route $route, AdapterInterface $console): void
+    protected function execute(Route $route): void
     {
-        $console->writeLine('Updating dependencies...');
+        $this->console->writeLine('Updating dependencies...');
 
         $modNames = $this->getModNames($route);
         foreach ($modNames as $modName) {

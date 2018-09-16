@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Combination;
 
+use FactorioItemBrowser\Export\Exception\MergerException;
+use FactorioItemBrowser\Export\Merger\MergerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -24,6 +26,12 @@ class ParentCombinationFinder
     protected $combinationRegistry;
 
     /**
+     * The merger manager.
+     * @var MergerManager
+     */
+    protected $mergerManager;
+
+    /**
      * The mod registry.
      * @var ModRegistry
      */
@@ -31,12 +39,17 @@ class ParentCombinationFinder
 
     /**
      * Initializes the parent combination finder.
-     * @param ModRegistry $modRegistry
      * @param EntityRegistry $combinationRegistry
+     * @param MergerManager $mergerManager
+     * @param ModRegistry $modRegistry
      */
-    public function __construct(EntityRegistry $combinationRegistry, ModRegistry $modRegistry)
-    {
+    public function __construct(
+        EntityRegistry $combinationRegistry,
+        MergerManager $mergerManager,
+        ModRegistry $modRegistry
+    ) {
         $this->combinationRegistry = $combinationRegistry;
+        $this->mergerManager = $mergerManager;
         $this->modRegistry = $modRegistry;
     }
 
@@ -49,6 +62,22 @@ class ParentCombinationFinder
     {
         $parentCombinations = $this->findParentCombinations($combination);
         return $this->sortCombinations($parentCombinations);
+    }
+
+    /**
+     * Returns a merge of all parent combinations.
+     * Note: The data of specified combination will not be part of the merge.
+     * @param Combination $combination
+     * @return Combination
+     * @throws MergerException
+     */
+    public function getMergedParentCombination(Combination $combination): Combination
+    {
+        $result = new Combination();
+        foreach ($this->find($combination) as $parentCombination) {
+            $this->mergerManager->merge($result, $parentCombination);
+        }
+        return $result;
     }
 
     /**

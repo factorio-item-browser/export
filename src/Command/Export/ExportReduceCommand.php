@@ -10,7 +10,6 @@ use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Reducer\ReducerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
-use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
 /**
@@ -58,11 +57,10 @@ class ExportReduceCommand extends AbstractCommand
     /**
      * Executes the command.
      * @param Route $route
-     * @param AdapterInterface $console
      * @throws ExportException
      * @throws CommandException
      */
-    protected function execute(Route $route, AdapterInterface $console): void
+    protected function execute(Route $route): void
     {
         $combinationHash = $route->getMatchedParam('combinationHash', '');
         $combination = $this->fetchCombination($combinationHash);
