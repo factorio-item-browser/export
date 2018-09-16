@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Reducer;
 
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\ReducerException;
 use FactorioItemBrowser\Export\Merger\MergerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -55,14 +56,14 @@ class ReducerManager
      * Reduces the specified combination against its parents.
      * @param Combination $combination
      * @return Combination
-     * @throws ReducerException
+     * @throws ExportException
      */
     public function reduce(Combination $combination): Combination
     {
         $mergedParentCombination = $this->createMergedParentCombination($combination);
 
         $result = clone($combination);
-        $this->reduceCombination($mergedParentCombination, $result);
+        $this->reduceCombination($result, $mergedParentCombination);
         return $result;
     }
 
@@ -70,6 +71,7 @@ class ReducerManager
      * Creates a merged combination of the parents of the specified combination.
      * @param Combination $combination
      * @return Combination
+     * @throws ExportException
      */
     protected function createMergedParentCombination(Combination $combination): Combination
     {

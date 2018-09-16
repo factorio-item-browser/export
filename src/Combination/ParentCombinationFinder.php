@@ -83,6 +83,7 @@ class ParentCombinationFinder
         foreach ($mod->getCombinationHashes() as $combinationHash) {
             $possibleCombination = $this->combinationRegistry->get($combinationHash);
             if ($possibleCombination instanceof Combination
+                && $possibleCombination->getName() !== $combination->getName()
                 && $this->isValidParentCombination($combination, $possibleCombination)
             ) {
                 $result[$possibleCombination->getName()] = $possibleCombination;

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Merger;
 
+use FactorioItemBrowser\Export\Exception\MergerException;
+use FactorioItemBrowser\ExportData\Entity\EntityWithIdentifierInterface;
 use FactorioItemBrowser\ExportData\Entity\Item;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 
 /**
  * The class merging items of combinations.
@@ -13,44 +15,74 @@ use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ItemMerger extends AbstractMerger
+class ItemMerger extends AbstractIdentifiedEntityMerger
 {
+    use LocalisedStringMergerTrait;
+
     /**
-     * Merges the source combination data into the destination one.
-     * @param CombinationData $destination
-     * @param CombinationData $source
-     * @return $this
+     * Returns the hashes to use from the specified combination.
+     * @param Combination $combination
+     * @return array|string[]
      */
-    public function merge(CombinationData $destination, CombinationData $source)
+    protected function getHashesFromCombination(Combination $combination): array
     {
-        foreach ($source->getItems() as $sourceItem) {
-            $destinationItem = $destination->getItem($sourceItem->getType(), $sourceItem->getName());
-            if ($destinationItem instanceof Item) {
-                $this->mergeItem($destinationItem, $sourceItem);
-            } else {
-                $destination->addItem(clone($sourceItem));
-            }
-        }
-        return $this;
+        return $combination->getItemHashes();
     }
 
     /**
-     * Merges the source item into the destination one.
-     * @param Item $destination
-     * @param Item $source
-     * @return $this
+     * Merges the source entity into the destination one.
+     * @param EntityWithIdentifierInterface $destination
+     * @param EntityWithIdentifierInterface $source
+     * @throws MergerException
      */
-    protected function mergeItem(Item $destination, Item $source)
-    {
-        if (strlen($source->getIconHash()) > 0) {
-            $destination->setIconHash($source->getIconHash());
+    protected function mergeEntities(
+        EntityWithIdentifierInterface $destination,
+        EntityWithIdentifierInterface $source
+    ): void {
+        if (!$destination instanceof Item || !$source instanceof Item) {
+            throw new MergerException('Internal type error.');
         }
 
-        $destination->setProvidesRecipeLocalisation($source->getProvidesRecipeLocalisation())
-                    ->setProvidesMachineLocalisation($source->getProvidesMachineLocalisation());
+        $this->mergeTranslations($destination, $source);
+        $this->mergeIcon($destination, $source);
+    }
 
-        $this->mergeLocalisedString($destination->getLabels(), $source->getLabels());
-        $this->mergeLocalisedString($destination->getDescriptions(), $source->getDescriptions());
-        return $this;
+    /**
+     * Merges the translations from the destination item to the source one.
+     * @param Item $destination
+     * @param Item $source
+     */
+    protected function mergeTranslations(Item $destination, Item $source): void
+    {
+        if (count($source->getLabels()->getTranslations()) > 0
+            || count($source->getDescriptions()->getTranslations()) > 0
+        ) {
+            $this->mergeLocalisedStrings($destination->getLabels(), $source->getLabels());
+            $this->mergeLocalisedStrings($destination->getDescriptions(), $source->getDescriptions());
+            $destination->setProvidesRecipeLocalisation($source->getProvidesRecipeLocalisation())
+                        ->setProvidesMachineLocalisation($source->getProvidesMachineLocalisation());
+        }
+    }
+
+    /**
+     * Merges the icon from the destination item to the source one.
+     * @param Item $destination
+     * @param Item $source
+     */
+    protected function mergeIcon(Item $destination, Item $source): void
+    {
+        if ($source->getIconHash() !== '') {
+            $destination->setIconHash($source->getIconHash());
+        }
+    }
+
+    /**
+     * Sets the hashes to the combination.
+     * @param Combination $combination
+     * @param array|string[] $hashes
+     */
+    protected function setHashesToCombination(Combination $combination, array $hashes): void
+    {
+        $combination->setItemHashes($hashes);
     }
 }

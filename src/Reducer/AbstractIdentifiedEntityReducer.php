@@ -77,31 +77,31 @@ abstract class AbstractIdentifiedEntityReducer implements ReducerInterface
 
     /**
      * Maps the entity hashes to their instances.
-     * @param array|string[] $entityHashes
+     * @param array|string[] $hashes
      * @return array|string[]
      * @throws ReducerException
      */
-    protected function mapEntityHashes(array $entityHashes): array
+    protected function mapEntityHashes(array $hashes): array
     {
         $result = [];
-        foreach ($entityHashes as $entityHash) {
-            $entity = $this->fetchEntityFromHash($entityHash);
-            $result[$entity->getIdentifier()] = $entityHash;
+        foreach ($hashes as $hash) {
+            $entity = $this->fetchEntityFromHash($hash);
+            $result[$entity->getIdentifier()] = $hash;
         }
         return $result;
     }
 
     /**
      * Fetches the entity with the specified hash.
-     * @param string $entityHash
+     * @param string $hash
      * @return EntityWithIdentifierInterface
      * @throws ReducerException
      */
-    protected function fetchEntityFromHash(string $entityHash): EntityWithIdentifierInterface
+    protected function fetchEntityFromHash(string $hash): EntityWithIdentifierInterface
     {
-        $result = $this->rawEntityRegistry->get($entityHash);
+        $result = $this->rawEntityRegistry->get($hash);
         if (!$result instanceof EntityWithIdentifierInterface) {
-            throw new ReducerException('Cannot find entity with hash #' . $entityHash);
+            throw new ReducerException('Cannot find entity with hash #' . $hash);
         }
         return $result;
     }

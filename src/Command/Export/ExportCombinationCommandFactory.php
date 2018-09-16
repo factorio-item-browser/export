@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\Export;
 
-use FactorioItemBrowser\Export\Combination\CombinationCreator;
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\Factorio\Instance;
 use FactorioItemBrowser\Export\Parser\ParserManager;
@@ -34,21 +33,6 @@ class ExportCombinationCommandFactory implements FactoryInterface
         $instance = $container->get(Instance::class);
         /* @var ParserManager $parserManager */
         $parserManager = $container->get(ParserManager::class);
-
-//        /* @var CombinationCreator $combinationCreator */
-//        $combinationCreator = $container->get(CombinationCreator::class);
-//
-//        $mod = $rawExportDataService->getModRegistry()->get('bobplates');
-//        $combinationCreator->setupForMod($mod);
-//
-//        $c = $combinationCreator->createMainCombination();
-//        $h = $rawExportDataService->getCombinationRegistry()->set($c);
-//        $mod->addCombinationHash($h);
-//        $rawExportDataService->getModRegistry()->set($mod);
-//        $rawExportDataService->getModRegistry()->saveMods();
-//        echo $h . PHP_EOL;
-//        die;
-
 
         return new ExportCombinationCommand(
             $rawExportDataService->getCombinationRegistry(),

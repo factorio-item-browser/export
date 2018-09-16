@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Merger;
 
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\Export\Exception\MergerException;
+use FactorioItemBrowser\ExportData\Entity\EntityWithIdentifierInterface;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 
 /**
@@ -13,50 +15,84 @@ use FactorioItemBrowser\ExportData\Entity\Recipe;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class RecipeMerger extends AbstractMerger
+class RecipeMerger extends AbstractIdentifiedEntityMerger
 {
+    use LocalisedStringMergerTrait;
+
     /**
-     * Merges the source combination data into the destination one.
-     * @param CombinationData $destination
-     * @param CombinationData $source
-     * @return $this
+     * Returns the hashes to use from the specified combination.
+     * @param Combination $combination
+     * @return array|string[]
      */
-    public function merge(CombinationData $destination, CombinationData $source)
+    protected function getHashesFromCombination(Combination $combination): array
     {
-        foreach ($source->getRecipes() as $sourceRecipe) {
-            $destinationRecipe = $destination->getRecipe($sourceRecipe->getName(), $sourceRecipe->getMode());
-            if ($destinationRecipe instanceof Recipe) {
-                $this->mergeRecipe($destinationRecipe, $sourceRecipe);
-            } else {
-                $destination->addRecipe(clone($sourceRecipe));
-            }
-        }
-        return $this;
+        return $combination->getRecipeHashes();
     }
 
     /**
-     * Merges the source recipe into the destination one.
+     * Merges the source entity into the destination one.
+     * @param EntityWithIdentifierInterface $destination
+     * @param EntityWithIdentifierInterface $source
+     * @throws MergerException
+     */
+    protected function mergeEntities(
+        EntityWithIdentifierInterface $destination,
+        EntityWithIdentifierInterface $source
+    ): void {
+        if (!$destination instanceof Recipe || !$source instanceof Recipe) {
+            throw new MergerException('Internal type error.');
+        }
+
+        $this->mergeData($destination, $source);
+        $this->mergeTranslations($destination, $source);
+        $this->mergeIcon($destination, $source);
+    }
+
+    /**
+     * Merges the actual data of the source recipe to the destination one.
      * @param Recipe $destination
      * @param Recipe $source
-     * @return $this
      */
-    protected function mergeRecipe(Recipe $destination, Recipe $source)
+    protected function mergeData(Recipe $destination, Recipe $source): void
     {
         if (count($source->getIngredients()) > 0 || count($source->getProducts()) > 0) {
-            $clonedSource = clone($source);
-            $destination
-                ->setIngredients($clonedSource->getIngredients())
-                ->setProducts($clonedSource->getProducts())
-                ->setCraftingTime($clonedSource->getCraftingTime())
-                ->setCraftingCategory($clonedSource->getCraftingCategory());
+            $destination->setIngredients($source->getIngredients())
+                        ->setProducts($source->getProducts())
+                        ->setCraftingTime($source->getCraftingTime())
+                        ->setCraftingCategory($source->getCraftingCategory());
         }
+    }
 
-        if (strlen($source->getIconHash()) > 0) {
+    /**
+     * Merges the translations from the destination recipe to the source one.
+     * @param Recipe $destination
+     * @param Recipe $source
+     */
+    protected function mergeTranslations(Recipe $destination, Recipe $source): void
+    {
+        $this->mergeLocalisedStrings($destination->getLabels(), $source->getLabels());
+        $this->mergeLocalisedStrings($destination->getDescriptions(), $source->getDescriptions());
+    }
+    
+    /**
+     * Merges the icon from the destination recipe to the source one.
+     * @param Recipe $destination
+     * @param Recipe $source
+     */
+    protected function mergeIcon(Recipe $destination, Recipe $source): void
+    {
+        if ($source->getIconHash() !== '') {
             $destination->setIconHash($source->getIconHash());
         }
-        $this->mergeLocalisedString($destination->getLabels(), $source->getLabels());
-        $this->mergeLocalisedString($destination->getDescriptions(), $source->getLabels());
-
-        return $this;
+    }
+    
+    /**
+     * Sets the hashes to the combination.
+     * @param Combination $combination
+     * @param array|string[] $hashes
+     */
+    protected function setHashesToCombination(Combination $combination, array $hashes): void
+    {
+        $combination->setRecipeHashes($hashes);
     }
 }

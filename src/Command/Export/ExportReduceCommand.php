@@ -70,7 +70,7 @@ class ExportReduceCommand extends AbstractCommand
         if ($this->isCombinationEmpty($reducedCombination)) {
             $this->reducedCombinationRegistry->remove($combinationHash);
         } else {
-            $this->reducedCombinationRegistry->set($combinationHash);
+            $this->reducedCombinationRegistry->set($reducedCombination);
         }
 
         // @todo Set Combination to reduced mod

@@ -57,8 +57,6 @@ class ItemReducer extends AbstractIdentifiedEntityReducer
 
         if (count($item->getLabels()->getTranslations()) === 0
             && count($item->getDescriptions()->getTranslations()) === 0
-            && $item->getProvidesRecipeLocalisation() === $parentItem->getProvidesRecipeLocalisation()
-            && $item->getProvidesMachineLocalisation() === $parentItem->getProvidesMachineLocalisation()
         ) {
             $item->setProvidesRecipeLocalisation(false)
                  ->setProvidesMachineLocalisation(false);

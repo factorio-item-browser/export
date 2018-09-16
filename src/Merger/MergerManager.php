@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Merger;
 
+use FactorioItemBrowser\Export\Exception\MergerException;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 
 /**
@@ -33,6 +34,7 @@ class MergerManager
      * Merges the source combination into the destination one.
      * @param Combination $destination
      * @param Combination $source
+     * @throws MergerException
      */
     public function merge(Combination $destination, Combination $source): void
     {

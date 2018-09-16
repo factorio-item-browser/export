@@ -19,10 +19,10 @@ class MergerManagerFactory implements FactoryInterface
      * The merger classes to use.
      */
     const MERGER_CLASSES = [
-//        IconMerger::class,
-//        ItemMerger::class,
-//        RecipeMerger::class,
-//        MachineMerger::class,
+        IconMerger::class,
+        ItemMerger::class,
+        MachineMerger::class,
+        RecipeMerger::class,
     ];
 
     /**

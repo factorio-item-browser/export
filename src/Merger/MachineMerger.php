@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Merger;
 
+use FactorioItemBrowser\Export\Exception\MergerException;
+use FactorioItemBrowser\ExportData\Entity\EntityWithIdentifierInterface;
 use FactorioItemBrowser\ExportData\Entity\Machine;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 
 /**
  * The class merging machines of combinations.
@@ -13,38 +15,46 @@ use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class MachineMerger extends AbstractMerger
+class MachineMerger extends AbstractIdentifiedEntityMerger
 {
+    use LocalisedStringMergerTrait;
+
     /**
-     * Merges the source combination data into the destination one.
-     * @param CombinationData $destination
-     * @param CombinationData $source
-     * @return $this
+     * Returns the hashes to use from the specified combination.
+     * @param Combination $combination
+     * @return array|string[]
      */
-    public function merge(CombinationData $destination, CombinationData $source)
+    protected function getHashesFromCombination(Combination $combination): array
     {
-        foreach ($source->getMachines() as $sourceMachine) {
-            $destinationMachine = $destination->getMachine($sourceMachine->getName());
-            if ($destinationMachine instanceof Machine) {
-                $this->mergeMachine($destinationMachine, $sourceMachine);
-            } else {
-                $destination->addMachine(clone($sourceMachine));
-            }
-        }
-        return $this;
+        return $combination->getMachineHashes();
     }
 
     /**
-     * Merges the source machine into the destination one.
+     * Merges the source entity into the destination one.
+     * @param EntityWithIdentifierInterface $destination
+     * @param EntityWithIdentifierInterface $source
+     * @throws MergerException
+     */
+    protected function mergeEntities(
+        EntityWithIdentifierInterface $destination,
+        EntityWithIdentifierInterface $source
+    ): void {
+        if (!$destination instanceof Machine || !$source instanceof Machine) {
+            throw new MergerException('Internal type error.');
+        }
+
+        $this->mergeData($destination, $source);
+        $this->mergeTranslations($destination, $source);
+        $this->mergeIcon($destination, $source);
+    }
+
+    /**
+     * Merges the actual data of the source machine to the destination one.
      * @param Machine $destination
      * @param Machine $source
-     * @return $this
      */
-    protected function mergeMachine(Machine $destination, Machine $source)
+    protected function mergeData(Machine $destination, Machine $source): void
     {
-        if (strlen($source->getIconHash()) > 0) {
-            $destination->setIconHash($source->getIconHash());
-        }
         if (count($source->getCraftingCategories()) > 0) {
             $destination->setCraftingCategories($source->getCraftingCategories())
                         ->setCraftingSpeed($source->getCraftingSpeed())
@@ -55,9 +65,38 @@ class MachineMerger extends AbstractMerger
                         ->setEnergyUsage($source->getEnergyUsage())
                         ->setEnergyUsageUnit($source->getEnergyUsageUnit());
         }
+    }
 
-        $this->mergeLocalisedString($destination->getLabels(), $source->getLabels());
-        $this->mergeLocalisedString($destination->getDescriptions(), $source->getDescriptions());
-        return $this;
+    /**
+     * Merges the translations from the destination machine to the source one.
+     * @param Machine $destination
+     * @param Machine $source
+     */
+    protected function mergeTranslations(Machine $destination, Machine $source): void
+    {
+        $this->mergeLocalisedStrings($destination->getLabels(), $source->getLabels());
+        $this->mergeLocalisedStrings($destination->getDescriptions(), $source->getDescriptions());
+    }
+
+    /**
+     * Merges the icon from the destination machine to the source one.
+     * @param Machine $destination
+     * @param Machine $source
+     */
+    protected function mergeIcon(Machine $destination, Machine $source): void
+    {
+        if ($source->getIconHash() !== '') {
+            $destination->setIconHash($source->getIconHash());
+        }
+    }
+
+    /**
+     * Sets the hashes to the combination.
+     * @param Combination $combination
+     * @param array|string[] $hashes
+     */
+    protected function setHashesToCombination(Combination $combination, array $hashes): void
+    {
+        $combination->setMachineHashes($hashes);
     }
 }

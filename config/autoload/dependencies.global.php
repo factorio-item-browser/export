@@ -35,17 +35,15 @@ return [
             ExportData\ReducedExportDataService::class => ExportData\ReducedExportDataServiceFactory::class,
 
             Factorio\DumpExtractor::class => InvokableFactory::class,
-            Factorio\FactorioManager::class => Factorio\FactorioManagerFactory::class,
             Factorio\Instance::class => Factorio\InstanceFactory::class,
-            Factorio\Options::class => Factorio\OptionsFactory::class,
 
             I18n\Translator::class => I18n\TranslatorFactory::class,
 
             Merger\IconMerger::class => InvokableFactory::class,
-            Merger\ItemMerger::class => InvokableFactory::class,
-            Merger\MachineMerger::class => InvokableFactory::class,
+            Merger\ItemMerger::class => Merger\ItemMergerFactory::class,
+            Merger\MachineMerger::class => Merger\MachineMergerFactory::class,
             Merger\MergerManager::class => Merger\MergerManagerFactory::class,
-            Merger\RecipeMerger::class => InvokableFactory::class,
+            Merger\RecipeMerger::class => Merger\RecipeMergerFactory::class,
 
             Mod\DependencyReader::class => Mod\DependencyReaderFactory::class,
             Mod\DependencyResolver::class => Mod\DependencyResolverFactory::class,
