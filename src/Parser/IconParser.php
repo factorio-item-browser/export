@@ -9,6 +9,7 @@ use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
+use FactorioItemBrowser\ExportData\Utils\EntityUtils;
 
 /**
  * The class parsing the icons of the dump data.
@@ -28,7 +29,13 @@ class IconParser implements ParserInterface
      * The parsed icons.
      * @var array|Icon[]
      */
-    protected $icons;
+    protected $parsedIcons = [];
+
+    /**
+     * The icon hashes which are used by any entity.
+     * @var array|string[]
+     */
+    protected $usedIconHashes = [];
 
     /**
      * Initializes the parser.
@@ -40,13 +47,12 @@ class IconParser implements ParserInterface
     }
 
     /**
-     * Parses the dump data into the combination.
-     * @param Combination $combination
+     * Parses the data from the dump into actual entities.
      * @param DataContainer $dumpData
      */
-    public function parse(Combination $combination, DataContainer $dumpData): void
+    public function parse(DataContainer $dumpData): void
     {
-        $combination->setIconHashes([]);
+        $this->parsedIcons = [];
         foreach ($dumpData->getObjectArray('icons') as $iconData) {
             $icon = $this->parseIcon($iconData);
 
@@ -56,12 +62,12 @@ class IconParser implements ParserInterface
                 case 'fluid':
                 case 'item':
                 case 'recipe':
-                    $this->icons[$this->buildArrayKey($type, $name)] = $icon;
+                    $this->parsedIcons[$this->buildArrayKey($type, $name)] = $icon;
                     break;
 
                 default:
-                    $this->icons[$this->buildArrayKey('item', $name)] = $icon;
-                    $this->icons[$this->buildArrayKey('machine', $name)] = $icon;
+                    $this->parsedIcons[$this->buildArrayKey('item', $name)] = $icon;
+                    $this->parsedIcons[$this->buildArrayKey('machine', $name)] = $icon;
                     break;
             }
         }
@@ -113,19 +119,34 @@ class IconParser implements ParserInterface
     }
 
     /**
-     * Returns the icon hash for the specified entity, if available.
+     * Checks the parsed data.
+     */
+    public function check(): void
+    {
+    }
+
+    /**
+     * Persists the parsed data into the combination.
      * @param Combination $combination
+     */
+    public function persist(Combination $combination): void
+    {
+        $combination->setIconHashes($this->usedIconHashes);
+    }
+
+    /**
+     * Returns the icon hash for the specified entity, if available.
      * @param string $type
      * @param string $name
      * @return string|null
      */
-    public function getIconHashForEntity(Combination $combination, string $type, string $name): ?string
+    public function getIconHashForEntity(string $type, string $name): ?string
     {
         $result = null;
         $key = $this->buildArrayKey($type, $name);
-        if (isset($this->icons[$key])) {
-            $result = $this->iconRegistry->set($this->icons[$key]);
-            $combination->addIconHash($result);
+        if (isset($this->parsedIcons[$key])) {
+            $result = $this->parsedIcons[$key]->calculateHash();
+            $this->usedIconHashes[] = $result;
         }
         return $result;
     }
@@ -138,6 +159,6 @@ class IconParser implements ParserInterface
      */
     protected function buildArrayKey(string $type, string $name): string
     {
-        return $type . '|' . $name;
+        return EntityUtils::buildIdentifier([$type, $name]);
     }
 }

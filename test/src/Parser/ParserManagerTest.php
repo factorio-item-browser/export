@@ -70,18 +70,29 @@ class ParserManagerTest extends TestCase
 
         /* @var ParserInterface|MockObject $parser1 */
         $parser1 = $this->getMockBuilder(ParserInterface::class)
-                        ->setMethods(['parse'])
+                        ->setMethods(['parse', 'check', 'persist'])
                         ->getMockForAbstractClass();
         $parser1->expects($this->once())
                 ->method('parse')
-                ->with($combination, $dumpData);
+                ->with($dumpData);
+        $parser1->expects($this->once())
+                ->method('check');
+        $parser1->expects($this->once())
+                ->method('persist')
+                ->with($combination);
+
         /* @var ParserInterface|MockObject $parser2 */
         $parser2 = $this->getMockBuilder(ParserInterface::class)
-                        ->setMethods(['parse'])
+                        ->setMethods(['parse', 'check', 'persist'])
                         ->getMockForAbstractClass();
         $parser2->expects($this->once())
                 ->method('parse')
-                ->with($combination, $dumpData);
+                ->with($dumpData);
+        $parser2->expects($this->once())
+                ->method('check');
+        $parser2->expects($this->once())
+                ->method('persist')
+                ->with($combination);
 
         $parserManager = new ParserManager($translator, [$parser1, $parser2]);
         $parserManager->parse($combination, $dumpData);

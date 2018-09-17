@@ -39,6 +39,12 @@ class RecipeParser implements ParserInterface
     protected $translator;
 
     /**
+     * The parsed recipes.
+     * @var array|Recipe[]
+     */
+    protected $parsedRecipes = [];
+
+    /**
      * Initializes the parser.
      * @param IconParser $iconParser
      * @param EntityRegistry $recipeRegistry
@@ -50,35 +56,22 @@ class RecipeParser implements ParserInterface
         $this->recipeRegistry = $recipeRegistry;
         $this->translator = $translator;
     }
-    
-    /**
-     * Parses the dump data into the combination.
-     * @param Combination $combination
-     * @param DataContainer $dumpData
-     */
-    public function parse(Combination $combination, DataContainer $dumpData): void
-    {
-        $combination->setRecipeHashes([]);
-        foreach ($dumpData->getObjectArray(['recipes', 'normal']) as $recipeData) {
-            $this->processRecipe($combination, $recipeData, 'normal');
-        }
-        foreach ($dumpData->getObjectArray(['recipes', 'expensive']) as $recipeData) {
-            $this->processRecipe($combination, $recipeData, 'expensive');
-        }
-    }
 
     /**
-     * Processes the specified recipe data.
-     * @param Combination $combination
-     * @param DataContainer $recipeData
-     * @param string $mode
+     * Parses the data from the dump into actual entities.
+     * @param DataContainer $dumpData
      */
-    protected function processRecipe(Combination $combination, DataContainer $recipeData, string $mode): void
+    public function parse(DataContainer $dumpData): void
     {
-        $recipe = $this->parseRecipe($recipeData, $mode);
-        $this->addTranslations($recipe, $recipeData);
-        $this->assignIconHash($combination, $recipe);
-        $combination->addRecipeHash($this->recipeRegistry->set($recipe));
+        $this->parsedRecipes = [];
+        foreach ($dumpData->getObjectArray(['recipes', 'normal']) as $recipeData) {
+            $recipe = $this->parseRecipe($recipeData, 'normal');
+            $this->parsedRecipes[$recipe->getIdentifier()] = $recipe;
+        }
+        foreach ($dumpData->getObjectArray(['recipes', 'expensive']) as $recipeData) {
+            $recipe = $this->parseRecipe($recipeData, 'expensive');
+            $this->parsedRecipes[$recipe->getIdentifier()] = $recipe;
+        }
     }
 
     /**
@@ -97,6 +90,7 @@ class RecipeParser implements ParserInterface
                ->setIngredients($this->parseIngredients($recipeData))
                ->setProducts($this->parseProducts($recipeData));
 
+        $this->addTranslations($recipe, $recipeData);
         return $recipe;
     }
 
@@ -195,24 +189,42 @@ class RecipeParser implements ParserInterface
     }
 
     /**
-     * Assigns the icon hash to the specified recipe.
-     * @param Combination $combination
+     * Checks the parsed data.
+     */
+    public function check(): void
+    {
+        foreach ($this->parsedRecipes as $recipe) {
+            $this->checkIcon($recipe);
+        }
+    }
+
+    /**
+     * Checks the icon of the recipe.
      * @param Recipe $recipe
      */
-    protected function assignIconHash(Combination $combination, Recipe $recipe): void
+    protected function checkIcon(Recipe $recipe): void
     {
-        $iconHash = $this->iconParser->getIconHashForEntity($combination, 'recipe', $recipe->getName());
+        $iconHash = $this->iconParser->getIconHashForEntity('recipe', $recipe->getName());
         $products = $recipe->getProducts();
         $firstProduct = reset($products);
         if ($iconHash === null && $firstProduct instanceof Product) {
-            $iconHash = $this->iconParser->getIconHashForEntity(
-                $combination,
-                $firstProduct->getType(),
-                $firstProduct->getName()
-            );
+            $iconHash = $this->iconParser->getIconHashForEntity($firstProduct->getType(), $firstProduct->getName());
         }
         if ($iconHash !== null) {
             $recipe->setIconHash($iconHash);
         }
+    }
+
+    /**
+     * Persists the parsed data into the combination.
+     * @param Combination $combination
+     */
+    public function persist(Combination $combination): void
+    {
+        $recipeHashes = [];
+        foreach ($this->parsedRecipes as $recipe) {
+            $recipeHashes[] = $this->recipeRegistry->set($recipe);
+        }
+        $combination->setRecipeHashes($recipeHashes);
     }
 }

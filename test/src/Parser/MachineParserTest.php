@@ -50,6 +50,7 @@ class MachineParserTest extends TestCase
 
     /**
      * Tests the parse method.
+     * @throws ReflectionException
      * @covers ::parse
      */
     public function testParse(): void
@@ -57,50 +58,12 @@ class MachineParserTest extends TestCase
         $dumpData = new DataContainer(['abc' => 'def']);
         $machine1 = (new Machine())->setName('ghi');
         $machine2 = (new Machine())->setName('jkl');
-        $machineHash1 = 'mno';
-        $machineHash2 = 'pqr';
         $machines = [$machine1, $machine2];
-
-        /* @var EntityRegistry|MockObject $machineRegistry */
-        $machineRegistry = $this->getMockBuilder(EntityRegistry::class)
-                                ->setMethods(['set'])
-                                ->disableOriginalConstructor()
-                                ->getMock();
-        $machineRegistry->expects($this->exactly(2))
-                        ->method('set')
-                        ->withConsecutive(
-                            [$machine1],
-                            [$machine2]
-                        )
-                        ->willReturnOnConsecutiveCalls(
-                            $machineHash1,
-                            $machineHash2
-                        );
-
-        /* @var Combination|MockObject $combination */
-        $combination = $this->getMockBuilder(Combination::class)
-                            ->setMethods(['setMachineHashes', 'addMachineHash'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $combination->expects($this->once())
-                    ->method('setMachineHashes')
-                    ->with([]);
-        $combination->expects($this->exactly(2))
-                    ->method('addMachineHash')
-                    ->withConsecutive(
-                        [$machineHash1],
-                        [$machineHash2]
-                    );
-
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
 
         /* @var MachineParser|MockObject $parser */
         $parser = $this->getMockBuilder(MachineParser::class)
-                       ->setMethods(['parseMachines', 'parseFluidBoxes', 'assignIconHash'])
-                       ->setConstructorArgs([$iconParser, $machineRegistry, $translator])
+                       ->setMethods(['parseMachines', 'parseFluidBoxes'])
+                       ->disableOriginalConstructor()
                        ->getMock();
         $parser->expects($this->once())
                ->method('parseMachines')
@@ -109,14 +72,9 @@ class MachineParserTest extends TestCase
         $parser->expects($this->once())
                ->method('parseFluidBoxes')
                ->with($dumpData, $machines);
-        $parser->expects($this->exactly(2))
-               ->method('assignIconHash')
-               ->withConsecutive(
-                   [$combination, $machine1],
-                   [$combination, $machine2]
-               );
 
-        $parser->parse($combination, $dumpData);
+        $parser->parse($dumpData);
+        $this->assertEquals($machines, $this->extractProperty($parser, 'parsedMachines'));
     }
 
     /**
@@ -144,7 +102,7 @@ class MachineParserTest extends TestCase
 
         /* @var MachineParser|MockObject $parser */
         $parser = $this->getMockBuilder(MachineParser::class)
-                       ->setMethods(['parseMachine', 'addTranslations'])
+                       ->setMethods(['parseMachine'])
                        ->disableOriginalConstructor()
                        ->getMock();
         $parser->expects($this->exactly(2))
@@ -156,12 +114,6 @@ class MachineParserTest extends TestCase
                ->willReturnOnConsecutiveCalls(
                    $machine1,
                    $machine2
-               );
-        $parser->expects($this->exactly(2))
-               ->method('addTranslations')
-               ->withConsecutive(
-                   [$machine1, $this->equalTo($machineData1)],
-                   [$machine2, $this->equalTo($machineData2)]
                );
 
         $result = $this->invokeMethod($parser, 'parseMachines', $dumpData);
@@ -196,11 +148,14 @@ class MachineParserTest extends TestCase
 
         /* @var MachineParser|MockObject $parser */
         $parser = $this->getMockBuilder(MachineParser::class)
-                       ->setMethods(['parseEnergyUsage'])
+                       ->setMethods(['parseEnergyUsage', 'addTranslations'])
                        ->disableOriginalConstructor()
                        ->getMock();
         $parser->expects($this->once())
                ->method('parseEnergyUsage')
+               ->with($this->equalTo($expectedResult), $machineData);
+        $parser->expects($this->once())
+               ->method('addTranslations')
                ->with($this->equalTo($expectedResult), $machineData);
 
         $result = $this->invokeMethod($parser, 'parseMachine', $machineData);
@@ -389,12 +344,39 @@ class MachineParserTest extends TestCase
         $parser = new MachineParser($iconParser, $machineRegistry, $translator);
         $this->invokeMethod($parser, 'addTranslations', $machine, $machineData);
     }
-    
-        /**
-     * Provides the data for the assignIconHash test.
+
+    /**
+     * Tests the check method.
+     * @throws ReflectionException
+     * @covers ::check
+     */
+    public function testCheck(): void
+    {
+        $machine1 = (new Machine())->setName('abc');
+        $machine2 = (new Machine())->setName('def');
+        $parsedMachines = [$machine1, $machine2];
+
+        /* @var MachineParser|MockObject $parser */
+        $parser = $this->getMockBuilder(MachineParser::class)
+                       ->setMethods(['checkIcon'])
+                       ->disableOriginalConstructor()
+                       ->getMock();
+        $parser->expects($this->exactly(2))
+               ->method('checkIcon')
+               ->withConsecutive(
+                   [$machine1],
+                   [$machine2]
+               );
+
+        $this->injectProperty($parser, 'parsedMachines', $parsedMachines);
+        $parser->check();
+    }
+
+    /**
+     * Provides the data for the checkIcon test.
      * @return array
      */
-    public function provideAssignIconHash(): array
+    public function provideCheckIcon(): array
     {
         return [
             ['foo', true],
@@ -403,17 +385,16 @@ class MachineParserTest extends TestCase
     }
 
     /**
-     * Tests the assignIconHash method.
+     * Tests the checkIcon method.
      * @param null|string $resultHash
      * @param bool $expectSet
      * @throws ReflectionException
-     * @covers ::assignIconHash
-     * @dataProvider provideAssignIconHash
+     * @covers ::checkIcon
+     * @dataProvider provideCheckIcon
      */
-    public function testAssignIconHash(?string $resultHash, bool $expectSet): void
+    public function testCheckIcon(?string $resultHash, bool $expectSet): void
     {
         $name = 'abc';
-        $combination = new Combination();
 
         /* @var IconParser|MockObject $iconParser */
         $iconParser = $this->getMockBuilder(IconParser::class)
@@ -422,20 +403,20 @@ class MachineParserTest extends TestCase
                            ->getMock();
         $iconParser->expects($this->once())
                    ->method('getIconHashForEntity')
-                   ->with($combination, 'machine', $name)
+                   ->with('machine', $name)
                    ->willReturn($resultHash);
 
         /* @var Machine|MockObject $machine */
         $machine = $this->getMockBuilder(Machine::class)
-                        ->setMethods(['getName', 'setIconHash'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
+                     ->setMethods(['getName', 'setIconHash'])
+                     ->disableOriginalConstructor()
+                     ->getMock();
         $machine->expects($this->once())
-                ->method('getName')
-                ->willReturn($name);
+             ->method('getName')
+             ->willReturn($name);
         $machine->expects($expectSet ? $this->once() : $this->never())
-                ->method('setIconHash')
-                ->with((string) $resultHash);
+             ->method('setIconHash')
+             ->with((string) $resultHash);
 
         /* @var EntityRegistry $machineRegistry */
         $machineRegistry = $this->createMock(EntityRegistry::class);
@@ -443,6 +424,56 @@ class MachineParserTest extends TestCase
         $translator = $this->createMock(Translator::class);
 
         $parser = new MachineParser($iconParser, $machineRegistry, $translator);
-        $this->invokeMethod($parser, 'assignIconHash', $combination, $machine);
+        $this->invokeMethod($parser, 'checkIcon', $machine);
+    }
+    
+    /**
+     * Tests the persist method.
+     * @throws ReflectionException
+     * @covers ::persist
+     */
+    public function testPersist(): void
+    {
+        $machine1 = (new Machine())->setName('abc');
+        $machine2 = (new Machine())->setName('def');
+        $parsedMachines = [$machine1, $machine2];
+        $machineHash1 = 'ghi';
+        $machineHash2 = 'jkl';
+        $expectedMachineHashes = [$machineHash1, $machineHash2];
+
+        /* @var EntityRegistry|MockObject $machineRegistry */
+        $machineRegistry = $this->getMockBuilder(EntityRegistry::class)
+                             ->setMethods(['set'])
+                             ->disableOriginalConstructor()
+                             ->getMock();
+        $machineRegistry->expects($this->exactly(2))
+                     ->method('set')
+                     ->withConsecutive(
+                         [$machine1],
+                         [$machine2]
+                     )
+                     ->willReturnOnConsecutiveCalls(
+                         $machineHash1,
+                         $machineHash2
+                     );
+
+        /* @var Combination|MockObject $combination */
+        $combination = $this->getMockBuilder(Combination::class)
+                            ->setMethods(['setMachineHashes'])
+                            ->disableOriginalConstructor()
+                            ->getMock();
+        $combination->expects($this->once())
+                    ->method('setMachineHashes')
+                    ->with($expectedMachineHashes);
+
+        /* @var IconParser $iconParser */
+        $iconParser = $this->createMock(IconParser::class);
+        /* @var Translator $translator */
+        $translator = $this->createMock(Translator::class);
+
+        $parser = new MachineParser($iconParser, $machineRegistry, $translator);
+        $this->injectProperty($parser, 'parsedMachines', $parsedMachines);
+
+        $parser->persist($combination);
     }
 }

@@ -37,6 +37,12 @@ class ItemParser implements ParserInterface
     protected $translator;
 
     /**
+     * The parsed items.
+     * @var array|Item[]
+     */
+    protected $parsedItems = [];
+
+    /**
      * Initializes the parser.
      * @param IconParser $iconParser
      * @param EntityRegistry $itemRegistry
@@ -50,33 +56,20 @@ class ItemParser implements ParserInterface
     }
 
     /**
-     * Parses the dump data into the combination.
-     * @param Combination $combination
+     * Parses the data from the dump into actual entities.
      * @param DataContainer $dumpData
      */
-    public function parse(Combination $combination, DataContainer $dumpData): void
+    public function parse(DataContainer $dumpData): void
     {
-        $combination->setItemHashes([]);
+        $this->parsedItems = [];
         foreach ($dumpData->getObjectArray('items') as $itemData) {
-            $this->processItem($combination, $itemData, 'item');
+            $item = $this->parseItem($itemData, 'item');
+            $this->parsedItems[$item->getIdentifier()] = $item;
         }
         foreach ($dumpData->getObjectArray('fluids') as $itemData) {
-            $this->processItem($combination, $itemData, 'fluid');
+            $item = $this->parseItem($itemData, 'fluid');
+            $this->parsedItems[$item->getIdentifier()] = $item;
         }
-    }
-
-    /**
-     * Processes the specified item data.
-     * @param Combination $combination
-     * @param DataContainer $itemData
-     * @param string $type
-     */
-    protected function processItem(Combination $combination, DataContainer $itemData, string $type): void
-    {
-        $item = $this->parseItem($itemData, $type);
-        $this->addTranslations($item, $itemData);
-        $this->assignIconHash($combination, $item);
-        $combination->addItemHash($this->itemRegistry->set($item));
     }
 
     /**
@@ -91,6 +84,7 @@ class ItemParser implements ParserInterface
         $item->setType($type)
              ->setName(strtolower($itemData->getString('name')));
 
+        $this->addTranslations($item, $itemData);
         return $item;
     }
 
@@ -116,15 +110,37 @@ class ItemParser implements ParserInterface
     }
 
     /**
-     * Assigns the icon hash to the specified item.
-     * @param Combination $combination
+     * Checks the parsed data.
+     */
+    public function check(): void
+    {
+        foreach ($this->parsedItems as $item) {
+            $this->checkIcon($item);
+        }
+    }
+
+    /**
+     * Checks the icon of the item.
      * @param Item $item
      */
-    protected function assignIconHash(Combination $combination, Item $item): void
+    protected function checkIcon(Item $item): void
     {
-        $iconHash = $this->iconParser->getIconHashForEntity($combination, $item->getType(), $item->getName());
+        $iconHash = $this->iconParser->getIconHashForEntity($item->getType(), $item->getName());
         if ($iconHash !== null) {
             $item->setIconHash($iconHash);
         }
+    }
+
+    /**
+     * Persists the parsed data into the combination.
+     * @param Combination $combination
+     */
+    public function persist(Combination $combination): void
+    {
+        $itemHashes = [];
+        foreach ($this->parsedItems as $item) {
+            $itemHashes[] = $this->itemRegistry->set($item);
+        }
+        $combination->setItemHashes($itemHashes);
     }
 }

@@ -16,9 +16,19 @@ use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 interface ParserInterface
 {
     /**
-     * Parses the dump data into the combination.
-     * @param Combination $combination
+     * Parses the data from the dump into actual entities.
      * @param DataContainer $dumpData
      */
-    public function parse(Combination $combination, DataContainer $dumpData): void;
+    public function parse(DataContainer $dumpData): void;
+
+    /**
+     * Checks the parsed data.
+     */
+    public function check(): void;
+
+    /**
+     * Persists the parsed data into the combination.
+     * @param Combination $combination
+     */
+    public function persist(Combination $combination): void;
 }

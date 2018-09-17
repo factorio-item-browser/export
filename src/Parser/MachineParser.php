@@ -42,6 +42,11 @@ class MachineParser implements ParserInterface
     protected $translator;
 
     /**
+     * @var array|Machine[]
+     */
+    protected $parsedMachines = [];
+
+    /**
      * Initializes the parser.
      * @param IconParser $iconParser
      * @param EntityRegistry $machineRegistry
@@ -55,20 +60,13 @@ class MachineParser implements ParserInterface
     }
 
     /**
-     * Parses the dump data into the combination.
-     * @param Combination $combination
+     * Parses the data from the dump into actual entities.
      * @param DataContainer $dumpData
      */
-    public function parse(Combination $combination, DataContainer $dumpData): void
+    public function parse(DataContainer $dumpData): void
     {
-        $combination->setMachineHashes([]);
-        $machines = $this->parseMachines($dumpData);
-        $this->parseFluidBoxes($dumpData, $machines);
-
-        foreach ($machines as $machine) {
-            $this->assignIconHash($combination, $machine);
-            $combination->addMachineHash($this->machineRegistry->set($machine));
-        }
+        $this->parsedMachines = $this->parseMachines($dumpData);
+        $this->parseFluidBoxes($dumpData, $this->parsedMachines);
     }
 
     /**
@@ -81,7 +79,6 @@ class MachineParser implements ParserInterface
         $machines = [];
         foreach ($dumpData->getObjectArray('machines') as $machineData) {
             $machine = $this->parseMachine($machineData);
-            $this->addTranslations($machine, $machineData);
             $machines[$machine->getName()] = $machine;
         }
         return $machines;
@@ -106,6 +103,7 @@ class MachineParser implements ParserInterface
             }
         }
         $this->parseEnergyUsage($machine, $machineData);
+        $this->addTranslations($machine, $machineData);
 
         return $machine;
     }
@@ -129,6 +127,25 @@ class MachineParser implements ParserInterface
             $machine->setEnergyUsage(round($energyUsage, 3))
                     ->setEnergyUsageUnit($currentUnit);
         }
+    }
+
+    /**
+     * Adds the translations to the machine.
+     * @param Machine $machine
+     * @param DataContainer $machineData
+     */
+    protected function addTranslations(Machine $machine, DataContainer $machineData): void
+    {
+        $this->translator->addTranslationsToEntity(
+            $machine->getLabels(),
+            'name',
+            $machineData->get(['localised', 'name'])
+        );
+        $this->translator->addTranslationsToEntity(
+            $machine->getDescriptions(),
+            'description',
+            $machineData->get(['localised', 'description'])
+        );
     }
 
     /**
@@ -157,35 +174,39 @@ class MachineParser implements ParserInterface
                 ->setNumberOfFluidOutputSlots($fluidBoxData->getInteger('output'));
     }
 
+
     /**
-     * Adds the translations to the machine.
-     * @param Machine $machine
-     * @param DataContainer $machineData
+     * Checks the parsed data.
      */
-    protected function addTranslations(Machine $machine, DataContainer $machineData): void
+    public function check(): void
     {
-        $this->translator->addTranslationsToEntity(
-            $machine->getLabels(),
-            'name',
-            $machineData->get(['localised', 'name'])
-        );
-        $this->translator->addTranslationsToEntity(
-            $machine->getDescriptions(),
-            'description',
-            $machineData->get(['localised', 'description'])
-        );
+        foreach ($this->parsedMachines as $machine) {
+            $this->checkIcon($machine);
+        }
     }
 
     /**
-     * Assigns the icon hash to the specified machine.
-     * @param Combination $combination
+     * Checks the icon of the machine.
      * @param Machine $machine
      */
-    protected function assignIconHash(Combination $combination, Machine $machine): void
+    protected function checkIcon(Machine $machine): void
     {
-        $iconHash = $this->iconParser->getIconHashForEntity($combination, 'machine', $machine->getName());
+        $iconHash = $this->iconParser->getIconHashForEntity('machine', $machine->getName());
         if ($iconHash !== null) {
             $machine->setIconHash($iconHash);
         }
+    }
+
+    /**
+     * Persists the parsed data into the combination.
+     * @param Combination $combination
+     */
+    public function persist(Combination $combination): void
+    {
+        $machineHashes = [];
+        foreach ($this->parsedMachines as $machine) {
+            $machineHashes[] = $this->machineRegistry->set($machine);
+        }
+        $combination->setMachineHashes($machineHashes);
     }
 }
