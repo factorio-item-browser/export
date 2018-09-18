@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\Common\Constant\EntityType;
+use FactorioItemBrowser\Common\Constant\RecipeMode;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\Utils\LocalisedStringUtils;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
@@ -79,11 +81,11 @@ class RecipeParser implements ParserInterface
     {
         $this->parsedRecipes = [];
         foreach ($dumpData->getObjectArray(['recipes', 'normal']) as $recipeData) {
-            $recipe = $this->parseRecipe($recipeData, 'normal');
+            $recipe = $this->parseRecipe($recipeData, RecipeMode::NORMAL);
             $this->parsedRecipes[$recipe->getIdentifier()] = $recipe;
         }
         foreach ($dumpData->getObjectArray(['recipes', 'expensive']) as $recipeData) {
-            $recipe = $this->parseRecipe($recipeData, 'expensive');
+            $recipe = $this->parseRecipe($recipeData, RecipeMode::EXPENSIVE);
             $this->parsedRecipes[$recipe->getIdentifier()] = $recipe;
         }
     }
@@ -219,7 +221,7 @@ class RecipeParser implements ParserInterface
      */
     protected function checkIcon(Recipe $recipe): void
     {
-        $iconHash = $this->iconParser->getIconHashForEntity('recipe', $recipe->getName());
+        $iconHash = $this->iconParser->getIconHashForEntity(EntityType::RECIPE, $recipe->getName());
         $products = $recipe->getProducts();
         $firstProduct = reset($products);
         if ($iconHash === null && $firstProduct instanceof Product) {

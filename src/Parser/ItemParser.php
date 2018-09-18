@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\Common\Constant\ItemType;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -64,11 +65,11 @@ class ItemParser implements ParserInterface
     {
         $this->parsedItems = [];
         foreach ($dumpData->getObjectArray('items') as $itemData) {
-            $item = $this->parseItem($itemData, 'item');
+            $item = $this->parseItem($itemData, ItemType::ITEM);
             $this->parsedItems[$item->getIdentifier()] = $item;
         }
         foreach ($dumpData->getObjectArray('fluids') as $itemData) {
-            $item = $this->parseItem($itemData, 'fluid');
+            $item = $this->parseItem($itemData, ItemType::FLUID);
             $this->parsedItems[$item->getIdentifier()] = $item;
         }
     }
@@ -153,8 +154,8 @@ class ItemParser implements ParserInterface
     public function getItem(string $name): array
     {
         return array_values(array_filter([
-            $this->parsedItems[EntityUtils::buildIdentifier(['item', $name])] ?? null,
-            $this->parsedItems[EntityUtils::buildIdentifier(['fluid', $name])] ?? null,
+            $this->parsedItems[EntityUtils::buildIdentifier([ItemType::ITEM, $name])] ?? null,
+            $this->parsedItems[EntityUtils::buildIdentifier([ItemType::FLUID, $name])] ?? null,
         ]));
     }
 }

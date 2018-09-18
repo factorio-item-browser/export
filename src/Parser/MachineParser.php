@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\Common\Constant\EnergyUsageUnit;
+use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\Utils\LocalisedStringUtils;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
@@ -20,11 +22,6 @@ use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
  */
 class MachineParser implements ParserInterface
 {
-    /**
-     * The units of the energy usage to use.
-     */
-    protected const ENERGY_USAGE_UNITS = ['W', 'kW', 'MW', 'GW', 'TW', 'PW', 'EW', 'ZW', 'YW'];
-
     /**
      * The icon parser.
      * @var IconParser
@@ -131,7 +128,7 @@ class MachineParser implements ParserInterface
     {
         $energyUsage = $machineData->getFloat('energyUsage', 0.); // Float because numbers may be bigger than 64bit
         if ($energyUsage > 0) {
-            $units = self::ENERGY_USAGE_UNITS;
+            $units = EnergyUsageUnit::ORDERED_UNITS;
             $currentUnit = array_shift($units);
             while ($energyUsage >= 1000 && count($units) > 0) {
                 $energyUsage /= 1000;
@@ -205,7 +202,7 @@ class MachineParser implements ParserInterface
      */
     protected function checkIcon(Machine $machine): void
     {
-        $iconHash = $this->iconParser->getIconHashForEntity('machine', $machine->getName());
+        $iconHash = $this->iconParser->getIconHashForEntity(EntityType::MACHINE, $machine->getName());
         if ($iconHash !== null) {
             $machine->setIconHash($iconHash);
         }

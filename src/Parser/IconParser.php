@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -59,15 +60,15 @@ class IconParser implements ParserInterface
             $name = $iconData->getString('name');
             $type = $iconData->getString('type');
             switch ($type) {
-                case 'fluid':
-                case 'item':
-                case 'recipe':
+                case EntityType::FLUID:
+                case EntityType::ITEM:
+                case EntityType::RECIPE:
                     $this->parsedIcons[$this->buildArrayKey($type, $name)] = $icon;
                     break;
 
                 default:
-                    $this->parsedIcons[$this->buildArrayKey('item', $name)] = $icon;
-                    $this->parsedIcons[$this->buildArrayKey('machine', $name)] = $icon;
+                    $this->parsedIcons[$this->buildArrayKey(EntityType::ITEM, $name)] = $icon;
+                    $this->parsedIcons[$this->buildArrayKey(EntityType::MACHINE, $name)] = $icon;
                     break;
             }
         }
