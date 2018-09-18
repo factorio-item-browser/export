@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Reducer;
 
 use FactorioItemBrowser\Export\Exception\ReducerException;
+use FactorioItemBrowser\Export\Utils\LocalisedStringUtils;
 use FactorioItemBrowser\ExportData\Entity\EntityInterface;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
@@ -20,8 +21,6 @@ use FactorioItemBrowser\ExportData\Utils\EntityUtils;
  */
 class RecipeReducer extends AbstractIdentifiedEntityReducer
 {
-    use LocalisedStringReducerTrait;
-
     /**
      * Returns the hashes to use from the specified combination.
      * @param Combination $combination
@@ -90,8 +89,8 @@ class RecipeReducer extends AbstractIdentifiedEntityReducer
      */
     protected function reduceTranslationsOfRecipe(Recipe $recipe, Recipe $parentRecipe): void
     {
-        $this->reduceLocalisedString($recipe->getLabels(), $parentRecipe->getLabels());
-        $this->reduceLocalisedString($recipe->getDescriptions(), $parentRecipe->getDescriptions());
+        LocalisedStringUtils::reduce($recipe->getLabels(), $parentRecipe->getLabels());
+        LocalisedStringUtils::reduce($recipe->getDescriptions(), $parentRecipe->getDescriptions());
     }
 
     /**

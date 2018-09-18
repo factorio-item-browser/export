@@ -28,11 +28,13 @@ class MachineParserFactory implements FactoryInterface
     {
         /* @var IconParser $iconParser */
         $iconParser = $container->get(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $container->get(ItemParser::class);
         /* @var RawExportDataService $rawExportDataService */
         $rawExportDataService = $container->get(RawExportDataService::class);
         /* @var Translator $translator */
         $translator = $container->get(Translator::class);
 
-        return new MachineParser($iconParser, $rawExportDataService->getMachineRegistry(), $translator);
+        return new MachineParser($iconParser, $itemParser, $rawExportDataService->getMachineRegistry(), $translator);
     }
 }

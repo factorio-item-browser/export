@@ -6,6 +6,8 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Export\I18n\Translator;
+use FactorioItemBrowser\Export\Utils\LocalisedStringUtils;
+use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient;
@@ -25,6 +27,12 @@ class RecipeParser implements ParserInterface
      * @var IconParser
      */
     protected $iconParser;
+
+    /**
+     * The item parser.
+     * @var ItemParser
+     */
+    protected $itemParser;
 
     /**
      * The recipe registry.
@@ -47,12 +55,18 @@ class RecipeParser implements ParserInterface
     /**
      * Initializes the parser.
      * @param IconParser $iconParser
+     * @param ItemParser $itemParser
      * @param EntityRegistry $recipeRegistry
      * @param Translator $translator
      */
-    public function __construct(IconParser $iconParser, EntityRegistry $recipeRegistry, Translator $translator)
-    {
+    public function __construct(
+        IconParser $iconParser,
+        ItemParser $itemParser,
+        EntityRegistry $recipeRegistry,
+        Translator $translator
+    ) {
         $this->iconParser = $iconParser;
+        $this->itemParser = $itemParser;
         $this->recipeRegistry = $recipeRegistry;
         $this->translator = $translator;
     }
@@ -195,6 +209,7 @@ class RecipeParser implements ParserInterface
     {
         foreach ($this->parsedRecipes as $recipe) {
             $this->checkIcon($recipe);
+            $this->checkTranslation($recipe);
         }
     }
 
@@ -212,6 +227,23 @@ class RecipeParser implements ParserInterface
         }
         if ($iconHash !== null) {
             $recipe->setIconHash($iconHash);
+        }
+    }
+
+    /**
+     * Checks the translation of the recipe.
+     * @param Recipe $recipe
+     */
+    protected function checkTranslation(Recipe $recipe): void
+    {
+        foreach ($this->itemParser->getItem($recipe->getName()) as $item) {
+            if (LocalisedStringUtils::areEqual($recipe->getLabels(), $item->getLabels())
+                && LocalisedStringUtils::areEqual($recipe->getDescriptions(), $item->getDescriptions())
+            ) {
+                $recipe->setLabels(new LocalisedString())
+                       ->setDescriptions(new LocalisedString());
+                $item->setProvidesRecipeLocalisation(true);
+            }
         }
     }
 

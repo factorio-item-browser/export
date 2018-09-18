@@ -8,6 +8,7 @@ use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\Parser\IconParser;
+use FactorioItemBrowser\Export\Parser\ItemParser;
 use FactorioItemBrowser\Export\Parser\RecipeParser;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -39,13 +40,16 @@ class RecipeParserTest extends TestCase
     {
         /* @var IconParser $iconParser */
         $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var EntityRegistry $recipeRegistry */
         $recipeRegistry = $this->createMock(EntityRegistry::class);
         /* @var Translator $translator */
         $translator = $this->createMock(Translator::class);
 
-        $parser = new RecipeParser($iconParser, $recipeRegistry, $translator);
+        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
         $this->assertSame($iconParser, $this->extractProperty($parser, 'iconParser'));
+        $this->assertSame($itemParser, $this->extractProperty($parser, 'itemParser'));
         $this->assertSame($recipeRegistry, $this->extractProperty($parser, 'recipeRegistry'));
         $this->assertSame($translator, $this->extractProperty($parser, 'translator'));
     }
@@ -258,12 +262,14 @@ class RecipeParserTest extends TestCase
     {
         /* @var IconParser $iconParser */
         $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var EntityRegistry $recipeRegistry */
         $recipeRegistry = $this->createMock(EntityRegistry::class);
         /* @var Translator $translator */
         $translator = $this->createMock(Translator::class);
 
-        $parser = new RecipeParser($iconParser, $recipeRegistry, $translator);
+        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
         $result = $this->invokeMethod($parser, 'parseIngredient', $ingredientData);
         $this->assertEquals($expectedResult, $result);
     }
@@ -372,12 +378,14 @@ class RecipeParserTest extends TestCase
     {
         /* @var IconParser $iconParser */
         $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var EntityRegistry $recipeRegistry */
         $recipeRegistry = $this->createMock(EntityRegistry::class);
         /* @var Translator $translator */
         $translator = $this->createMock(Translator::class);
 
-        $parser = new RecipeParser($iconParser, $recipeRegistry, $translator);
+        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
         $result = $this->invokeMethod($parser, 'parseProduct', $productData);
         $this->assertEquals($expectedResult, $result);
     }
@@ -401,15 +409,15 @@ class RecipeParserTest extends TestCase
 
         /* @var Recipe|MockObject $recipe */
         $recipe = $this->getMockBuilder(Recipe::class)
-                     ->setMethods(['getLabels', 'getDescriptions'])
-                     ->disableOriginalConstructor()
-                     ->getMock();
+                       ->setMethods(['getLabels', 'getDescriptions'])
+                       ->disableOriginalConstructor()
+                       ->getMock();
         $recipe->expects($this->once())
-             ->method('getLabels')
-             ->willReturn($labels);
+               ->method('getLabels')
+               ->willReturn($labels);
         $recipe->expects($this->once())
-             ->method('getDescriptions')
-             ->willReturn($descriptions);
+               ->method('getDescriptions')
+               ->willReturn($descriptions);
 
         /* @var Translator|MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
@@ -425,10 +433,12 @@ class RecipeParserTest extends TestCase
 
         /* @var IconParser $iconParser */
         $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var EntityRegistry $recipeRegistry */
         $recipeRegistry = $this->createMock(EntityRegistry::class);
 
-        $parser = new RecipeParser($iconParser, $recipeRegistry, $translator);
+        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
         $this->invokeMethod($parser, 'addTranslations', $recipe, $recipeData);
     }
 
@@ -445,11 +455,17 @@ class RecipeParserTest extends TestCase
 
         /* @var RecipeParser|MockObject $parser */
         $parser = $this->getMockBuilder(RecipeParser::class)
-                       ->setMethods(['checkIcon'])
+                       ->setMethods(['checkIcon', 'checkTranslation'])
                        ->disableOriginalConstructor()
                        ->getMock();
         $parser->expects($this->exactly(2))
                ->method('checkIcon')
+               ->withConsecutive(
+                   [$recipe1],
+                   [$recipe2]
+               );
+        $parser->expects($this->exactly(2))
+               ->method('checkTranslation')
                ->withConsecutive(
                    [$recipe1],
                    [$recipe2]
@@ -536,12 +552,14 @@ class RecipeParserTest extends TestCase
                        $resultHash2
                    );
 
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var EntityRegistry $recipeRegistry */
         $recipeRegistry = $this->createMock(EntityRegistry::class);
         /* @var Translator $translator */
         $translator = $this->createMock(Translator::class);
 
-        $parser = new RecipeParser($iconParser, $recipeRegistry, $translator);
+        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
         $this->invokeMethod($parser, 'checkIcon', $recipe);
     }
     
@@ -586,10 +604,12 @@ class RecipeParserTest extends TestCase
 
         /* @var IconParser $iconParser */
         $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var Translator $translator */
         $translator = $this->createMock(Translator::class);
 
-        $parser = new RecipeParser($iconParser, $recipeRegistry, $translator);
+        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
         $this->injectProperty($parser, 'parsedRecipes', $parsedRecipes);
 
         $parser->persist($combination);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Merger;
 
 use FactorioItemBrowser\Export\Exception\MergerException;
+use FactorioItemBrowser\Export\Utils\LocalisedStringUtils;
 use FactorioItemBrowser\ExportData\Entity\EntityWithIdentifierInterface;
 use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -17,8 +18,6 @@ use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
  */
 class ItemMerger extends AbstractIdentifiedEntityMerger
 {
-    use LocalisedStringMergerTrait;
-
     /**
      * Returns the hashes to use from the specified combination.
      * @param Combination $combination
@@ -57,8 +56,8 @@ class ItemMerger extends AbstractIdentifiedEntityMerger
         if (count($source->getLabels()->getTranslations()) > 0
             || count($source->getDescriptions()->getTranslations()) > 0
         ) {
-            $this->mergeLocalisedStrings($destination->getLabels(), $source->getLabels());
-            $this->mergeLocalisedStrings($destination->getDescriptions(), $source->getDescriptions());
+            LocalisedStringUtils::merge($destination->getLabels(), $source->getLabels());
+            LocalisedStringUtils::merge($destination->getDescriptions(), $source->getDescriptions());
             $destination->setProvidesRecipeLocalisation($source->getProvidesRecipeLocalisation())
                         ->setProvidesMachineLocalisation($source->getProvidesMachineLocalisation());
         }

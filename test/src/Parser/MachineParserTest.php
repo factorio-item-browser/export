@@ -8,6 +8,7 @@ use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\Parser\IconParser;
+use FactorioItemBrowser\Export\Parser\ItemParser;
 use FactorioItemBrowser\Export\Parser\MachineParser;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use FactorioItemBrowser\ExportData\Entity\Machine;
@@ -37,13 +38,16 @@ class MachineParserTest extends TestCase
     {
         /* @var IconParser $iconParser */
         $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var EntityRegistry $machineRegistry */
         $machineRegistry = $this->createMock(EntityRegistry::class);
         /* @var Translator $translator */
         $translator = $this->createMock(Translator::class);
 
-        $parser = new MachineParser($iconParser, $machineRegistry, $translator);
+        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
         $this->assertSame($iconParser, $this->extractProperty($parser, 'iconParser'));
+        $this->assertSame($itemParser, $this->extractProperty($parser, 'itemParser'));
         $this->assertSame($machineRegistry, $this->extractProperty($parser, 'machineRegistry'));
         $this->assertSame($translator, $this->extractProperty($parser, 'translator'));
     }
@@ -216,12 +220,14 @@ class MachineParserTest extends TestCase
 
         /* @var IconParser $iconParser */
         $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var EntityRegistry $machineRegistry */
         $machineRegistry = $this->createMock(EntityRegistry::class);
         /* @var Translator $translator */
         $translator = $this->createMock(Translator::class);
 
-        $parser = new MachineParser($iconParser, $machineRegistry, $translator);
+        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
         $this->invokeMethod($parser, 'parseEnergyUsage', $machine, $machineData);
     }
 
@@ -286,12 +292,14 @@ class MachineParserTest extends TestCase
 
         /* @var IconParser $iconParser */
         $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var EntityRegistry $machineRegistry */
         $machineRegistry = $this->createMock(EntityRegistry::class);
         /* @var Translator $translator */
         $translator = $this->createMock(Translator::class);
 
-        $parser = new MachineParser($iconParser, $machineRegistry, $translator);
+        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
         $this->invokeMethod($parser, 'parseFluidBox', $machine, $fluidBoxData);
     }
     
@@ -338,10 +346,12 @@ class MachineParserTest extends TestCase
 
         /* @var IconParser $iconParser */
         $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var EntityRegistry $machineRegistry */
         $machineRegistry = $this->createMock(EntityRegistry::class);
 
-        $parser = new MachineParser($iconParser, $machineRegistry, $translator);
+        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
         $this->invokeMethod($parser, 'addTranslations', $machine, $machineData);
     }
 
@@ -358,11 +368,17 @@ class MachineParserTest extends TestCase
 
         /* @var MachineParser|MockObject $parser */
         $parser = $this->getMockBuilder(MachineParser::class)
-                       ->setMethods(['checkIcon'])
+                       ->setMethods(['checkIcon', 'checkTranslation'])
                        ->disableOriginalConstructor()
                        ->getMock();
         $parser->expects($this->exactly(2))
                ->method('checkIcon')
+               ->withConsecutive(
+                   [$machine1],
+                   [$machine2]
+               );
+        $parser->expects($this->exactly(2))
+               ->method('checkTranslation')
                ->withConsecutive(
                    [$machine1],
                    [$machine2]
@@ -418,12 +434,14 @@ class MachineParserTest extends TestCase
              ->method('setIconHash')
              ->with((string) $resultHash);
 
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var EntityRegistry $machineRegistry */
         $machineRegistry = $this->createMock(EntityRegistry::class);
         /* @var Translator $translator */
         $translator = $this->createMock(Translator::class);
 
-        $parser = new MachineParser($iconParser, $machineRegistry, $translator);
+        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
         $this->invokeMethod($parser, 'checkIcon', $machine);
     }
     
@@ -468,10 +486,12 @@ class MachineParserTest extends TestCase
 
         /* @var IconParser $iconParser */
         $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
         /* @var Translator $translator */
         $translator = $this->createMock(Translator::class);
 
-        $parser = new MachineParser($iconParser, $machineRegistry, $translator);
+        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
         $this->injectProperty($parser, 'parsedMachines', $parsedMachines);
 
         $parser->persist($combination);

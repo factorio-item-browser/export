@@ -6,6 +6,8 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Export\I18n\Translator;
+use FactorioItemBrowser\Export\Utils\LocalisedStringUtils;
+use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use FactorioItemBrowser\ExportData\Entity\Machine;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -30,6 +32,12 @@ class MachineParser implements ParserInterface
     protected $iconParser;
 
     /**
+     * The item parser.
+     * @var ItemParser
+     */
+    protected $itemParser;
+
+    /**
      * The machine registry.
      * @var EntityRegistry
      */
@@ -49,12 +57,18 @@ class MachineParser implements ParserInterface
     /**
      * Initializes the parser.
      * @param IconParser $iconParser
+     * @param ItemParser $itemParser
      * @param EntityRegistry $machineRegistry
      * @param Translator $translator
      */
-    public function __construct(IconParser $iconParser, EntityRegistry $machineRegistry, Translator $translator)
-    {
+    public function __construct(
+        IconParser $iconParser,
+        ItemParser $itemParser,
+        EntityRegistry $machineRegistry,
+        Translator $translator
+    ) {
         $this->iconParser = $iconParser;
+        $this->itemParser = $itemParser;
         $this->machineRegistry = $machineRegistry;
         $this->translator = $translator;
     }
@@ -174,7 +188,6 @@ class MachineParser implements ParserInterface
                 ->setNumberOfFluidOutputSlots($fluidBoxData->getInteger('output'));
     }
 
-
     /**
      * Checks the parsed data.
      */
@@ -182,6 +195,7 @@ class MachineParser implements ParserInterface
     {
         foreach ($this->parsedMachines as $machine) {
             $this->checkIcon($machine);
+            $this->checkTranslation($machine);
         }
     }
 
@@ -197,6 +211,23 @@ class MachineParser implements ParserInterface
         }
     }
 
+    /**
+     * Checks the translation of the machine.
+     * @param Machine $machine
+     */
+    protected function checkTranslation(Machine $machine): void
+    {
+        foreach ($this->itemParser->getItem($machine->getName()) as $item) {
+            if (LocalisedStringUtils::areEqual($machine->getLabels(), $item->getLabels())
+                && LocalisedStringUtils::areEqual($machine->getDescriptions(), $item->getDescriptions())
+            ) {
+                $machine->setLabels(new LocalisedString())
+                       ->setDescriptions(new LocalisedString());
+                $item->setProvidesMachineLocalisation(true);
+            }
+        }
+    }
+    
     /**
      * Persists the parsed data into the combination.
      * @param Combination $combination

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Reducer;
 
 use FactorioItemBrowser\Export\Exception\ReducerException;
+use FactorioItemBrowser\Export\Utils\LocalisedStringUtils;
 use FactorioItemBrowser\ExportData\Entity\EntityInterface;
 use FactorioItemBrowser\ExportData\Entity\Machine;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -18,8 +19,6 @@ use FactorioItemBrowser\ExportData\Utils\EntityUtils;
  */
 class MachineReducer extends AbstractIdentifiedEntityReducer
 {
-    use LocalisedStringReducerTrait;
-    
     /**
      * Returns the hashes to use from the specified combination.
      * @param Combination $combination
@@ -95,8 +94,8 @@ class MachineReducer extends AbstractIdentifiedEntityReducer
      */
     protected function reduceTranslationsOfMachine(Machine $machine, Machine $parentMachine): void
     {
-        $this->reduceLocalisedString($machine->getLabels(), $parentMachine->getLabels());
-        $this->reduceLocalisedString($machine->getDescriptions(), $parentMachine->getDescriptions());
+        LocalisedStringUtils::reduce($machine->getLabels(), $parentMachine->getLabels());
+        LocalisedStringUtils::reduce($machine->getDescriptions(), $parentMachine->getDescriptions());
     }
 
     /**

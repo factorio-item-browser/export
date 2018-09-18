@@ -7,6 +7,7 @@ namespace FactorioItemBrowserTest\Export\Parser;
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\Parser\IconParser;
+use FactorioItemBrowser\Export\Parser\ItemParser;
 use FactorioItemBrowser\Export\Parser\RecipeParser;
 use FactorioItemBrowser\Export\Parser\RecipeParserFactory;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -45,15 +46,17 @@ class RecipeParserFactoryTest extends TestCase
         $container = $this->getMockBuilder(ContainerInterface::class)
                           ->setMethods(['get'])
                           ->getMockForAbstractClass();
-        $container->expects($this->exactly(3))
+        $container->expects($this->exactly(4))
                   ->method('get')
                   ->withConsecutive(
                       [IconParser::class],
+                      [ItemParser::class],
                       [RawExportDataService::class],
                       [Translator::class]
                   )
                   ->willReturnOnConsecutiveCalls(
                       $this->createMock(IconParser::class),
+                      $this->createMock(ItemParser::class),
                       $rawExportDataService,
                       $this->createMock(Translator::class)
                   );

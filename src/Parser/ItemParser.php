@@ -9,6 +9,7 @@ use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
+use FactorioItemBrowser\ExportData\Utils\EntityUtils;
 
 /**
  * The class parsing the items of the dump.
@@ -142,5 +143,18 @@ class ItemParser implements ParserInterface
             $itemHashes[] = $this->itemRegistry->set($item);
         }
         $combination->setItemHashes($itemHashes);
+    }
+
+    /**
+     * Returns the items with the specified name.
+     * @param string $name
+     * @return array|Item[]
+     */
+    public function getItem(string $name): array
+    {
+        return array_values(array_filter([
+            $this->parsedItems[EntityUtils::buildIdentifier(['item', $name])] ?? null,
+            $this->parsedItems[EntityUtils::buildIdentifier(['fluid', $name])] ?? null,
+        ]));
     }
 }
