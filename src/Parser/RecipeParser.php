@@ -242,7 +242,7 @@ class RecipeParser implements ParserInterface
     {
         $clonedRecipe = clone($recipe);
         $clonedRecipe->setMode($mode);
-        return $this->parsedRecipes[$clonedRecipe->getIdentifier()];
+        return $this->parsedRecipes[$clonedRecipe->getIdentifier()] ?? null;
     }
 
     /**
