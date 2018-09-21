@@ -209,10 +209,52 @@ class RecipeParser implements ParserInterface
      */
     public function check(): void
     {
+        $this->parsedRecipes = array_filter($this->parsedRecipes, [$this, 'isUniqueRecipe']);
         foreach ($this->parsedRecipes as $recipe) {
             $this->checkIcon($recipe);
             $this->checkTranslation($recipe);
         }
+    }
+
+    /**
+     * Checks whether the specified recipe is unique and not a duplication.
+     * @param Recipe $recipe
+     * @return bool
+     */
+    protected function isUniqueRecipe(Recipe $recipe): bool
+    {
+        $result = true;
+        if ($recipe->getMode() === RecipeMode::EXPENSIVE) {
+            $normalRecipe = $this->findRecipeWithMode($recipe, RecipeMode::NORMAL);
+            $result = !$normalRecipe instanceof Recipe
+                || $this->calculateRecipeDataHash($recipe) !== $this->calculateRecipeDataHash($normalRecipe);
+        }
+        return $result;
+    }
+
+    /**
+     * Returns the recipe variant with the specified mode, if available.
+     * @param Recipe $recipe
+     * @param string $mode
+     * @return Recipe|null
+     */
+    protected function findRecipeWithMode(Recipe $recipe, string $mode): ?Recipe
+    {
+        $clonedRecipe = clone($recipe);
+        $clonedRecipe->setMode($mode);
+        return $this->parsedRecipes[$clonedRecipe->getIdentifier()];
+    }
+
+    /**
+     * Calculates the data hash of the recipe, ignoring the mode.
+     * @param Recipe $recipe
+     * @return string
+     */
+    protected function calculateRecipeDataHash(Recipe $recipe): string
+    {
+        $clonedRecipe = clone($recipe);
+        $clonedRecipe->setMode('');
+        return $clonedRecipe->calculateHash();
     }
 
     /**
@@ -238,7 +280,7 @@ class RecipeParser implements ParserInterface
      */
     protected function checkTranslation(Recipe $recipe): void
     {
-        foreach ($this->itemParser->getItem($recipe->getName()) as $item) {
+        foreach ($this->itemParser->getItemsWithName($recipe->getName()) as $item) {
             if (LocalisedStringUtils::areEqual($recipe->getLabels(), $item->getLabels())
                 && LocalisedStringUtils::areEqual($recipe->getDescriptions(), $item->getDescriptions())
             ) {

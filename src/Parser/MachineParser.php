@@ -214,13 +214,14 @@ class MachineParser implements ParserInterface
      */
     protected function checkTranslation(Machine $machine): void
     {
-        foreach ($this->itemParser->getItem($machine->getName()) as $item) {
+        foreach ($this->itemParser->getItemsWithName($machine->getName()) as $item) {
             if (LocalisedStringUtils::areEqual($machine->getLabels(), $item->getLabels())
                 && LocalisedStringUtils::areEqual($machine->getDescriptions(), $item->getDescriptions())
             ) {
                 $machine->setLabels(new LocalisedString())
-                       ->setDescriptions(new LocalisedString());
+                        ->setDescriptions(new LocalisedString());
                 $item->setProvidesMachineLocalisation(true);
+                break;
             }
         }
     }

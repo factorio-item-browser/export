@@ -10,6 +10,7 @@ use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use FactorioItemBrowser\Export\Parser\ItemParser;
 use FactorioItemBrowser\Export\Parser\MachineParser;
+use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use FactorioItemBrowser\ExportData\Entity\Machine;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -444,6 +445,63 @@ class MachineParserTest extends TestCase
         $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
         $this->invokeMethod($parser, 'checkIcon', $machine);
     }
+
+    /**
+     * Tests the checkTranslation method.
+     * @throws ReflectionException
+     * @covers ::checkTranslation
+     */
+    public function testCheckTranslation(): void
+    {
+        $machineName = 'foo';
+
+        /* @var Item|MockObject $item1 */
+        $item1 = $this->getMockBuilder(Item::class)
+                      ->setMethods(['setProvidesMachineLocalisation'])
+                      ->getMock();
+        $item1->expects($this->never())
+              ->method('setProvidesMachineLocalisation');
+        $item1->getLabels()->setTranslation('en', 'ghi');
+
+        /* @var Item|MockObject $item2 */
+        $item2 = $this->getMockBuilder(Item::class)
+                      ->setMethods(['setProvidesMachineLocalisation'])
+                      ->getMock();
+        $item2->expects($this->once())
+              ->method('setProvidesMachineLocalisation')
+              ->with(true);  
+        $item2->getLabels()->setTranslation('en', 'abc');
+        $item2->getDescriptions()->setTranslation('en', 'def');
+
+        $machine = new Machine();
+        $machine->setName($machineName);
+        $machine->getLabels()->setTranslation('en', 'abc');
+        $machine->getDescriptions()->setTranslation('en', 'def');
+
+        $expectedMachine = new Machine();
+        $expectedMachine->setName($machineName);
+
+        /* @var ItemParser|MockObject $itemParser */
+        $itemParser = $this->getMockBuilder(ItemParser::class)
+                           ->setMethods(['getItemsWithName'])
+                           ->disableOriginalConstructor()
+                           ->getMock();
+        $itemParser->expects($this->once())
+                   ->method('getItemsWithName')
+                   ->with($machineName)
+                   ->willReturn([$item1, $item2]);
+
+        /* @var IconParser $iconParser */
+        $iconParser = $this->createMock(IconParser::class);
+        /* @var EntityRegistry $machineRegistry */
+        $machineRegistry = $this->createMock(EntityRegistry::class);
+        /* @var Translator $translator */
+        $translator = $this->createMock(Translator::class);
+
+        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
+
+        $this->invokeMethod($parser, 'checkTranslation', $machine);
+    }
     
     /**
      * Tests the persist method.
@@ -465,15 +523,15 @@ class MachineParserTest extends TestCase
                              ->disableOriginalConstructor()
                              ->getMock();
         $machineRegistry->expects($this->exactly(2))
-                     ->method('set')
-                     ->withConsecutive(
-                         [$machine1],
-                         [$machine2]
-                     )
-                     ->willReturnOnConsecutiveCalls(
-                         $machineHash1,
-                         $machineHash2
-                     );
+                        ->method('set')
+                        ->withConsecutive(
+                            [$machine1],
+                            [$machine2]
+                        )
+                        ->willReturnOnConsecutiveCalls(
+                            $machineHash1,
+                            $machineHash2
+                        );
 
         /* @var Combination|MockObject $combination */
         $combination = $this->getMockBuilder(Combination::class)

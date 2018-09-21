@@ -151,7 +151,7 @@ class ItemParser implements ParserInterface
      * @param string $name
      * @return array|Item[]
      */
-    public function getItem(string $name): array
+    public function getItemsWithName(string $name): array
     {
         return array_values(array_filter([
             $this->parsedItems[EntityUtils::buildIdentifier([ItemType::ITEM, $name])] ?? null,

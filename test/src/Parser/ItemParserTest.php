@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
+use FactorioItemBrowser\Common\Constant\ItemType;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use FactorioItemBrowser\Export\Parser\ItemParser;
@@ -325,5 +326,58 @@ class ItemParserTest extends TestCase
         $this->injectProperty($parser, 'parsedItems', $parsedItems);
 
         $parser->persist($combination);
+    }
+
+    /**
+     * Provides the data for the getItem test.
+     * @return array
+     */
+    public function provideGetItem(): array
+    {
+        $item1 = new Item();
+        $item1->setType(ItemType::ITEM)
+              ->setName('abc');
+        $item2 = new Item();
+        $item2->setType(ItemType::ITEM)
+              ->setName('def');
+        $item3 = new Item();
+        $item3->setType(ItemType::FLUID)
+              ->setName('abc');
+
+        $parsedItems = [
+            'item|abc' => $item1,
+            'item|def' => $item2,
+            'fluid|abc' => $item3,
+        ];
+
+        return [
+            [$parsedItems, 'abc', [$item1, $item3]],
+            [$parsedItems, 'def', [$item2]],
+            [$parsedItems, 'ghi', []]
+        ];
+    }
+
+    /**
+     * Tests the getItemsWithName method.
+     * @param array $parsedItems
+     * @param string $name
+     * @param array $expectedResult
+     * @throws ReflectionException
+     * @covers ::getItemsWithName
+     * @dataProvider provideGetItem
+     */
+    public function testGetItemsWithName(array $parsedItems, string $name, array $expectedResult): void
+    {
+        /* @var IconParser $iconParser */
+        $iconParser = $this->createMock(IconParser::class);
+        /* @var EntityRegistry $itemRegistry */
+        $itemRegistry = $this->createMock(EntityRegistry::class);
+        /* @var Translator $translator */
+        $translator = $this->createMock(Translator::class);
+
+        $parser = new ItemParser($iconParser, $itemRegistry, $translator);
+        $this->injectProperty($parser, 'parsedItems', $parsedItems);
+        $result = $parser->getItemsWithName($name);
+        $this->assertEquals($expectedResult, $result);
     }
 }
