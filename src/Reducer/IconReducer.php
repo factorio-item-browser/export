@@ -48,7 +48,7 @@ class IconReducer implements ReducerInterface
      */
     public function reduce(Combination $combination, Combination $parentCombination): void
     {
-        $iconHashes = array_diff($combination->getIconHashes(), $parentCombination->getIconHashes());
+        $iconHashes = array_values(array_diff($combination->getIconHashes(), $parentCombination->getIconHashes()));
         $combination->setIconHashes($iconHashes);
         $this->copyIcons($iconHashes);
     }
