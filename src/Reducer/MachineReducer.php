@@ -42,9 +42,9 @@ class MachineReducer extends AbstractIdentifiedEntityReducer
             throw new ReducerException('Internal type error.');
         }
 
-        $this->reduceDataOfMachine($entity, $parentEntity);
-        $this->reduceTranslationsOfMachine($entity, $parentEntity);
-        $this->reduceIconOfMachine($entity, $parentEntity);
+        $this->reduceData($entity, $parentEntity);
+        $this->reduceTranslations($entity, $parentEntity);
+        $this->reduceIcon($entity, $parentEntity);
     }
 
     /**
@@ -52,7 +52,7 @@ class MachineReducer extends AbstractIdentifiedEntityReducer
      * @param Machine $machine
      * @param Machine $parentMachine
      */
-    protected function reduceDataOfMachine(Machine $machine, Machine $parentMachine): void
+    protected function reduceData(Machine $machine, Machine $parentMachine): void
     {
         if ($this->calculateDataHash($machine) === $this->calculateDataHash($parentMachine)) {
             $machine->setCraftingCategories([])
@@ -93,7 +93,7 @@ class MachineReducer extends AbstractIdentifiedEntityReducer
      * @param Machine $machine
      * @param Machine $parentMachine
      */
-    protected function reduceTranslationsOfMachine(Machine $machine, Machine $parentMachine): void
+    protected function reduceTranslations(Machine $machine, Machine $parentMachine): void
     {
         LocalisedStringUtils::reduce($machine->getLabels(), $parentMachine->getLabels());
         LocalisedStringUtils::reduce($machine->getDescriptions(), $parentMachine->getDescriptions());
@@ -104,7 +104,7 @@ class MachineReducer extends AbstractIdentifiedEntityReducer
      * @param Machine $machine
      * @param Machine $parentMachine
      */
-    protected function reduceIconOfMachine(Machine $machine, Machine $parentMachine): void
+    protected function reduceIcon(Machine $machine, Machine $parentMachine): void
     {
         if ($machine->getIconHash() === $parentMachine->getIconHash()) {
             $machine->setIconHash('');

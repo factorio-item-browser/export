@@ -83,14 +83,14 @@ class ItemReducerTest extends TestCase
     ): void {
         /* @var ItemReducer|MockObject $reducer */
         $reducer = $this->getMockBuilder(ItemReducer::class)
-                        ->setMethods(['reduceTranslationsOfItem', 'reduceIconOfItem'])
+                        ->setMethods(['reduceTranslations', 'reduceIcon'])
                         ->disableOriginalConstructor()
                         ->getMock();
         $reducer->expects($expectException ? $this->never() : $this->once())
-                ->method('reduceTranslationsOfItem')
+                ->method('reduceTranslations')
                 ->with($entity, $parentEntity);
         $reducer->expects($expectException ? $this->never() : $this->once())
-                ->method('reduceIconOfItem')
+                ->method('reduceIcon')
                 ->with($entity, $parentEntity);
 
         if ($expectException) {
@@ -101,10 +101,10 @@ class ItemReducerTest extends TestCase
     }
 
     /**
-     * Provides the data for the reduceTranslationsOfItem test.
+     * Provides the data for the reduceTranslations test.
      * @return array
      */
-    public function provideReduceTranslationsOfItem(): array
+    public function provideReduceTranslations(): array
     {
         $item1 = new Item();
         $item1->setProvidesMachineLocalisation(true)
@@ -147,15 +147,15 @@ class ItemReducerTest extends TestCase
     }
 
     /**
-     * Tests the reduceTranslationsOfItem method.
+     * Tests the reduceTranslations method.
      * @param Item $item
      * @param Item $parentItem
      * @param Item $expectedItem
      * @throws ReflectionException
-     * @covers ::reduceTranslationsOfItem
-     * @dataProvider provideReduceTranslationsOfItem
+     * @covers ::reduceTranslations
+     * @dataProvider provideReduceTranslations
      */
-    public function testReduceTranslationsOfItem(Item $item, Item $parentItem, Item $expectedItem): void
+    public function testReduceTranslations(Item $item, Item $parentItem, Item $expectedItem): void
     {
         /* @var EntityRegistry $rawItemRegistry */
         $rawItemRegistry = $this->createMock(EntityRegistry::class);
@@ -164,15 +164,15 @@ class ItemReducerTest extends TestCase
 
         $reducer = new ItemReducer($rawItemRegistry, $reducedItemRegistry);
 
-        $this->invokeMethod($reducer, 'reduceTranslationsOfItem', $item, $parentItem);
+        $this->invokeMethod($reducer, 'reduceTranslations', $item, $parentItem);
         $this->assertEquals($expectedItem, $item);
     }
 
     /**
-     * Provides the data for the reduceIconOfItem test.
+     * Provides the data for the reduceIcon test.
      * @return array
      */
-    public function provideReduceIconOfItem(): array
+    public function provideReduceIcon(): array
     {
         return [
             ['abc', 'abc', true],
@@ -181,15 +181,15 @@ class ItemReducerTest extends TestCase
     }
 
     /**
-     * Tests the reduceIconOfItem method.
+     * Tests the reduceIcon method.
      * @param string $iconHash
      * @param string $parentIconHash
      * @param bool $expectSet
      * @throws ReflectionException
-     * @covers ::reduceIconOfItem
-     * @dataProvider provideReduceIconOfItem
+     * @covers ::reduceIcon
+     * @dataProvider provideReduceIcon
      */
-    public function testReduceIconOfItem(string $iconHash, string $parentIconHash, bool $expectSet): void
+    public function testReduceIcon(string $iconHash, string $parentIconHash, bool $expectSet): void
     {
         /* @var Item|MockObject $item */
         $item = $this->getMockBuilder(Item::class)
@@ -219,7 +219,7 @@ class ItemReducerTest extends TestCase
 
         $reducer = new ItemReducer($rawItemRegistry, $reducedItemRegistry);
 
-        $this->invokeMethod($reducer, 'reduceIconOfItem', $item, $parentItem);
+        $this->invokeMethod($reducer, 'reduceIcon', $item, $parentItem);
     }
 
     /**

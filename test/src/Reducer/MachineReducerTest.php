@@ -83,17 +83,17 @@ class MachineReducerTest extends TestCase
     ): void {
         /* @var MachineReducer|MockObject $reducer */
         $reducer = $this->getMockBuilder(MachineReducer::class)
-                        ->setMethods(['reduceDataOfMachine', 'reduceTranslationsOfMachine', 'reduceIconOfMachine'])
+                        ->setMethods(['reduceData', 'reduceTranslations', 'reduceIcon'])
                         ->disableOriginalConstructor()
                         ->getMock();
         $reducer->expects($expectException ? $this->never() : $this->once())
-                ->method('reduceDataOfMachine')
+                ->method('reduceData')
                 ->with($entity, $parentEntity);
         $reducer->expects($expectException ? $this->never() : $this->once())
-                ->method('reduceTranslationsOfMachine')
+                ->method('reduceTranslations')
                 ->with($entity, $parentEntity);
         $reducer->expects($expectException ? $this->never() : $this->once())
-                ->method('reduceIconOfMachine')
+                ->method('reduceIcon')
                 ->with($entity, $parentEntity);
 
         if ($expectException) {
@@ -104,10 +104,10 @@ class MachineReducerTest extends TestCase
     }
 
     /**
-     * Provides the data for the reduceDataOfMachine test.
+     * Provides the data for the reduceData test.
      * @return array
      */
-    public function provideReduceDataOfMachine(): array
+    public function provideReduceData(): array
     {
         return [
             ['abc', 'abc', true],
@@ -116,15 +116,15 @@ class MachineReducerTest extends TestCase
     }
 
     /**
-     * Tests the reduceDataOfMachine method.
+     * Tests the reduceData method.
      * @param string $hash
      * @param string $parentHash
      * @param bool $expectReduction
      * @throws ReflectionException
-     * @covers ::reduceDataOfMachine
-     * @dataProvider provideReduceDataOfMachine
+     * @covers ::reduceData
+     * @dataProvider provideReduceData
      */
-    public function testReduceDataOfMachine(string $hash, string $parentHash, bool $expectReduction): void
+    public function testReduceData(string $hash, string $parentHash, bool $expectReduction): void
     {
         $machine = new Machine();
         $machine->setName('foo')
@@ -156,7 +156,7 @@ class MachineReducerTest extends TestCase
                     $parentHash
                 );
 
-        $this->invokeMethod($reducer, 'reduceDataOfMachine', $machine, $parentMachine);
+        $this->invokeMethod($reducer, 'reduceData', $machine, $parentMachine);
         $this->assertEquals($expectedMachine, $machine);
     }
 
@@ -192,11 +192,11 @@ class MachineReducerTest extends TestCase
     }
 
     /**
-     * Tests the reduceTranslationsOfMachine method.
+     * Tests the reduceTranslations method.
      * @throws ReflectionException
-     * @covers ::reduceTranslationsOfMachine
+     * @covers ::reduceTranslations
      */
-    public function testReduceTranslationsOfMachine(): void
+    public function testReduceTranslations(): void
     {
         $machine = new Machine();
         $machine->getLabels()->setTranslation('en', 'abc')
@@ -221,15 +221,15 @@ class MachineReducerTest extends TestCase
 
         $reducer = new MachineReducer($rawMachineRegistry, $reducedMachineRegistry);
 
-        $this->invokeMethod($reducer, 'reduceTranslationsOfMachine', $machine, $parentMachine);
+        $this->invokeMethod($reducer, 'reduceTranslations', $machine, $parentMachine);
         $this->assertEquals($expectedMachine, $machine);
     }
 
     /**
-     * Provides the data for the reduceIconOfMachine test.
+     * Provides the data for the reduceIcon test.
      * @return array
      */
-    public function provideReduceIconOfMachine(): array
+    public function provideReduceIcon(): array
     {
         return [
             ['abc', 'abc', true],
@@ -238,15 +238,15 @@ class MachineReducerTest extends TestCase
     }
 
     /**
-     * Tests the reduceIconOfMachine method.
+     * Tests the reduceIcon method.
      * @param string $iconHash
      * @param string $parentIconHash
      * @param bool $expectSet
      * @throws ReflectionException
-     * @covers ::reduceIconOfMachine
-     * @dataProvider provideReduceIconOfMachine
+     * @covers ::reduceIcon
+     * @dataProvider provideReduceIcon
      */
-    public function testReduceIconOfMachine(string $iconHash, string $parentIconHash, bool $expectSet): void
+    public function testReduceIcon(string $iconHash, string $parentIconHash, bool $expectSet): void
     {
         /* @var Machine|MockObject $machine */
         $machine = $this->getMockBuilder(Machine::class)
@@ -276,7 +276,7 @@ class MachineReducerTest extends TestCase
 
         $reducer = new MachineReducer($rawMachineRegistry, $reducedMachineRegistry);
 
-        $this->invokeMethod($reducer, 'reduceIconOfMachine', $machine, $parentMachine);
+        $this->invokeMethod($reducer, 'reduceIcon', $machine, $parentMachine);
     }
 
     /**

@@ -43,9 +43,9 @@ class RecipeReducer extends AbstractIdentifiedEntityReducer
             throw new ReducerException('Internal type error.');
         }
         
-        $this->reduceDataOfRecipe($entity, $parentEntity);
-        $this->reduceTranslationsOfRecipe($entity, $parentEntity);
-        $this->reduceIconOfRecipe($entity, $parentEntity);
+        $this->reduceData($entity, $parentEntity);
+        $this->reduceTranslations($entity, $parentEntity);
+        $this->reduceIcon($entity, $parentEntity);
     }
 
     /**
@@ -53,7 +53,7 @@ class RecipeReducer extends AbstractIdentifiedEntityReducer
      * @param Recipe $recipe
      * @param Recipe $parentRecipe
      */
-    protected function reduceDataOfRecipe(Recipe $recipe, Recipe $parentRecipe): void
+    protected function reduceData(Recipe $recipe, Recipe $parentRecipe): void
     {
         if ($this->calculateDataHash($recipe) === $this->calculateDataHash($parentRecipe)) {
             $recipe->setIngredients([])
@@ -87,7 +87,7 @@ class RecipeReducer extends AbstractIdentifiedEntityReducer
      * @param Recipe $recipe
      * @param Recipe $parentRecipe
      */
-    protected function reduceTranslationsOfRecipe(Recipe $recipe, Recipe $parentRecipe): void
+    protected function reduceTranslations(Recipe $recipe, Recipe $parentRecipe): void
     {
         LocalisedStringUtils::reduce($recipe->getLabels(), $parentRecipe->getLabels());
         LocalisedStringUtils::reduce($recipe->getDescriptions(), $parentRecipe->getDescriptions());
@@ -98,7 +98,7 @@ class RecipeReducer extends AbstractIdentifiedEntityReducer
      * @param Recipe $recipe
      * @param Recipe $parentRecipe
      */
-    protected function reduceIconOfRecipe(Recipe $recipe, Recipe $parentRecipe): void
+    protected function reduceIcon(Recipe $recipe, Recipe $parentRecipe): void
     {
         if ($recipe->getIconHash() === $parentRecipe->getIconHash()) {
             $recipe->setIconHash('');

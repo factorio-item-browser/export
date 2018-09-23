@@ -40,8 +40,8 @@ class ItemReducer extends AbstractIdentifiedEntityReducer
             throw new ReducerException('Internal type error.');
         }
 
-        $this->reduceTranslationsOfItem($entity, $parentEntity);
-        $this->reduceIconOfItem($entity, $parentEntity);
+        $this->reduceTranslations($entity, $parentEntity);
+        $this->reduceIcon($entity, $parentEntity);
     }
 
     /**
@@ -49,7 +49,7 @@ class ItemReducer extends AbstractIdentifiedEntityReducer
      * @param Item $item
      * @param Item $parentItem
      */
-    protected function reduceTranslationsOfItem(Item $item, Item $parentItem): void
+    protected function reduceTranslations(Item $item, Item $parentItem): void
     {
         LocalisedStringUtils::reduce($item->getLabels(), $parentItem->getLabels());
         LocalisedStringUtils::reduce($item->getDescriptions(), $parentItem->getDescriptions());
@@ -67,7 +67,7 @@ class ItemReducer extends AbstractIdentifiedEntityReducer
      * @param Item $item
      * @param Item $parentItem
      */
-    protected function reduceIconOfItem(Item $item, Item $parentItem): void
+    protected function reduceIcon(Item $item, Item $parentItem): void
     {
         if ($item->getIconHash() === $parentItem->getIconHash()) {
             $item->setIconHash('');

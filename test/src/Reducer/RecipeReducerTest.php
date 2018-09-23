@@ -85,17 +85,17 @@ class RecipeReducerTest extends TestCase
     ): void {
         /* @var RecipeReducer|MockObject $reducer */
         $reducer = $this->getMockBuilder(RecipeReducer::class)
-                        ->setMethods(['reduceDataOfRecipe', 'reduceTranslationsOfRecipe', 'reduceIconOfRecipe'])
+                        ->setMethods(['reduceData', 'reduceTranslations', 'reduceIcon'])
                         ->disableOriginalConstructor()
                         ->getMock();
         $reducer->expects($expectException ? $this->never() : $this->once())
-                ->method('reduceDataOfRecipe')
+                ->method('reduceData')
                 ->with($entity, $parentEntity);
         $reducer->expects($expectException ? $this->never() : $this->once())
-                ->method('reduceTranslationsOfRecipe')
+                ->method('reduceTranslations')
                 ->with($entity, $parentEntity);
         $reducer->expects($expectException ? $this->never() : $this->once())
-                ->method('reduceIconOfRecipe')
+                ->method('reduceIcon')
                 ->with($entity, $parentEntity);
 
         if ($expectException) {
@@ -106,10 +106,10 @@ class RecipeReducerTest extends TestCase
     }
 
     /**
-     * Provides the data for the reduceDataOfRecipe test.
+     * Provides the data for the reduceData test.
      * @return array
      */
-    public function provideReduceDataOfRecipe(): array
+    public function provideReduceData(): array
     {
         return [
             ['abc', 'abc', true],
@@ -118,15 +118,15 @@ class RecipeReducerTest extends TestCase
     }
 
     /**
-     * Tests the reduceDataOfRecipe method.
+     * Tests the reduceData method.
      * @param string $hash
      * @param string $parentHash
      * @param bool $expectReduction
      * @throws ReflectionException
-     * @covers ::reduceDataOfRecipe
-     * @dataProvider provideReduceDataOfRecipe
+     * @covers ::reduceData
+     * @dataProvider provideReduceData
      */
-    public function testReduceDataOfRecipe(string $hash, string $parentHash, bool $expectReduction): void
+    public function testReduceData(string $hash, string $parentHash, bool $expectReduction): void
     {
         $recipe = new Recipe();
         $recipe->setName('foo')
@@ -154,7 +154,7 @@ class RecipeReducerTest extends TestCase
                     $parentHash
                 );
 
-        $this->invokeMethod($reducer, 'reduceDataOfRecipe', $recipe, $parentRecipe);
+        $this->invokeMethod($reducer, 'reduceData', $recipe, $parentRecipe);
         $this->assertEquals($expectedRecipe, $recipe);
     }
 
@@ -186,11 +186,11 @@ class RecipeReducerTest extends TestCase
     }
 
     /**
-     * Tests the reduceTranslationsOfRecipe method.
+     * Tests the reduceTranslations method.
      * @throws ReflectionException
-     * @covers ::reduceTranslationsOfRecipe
+     * @covers ::reduceTranslations
      */
-    public function testReduceTranslationsOfRecipe(): void
+    public function testReduceTranslations(): void
     {
         $recipe = new Recipe();
         $recipe->getLabels()->setTranslation('en', 'abc')
@@ -215,15 +215,15 @@ class RecipeReducerTest extends TestCase
 
         $reducer = new RecipeReducer($rawRecipeRegistry, $reducedRecipeRegistry);
 
-        $this->invokeMethod($reducer, 'reduceTranslationsOfRecipe', $recipe, $parentRecipe);
+        $this->invokeMethod($reducer, 'reduceTranslations', $recipe, $parentRecipe);
         $this->assertEquals($expectedRecipe, $recipe);
     }
 
     /**
-     * Provides the data for the reduceIconOfRecipe test.
+     * Provides the data for the reduceIcon test.
      * @return array
      */
-    public function provideReduceIconOfRecipe(): array
+    public function provideReduceIcon(): array
     {
         return [
             ['abc', 'abc', true],
@@ -232,15 +232,15 @@ class RecipeReducerTest extends TestCase
     }
 
     /**
-     * Tests the reduceIconOfRecipe method.
+     * Tests the reduceIcon method.
      * @param string $iconHash
      * @param string $parentIconHash
      * @param bool $expectSet
      * @throws ReflectionException
-     * @covers ::reduceIconOfRecipe
-     * @dataProvider provideReduceIconOfRecipe
+     * @covers ::reduceIcon
+     * @dataProvider provideReduceIcon
      */
-    public function testReduceIconOfRecipe(string $iconHash, string $parentIconHash, bool $expectSet): void
+    public function testReduceIcon(string $iconHash, string $parentIconHash, bool $expectSet): void
     {
         /* @var Recipe|MockObject $recipe */
         $recipe = $this->getMockBuilder(Recipe::class)
@@ -270,7 +270,7 @@ class RecipeReducerTest extends TestCase
 
         $reducer = new RecipeReducer($rawRecipeRegistry, $reducedRecipeRegistry);
 
-        $this->invokeMethod($reducer, 'reduceIconOfRecipe', $recipe, $parentRecipe);
+        $this->invokeMethod($reducer, 'reduceIcon', $recipe, $parentRecipe);
     }
 
     /**
