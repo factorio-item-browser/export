@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Merger;
 
 use FactorioItemBrowser\Export\Exception\MergerException;
+use FactorioItemBrowser\ExportData\Entity\EntityInterface;
 use FactorioItemBrowser\ExportData\Entity\EntityWithIdentifierInterface;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -98,13 +99,10 @@ abstract class AbstractIdentifiedEntityMerger implements MergerInterface
 
     /**
      * Merges the source entity into the destination one.
-     * @param EntityWithIdentifierInterface $destination
-     * @param EntityWithIdentifierInterface $source
+     * @param EntityInterface $destination
+     * @param EntityInterface$source
      */
-    abstract protected function mergeEntities(
-        EntityWithIdentifierInterface $destination,
-        EntityWithIdentifierInterface $source
-    ): void;
+    abstract protected function mergeEntities(EntityInterface $destination, EntityInterface $source): void;
 
     /**
      * Sets the hashes to the combination.

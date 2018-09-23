@@ -6,7 +6,7 @@ namespace FactorioItemBrowser\Export\Merger;
 
 use FactorioItemBrowser\Export\Exception\MergerException;
 use FactorioItemBrowser\Export\Utils\LocalisedStringUtils;
-use FactorioItemBrowser\ExportData\Entity\EntityWithIdentifierInterface;
+use FactorioItemBrowser\ExportData\Entity\EntityInterface;
 use FactorioItemBrowser\ExportData\Entity\Machine;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 
@@ -30,14 +30,12 @@ class MachineMerger extends AbstractIdentifiedEntityMerger
 
     /**
      * Merges the source entity into the destination one.
-     * @param EntityWithIdentifierInterface $destination
-     * @param EntityWithIdentifierInterface $source
+     * @param EntityInterface $destination
+     * @param EntityInterface $source
      * @throws MergerException
      */
-    protected function mergeEntities(
-        EntityWithIdentifierInterface $destination,
-        EntityWithIdentifierInterface $source
-    ): void {
+    protected function mergeEntities(EntityInterface $destination, EntityInterface $source): void
+    {
         if (!$destination instanceof Machine || !$source instanceof Machine) {
             throw new MergerException('Internal type error.');
         }

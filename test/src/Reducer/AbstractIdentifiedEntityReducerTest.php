@@ -155,7 +155,6 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
         $this->invokeMethod($reducer, 'reduce', $combination, $parentCombination);
     }
 
-
     /**
      * Tests the mapEntityHashes method.
      * @throws ReflectionException
