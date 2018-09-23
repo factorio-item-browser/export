@@ -93,7 +93,7 @@ class AbstractIdentifiedEntityMergerTest extends TestCase
                            'getHashesFromCombination',
                            'mapEntitiesToIdentifier',
                            'fetchEntityFromHash',
-                           'mergeEntities',
+                           'mergeEntity',
                            'setHashesToCombination',
                        ])
                        ->setConstructorArgs([$entityRegistry])
@@ -124,7 +124,7 @@ class AbstractIdentifiedEntityMergerTest extends TestCase
                    $entity2
                );
         $merger->expects($this->once())
-               ->method('mergeEntities')
+               ->method('mergeEntity')
                ->with($this->equalTo($destinationEntity1), $entity1);
         $merger->expects($this->once())
                ->method('setHashesToCombination')
@@ -132,7 +132,6 @@ class AbstractIdentifiedEntityMergerTest extends TestCase
 
         $merger->merge($destination, $source);
     }
-
 
     /**
      * Tests the mapEntitiesToIdentifier method.

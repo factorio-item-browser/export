@@ -50,7 +50,7 @@ abstract class AbstractIdentifiedEntityMerger implements MergerInterface
 
             if (isset($destinationEntities[$identifier])) {
                 $mergedEntity = clone($destinationEntities[$identifier]);
-                $this->mergeEntities($mergedEntity, $sourceEntity);
+                $this->mergeEntity($mergedEntity, $sourceEntity);
                 $mergedHashes[] = $this->entityRegistry->set($mergedEntity);
             } else {
                 $mergedHashes[] = $hash;
@@ -102,7 +102,7 @@ abstract class AbstractIdentifiedEntityMerger implements MergerInterface
      * @param EntityInterface $destination
      * @param EntityInterface$source
      */
-    abstract protected function mergeEntities(EntityInterface $destination, EntityInterface $source): void;
+    abstract protected function mergeEntity(EntityInterface $destination, EntityInterface $source): void;
 
     /**
      * Sets the hashes to the combination.

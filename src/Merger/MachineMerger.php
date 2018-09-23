@@ -34,7 +34,7 @@ class MachineMerger extends AbstractIdentifiedEntityMerger
      * @param EntityInterface $source
      * @throws MergerException
      */
-    protected function mergeEntities(EntityInterface $destination, EntityInterface $source): void
+    protected function mergeEntity(EntityInterface $destination, EntityInterface $source): void
     {
         if (!$destination instanceof Machine || !$source instanceof Machine) {
             throw new MergerException('Internal type error.');

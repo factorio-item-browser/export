@@ -34,7 +34,7 @@ class ItemMerger extends AbstractIdentifiedEntityMerger
      * @param EntityInterface $source
      * @throws MergerException
      */
-    protected function mergeEntities(EntityInterface $destination, EntityInterface $source): void
+    protected function mergeEntity(EntityInterface $destination, EntityInterface $source): void
     {
         if (!$destination instanceof Item || !$source instanceof Item) {
             throw new MergerException('Internal type error.');

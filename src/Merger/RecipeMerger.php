@@ -34,7 +34,7 @@ class RecipeMerger extends AbstractIdentifiedEntityMerger
      * @param EntityInterface $source
      * @throws MergerException
      */
-    protected function mergeEntities(EntityInterface $destination, EntityInterface $source): void
+    protected function mergeEntity(EntityInterface $destination, EntityInterface $source): void
     {
         if (!$destination instanceof Recipe || !$source instanceof Recipe) {
             throw new MergerException('Internal type error.');

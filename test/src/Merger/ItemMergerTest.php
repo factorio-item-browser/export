@@ -53,10 +53,10 @@ class ItemMergerTest extends TestCase
     }
 
     /**
-     * Provides the data for the mergeEntities test.
+     * Provides the data for the mergeEntity test.
      * @return array
      */
-    public function provideMergeEntities(): array
+    public function provideMergeEntity(): array
     {
         return [
             [new Item(), new Item(), false],
@@ -66,15 +66,15 @@ class ItemMergerTest extends TestCase
     }
 
     /**
-     * Tests the mergeEntities method.
+     * Tests the mergeEntity method.
      * @param EntityInterface $destination
      * @param EntityInterface $source
      * @param bool $expectException
      * @throws ReflectionException
-     * @covers ::mergeEntities
-     * @dataProvider provideMergeEntities
+     * @covers ::mergeEntity
+     * @dataProvider provideMergeEntity
      */
-    public function testMergeEntities(
+    public function testMergeEntity(
         EntityInterface $destination,
         EntityInterface $source,
         bool $expectException
@@ -95,7 +95,111 @@ class ItemMergerTest extends TestCase
             $this->expectException(MergerException::class);
         }
 
-        $this->invokeMethod($merger, 'mergeEntities', $destination, $source);
+        $this->invokeMethod($merger, 'mergeEntity', $destination, $source);
+    }
+    
+    /**
+     * Provides the data for the mergeTranslations test.
+     * @return array
+     */
+    public function provideMergeTranslations(): array
+    {
+        $destination = new Item();
+        $destination->setProvidesRecipeLocalisation(true)
+                    ->setProvidesMachineLocalisation(false);
+        $destination->getLabels()->setTranslation('en', 'abc')
+                                 ->setTranslation('de', 'def');
+        $destination->getDescriptions()->setTranslation('en', 'ghi')
+                                       ->setTranslation('de', 'jkl');
+
+        $source1 = new Item();
+        $source1->setProvidesRecipeLocalisation(false)
+                ->setProvidesMachineLocalisation(true);
+        $source1->getLabels()->setTranslation('en', 'mno')
+                             ->setTranslation('fr', 'pqr');
+        $source1->getDescriptions()->setTranslation('en', 'stu')
+                                  ->setTranslation('fr', 'vwx');
+
+        $source2 = new Item();
+        $source2->setProvidesRecipeLocalisation(false)
+                ->setProvidesMachineLocalisation(true);
+
+        $expectedDestination1 = new Item();
+        $expectedDestination1->setProvidesRecipeLocalisation(false)
+                             ->setProvidesMachineLocalisation(true);
+        $expectedDestination1->getLabels()->setTranslation('en', 'mno')
+                                          ->setTranslation('de', 'def')
+                                          ->setTranslation('fr', 'pqr');
+        $expectedDestination1->getDescriptions()->setTranslation('en', 'stu')
+                                                ->setTranslation('de', 'jkl')
+                                                ->setTranslation('fr', 'vwx');
+
+        return [
+            [$destination, $source1, $expectedDestination1],
+            [$destination, $source2, $destination],
+        ];
+    }
+
+    /**
+     * Tests the mergeTranslations method.
+     * @param Item $destination
+     * @param Item $source
+     * @param Item $expectedDestination
+     * @throws ReflectionException
+     * @covers ::mergeTranslations
+     * @dataProvider provideMergeTranslations
+     */
+    public function testMergeTranslations(Item $destination, Item $source, Item $expectedDestination): void
+    {
+        /* @var EntityRegistry $itemRegistry */
+        $itemRegistry = $this->createMock(EntityRegistry::class);
+
+        $merger = new ItemMerger($itemRegistry);
+
+        $this->invokeMethod($merger, 'mergeTranslations', $destination, $source);
+        $this->assertEquals($expectedDestination, $destination);
+    }
+
+    /**
+     * Provides the data for the mergeIcon test.
+     * @return array
+     */
+    public function provideMergeIcon(): array
+    {
+        return [
+            ['abc', true],
+            ['', false],
+        ];
+    }
+
+    /**
+     * Tests the mergeIcon method.
+     * @param string $sourceIconHash
+     * @param bool $expectDestinationIconHash
+     * @throws ReflectionException
+     * @covers ::mergeIcon
+     * @dataProvider provideMergeIcon
+     */
+    public function testMergeIcon(string $sourceIconHash, bool $expectDestinationIconHash): void
+    {
+        $source = new Item();
+        $source->setIconHash($sourceIconHash);
+
+        /* @var Item|MockObject $destination */
+        $destination = $this->getMockBuilder(Item::class)
+                            ->setMethods(['setIconHash'])
+                            ->disableOriginalConstructor()
+                            ->getMock();
+        $destination->expects($expectDestinationIconHash ? $this->once() : $this->never())
+                    ->method('setIconHash')
+                    ->with($sourceIconHash);
+
+        /* @var EntityRegistry $itemRegistry */
+        $itemRegistry = $this->createMock(EntityRegistry::class);
+
+        $merger = new ItemMerger($itemRegistry);
+
+        $this->invokeMethod($merger, 'mergeIcon', $destination, $source);
     }
 
     /**
