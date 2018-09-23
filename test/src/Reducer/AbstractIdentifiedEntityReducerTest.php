@@ -6,6 +6,7 @@ use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ReducerException;
 use FactorioItemBrowser\Export\Reducer\AbstractIdentifiedEntityReducer;
 use FactorioItemBrowser\ExportData\Entity\EntityWithIdentifierInterface;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -44,6 +45,118 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
     }
 
     /**
+     * Tests the reduce method.
+     * @throws ReflectionException
+     * @covers ::reduce
+     */
+    public function testReduce(): void
+    {
+        $parentHashes = ['abc', 'def'];
+        $mappedParentHashes = ['foo' => 'abc', 'bar' => 'def'];
+        $hashes = ['abc', 'ghi', 'jkl'];
+        $expectedHashes = ['ghi', 'jkl'];
+
+        /* @var EntityWithIdentifierInterface|MockObject $entity1 */
+        $entity1 = $this->getMockBuilder(EntityWithIdentifierInterface::class)
+                        ->setMethods(['getIdentifier'])
+                        ->getMockForAbstractClass();
+        $entity1->expects($this->once())
+                ->method('getIdentifier')
+                ->willReturn('foo');
+
+        /* @var EntityWithIdentifierInterface|MockObject $entity2 */
+        $entity2 = $this->getMockBuilder(EntityWithIdentifierInterface::class)
+                        ->setMethods(['getIdentifier'])
+                        ->getMockForAbstractClass();
+        $entity2->expects($this->once())
+                ->method('getIdentifier')
+                ->willReturn('bar');
+
+        /* @var EntityWithIdentifierInterface|MockObject $entity3 */
+        $entity3 = $this->getMockBuilder(EntityWithIdentifierInterface::class)
+                        ->setMethods(['getIdentifier'])
+                        ->getMockForAbstractClass();
+        $entity3->expects($this->once())
+                ->method('getIdentifier')
+                ->willReturn('baz');
+
+        /* @var EntityWithIdentifierInterface $parentEntity2 */
+        $parentEntity2 = $this->createMock(EntityWithIdentifierInterface::class);
+
+        /* @var EntityRegistry|MockObject $reducedEntityRegistry */
+        $reducedEntityRegistry = $this->getMockBuilder(EntityRegistry::class)
+                                      ->setMethods(['set'])
+                                      ->disableOriginalConstructor()
+                                      ->getMock();
+        $reducedEntityRegistry->expects($this->exactly(2))
+            ->method('set')
+            ->withConsecutive(
+                [$this->equalTo($entity2)],
+                [$entity3]
+            )
+            ->willReturnOnConsecutiveCalls(
+                'ghi',
+                'jkl'
+            );
+
+        /* @var Combination $combination */
+        $combination = $this->createMock(Combination::class);
+        /* @var Combination $parentCombination */
+        $parentCombination = $this->createMock(Combination::class);
+        /* @var EntityRegistry $rawEntityRegistry */
+        $rawEntityRegistry = $this->createMock(EntityRegistry::class);
+
+        /* @var AbstractIdentifiedEntityReducer|MockObject $reducer */
+        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityReducer::class)
+                        ->setMethods([
+                            'getHashesFromCombination',
+                            'mapEntityHashes',
+                            'fetchEntityFromHash',
+                            'reduceEntity',
+                            'setHashesToCombination'
+                        ])
+                        ->setConstructorArgs([$rawEntityRegistry, $reducedEntityRegistry])
+                        ->getMockForAbstractClass();
+        $reducer->expects($this->exactly(2))
+            ->method('getHashesFromCombination')
+            ->withConsecutive(
+                [$parentCombination],
+                [$combination]
+            )
+            ->willReturnOnConsecutiveCalls(
+                $parentHashes,
+                $hashes
+            );
+        $reducer->expects($this->once())
+                ->method('mapEntityHashes')
+                ->with($parentHashes)
+                ->willReturn($mappedParentHashes);
+        $reducer->expects($this->exactly(4))
+            ->method('fetchEntityFromHash')
+            ->withConsecutive(
+                ['abc'],
+                ['ghi'],
+                ['def'],
+                ['jkl']
+            )
+            ->willReturnOnConsecutiveCalls(
+                $entity1,
+                $entity2,
+                $parentEntity2,
+                $entity3
+            );
+        $reducer->expects($this->once())
+                ->method('reduceEntity')
+                ->with($this->equalTo($entity2), $parentEntity2);
+        $reducer->expects($this->once())
+                ->method('setHashesToCombination')
+                ->with($combination, $expectedHashes);
+
+        $this->invokeMethod($reducer, 'reduce', $combination, $parentCombination);
+    }
+
+
+    /**
      * Tests the mapEntityHashes method.
      * @throws ReflectionException
      * @covers ::mapEntityHashes
@@ -51,7 +164,7 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
     public function testMapEntityHashes(): void
     {
         $hashes = ['abc', 'def'];
-        
+
         /* @var EntityWithIdentifierInterface|MockObject $entity1 */
         $entity1 = $this->getMockBuilder(EntityWithIdentifierInterface::class)
                         ->setMethods(['getIdentifier'])
@@ -89,8 +202,7 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
         $result = $this->invokeMethod($reducer, 'mapEntityHashes', $hashes);
         $this->assertEquals($expectedResult, $result);
     }
-    
-    
+
     /**
      * Provides the data for the fetchEntityFromHash test.
      * @return array

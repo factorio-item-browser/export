@@ -101,6 +101,74 @@ class ItemReducerTest extends TestCase
     }
 
     /**
+     * Provides the data for the reduceTranslationsOfItem test.
+     * @return array
+     */
+    public function provideReduceTranslationsOfItem(): array
+    {
+        $item1 = new Item();
+        $item1->setProvidesMachineLocalisation(true)
+              ->setProvidesRecipeLocalisation(true);   
+        $item1->getLabels()->setTranslation('en', 'abc')
+                           ->setTranslation('de', 'def');
+        $item1->getDescriptions()->setTranslation('en', 'ghi')
+                                 ->setTranslation('de', 'jkl');
+        
+        $parentItem1 = new Item();
+        $parentItem1->getLabels()->setTranslation('en', 'abc')
+                                 ->setTranslation('de', 'mno');
+        $parentItem1->getDescriptions()->setTranslation('en', 'ghi')
+                                       ->setTranslation('de', 'pqr');
+
+        $expectedItem1 = new Item();
+        $expectedItem1->setProvidesMachineLocalisation(true)
+                      ->setProvidesRecipeLocalisation(true);   
+        $expectedItem1->getLabels()->setTranslation('de', 'def');
+        $expectedItem1->getDescriptions()->setTranslation('de', 'jkl');
+        
+        $item2 = new Item();
+        $item2->setProvidesMachineLocalisation(true)
+              ->setProvidesRecipeLocalisation(true);   
+        $item2->getLabels()->setTranslation('en', 'abc');
+        $item2->getDescriptions()->setTranslation('en', 'ghi');
+        
+        $parentItem2 = new Item();
+        $parentItem2->getLabels()->setTranslation('en', 'abc');
+        $parentItem2->getDescriptions()->setTranslation('en', 'ghi');
+
+        $expectedItem2 = new Item();
+        $expectedItem2->setProvidesMachineLocalisation(false)
+                      ->setProvidesRecipeLocalisation(false);   
+        
+        return [
+            [$item1, $parentItem1, $expectedItem1],
+            [$item2, $parentItem2, $expectedItem2],
+        ];
+    }
+
+    /**
+     * Tests the reduceTranslationsOfItem method.
+     * @param Item $item
+     * @param Item $parentItem
+     * @param Item $expectedItem
+     * @throws ReflectionException
+     * @covers ::reduceTranslationsOfItem
+     * @dataProvider provideReduceTranslationsOfItem
+     */
+    public function testReduceTranslationsOfItem(Item $item, Item $parentItem, Item $expectedItem): void
+    {
+        /* @var EntityRegistry $rawItemRegistry */
+        $rawItemRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry $reducedItemRegistry */
+        $reducedItemRegistry = $this->createMock(EntityRegistry::class);
+
+        $reducer = new ItemReducer($rawItemRegistry, $reducedItemRegistry);
+
+        $this->invokeMethod($reducer, 'reduceTranslationsOfItem', $item, $parentItem);
+        $this->assertEquals($expectedItem, $item);
+    }
+
+    /**
      * Provides the data for the reduceIconOfItem test.
      * @return array
      */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Reducer;
 
+use FactorioItemBrowser\Common\Constant\EnergyUsageUnit;
 use FactorioItemBrowser\Export\Exception\ReducerException;
 use FactorioItemBrowser\Export\Utils\LocalisedStringUtils;
 use FactorioItemBrowser\ExportData\Entity\EntityInterface;
@@ -61,7 +62,7 @@ class MachineReducer extends AbstractIdentifiedEntityReducer
                     ->setNumberOfFluidOutputSlots(0)
                     ->setNumberOfModuleSlots(0)
                     ->setEnergyUsage(0)
-                    ->setEnergyUsageUnit('');
+                    ->setEnergyUsageUnit(EnergyUsageUnit::WATT);
         }
     }
 
@@ -76,14 +77,14 @@ class MachineReducer extends AbstractIdentifiedEntityReducer
         sort($craftingCategories);
 
         return EntityUtils::calculateHashOfArray([
-            'cc' => array_values($craftingCategories),
-            'cs' => $machine->getCraftingSpeed(),
-            'ni' => $machine->getNumberOfItemSlots(),
-            'fi' => $machine->getNumberOfFluidInputSlots(),
-            'fo' => $machine->getNumberOfFluidOutputSlots(),
-            'nm' => $machine->getNumberOfModuleSlots(),
-            'eu' => $machine->getEnergyUsage(),
-            'un' => $machine->getEnergyUsageUnit(),
+            array_values($craftingCategories),
+            $machine->getCraftingSpeed(),
+            $machine->getNumberOfItemSlots(),
+            $machine->getNumberOfFluidInputSlots(),
+            $machine->getNumberOfFluidOutputSlots(),
+            $machine->getNumberOfModuleSlots(),
+            $machine->getEnergyUsage(),
+            $machine->getEnergyUsageUnit(),
         ]);
     }
 

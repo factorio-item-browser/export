@@ -9,6 +9,8 @@ use FactorioItemBrowser\ExportData\Entity\EntityInterface;
 use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
+use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient;
+use FactorioItemBrowser\ExportData\Entity\Recipe\Product;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -101,6 +103,120 @@ class RecipeReducerTest extends TestCase
         }
 
         $this->invokeMethod($reducer, 'reduceEntity', $entity, $parentEntity);
+    }
+
+    /**
+     * Provides the data for the reduceDataOfRecipe test.
+     * @return array
+     */
+    public function provideReduceDataOfRecipe(): array
+    {
+        return [
+            ['abc', 'abc', true],
+            ['abc', 'def', false],
+        ];
+    }
+
+    /**
+     * Tests the reduceDataOfRecipe method.
+     * @param string $hash
+     * @param string $parentHash
+     * @param bool $expectReduction
+     * @throws ReflectionException
+     * @covers ::reduceDataOfRecipe
+     * @dataProvider provideReduceDataOfRecipe
+     */
+    public function testReduceDataOfRecipe(string $hash, string $parentHash, bool $expectReduction): void
+    {
+        $recipe = new Recipe();
+        $recipe->setName('foo')
+               ->addIngredient(new Ingredient())
+               ->addProduct(new Product())
+               ->setCraftingTime(13.37)
+               ->setCraftingCategory('abc');
+
+        $parentRecipe = (new Recipe())->setName('bar');
+        $expectedRecipe = $expectReduction ? (new Recipe())->setName('foo') : $recipe;
+
+        /* @var RecipeReducer|MockObject $reducer */
+        $reducer = $this->getMockBuilder(RecipeReducer::class)
+                        ->setMethods(['calculateDataHash'])
+                        ->disableOriginalConstructor()
+                        ->getMock();
+        $reducer->expects($this->exactly(2))
+                ->method('calculateDataHash')
+                ->withConsecutive(
+                    [$recipe],
+                    [$parentRecipe]
+                )
+                ->willReturnOnConsecutiveCalls(
+                    $hash,
+                    $parentHash
+                );
+
+        $this->invokeMethod($reducer, 'reduceDataOfRecipe', $recipe, $parentRecipe);
+        $this->assertEquals($expectedRecipe, $recipe);
+    }
+
+    /**
+     * Tests the calculateDataHash method.
+     * @throws ReflectionException
+     * @covers ::calculateDataHash
+     */
+    public function testCalculateDataHash(): void
+    {
+        $recipe = new Recipe();
+        $recipe->setName('foo')
+               ->addIngredient(new Ingredient())
+               ->addProduct(new Product())
+               ->setCraftingTime(13.37)
+               ->setCraftingCategory('abc');
+
+        $expectedResult = '7f374023f24e486c';
+
+        /* @var EntityRegistry $rawRecipeRegistry */
+        $rawRecipeRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry $reducedRecipeRegistry */
+        $reducedRecipeRegistry = $this->createMock(EntityRegistry::class);
+
+        $reducer = new RecipeReducer($rawRecipeRegistry, $reducedRecipeRegistry);
+
+        $result = $this->invokeMethod($reducer, 'calculateDataHash', $recipe);
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Tests the reduceTranslationsOfRecipe method.
+     * @throws ReflectionException
+     * @covers ::reduceTranslationsOfRecipe
+     */
+    public function testReduceTranslationsOfRecipe(): void
+    {
+        $recipe = new Recipe();
+        $recipe->getLabels()->setTranslation('en', 'abc')
+                ->setTranslation('de', 'def');
+        $recipe->getDescriptions()->setTranslation('en', 'ghi')
+                ->setTranslation('de', 'jkl');
+
+        $parentRecipe = new Recipe();
+        $parentRecipe->getLabels()->setTranslation('en', 'abc')
+                      ->setTranslation('de', 'mno');
+        $parentRecipe->getDescriptions()->setTranslation('en', 'ghi')
+                      ->setTranslation('de', 'pqr');
+
+        $expectedRecipe = new Recipe();
+        $expectedRecipe->getLabels()->setTranslation('de', 'def');
+        $expectedRecipe->getDescriptions()->setTranslation('de', 'jkl');
+
+        /* @var EntityRegistry $rawRecipeRegistry */
+        $rawRecipeRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry $reducedRecipeRegistry */
+        $reducedRecipeRegistry = $this->createMock(EntityRegistry::class);
+
+        $reducer = new RecipeReducer($rawRecipeRegistry, $reducedRecipeRegistry);
+
+        $this->invokeMethod($reducer, 'reduceTranslationsOfRecipe', $recipe, $parentRecipe);
+        $this->assertEquals($expectedRecipe, $recipe);
     }
 
     /**

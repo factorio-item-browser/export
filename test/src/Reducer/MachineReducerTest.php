@@ -104,6 +104,128 @@ class MachineReducerTest extends TestCase
     }
 
     /**
+     * Provides the data for the reduceDataOfMachine test.
+     * @return array
+     */
+    public function provideReduceDataOfMachine(): array
+    {
+        return [
+            ['abc', 'abc', true],
+            ['abc', 'def', false],
+        ];
+    }
+
+    /**
+     * Tests the reduceDataOfMachine method.
+     * @param string $hash
+     * @param string $parentHash
+     * @param bool $expectReduction
+     * @throws ReflectionException
+     * @covers ::reduceDataOfMachine
+     * @dataProvider provideReduceDataOfMachine
+     */
+    public function testReduceDataOfMachine(string $hash, string $parentHash, bool $expectReduction): void
+    {
+        $machine = new Machine();
+        $machine->setName('foo')
+                ->setCraftingCategories(['def', 'abc'])
+                ->setCraftingSpeed(4.2)
+                ->setNumberOfItemSlots(12)
+                ->setNumberOfFluidInputSlots(23)
+                ->setNumberOfFluidOutputSlots(34)
+                ->setNumberOfModuleSlots(45)
+                ->setEnergyUsage(13.37)
+                ->setEnergyUsageUnit('ghi');
+
+        $parentMachine = (new Machine())->setName('bar');
+        $expectedMachine = $expectReduction ? (new Machine())->setName('foo') : $machine;
+
+        /* @var MachineReducer|MockObject $reducer */
+        $reducer = $this->getMockBuilder(MachineReducer::class)
+                        ->setMethods(['calculateDataHash'])
+                        ->disableOriginalConstructor()
+                        ->getMock();
+        $reducer->expects($this->exactly(2))
+                ->method('calculateDataHash')
+                ->withConsecutive(
+                    [$machine],
+                    [$parentMachine]
+                )
+                ->willReturnOnConsecutiveCalls(
+                    $hash,
+                    $parentHash
+                );
+
+        $this->invokeMethod($reducer, 'reduceDataOfMachine', $machine, $parentMachine);
+        $this->assertEquals($expectedMachine, $machine);
+    }
+
+    /**
+     * Tests the calculateDataHash method.
+     * @throws ReflectionException
+     * @covers ::calculateDataHash
+     */
+    public function testCalculateDataHash(): void
+    {
+        $machine = new Machine();
+        $machine->setCraftingCategories(['def', 'abc'])
+                ->setCraftingSpeed(4.2)
+                ->setNumberOfItemSlots(12)
+                ->setNumberOfFluidInputSlots(23)
+                ->setNumberOfFluidOutputSlots(34)
+                ->setNumberOfModuleSlots(45)
+                ->setEnergyUsage(13.37)
+                ->setEnergyUsageUnit('ghi')
+                ->setName('foo');
+
+        $expectedResult = '3d8217714a401f0c';
+
+        /* @var EntityRegistry $rawMachineRegistry */
+        $rawMachineRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry $reducedMachineRegistry */
+        $reducedMachineRegistry = $this->createMock(EntityRegistry::class);
+
+        $reducer = new MachineReducer($rawMachineRegistry, $reducedMachineRegistry);
+
+        $result = $this->invokeMethod($reducer, 'calculateDataHash', $machine);
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Tests the reduceTranslationsOfMachine method.
+     * @throws ReflectionException
+     * @covers ::reduceTranslationsOfMachine
+     */
+    public function testReduceTranslationsOfMachine(): void
+    {
+        $machine = new Machine();
+        $machine->getLabels()->setTranslation('en', 'abc')
+                ->setTranslation('de', 'def');
+        $machine->getDescriptions()->setTranslation('en', 'ghi')
+                ->setTranslation('de', 'jkl');
+
+        $parentMachine = new Machine();
+        $parentMachine->getLabels()->setTranslation('en', 'abc')
+                      ->setTranslation('de', 'mno');
+        $parentMachine->getDescriptions()->setTranslation('en', 'ghi')
+                      ->setTranslation('de', 'pqr');
+
+        $expectedMachine = new Machine();
+        $expectedMachine->getLabels()->setTranslation('de', 'def');
+        $expectedMachine->getDescriptions()->setTranslation('de', 'jkl');
+
+        /* @var EntityRegistry $rawMachineRegistry */
+        $rawMachineRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry $reducedMachineRegistry */
+        $reducedMachineRegistry = $this->createMock(EntityRegistry::class);
+
+        $reducer = new MachineReducer($rawMachineRegistry, $reducedMachineRegistry);
+
+        $this->invokeMethod($reducer, 'reduceTranslationsOfMachine', $machine, $parentMachine);
+        $this->assertEquals($expectedMachine, $machine);
+    }
+
+    /**
      * Provides the data for the reduceIconOfMachine test.
      * @return array
      */
