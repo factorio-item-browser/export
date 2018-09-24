@@ -33,10 +33,10 @@ class IconParser implements ParserInterface
     protected $parsedIcons = [];
 
     /**
-     * The icon hashes which are used by any entity.
+     * The icons which are used by any entity.
      * @var array|string[]
      */
-    protected $usedIconHashes = [];
+    protected $usedIcons = [];
 
     /**
      * Initializes the parser.
@@ -54,6 +54,8 @@ class IconParser implements ParserInterface
     public function parse(DataContainer $dumpData): void
     {
         $this->parsedIcons = [];
+        $this->usedIcons = [];
+
         foreach ($dumpData->getObjectArray('icons') as $iconData) {
             $icon = $this->parseIcon($iconData);
 
@@ -132,7 +134,10 @@ class IconParser implements ParserInterface
      */
     public function persist(Combination $combination): void
     {
-        $combination->setIconHashes($this->usedIconHashes);
+        foreach ($this->usedIcons as $icon) {
+            $this->iconRegistry->set($icon);
+        }
+        $combination->setIconHashes(array_keys($this->usedIcons));
     }
 
     /**
@@ -143,13 +148,13 @@ class IconParser implements ParserInterface
      */
     public function getIconHashForEntity(string $type, string $name): ?string
     {
-        $result = null;
-        $key = $this->buildArrayKey($type, $name);
-        if (isset($this->parsedIcons[$key])) {
-            $result = $this->parsedIcons[$key]->calculateHash();
-            $this->usedIconHashes[] = $result;
+        $iconHash = null;
+        $icon = $this->parsedIcons[$this->buildArrayKey($type, $name)];
+        if ($icon instanceof Icon) {
+            $iconHash = $icon->calculateHash();
+            $this->usedIcons[$iconHash] = $icon;
         }
-        return $result;
+        return $iconHash;
     }
 
     /**

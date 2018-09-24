@@ -108,9 +108,11 @@ class IconParserTest extends TestCase
                    'machine|jkl'
                );
         $this->injectProperty($parser, 'parsedIcons', ['fail' => new Icon()]);
+        $this->injectProperty($parser, 'usedIcons', ['fail' => new Icon()]);
 
         $parser->parse($dumpData);
         $this->assertEquals($expectedParsedIcons, $this->extractProperty($parser, 'parsedIcons'));
+        $this->assertEquals([], $this->extractProperty($parser, 'usedIcons'));
     }
 
     /**
@@ -251,7 +253,12 @@ class IconParserTest extends TestCase
      */
     public function testPersist(): void
     {
-        $usedIconHashes = ['abc', 'def'];
+        $icon1 = (new Icon())->setSize(42);
+        $icon2 = (new Icon())->setSize(21);
+        $usedIcons = [
+            'abc' => $icon1,
+            'def' => $icon2,
+        ];
 
         /* @var Combination|MockObject $combination */
         $combination = $this->getMockBuilder(Combination::class)
@@ -260,13 +267,26 @@ class IconParserTest extends TestCase
                             ->getMock();
         $combination->expects($this->once())
                     ->method('setIconHashes')
-                    ->with($usedIconHashes);
+                    ->with(['abc', 'def']);
 
-        /* @var EntityRegistry $iconRegistry */
-        $iconRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry|MockObject $iconRegistry */
+        $iconRegistry = $this->getMockBuilder(EntityRegistry::class)
+                             ->setMethods(['set'])
+                             ->disableOriginalConstructor()
+                             ->getMock();
+        $iconRegistry->expects($this->exactly(2))
+                     ->method('set')
+                     ->withConsecutive(
+                         [$icon1],
+                         [$icon2]
+                     )
+                     ->willReturnOnConsecutiveCalls(
+                         'abc',
+                         'def'
+                     );
 
         $parser = new IconParser($iconRegistry);
-        $this->injectProperty($parser, 'usedIconHashes', $usedIconHashes);
+        $this->injectProperty($parser, 'usedIcons', $usedIcons);
 
         $parser->persist($combination);
     }
@@ -277,39 +297,54 @@ class IconParserTest extends TestCase
      */
     public function provideGetIconHashForEntity(): array
     {
-        $iconHash = 'abc';
-        /* @var Icon|MockObject $icon */
-        $icon = $this->getMockBuilder(Icon::class)
-                     ->setMethods(['calculateHash'])
-                     ->disableOriginalConstructor()
-                     ->getMock();
-        $icon->expects($this->once())
-             ->method('calculateHash')
-             ->willReturn($iconHash);
+        /* @var Icon|MockObject $icon1 */
+        $icon1 = $this->getMockBuilder(Icon::class)
+                      ->setMethods(['calculateHash'])
+                      ->disableOriginalConstructor()
+                      ->getMock();
+        $icon1->expects($this->once())
+              ->method('calculateHash')
+              ->willReturn('abc');
+
+        $icon2 = (new Icon())->setSize(42);
+        $icon3 = (new Icon())->setSize(21);
+
 
         return [
-            [['def' => $icon], ['ghi'], 'def', 'abc', ['ghi', 'abc']],
-            [[], ['def'], 'bar', null, ['def']]
+            [
+                ['def' => $icon1],
+                ['ghi' => $icon2],
+                'def',
+                'abc',
+                ['ghi' => $icon2, 'abc' => $icon1],
+            ],
+            [
+                ['def' => $icon2],
+                ['ghi' => $icon3],
+                'jkl',
+                null,
+                ['ghi' => $icon3],
+            ],
         ];
     }
 
     /**
      * Tests the getIconHashForEntity method.
-     * @param array $parsedIcons
-     * @param array $usedIconHashes
-     * @param string $key
+     * @param array|Icon[] $parsedIcons
+     * @param array|Icon[] $usedIcons
+     * @param string $arrayKey
      * @param null|string $expectedResult
-     * @param array $expectedUsedIconHashes
+     * @param array|Icon[] $expectedUsedIcons
      * @throws ReflectionException
      * @covers ::getIconHashForEntity
      * @dataProvider provideGetIconHashForEntity
      */
     public function testGetIconHashForEntity(
         array $parsedIcons,
-        array $usedIconHashes,
-        string $key,
+        array $usedIcons,
+        string $arrayKey,
         ?string $expectedResult,
-        array $expectedUsedIconHashes
+        array $expectedUsedIcons
     ): void {
         $type = 'foo';
         $name = 'bar';
@@ -322,13 +357,13 @@ class IconParserTest extends TestCase
         $parser->expects($this->once())
                ->method('buildArrayKey')
                ->with($type, $name)
-               ->willReturn($key);
+               ->willReturn($arrayKey);
         $this->injectProperty($parser, 'parsedIcons', $parsedIcons);
-        $this->injectProperty($parser, 'usedIconHashes', $usedIconHashes);
+        $this->injectProperty($parser, 'usedIcons', $usedIcons);
 
         $result = $this->invokeMethod($parser, 'getIconHashForEntity', $type, $name);
         $this->assertSame($expectedResult, $result);
-        $this->assertEquals($expectedUsedIconHashes, $this->extractProperty($parser, 'usedIconHashes'));
+        $this->assertEquals($expectedUsedIcons, $this->extractProperty($parser, 'usedIcons'));
     }
 
     /**
