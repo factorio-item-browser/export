@@ -6,6 +6,7 @@ namespace FactorioItemBrowser\Export\Command\Update;
 
 use FactorioItemBrowser\Export\Command\AbstractCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
+use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Mod\ModReader;
@@ -74,8 +75,8 @@ class UpdateListCommand extends AbstractCommand
         $this->setModsToRegistry($newMods, $this->modRegistry);
         $this->printChangesToConsole($newMods, $currentMods);
 
-        $this->runSubCommand('update dependencies', [], $this->console);
-        $this->runSubCommand('update order', [], $this->console);
+        $this->runCommand(CommandName::UPDATE_DEPENDENCIES, [], $this->console);
+        $this->runCommand(CommandName::UPDATE_ORDER, [], $this->console);
 
         $this->console->writeLine('Done.');
     }
@@ -150,7 +151,7 @@ class UpdateListCommand extends AbstractCommand
             $result = $currentModsByChecksum[$checksum];
         } else {
             $result = $this->modReader->read($modFileName, $checksum);
-            $this->runSubCommand('clean cache', ['mod' => $result->getName()]);
+            $this->runCommand(CommandName::CLEAN_CACHE, ['mod' => $result->getName()]);
         }
         return $result;
     }

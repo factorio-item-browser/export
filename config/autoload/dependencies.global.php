@@ -10,6 +10,8 @@ namespace FactorioItemBrowser\Export;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
+
+use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use Zend\ServiceManager\Factory\InvokableFactory;
 
 return [
@@ -23,6 +25,7 @@ return [
 
             Command\Clean\CleanCacheCommand::class => Command\Clean\CleanCacheCommandFactory::class,
             Command\Export\ExportCombinationCommand::class => Command\Export\ExportCombinationCommandFactory::class,
+            Command\Export\ExportModCommand::class => Command\Export\ExportModCommandFactory::class,
             Command\Export\ExportReduceCommand::class => Command\Export\ExportReduceCommandFactory::class,
             Command\Lists\ListCommand::class => Command\Lists\ListCommandFactory::class,
             Command\Render\RenderIconCommand::class => Command\Render\RenderIconCommandFactory::class,
@@ -64,6 +67,9 @@ return [
             Reducer\ReducerManager::class => Reducer\ReducerManagerFactory::class,
 
             Renderer\IconRenderer::class => Renderer\IconRendererFactory::class,
+
+            // 3rd-party services
+            ProcessManager::class => Process\ProcessManagerFactory::class,
         ],
     ]
 ];

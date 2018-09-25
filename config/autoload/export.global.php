@@ -35,5 +35,9 @@ return [
         'numberOfInstances' => 4
     ],
     'name' => 'Factorio Item Browser Export',
+    'process-manager' => [
+        'process-count' => 4,
+        'poll-interval' => 100,
+    ],
     'version' => '2.0.0-alpha'
 ];

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export;
 
+use FactorioItemBrowser\Export\Constant\CommandName;
+
 /**
  * The configuration of the routes.
  *
@@ -13,7 +15,7 @@ namespace FactorioItemBrowser\Export;
 return [
     'routes' => [
         [
-            'name' => 'clean cache',
+            'name' => CommandName::CLEAN_CACHE,
             'route' => '[--mod=]',
             'handler' => Command\Clean\CleanCacheCommand::class,
             'short_description' => 'Cleans the caches.',
@@ -23,7 +25,7 @@ return [
         ],
 
         [
-            'name' => 'export combination',
+            'name' => CommandName::EXPORT_COMBINATION,
             'route' => '<combinationHash>',
             'handler' => Command\Export\ExportCombinationCommand::class,
             'short_description' => 'Exports a combination of mods running the Factorio game.',
@@ -32,7 +34,16 @@ return [
             ],
         ],
         [
-            'name' => 'export reduce',
+            'name' => CommandName::EXPORT_MOD,
+            'route' => '<modName>',
+            'handler' => Command\Export\ExportModCommand::class,
+            'short_description' => 'Exports a mod with all its combinations.',
+            'options_description' => [
+                '<modName>' => 'The name of the mod to be exported.',
+            ],
+        ],
+        [
+            'name' => CommandName::EXPORT_REDUCE,
             'route' => '<combinationHash>',
             'handler' => Command\Export\ExportReduceCommand::class,
             'short_description' => 'Reduces an exported combination against its parents.',
@@ -42,13 +53,13 @@ return [
         ],
 
         [
-            'name' => 'list',
+            'name' => CommandName::LIST,
             'handler' => Command\Lists\ListCommand::class,
             'short_description' => 'Lists all available mods.',
         ],
 
         [
-            'name' => 'render icon',
+            'name' => CommandName::RENDER_ICON,
             'route' => '<hash>',
             'handler' => Command\Render\RenderIconCommand::class,
             'short_description' => 'Renders an icon.',
@@ -57,7 +68,7 @@ return [
             ],
         ],
         [
-            'name' => 'render mod-icons',
+            'name' => CommandName::RENDER_MOD_ICONS,
             'route' => '<modName>',
             'handler' => Command\Render\RenderModIconsCommand::class,
             'short_description' => 'Renders all icons of a mod.',
@@ -67,7 +78,7 @@ return [
         ],
 
         [
-            'name' => 'update dependencies',
+            'name' => CommandName::UPDATE_DEPENDENCIES,
             'route' => '[--mod=]',
             'handler' => Command\Update\UpdateDependenciesCommand::class,
             'short_description' => 'Updates the dependencies of the mods.',
@@ -76,12 +87,12 @@ return [
             ],
         ],
         [
-            'name' => 'update list',
+            'name' => CommandName::UPDATE_LIST,
             'handler' => Command\Update\UpdateListCommand::class,
             'short_description' => 'Updates the list of mods from the directory.',
         ],
         [
-            'name' => 'update order',
+            'name' => CommandName::UPDATE_ORDER,
             'handler' => Command\Update\UpdateOrderCommand::class,
             'short_description' => 'Updates the absolute order of the mods.',
         ],

@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\Render;
 
+use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use FactorioItemBrowser\Export\Command\AbstractCommand;
-use FactorioItemBrowser\Export\Command\SubCommandTrait;
+use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Process\CommandProcess;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
+use Symfony\Component\Process\Process;
 use ZF\Console\Route;
 
 /**
@@ -22,8 +25,6 @@ use ZF\Console\Route;
  */
 class RenderModIconsCommand extends AbstractCommand
 {
-    use SubCommandTrait;
-
     /**
      * The registry of the combinations.
      * @var EntityRegistry
@@ -37,14 +38,25 @@ class RenderModIconsCommand extends AbstractCommand
     protected $modRegistry;
 
     /**
+     * The process manager.
+     * @var ProcessManager
+     */
+    protected $processManager;
+
+    /**
      * RenderModIconsCommand constructor.
      * @param EntityRegistry $combinationRegistry
      * @param ModRegistry $modRegistry
+     * @param ProcessManager $processManager
      */
-    public function __construct(EntityRegistry $combinationRegistry, ModRegistry $modRegistry)
-    {
+    public function __construct(
+        EntityRegistry $combinationRegistry,
+        ModRegistry $modRegistry,
+        ProcessManager $processManager
+    ) {
         $this->combinationRegistry = $combinationRegistry;
         $this->modRegistry = $modRegistry;
+        $this->processManager = $processManager;
     }
 
     /**
@@ -104,10 +116,19 @@ class RenderModIconsCommand extends AbstractCommand
      */
     protected function renderIconsWithHashes(array $iconHashes): void
     {
-        $processManager = $this->createProcessManager($this->console);
         foreach ($iconHashes as $iconHash) {
-            $processManager->addProcess($this->createProcessForSubCommand('render icon', [$iconHash]));
+            $this->processManager->addProcess($this->createProcessForIcon($iconHash));
         }
-        $processManager->waitForAllProcesses();
+        $this->processManager->waitForAllProcesses();
+    }
+
+    /**
+     * Returns the process to render the icon with the specified hash.
+     * @param string $iconHash
+     * @return Process
+     */
+    protected function createProcessForIcon(string $iconHash): Process
+    {
+        return new CommandProcess(CommandName::RENDER_ICON, [$iconHash], $this->console);
     }
 }

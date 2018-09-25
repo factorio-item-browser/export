@@ -6,10 +6,12 @@ namespace FactorioItemBrowserTest\Export\Command;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
+use FactorioItemBrowser\Export\Process\CommandProcess;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use Symfony\Component\Process\Process;
+use Zend\Console\Adapter\AdapterInterface;
 
 /**
  * The PHPUnit test of the SubCommandTrait class.
@@ -23,43 +25,61 @@ class SubCommandTraitTest extends TestCase
     use ReflectionTrait;
 
     /**
-     * Provides the data for the createProcessForSubCommand test.
-     * @return array
+     * Tests the runCommand method.
+     * @throws ReflectionException
+     * @covers ::runCommand
      */
-    public function provideCreateProcessForSubCommand(): array
+    public function testRunCommand(): void
     {
-        return [
-            ['foo', [], 'foo'],
-            ['foo bar', [], 'foo bar'],
-            ['foo', ['bar'], 'foo "bar"'],
-            ['foo', ['abc' => 'def'], 'foo --abc="def"'],
-            ['foo', ['bar', 'abc' => 'def'], 'foo "bar" --abc="def"'],
-        ];
+        $commandName = 'abc';
+        $parameters = ['def'];
+        $exitCode = 42;
+
+        /* @var AdapterInterface $console */
+        $console = $this->createMock(AdapterInterface::class);
+
+        /* @var Process|MockObject $process */
+        $process = $this->getMockBuilder(Process::class)
+                        ->setMethods(['run', 'getExitCode'])
+                        ->disableOriginalConstructor()
+                        ->getMock();
+        $process->expects($this->once())
+                ->method('run');
+        $process->expects($this->once())
+                ->method('getExitCode')
+                ->willReturn($exitCode);
+
+        /* @var SubCommandTrait|MockObject $trait */
+        $trait = $this->getMockBuilder(SubCommandTrait::class)
+                      ->setMethods(['createCommandProcess'])
+                      ->getMockForTrait();
+        $trait->expects($this->once())
+              ->method('createCommandProcess')
+              ->with($commandName, $parameters, $console)
+              ->willReturn($process);
+
+        $result = $this->invokeMethod($trait, 'runCommand', $commandName, $parameters, $console);
+        $this->assertSame($exitCode, $result);
     }
 
     /**
-     * Tests the createProcessForSubCommand method.
-     * @param string $commandName
-     * @param array $parameters
-     * @param string $expectedCommandLinePart
+     * Tests the createCommandProcess method.
      * @throws ReflectionException
-     * @covers ::createProcessForSubCommand
-     * @dataProvider provideCreateProcessForSubCommand
+     * @covers ::createCommandProcess
      */
-    public function testCreateProcessForSubCommand(
-        string $commandName,
-        array $parameters,
-        string $expectedCommandLinePart
-    ): void {
-        $expectedCommandLine = 'php ' . $_SERVER['SCRIPT_FILENAME'] . ' ' . $expectedCommandLinePart;
+    public function testCreateCommandProcess(): void
+    {
+        $commandName = 'abc';
+        $parameters = ['def'];
+
+        /* @var AdapterInterface $console */
+        $console = $this->createMock(AdapterInterface::class);
 
         /* @var SubCommandTrait|MockObject $trait */
         $trait = $this->getMockBuilder(SubCommandTrait::class)
                       ->getMockForTrait();
 
-        /* @var Process $process */
-        $process = $this->invokeMethod($trait, 'createProcessForSubCommand', $commandName, $parameters);
-        $this->assertSame($expectedCommandLine, $process->getCommandLine());
-        $this->assertEquals(['SUBCMD' => 1], $process->getEnv());
+        $result = $this->invokeMethod($trait, 'createCommandProcess', $commandName, $parameters, $console);
+        $this->assertInstanceOf(CommandProcess::class, $result);
     }
 }

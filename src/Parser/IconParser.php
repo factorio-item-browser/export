@@ -34,7 +34,7 @@ class IconParser implements ParserInterface
 
     /**
      * The icons which are used by any entity.
-     * @var array|string[]
+     * @var array|Icon[]
      */
     protected $usedIcons = [];
 
@@ -149,7 +149,7 @@ class IconParser implements ParserInterface
     public function getIconHashForEntity(string $type, string $name): ?string
     {
         $iconHash = null;
-        $icon = $this->parsedIcons[$this->buildArrayKey($type, $name)];
+        $icon = $this->parsedIcons[$this->buildArrayKey($type, $name)] ?? null;
         if ($icon instanceof Icon) {
             $iconHash = $icon->calculateHash();
             $this->usedIcons[$iconHash] = $icon;

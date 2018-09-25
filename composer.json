@@ -61,7 +61,7 @@
     ],
     "run": "@php bin/cli.php",
     "test": [
-      "#@composer validate --strict",
+      "@composer validate #--strict",
       "@phpunit",
       "#@coverage-check",
       "@phpcs",

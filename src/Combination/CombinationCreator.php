@@ -75,11 +75,37 @@ class CombinationCreator
      */
     public function createMainCombination(): Combination
     {
+        $this->verifyMod();
+
+        return $this->createCombination([]);
+    }
+
+    /**
+     * Creates the combinations with the specified number of optional mods.
+     * @param int $numberOfOptionalMods
+     * @return array|Combination[]
+     * @throws ExportException
+     */
+    public function createCombinationsWithOptionalMods(int $numberOfOptionalMods): array
+    {
+        $this->verifyMod();
+
+        $result = [];
+//        if ($numberOfOptionalMods  >= 1 && $numberOfOptionalMods <= count($this->optionalModNames)) {
+//
+//        }
+        return $result;
+    }
+
+    /**
+     * Verifies that a valid mod has been set up.
+     * @throws ExportException
+     */
+    protected function verifyMod(): void
+    {
         if ($this->mod === null) {
             throw new ExportException('Unable to create combination without a mod.');
         }
-
-        return $this->createCombination([]);
     }
 
     /**
