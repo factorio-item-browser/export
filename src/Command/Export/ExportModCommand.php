@@ -10,6 +10,7 @@ use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use ZF\Console\Route;
@@ -78,14 +79,18 @@ class ExportModCommand extends AbstractCommand
         $mod = $this->fetchMod($route->getMatchedParam('modName', ''));
         $this->combinationCreator->setupForMod($mod);
 
-        $combination = $this->combinationCreator->createMainCombination();
-        $combinationHash = $this->combinationRegistry->set($combination);
-        $this->exportCombinations([$combinationHash]);
+        $combinationHashes = $this->exportCombinations([$this->combinationCreator->createMainCombination()]);
+        for ($i = 1; $i <= $this->combinationCreator->getNumberOfOptionalMods(); ++$i) {
+            $combinationHashes = array_merge(
+                $combinationHashes,
+                $this->exportCombinations($this->combinationCreator->createCombinationsWithOptionalMods($i))
+            );
+        }
 
-        $mod->setCombinationHashes([$combinationHash]);
+        $mod->setCombinationHashes($combinationHashes);
         $this->modRegistry->set($mod);
         $this->modRegistry->saveMods();
-        $this->runCommand(CommandName::RENDER_MOD_ICONS, [$mod->getName()], $this->console);
+//        $this->runCommand(CommandName::RENDER_MOD_ICONS, [$mod->getName()], $this->console);
     }
 
     /**
@@ -104,13 +109,30 @@ class ExportModCommand extends AbstractCommand
     }
 
     /**
-     * Exports the combination with the specified hashes in sub processes.
-     * @param array|string[] $combinationHashes
+     * Exports the specified combinations in sub processes and returns their hashes.
+     * @param array|Combination[] $combinations
+     * @return array|string[]
      */
-    protected function exportCombinations(array $combinationHashes): void
+    protected function exportCombinations(array $combinations): array
     {
+        $combinationHashes = $this->getHashesToCombinations($combinations);
         $this->runCombinationCommands(CommandName::EXPORT_COMBINATION, $combinationHashes);
         $this->runCombinationCommands(CommandName::EXPORT_REDUCE, $combinationHashes);
+        return $combinationHashes;
+    }
+
+    /**
+     * Returns the hashes to the specified combinations.
+     * @param array|Combination[] $combinations
+     * @return array|string[]
+     */
+    protected function getHashesToCombinations(array $combinations): array
+    {
+        $result = [];
+        foreach ($combinations as $combination) {
+            $result[] = $this->combinationRegistry->set($combination);
+        }
+        return $result;
     }
 
     /**

@@ -36,7 +36,9 @@ class ExportReduceCommandFactory implements FactoryInterface
 
         return new ExportReduceCommand(
             $rawExportDataService->getCombinationRegistry(),
+            $rawExportDataService->getModRegistry(),
             $reducedExportDataService->getCombinationRegistry(),
+            $reducedExportDataService->getModRegistry(),
             $reducerManager
         );
     }

@@ -8,6 +8,8 @@ use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\DependencyResolver;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
+use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 
 /**
  * The class creating the combinations to be exported for a mod.
@@ -18,11 +20,22 @@ use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 class CombinationCreator
 {
     /**
+     * The registry of the combinations.
+     * @var EntityRegistry
+     */
+    protected $combinationRegistry;
+
+    /**
      * The dependency resolver.
-     *
      * @var DependencyResolver
      */
     protected $dependencyResolver;
+
+    /**
+     * The registry of the mods.
+     * @var ModRegistry
+     */
+    protected $modRegistry;
 
     /**
      * The mod to create combinations for.
@@ -43,12 +56,25 @@ class CombinationCreator
     protected $optionalModNames = [];
 
     /**
-     * Initializes the combination creator.
-     * @param DependencyResolver $dependencyResolver
+     * The orders of the mod names.
+     * @var array|int[]
      */
-    public function __construct(DependencyResolver $dependencyResolver)
-    {
+    protected $modOrders = [];
+
+    /**
+     * Initializes the combination creator.
+     * @param EntityRegistry $combinationRegistry
+     * @param DependencyResolver $dependencyResolver
+     * @param ModRegistry $modRegistry
+     */
+    public function __construct(
+        EntityRegistry $combinationRegistry,
+        DependencyResolver $dependencyResolver,
+        ModRegistry $modRegistry
+    ) {
+        $this->combinationRegistry = $combinationRegistry;
         $this->dependencyResolver = $dependencyResolver;
+        $this->modRegistry = $modRegistry;
     }
 
     /**
@@ -64,8 +90,37 @@ class CombinationCreator
             [$mod->getName()],
             $this->mandatoryModNames
         );
-
+        $this->modOrders = $this->getOrdersOfModNames($this->optionalModNames);
         return $this;
+    }
+
+    /**
+     * Returns the orders of the specified mod names.
+     * @param array|string[] $modNames
+     * @return array|int[]
+     */
+    protected function getOrdersOfModNames(array $modNames): array
+    {
+        $result = [];
+        foreach ($modNames as $modName) {
+            $mod = $this->modRegistry->get($modName);
+            if ($mod instanceof Mod) {
+                $result[$modName] = $mod->getOrder();
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Returns the number of optional mods the set up mod has.
+     * @return int
+     * @throws ExportException
+     */
+    public function getNumberOfOptionalMods(): int
+    {
+        $this->verifyMod();
+
+        return count($this->optionalModNames);
     }
 
     /**
@@ -81,6 +136,17 @@ class CombinationCreator
     }
 
     /**
+     * Verifies that a valid mod has been set up.
+     * @throws ExportException
+     */
+    protected function verifyMod(): void
+    {
+        if ($this->mod === null) {
+            throw new ExportException('Unable to create combination without a mod.');
+        }
+    }
+
+    /**
      * Creates the combinations with the specified number of optional mods.
      * @param int $numberOfOptionalMods
      * @return array|Combination[]
@@ -91,21 +157,68 @@ class CombinationCreator
         $this->verifyMod();
 
         $result = [];
-//        if ($numberOfOptionalMods  >= 1 && $numberOfOptionalMods <= count($this->optionalModNames)) {
-//
-//        }
+        if ($numberOfOptionalMods  >= 1 && $numberOfOptionalMods <= count($this->optionalModNames)) {
+            $combinations = $this->getCombinationsWithNumberOfOptionalMods($numberOfOptionalMods - 1);
+            foreach ($combinations as $combination) {
+                $result = array_merge($result, $this->checkForChildCombinations($combination));
+            }
+        }
         return $result;
     }
 
     /**
-     * Verifies that a valid mod has been set up.
-     * @throws ExportException
+     * Returns the combinations with the specified number of mods loaded.
+     * @param int $numberOfOptionalMods
+     * @return array|Combination[]
      */
-    protected function verifyMod(): void
+    protected function getCombinationsWithNumberOfOptionalMods(int $numberOfOptionalMods): array
     {
-        if ($this->mod === null) {
-            throw new ExportException('Unable to create combination without a mod.');
+        $mod = $this->modRegistry->get($this->mod->getName());
+        $result = [];
+        if ($mod instanceof Mod) {
+            foreach ($mod->getCombinationHashes() as $combinationHash) {
+                $combination = $this->combinationRegistry->get($combinationHash);
+                if ($combination instanceof Combination
+                    && count($combination->getLoadedOptionalModNames()) === $numberOfOptionalMods
+                ) {
+                    $result[$combination->getName()] = $combination;
+                }
+            }
         }
+        return $result;
+    }
+
+    /**
+     * Checks for child combinations having one optional mod more than the specified one.
+     * @param Combination $combination
+     * @return array|Combination[]
+     */
+    protected function checkForChildCombinations(Combination $combination): array
+    {
+        $result = [];
+        $loadedOptionalModNames = $combination->getLoadedOptionalModNames();
+        $requiredOrder = $this->getHighestOrderOfMods($loadedOptionalModNames);
+        foreach ($this->optionalModNames as $optionalModName) {
+            if (($this->modOrders[$optionalModName] ?? 0) > $requiredOrder) {
+                $newCombination = $this->createCombination(array_merge($loadedOptionalModNames, [$optionalModName]));
+                $result[$newCombination->getName()] = $newCombination;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Returns the highest order of the specified mod names.
+     * @param array|string[] $modNames
+     * @return int
+     */
+    protected function getHighestOrderOfMods(array $modNames): int
+    {
+        $result = 0;
+        foreach ($modNames as $modName) {
+            $result = max($result, $this->modOrders[$modName] ?? 0);
+        }
+        return $result;
     }
 
     /**
