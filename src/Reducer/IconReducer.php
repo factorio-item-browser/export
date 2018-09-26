@@ -50,17 +50,16 @@ class IconReducer implements ReducerInterface
     {
         $iconHashes = array_values(array_diff($combination->getIconHashes(), $parentCombination->getIconHashes()));
         $combination->setIconHashes($iconHashes);
-        $this->copyIcons($iconHashes);
     }
 
     /**
-     * Copies the icons with the specified hashes to the reduced repository.
-     * @param array|string[] $iconHashes
+     * Persists the data of the specified combination.
+     * @param Combination $combination
      * @throws ReducerException
      */
-    protected function copyIcons(array $iconHashes): void
+    public function persist(Combination $combination): void
     {
-        foreach ($iconHashes as $iconHash) {
+        foreach ($combination->getIconHashes() as $iconHash) {
             $icon = $this->rawIconRegistry->get($iconHash);
             if ($icon instanceof Icon) {
                 $this->reducedIconRegistry->set($icon);

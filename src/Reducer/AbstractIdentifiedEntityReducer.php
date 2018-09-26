@@ -58,11 +58,11 @@ abstract class AbstractIdentifiedEntityReducer implements ReducerInterface
 
             $parentEntityHash = $parentHashes[$identifier] ?? null;
             if ($parentEntityHash === null) {
-                $reducedHashes[] = $this->reducedEntityRegistry->set($entity);
+                $reducedHashes[] = $this->rawEntityRegistry->set($entity);
             } elseif ($parentEntityHash !== $hash) {
                 $reducedEntity = clone($entity);
                 $this->reduceEntity($reducedEntity, $this->fetchEntityFromHash($parentEntityHash));
-                $reducedHashes[] = $this->reducedEntityRegistry->set($reducedEntity);
+                $reducedHashes[] = $this->rawEntityRegistry->set($reducedEntity);
             }
         }
         $this->setHashesToCombination($combination, $reducedHashes);
@@ -119,4 +119,16 @@ abstract class AbstractIdentifiedEntityReducer implements ReducerInterface
      * @param array|string[] $hashes
      */
     abstract protected function setHashesToCombination(Combination $combination, array $hashes): void;
+
+    /**
+     * Persists the data of the specified combination.
+     * @param Combination $combination
+     * @throws ReducerException
+     */
+    public function persist(Combination $combination): void
+    {
+        foreach ($this->getHashesFromCombination($combination) as $hash) {
+            $this->reducedEntityRegistry->set($this->fetchEntityFromHash($hash));
+        }
+    }
 }

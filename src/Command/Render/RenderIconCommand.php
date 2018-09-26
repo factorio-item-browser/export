@@ -67,7 +67,7 @@ class RenderIconCommand extends AbstractCommand
      */
     protected function execute(Route $route): void
     {
-        $hash = $route->getMatchedParam('hash', '');
+        $hash = $route->getMatchedParam('iconHash', '');
         $icon = $this->iconRegistry->get($hash);
 
         if (!$icon instanceof Icon) {

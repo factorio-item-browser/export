@@ -83,12 +83,12 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
         /* @var EntityWithIdentifierInterface $parentEntity2 */
         $parentEntity2 = $this->createMock(EntityWithIdentifierInterface::class);
 
-        /* @var EntityRegistry|MockObject $reducedEntityRegistry */
-        $reducedEntityRegistry = $this->getMockBuilder(EntityRegistry::class)
-                                      ->setMethods(['set'])
-                                      ->disableOriginalConstructor()
-                                      ->getMock();
-        $reducedEntityRegistry->expects($this->exactly(2))
+        /* @var EntityRegistry|MockObject $rawEntityRegistry */
+        $rawEntityRegistry = $this->getMockBuilder(EntityRegistry::class)
+                                  ->setMethods(['set'])
+                                  ->disableOriginalConstructor()
+                                  ->getMock();
+        $rawEntityRegistry->expects($this->exactly(2))
             ->method('set')
             ->withConsecutive(
                 [$this->equalTo($entity2)],
@@ -103,8 +103,8 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
         $combination = $this->createMock(Combination::class);
         /* @var Combination $parentCombination */
         $parentCombination = $this->createMock(Combination::class);
-        /* @var EntityRegistry $rawEntityRegistry */
-        $rawEntityRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry $reducedEntityRegistry */
+        $reducedEntityRegistry = $this->createMock(EntityRegistry::class);
 
         /* @var AbstractIdentifiedEntityReducer|MockObject $reducer */
         $reducer = $this->getMockBuilder(AbstractIdentifiedEntityReducer::class)
@@ -250,5 +250,59 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
 
         $result = $this->invokeMethod($reducer, 'fetchEntityFromHash', $hash);
         $this->assertSame($resultGet, $result);
+    }
+
+    /**
+     * Tests the persist method.
+     * @throws ReducerException
+     * @covers ::persist
+     */
+    public function testPersist(): void
+    {
+        $hashes = ['abc', 'def'];
+
+        /* @var Combination $combination */
+        $combination = $this->createMock(Combination::class);
+        /* @var EntityWithIdentifierInterface $entity1 */
+        $entity1 = $this->createMock(EntityWithIdentifierInterface::class);
+        /* @var EntityWithIdentifierInterface $entity2 */
+        $entity2 = $this->createMock(EntityWithIdentifierInterface::class);
+
+        /* @var EntityRegistry|MockObject $reducedEntityRegistry */
+        $reducedEntityRegistry = $this->getMockBuilder(EntityRegistry::class)
+                                      ->setMethods(['set'])
+                                      ->disableOriginalConstructor()
+                                      ->getMock();
+        $reducedEntityRegistry->expects($this->exactly(2))
+                              ->method('set')
+                              ->withConsecutive(
+                                  [$entity1],
+                                  [$entity2]
+                              );
+
+        /* @var EntityRegistry $rawEntityRegistry */
+        $rawEntityRegistry = $this->createMock(EntityRegistry::class);
+
+        /* @var AbstractIdentifiedEntityReducer|MockObject $reducer */
+        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityReducer::class)
+                        ->setMethods(['getHashesFromCombination', 'fetchEntityFromHash'])
+                        ->setConstructorArgs([$rawEntityRegistry, $reducedEntityRegistry])
+                        ->getMockForAbstractClass();
+        $reducer->expects($this->once())
+                ->method('getHashesFromCombination')
+                ->with($combination)
+                ->willReturn($hashes);
+        $reducer->expects($this->exactly(2))
+                ->method('fetchEntityFromHash')
+                ->withConsecutive(
+                    ['abc'],
+                    ['def']
+                )
+                ->willReturnOnConsecutiveCalls(
+                    $entity1,
+                    $entity2
+                );
+
+        $reducer->persist($combination);
     }
 }

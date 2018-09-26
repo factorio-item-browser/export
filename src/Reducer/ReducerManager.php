@@ -66,5 +66,8 @@ class ReducerManager
         foreach ($this->reducers as $reducer) {
             $reducer->reduce($combination, $parentCombination);
         }
+        foreach ($this->reducers as $reducer) {
+            $reducer->persist($combination);
+        }
     }
 }

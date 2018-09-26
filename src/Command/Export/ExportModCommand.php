@@ -90,7 +90,8 @@ class ExportModCommand extends AbstractCommand
         $mod->setCombinationHashes($combinationHashes);
         $this->modRegistry->set($mod);
         $this->modRegistry->saveMods();
-//        $this->runCommand(CommandName::RENDER_MOD_ICONS, [$mod->getName()], $this->console);
+
+        $this->runCommand(CommandName::RENDER_MOD_ICONS, [$mod->getName()], $this->console);
     }
 
     /**
@@ -117,7 +118,7 @@ class ExportModCommand extends AbstractCommand
     {
         $combinationHashes = $this->getHashesToCombinations($combinations);
         $this->runCombinationCommands(CommandName::EXPORT_COMBINATION, $combinationHashes);
-        $this->runCombinationCommands(CommandName::EXPORT_REDUCE, $combinationHashes);
+        $this->runCombinationCommands(CommandName::REDUCE_COMBINATION, $combinationHashes);
         return $combinationHashes;
     }
 

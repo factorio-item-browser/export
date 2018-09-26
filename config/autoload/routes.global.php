@@ -42,15 +42,6 @@ return [
                 '<modName>' => 'The name of the mod to be exported.',
             ],
         ],
-        [
-            'name' => CommandName::EXPORT_REDUCE,
-            'route' => '<combinationHash>',
-            'handler' => Command\Export\ExportReduceCommand::class,
-            'short_description' => 'Reduces an exported combination against its parents.',
-            'options_description' => [
-                '<combinationHash>' => 'The hash of the combination to reduce.',
-            ],
-        ],
 
         [
             'name' => CommandName::LIST,
@@ -59,12 +50,22 @@ return [
         ],
 
         [
+            'name' => CommandName::REDUCE_COMBINATION,
+            'route' => '<combinationHash>',
+            'handler' => Command\Reduce\ReduceCombinationCommand::class,
+            'short_description' => 'Reduces an exported combination against its parents.',
+            'options_description' => [
+                '<combinationHash>' => 'The hash of the combination to reduce.',
+            ],
+        ],
+
+        [
             'name' => CommandName::RENDER_ICON,
-            'route' => '<hash>',
+            'route' => '<iconHash>',
             'handler' => Command\Render\RenderIconCommand::class,
             'short_description' => 'Renders an icon.',
             'options_description' => [
-                '<hash>' => 'The hash of the icon to render.',
+                '<iconHash>' => 'The hash of the icon to render.',
             ],
         ],
         [

@@ -64,23 +64,21 @@ class IconReducerTest extends TestCase
                     ->with($expectedIconHashes);
         $this->injectProperty($combination, 'iconHashes', ['abc', 'ghi']);
 
-        /* @var IconReducer|MockObject $reducer */
-        $reducer = $this->getMockBuilder(IconReducer::class)
-                        ->setMethods(['copyIcons'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
-        $reducer->expects($this->once())
-                ->method('copyIcons')
-                ->with($expectedIconHashes);
+        /* @var EntityRegistry $rawIconRegistry */
+        $rawIconRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry $reducedIconRegistry */
+        $reducedIconRegistry = $this->createMock(EntityRegistry::class);
+
+        $reducer = new IconReducer($rawIconRegistry, $reducedIconRegistry);
 
         $reducer->reduce($combination, $parentCombination);
     }
 
     /**
-     * Provides the data for the copyIcons test.
+     * Provides the data for the persist test.
      * @return array
      */
-    public function provideCopyIcons(): array
+    public function providePersist(): array
     {
         return [
             [false],
@@ -89,17 +87,19 @@ class IconReducerTest extends TestCase
     }
 
     /**
-     * Tests the copyIcons method.
+     * Tests the persist method.
      * @param bool $withException
-     * @throws ReflectionException
-     * @covers ::copyIcons
-     * @dataProvider provideCopyIcons
+     * @throws ReducerException
+     * @covers ::persist
+     * @dataProvider providePersist
      */
-    public function testCopyIcons(bool $withException): void
+    public function testPersist(bool $withException): void
     {
         $iconHashes = ['abc', 'def'];
         $icon1 = (new Icon())->setSize(42);
         $icon2 = (new Icon())->setSize(21);
+        $combination = new Combination();
+        $combination->setIconHashes($iconHashes);
 
         /* @var EntityRegistry|MockObject $rawIconRegistry */
         $rawIconRegistry = $this->getMockBuilder(EntityRegistry::class)
@@ -141,6 +141,6 @@ class IconReducerTest extends TestCase
         }
 
         $reducer = new IconReducer($rawIconRegistry, $reducedIconRegistry);
-        $this->invokeMethod($reducer, 'copyIcons', $iconHashes);
+        $reducer->persist($combination);
     }
 }

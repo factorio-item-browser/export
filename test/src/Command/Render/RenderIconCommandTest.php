@@ -71,7 +71,7 @@ class RenderIconCommandTest extends TestCase
      */
     public function testExecute(?Icon $icon, bool $expectRender, bool $expectException): void
     {
-        $hash = 'abc';
+        $iconHash = 'abc';
         $renderedIcon = 'def';
 
         /* @var Route|MockObject $route */
@@ -81,8 +81,8 @@ class RenderIconCommandTest extends TestCase
                       ->getMock();
         $route->expects($this->once())
               ->method('getMatchedParam')
-              ->with('hash', '')
-              ->willReturn($hash);
+              ->with('iconHash', '')
+              ->willReturn($iconHash);
 
         /* @var EntityRegistry|MockObject $iconRegistry */
         $iconRegistry = $this->getMockBuilder(EntityRegistry::class)
@@ -91,7 +91,7 @@ class RenderIconCommandTest extends TestCase
                              ->getMock();
         $iconRegistry->expects($this->once())
                      ->method('get')
-                     ->with($hash)
+                     ->with($iconHash)
                      ->willReturn($icon);
 
         /* @var AdapterInterface|MockObject $console */
@@ -119,7 +119,7 @@ class RenderIconCommandTest extends TestCase
                                      ->getMock();
         $renderedIconRegistry->expects($expectRender ? $this->once() : $this->never())
                              ->method('set')
-                             ->with($hash, $renderedIcon);
+                             ->with($iconHash, $renderedIcon);
 
         if ($expectException) {
             $this->expectException(CommandException::class);

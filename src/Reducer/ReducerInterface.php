@@ -22,4 +22,11 @@ interface ReducerInterface
      * @throws ReducerException
      */
     public function reduce(Combination $combination, Combination $parentCombination): void;
+
+    /**
+     * Persists the data of the specified combination.
+     * @param Combination $combination
+     * @throws ReducerException
+     */
+    public function persist(Combination $combination): void;
 }
