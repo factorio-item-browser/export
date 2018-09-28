@@ -26,7 +26,6 @@ return [
 
         [
             'name' => CommandName::EXPORT_COMBINATION,
-            'route' => '<combinationHash>',
             'handler' => Command\Export\ExportCombinationCommand::class,
             'short_description' => 'Exports a combination of mods running the Factorio game.',
             'options_description' => [
@@ -35,11 +34,19 @@ return [
         ],
         [
             'name' => CommandName::EXPORT_MOD,
-            'route' => '<modName>',
             'handler' => Command\Export\ExportModCommand::class,
             'short_description' => 'Exports a mod with all its combinations.',
             'options_description' => [
                 '<modName>' => 'The name of the mod to be exported.',
+            ],
+        ],
+        [
+            'name' => CommandName::EXPORT_MOD_STEP,
+            'handler' => Command\Export\ExportModStepCommand::class,
+            'short_description' => 'Exports a step of the mod.',
+            'options_description' => [
+                '<modName>' => 'The name of the mod to be exported.',
+                '<step>' => 'The step of the export.'
             ],
         ],
 
@@ -51,7 +58,6 @@ return [
 
         [
             'name' => CommandName::REDUCE_COMBINATION,
-            'route' => '<combinationHash>',
             'handler' => Command\Reduce\ReduceCombinationCommand::class,
             'short_description' => 'Reduces an exported combination against its parents.',
             'options_description' => [
@@ -61,7 +67,6 @@ return [
 
         [
             'name' => CommandName::RENDER_ICON,
-            'route' => '<iconHash>',
             'handler' => Command\Render\RenderIconCommand::class,
             'short_description' => 'Renders an icon.',
             'options_description' => [
@@ -70,7 +75,6 @@ return [
         ],
         [
             'name' => CommandName::RENDER_MOD_ICONS,
-            'route' => '<modName>',
             'handler' => Command\Render\RenderModIconsCommand::class,
             'short_description' => 'Renders all icons of a mod.',
             'options_description' => [

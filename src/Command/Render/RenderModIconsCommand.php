@@ -6,15 +6,14 @@ namespace FactorioItemBrowser\Export\Command\Render;
 
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Process\CommandProcess;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
-use Symfony\Component\Process\Process;
 use ZF\Console\Route;
 
 /**
@@ -25,6 +24,8 @@ use ZF\Console\Route;
  */
 class RenderModIconsCommand extends AbstractCommand
 {
+    use SubCommandTrait;
+
     /**
      * The registry of the combinations.
      * @var EntityRegistry
@@ -117,18 +118,11 @@ class RenderModIconsCommand extends AbstractCommand
     protected function renderIconsWithHashes(array $iconHashes): void
     {
         foreach ($iconHashes as $iconHash) {
-            $this->processManager->addProcess($this->createProcessForIcon($iconHash));
+            $this->processManager->addProcess($this->createCommandProcess(
+                CommandName::RENDER_ICON,
+                ['iconHash' => $iconHash]
+            ));
         }
         $this->processManager->waitForAllProcesses();
-    }
-
-    /**
-     * Returns the process to render the icon with the specified hash.
-     * @param string $iconHash
-     * @return Process
-     */
-    protected function createProcessForIcon(string $iconHash): Process
-    {
-        return new CommandProcess(CommandName::RENDER_ICON, [$iconHash], $this->console);
     }
 }

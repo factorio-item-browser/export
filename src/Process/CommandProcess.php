@@ -40,14 +40,17 @@ class CommandProcess extends Process
      */
     protected function buildCommandLine(string $commandName, array $parameters): string
     {
-        $commandParts = ['php', $_SERVER['SCRIPT_FILENAME'], $commandName];
+        $commandParts = [];
         foreach ($parameters as $name => $value) {
             if (is_int($name)) {
                 $commandParts[] = '"' . $value . '"';
+            } elseif (strpos($commandName, '<' . $name . '>') !== false) {
+                $commandName = str_replace('<' . $name . '>', '"' . $value . '"', $commandName);
             } else {
                 $commandParts[] = '--' . $name . '="' . $value . '"';
             }
         }
+        array_unshift($commandParts, 'php', $_SERVER['SCRIPT_FILENAME'], $commandName);
 
         return implode(' ', $commandParts);
     }
@@ -59,16 +62,28 @@ class CommandProcess extends Process
      */
     public function start(callable $callback = null, array $env = []): void
     {
-        if ($this->console instanceof AdapterInterface) {
-            $this->console->writeLine('Starting process: ' . $this->getCommandLine(), ColorInterface::GRAY);
+        parent::start($this->wrapCallback($callback), $env);
+    }
 
-            $callback = function (string $type, string $output): void {
-                if ($this->console instanceof AdapterInterface) {
-                    $this->console->write($output, $type === self::ERR ? ColorInterface::RED : null);
+    /**
+     * Creates the callback to print the process output into the console.
+     * @param callable|null $callback
+     * @return callable|null
+     */
+    protected function wrapCallback(?callable $callback): ?callable
+    {
+        $result = $callback;
+        $console = $this->console;
+        if ($console instanceof AdapterInterface) {
+            $console->writeLine('Starting process: ' . $this->getCommandLine(), ColorInterface::GRAY);
+
+            $result = function (string $type, string $output) use ($callback, $console): void {
+                $console->write($output, $type === self::ERR ? ColorInterface::RED : null);
+                if (is_callable($callback)) {
+                    $callback($type, $output);
                 }
             };
         }
-
-        parent::start($callback, $env);
+        return $result;
     }
 }
