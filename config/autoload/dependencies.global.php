@@ -29,6 +29,7 @@ return [
             Command\Export\ExportModStepCommand::class => Command\Export\ExportModStepCommandFactory::class,
             Command\Lists\ListCommand::class => Command\Lists\ListCommandFactory::class,
             Command\Reduce\ReduceCombinationCommand::class => Command\Reduce\ReduceCombinationCommandFactory::class,
+            Command\Reduce\ReduceModCommand::class => Command\Reduce\ReduceModCommandFactory::class,
             Command\Render\RenderIconCommand::class => Command\Render\RenderIconCommandFactory::class,
             Command\Render\RenderModIconsCommand::class => Command\Render\RenderModIconsCommandFactory::class,
             Command\Update\UpdateDependenciesCommand::class => Command\Update\UpdateDependenciesCommandFactory::class,

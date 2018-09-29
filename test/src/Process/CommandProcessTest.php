@@ -1,6 +1,6 @@
 <?php
 /**
- *
+ * The PHPUnit test of the CommandProcess class.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3

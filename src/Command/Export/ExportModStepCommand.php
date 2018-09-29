@@ -80,7 +80,11 @@ class ExportModStepCommand extends AbstractCommand
         $this->combinationCreator->setupForMod($mod);
 
         $combinations = $this->fetchCombinations((int) $route->getMatchedParam('step', 0));
-        $this->exportCombinations($combinations);
+        $combinationHashes = $this->exportCombinations($combinations);
+
+        $mod->setCombinationHashes(array_merge($mod->getCombinationHashes(), $combinationHashes));
+        $this->modRegistry->set($mod);
+        $this->modRegistry->saveMods();
     }
 
     /**

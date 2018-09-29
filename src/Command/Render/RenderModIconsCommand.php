@@ -120,7 +120,8 @@ class RenderModIconsCommand extends AbstractCommand
         foreach ($iconHashes as $iconHash) {
             $this->processManager->addProcess($this->createCommandProcess(
                 CommandName::RENDER_ICON,
-                ['iconHash' => $iconHash]
+                ['iconHash' => $iconHash],
+                $this->console
             ));
         }
         $this->processManager->waitForAllProcesses();

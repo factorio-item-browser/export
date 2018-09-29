@@ -64,6 +64,14 @@ return [
                 '<combinationHash>' => 'The hash of the combination to reduce.',
             ],
         ],
+        [
+            'name' => CommandName::REDUCE_MOD,
+            'handler' => Command\Reduce\ReduceModCommand::class,
+            'short_description' => 'Adds the mod to the reduced data after all its combinations have been exported.',
+            'options_description' => [
+                '<modName>' => 'The name of the mod to reduce.',
+            ],
+        ],
 
         [
             'name' => CommandName::RENDER_ICON,

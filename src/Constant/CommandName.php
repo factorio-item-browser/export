@@ -19,6 +19,7 @@ interface CommandName
     public const LIST = 'list';
 
     public const REDUCE_COMBINATION = 'reduce combination <combinationHash>';
+    public const REDUCE_MOD = 'reduce mod <modName>';
 
     public const RENDER_ICON = 'render icon <iconHash>';
     public const RENDER_MOD_ICONS = 'render mod-icons <modName>';
