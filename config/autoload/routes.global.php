@@ -41,6 +41,14 @@ return [
             ],
         ],
         [
+            'name' => CommandName::EXPORT_MOD_META,
+            'handler' => Command\Export\ExportModMetaCommand::class,
+            'short_description' => 'Exports the meta data of a mod.',
+            'options_description' => [
+                '<modName>' => 'The name of the mod to be exported.',
+            ],
+        ],
+        [
             'name' => CommandName::EXPORT_MOD_STEP,
             'handler' => Command\Export\ExportModStepCommand::class,
             'short_description' => 'Exports a step of the mod.',

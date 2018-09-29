@@ -1,41 +1,37 @@
 <?php
 
-declare(strict_types=1);
-
-namespace FactorioItemBrowser\Export\Factorio;
+namespace FactorioItemBrowser\Export\Command\Export;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
+use FactorioItemBrowser\Export\I18n\Translator;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
 /**
- * The factory of the instances.
+ * The factory of the export mod meta command.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class InstanceFactory implements FactoryInterface
+class ExportModMetaCommandFactory implements FactoryInterface
 {
     /**
-     * Creates an instance.
+     * Creates the command.
      * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  null|array $options
-     * @return Instance
+     * @return ExportModMetaCommand
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        $config = $container->get('config');
-
-        /* @var DumpExtractor $dumpExtractor */
-        $dumpExtractor = $container->get(DumpExtractor::class);
         /* @var RawExportDataService $rawExportDataService */
         $rawExportDataService = $container->get(RawExportDataService::class);
+        /* @var Translator $translator */
+        $translator = $container->get(Translator::class);
 
-        return new Instance(
-            $dumpExtractor,
+        return new ExportModMetaCommand(
             $rawExportDataService->getModRegistry(),
-            $config['factorio']['directory']
+            $translator
         );
     }
 }

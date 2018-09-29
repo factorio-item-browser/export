@@ -29,6 +29,6 @@ class ModFileManagerFactory implements FactoryInterface
         /* @var ModFileCache $cache */
         $cache = $container->get(ModFileCache::class);
 
-        return new ModFileManager($cache, $config['factorio']['modsDirectory']);
+        return new ModFileManager($cache, $config['factorio']['directory'] . '/mods');
     }
 }

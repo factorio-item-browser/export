@@ -118,7 +118,6 @@ class ExportModStepCommand extends AbstractCommand
         return $result;
     }
 
-
     /**
      * Exports the specified combinations in sub processes and returns their hashes.
      * @param array|Combination[] $combinations

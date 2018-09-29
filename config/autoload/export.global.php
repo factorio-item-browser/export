@@ -28,11 +28,7 @@ return [
         ]
     ],
     'factorio' => [
-        'factorioDirectory' => __DIR__ . '/../../factorio',
-        'modsDirectory' => __DIR__ . '/../../factorio/mods',
-        'instancesDirectory' => __DIR__ . '/../../factorio/instances',
-        'numberOfAttempts' => 2,
-        'numberOfInstances' => 4
+        'directory' => __DIR__ . '/../../factorio',
     ],
     'name' => 'Factorio Item Browser Export',
     'process-manager' => [

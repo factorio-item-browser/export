@@ -173,16 +173,13 @@ class CombinationCreator
      */
     protected function getCombinationsWithNumberOfOptionalMods(int $numberOfOptionalMods): array
     {
-        $mod = $this->modRegistry->get($this->mod->getName());
         $result = [];
-        if ($mod instanceof Mod) {
-            foreach ($mod->getCombinationHashes() as $combinationHash) {
-                $combination = $this->combinationRegistry->get($combinationHash);
-                if ($combination instanceof Combination
-                    && count($combination->getLoadedOptionalModNames()) === $numberOfOptionalMods
-                ) {
-                    $result[$combination->getName()] = $combination;
-                }
+        foreach ($this->mod->getCombinationHashes() as $combinationHash) {
+            $combination = $this->combinationRegistry->get($combinationHash);
+            if ($combination instanceof Combination
+                && count($combination->getLoadedOptionalModNames()) === $numberOfOptionalMods
+            ) {
+                $result[$combination->getName()] = $combination;
             }
         }
         return $result;

@@ -63,6 +63,7 @@ class ExportModCommand extends AbstractCommand
             ], $this->console);
         }
 
+        $this->runCommand(CommandName::EXPORT_MOD_META, ['modName' => $mod->getName()], $this->console);
         $this->runCommand(CommandName::REDUCE_MOD, ['modName' => $mod->getName()], $this->console);
         $this->runCommand(CommandName::RENDER_MOD_ICONS, ['modName' => $mod->getName()], $this->console);
     }
