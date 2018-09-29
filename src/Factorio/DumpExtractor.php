@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Factorio;
 
 use BluePsyduck\Common\Data\DataContainer;
-use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\DumpException;
 
 /**
  * The class for extracting all dumps from the game output.
@@ -29,65 +29,92 @@ class DumpExtractor
      * Extracts all dumps from the specified output.
      * @param string $output
      * @return DataContainer
-     * @throws ExportException
+     * @throws DumpException
      */
     public function extract(string $output): DataContainer
     {
         return new DataContainer([
-            'items' => $this->extractDump($output, 'ITEMS'),
-            'fluids' => $this->extractDump($output, 'FLUIDS'),
+            'items' => $this->extractDumpData($output, 'ITEMS'),
+            'fluids' => $this->extractDumpData($output, 'FLUIDS'),
             'recipes' => [
-                'normal' => $this->extractDump($output, 'RECIPES_NORMAL'),
-                'expensive' => $this->extractDump($output, 'RECIPES_EXPENSIVE')
+                'normal' => $this->extractDumpData($output, 'RECIPES_NORMAL'),
+                'expensive' => $this->extractDumpData($output, 'RECIPES_EXPENSIVE')
             ],
-            'machines' => $this->extractDump($output, 'MACHINES'),
-            'icons' => $this->extractDump($output, 'ICONS'),
-            'fluidBoxes' => $this->extractDump($output, 'FLUID_BOXES')
+            'machines' => $this->extractDumpData($output, 'MACHINES'),
+            'icons' => $this->extractDumpData($output, 'ICONS'),
+            'fluidBoxes' => $this->extractDumpData($output, 'FLUID_BOXES')
         ]);
     }
 
     /**
      * Extracts the actual dump from the specified output.
      * @param string $output
-     * @param string $dumpName
+     * @param string $name
      * @return array
-     * @throws ExportException
+     * @throws DumpException
      */
-    protected function extractDump(string $output, string $dumpName): array
+    protected function extractDumpData(string $output, string $name): array
     {
-        $placeHolderBegin = str_replace('%name%', $dumpName, self::PLACEHOLDER_BEGIN);
-        $placeHolderEnd = str_replace('%name%', $dumpName, self::PLACEHOLDER_END);
+        $dump = $this->extractRawDump($output, $name);
+        return $this->parseDump($name, $dump);
+    }
 
-        $isValid = true;
-        $posBegin = strpos($output, $placeHolderBegin);
-        $posEnd = false;
-        if ($posBegin === false) {
-            $isValid = false;
-        } else {
-            $posBegin += strlen($placeHolderBegin);
-            $posEnd = strpos($output, $placeHolderEnd, $posBegin);
-            if ($posEnd === false) {
-                $isValid = false;
-            }
+    /**
+     * Extracts the raw dump string from the output.
+     * @param string $output
+     * @param string $name
+     * @return string
+     * @throws DumpException
+     */
+    protected function extractRawDump(string $output, string $name): string
+    {
+        $startPosition = $this->getStartPosition($output, $name);
+        $endPosition = $this->getEndPosition($output, $name);
+        if ($startPosition === null || $endPosition === null || $endPosition < $startPosition) {
+            throw new DumpException($name, 'Cannot locate placeholders.', $output);
         }
+        return substr($output, $startPosition, $endPosition - $startPosition);
+    }
 
-        if (!$isValid) {
-            $lines = explode(PHP_EOL, $output);
-            $lastLines = implode(PHP_EOL, array_slice($lines, -5));
+    /**
+     * Returns the start position of the dump with the specified name.
+     * @param string $output
+     * @param string $name
+     * @return int|null
+     */
+    protected function getStartPosition(string $output, string $name): ?int
+    {
+        $placeholder = str_replace('%name%', $name, self::PLACEHOLDER_BEGIN);
+        $position = strpos($output, $placeholder);
+        return ($position === false) ? null : ($position + strlen($placeholder));
+    }
 
-            throw new ExportException(
-                'Unable to locate dump ' . $dumpName . ' in the output. Last lines were: ' . PHP_EOL . $lastLines
-            );
-        }
+    /**
+     * Returns the end position of the dump with the specified name.
+     * @param string $output
+     * @param string $name
+     * @return int|null
+     */
+    protected function getEndPosition(string $output, string $name): ?int
+    {
+        $placeholder = str_replace('%name%', $name, self::PLACEHOLDER_END);
+        $position = strpos($output, $placeholder);
+        return ($position === false) ? null : $position;
+    }
 
-        $posBegin = (int) $posBegin;
-        $posEnd = (int) $posEnd;
-        $dump = substr($output, $posBegin, $posEnd - $posBegin);
-        $result = json_decode($dump, true);
+    /**
+     * Parses the dump to an array of data.
+     * @param string $name
+     * @param string $dump
+     * @return array
+     * @throws DumpException
+     */
+    protected function parseDump(string $name, string $dump): array
+    {
+        $result = @json_decode($dump, true);
         if (!is_array($result)) {
-            throw new ExportException('The dump ' . $dumpName . ' seems to be not valid JSON.');
+            throw new DumpException($name, 'Invalid JSON string.');
         }
-
         return $result;
     }
 }
