@@ -28,7 +28,7 @@ class ModFileManagerFactoryTest extends TestCase
     {
         $config = [
             'factorio' => [
-                'modsDirectory' => 'abc',
+                'directory' => 'abc',
             ],
         ];
 
