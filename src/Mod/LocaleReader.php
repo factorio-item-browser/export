@@ -91,17 +91,6 @@ class LocaleReader
     }
 
     /**
-     * Reads a locale file from the specified mod.
-     * @param Mod $mod
-     * @param string $fileName
-     * @return array
-     */
-    protected function readLocaleFile(Mod $mod, string $fileName): array
-    {
-        return $this->parseLocaleFile((string) $this->modFileManager->readFile($mod, $fileName));
-    }
-
-    /**
      * Returns all locale file names of the specified mod.
      * @param Mod $mod
      * @return array|string[][]
@@ -120,6 +109,17 @@ class LocaleReader
             }
         }
         return $result;
+    }
+
+    /**
+     * Reads a locale file from the specified mod.
+     * @param Mod $mod
+     * @param string $fileName
+     * @return array
+     */
+    protected function readLocaleFile(Mod $mod, string $fileName): array
+    {
+        return $this->parseLocaleFile((string) $this->modFileManager->readFile($mod, $fileName));
     }
 
     /**

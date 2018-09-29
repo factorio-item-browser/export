@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Mod;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Mod\DependencyResolver;
+use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Dependency;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -105,6 +106,123 @@ class DependencyResolverTest extends TestCase
                  });
 
         $result = $resolver->resolveOptionalDependencies($modNames, $mandatoryModNames);
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * Tests the processMod method.
+     * @throws ReflectionException
+     * @covers ::processMod
+     */
+    public function testProcessMod(): void
+    {
+        $allModNames = ['foo', 'bar'];
+        $isMandatory = true;
+        $modName = 'abc';
+        $mod1 = (new Mod())->setName('abc');
+        $mod2 = (new Mod())->setName('def');
+        $expectedResolvedModNames = ['abc' => true, 'def' => true];
+
+        /* @var ModRegistry|MockObject $modRegistry */
+        $modRegistry = $this->getMockBuilder(ModRegistry::class)
+                            ->setMethods(['get'])
+                            ->disableOriginalConstructor()
+                            ->getMock();
+        $modRegistry->expects($this->exactly(3))
+                    ->method('get')
+                    ->withConsecutive(
+                        ['abc'],
+                        ['def'],
+                        ['ghi']
+                    )
+                    ->willReturnOnConsecutiveCalls(
+                        $mod1,
+                        $mod2,
+                        null
+                    );
+
+        /* @var DependencyResolver|MockObject $resolver */
+        $resolver = $this->getMockBuilder(DependencyResolver::class)
+                         ->setMethods(['getRequiredModNames', 'sortModNames'])
+                         ->setConstructorArgs([$modRegistry])
+                         ->getMock();
+        $resolver->expects($this->exactly(2))
+                 ->method('getRequiredModNames')
+                 ->withConsecutive(
+                     [$mod1, $allModNames, $isMandatory],
+                     [$mod2, $allModNames, $isMandatory]
+                 )
+                 ->willReturnOnConsecutiveCalls(
+                     ['ghi', 'def'],
+                     []
+                 );
+        $resolver->expects($this->exactly(2))
+                 ->method('sortModNames')
+                 ->withConsecutive(
+                     [['ghi', 'def']],
+                     [[]]
+                 )
+                 ->willReturnOnConsecutiveCalls(
+                     ['def', 'ghi'],
+                     []
+                 );
+
+        $this->invokeMethod($resolver, 'processMod', $allModNames, $modName, $isMandatory);
+        $this->assertEquals($expectedResolvedModNames, $this->extractProperty($resolver, 'resolvedModNames'));
+    }
+
+
+    /**
+     * Tests the getRequiredModNames method.
+     * @throws ReflectionException
+     * @covers ::getRequiredModNames
+     */
+    public function testGetRequiredModNames(): void
+    {
+        $allModNames = ['foo', 'bar'];
+        $isMandatory = true;
+
+        $dependency1 = (new Dependency())->setRequiredModName('abc');
+        $dependency2 = (new Dependency())->setRequiredModName('def');
+        $dependency3 = (new Dependency())->setRequiredModName('ghi');
+        $dependency4 = (new Dependency())->setRequiredModName('jkl');
+
+        $mod = new Mod();
+        $mod->setDependencies([$dependency1, $dependency2, $dependency3, $dependency4]);
+
+        $resolvedModNames = ['abc' => true];
+        $expectedResult = ['ghi', 'jkl'];
+
+        /* @var DependencyResolver|MockObject $resolver */
+        $resolver = $this->getMockBuilder(DependencyResolver::class)
+                         ->setMethods(['isDependencyMandatory', 'isDependencyOptional'])
+                         ->disableOriginalConstructor()
+                         ->getMock();
+        $resolver->expects($this->exactly(3))
+                 ->method('isDependencyMandatory')
+                 ->withConsecutive(
+                     [$isMandatory, $dependency2, $allModNames],
+                     [$isMandatory, $dependency3, $allModNames],
+                     [$isMandatory, $dependency4, $allModNames]
+                 )
+                 ->willReturnOnConsecutiveCalls(
+                     false,
+                     true,
+                     false
+                 );
+        $resolver->expects($this->exactly(2))
+                 ->method('isDependencyOptional')
+                 ->withConsecutive(
+                     [$isMandatory, $dependency2],
+                     [$isMandatory, $dependency4]
+                 )
+                 ->willReturnOnConsecutiveCalls(
+                     false,
+                     true
+                 );
+        $this->injectProperty($resolver, 'resolvedModNames', $resolvedModNames);
+
+        $result = $this->invokeMethod($resolver, 'getRequiredModNames', $mod, $allModNames, $isMandatory);
         $this->assertEquals($expectedResult, $result);
     }
 

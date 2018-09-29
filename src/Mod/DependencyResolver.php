@@ -71,28 +71,39 @@ class DependencyResolver
      * @param array $allModNames
      * @param string $modName
      * @param bool $isMandatory
-     * @return $this
      */
-    protected function processMod(array $allModNames, string $modName, bool $isMandatory)
+    protected function processMod(array $allModNames, string $modName, bool $isMandatory): void
     {
         $mod = $this->modRegistry->get($modName);
         if ($mod instanceof Mod) {
-            $requiredModNames = [];
-            foreach ($mod->getDependencies() as $dependency) {
-                if (!isset($this->resolvedModNames[$dependency->getRequiredModName()])
-                    && ($this->isDependencyMandatory($isMandatory, $dependency, $allModNames)
-                        || $this->isDependencyOptional($isMandatory, $dependency))
-                ) {
-                    $requiredModNames[] = $dependency->getRequiredModName();
-                }
-            }
+            $requiredModNames = $this->getRequiredModNames($mod, $allModNames, $isMandatory);
 
             foreach ($this->sortModNames($requiredModNames) as $requiredModName) {
                 $this->processMod($allModNames, $requiredModName, $isMandatory);
             }
             $this->resolvedModNames[$modName] = true;
         }
-        return $this;
+    }
+
+    /**
+     * Returns the names of required mods for the specified one.
+     * @param Mod $mod
+     * @param array|string[] $allModNames
+     * @param bool $isMandatory
+     * @return array|string[]
+     */
+    protected function getRequiredModNames(Mod $mod, array $allModNames, bool $isMandatory): array
+    {
+        $result = [];
+        foreach ($mod->getDependencies() as $dependency) {
+            if (!isset($this->resolvedModNames[$dependency->getRequiredModName()])
+                && ($this->isDependencyMandatory($isMandatory, $dependency, $allModNames)
+                    || $this->isDependencyOptional($isMandatory, $dependency))
+            ) {
+                $result[] = $dependency->getRequiredModName();
+            }
+        }
+        return $result;
     }
 
     /**

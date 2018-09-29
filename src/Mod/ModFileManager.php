@@ -132,7 +132,9 @@ class ModFileManager
 
         for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
             $stats = $zipArchive->statIndex($i);
-            $result[] = ltrim(str_replace($mod->getDirectoryName(), '', $stats['name']), '/');
+            if ($stats['size'] > 0) {
+                $result[] = ltrim(str_replace($mod->getDirectoryName(), '', $stats['name']), '/');
+            }
         }
 
         return $result;

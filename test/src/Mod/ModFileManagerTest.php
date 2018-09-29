@@ -230,6 +230,53 @@ class ModFileManagerTest extends TestCase
     }
 
     /**
+     * Provides the data for the getAllFileNamesOfMod test.
+     * @return array
+     */
+    public function provideGetAllFileNamesOfMod(): array
+    {
+        $mod1 = new Mod();
+        $mod1->setFileName('foo.zip')
+             ->setDirectoryName('foo');
+
+        $mod2 = new Mod();
+        $mod2->setFileName('invalid.zip');
+
+        return [
+            [$mod1, false, ['abc', 'def', 'bar/abc', 'bar/ghi']],
+            [$mod2, true, []],
+        ];
+    }
+
+    /**
+     * Tests the getAllFileNamesOfMod method.
+     * @param Mod $mod
+     * @param bool $expectException
+     * @param array $expectedResult
+     * @throws ExportException
+     * @covers ::getAllFileNamesOfMod
+     * @dataProvider provideGetAllFileNamesOfMod
+     */
+    public function testGetAllFileNamesOfMod(Mod $mod, bool $expectException, array $expectedResult): void
+    {
+        $directory = __DIR__ . '/../../asset/mod';
+
+        /* @var ModFileCache $cache */
+        $cache = $this->createMock(ModFileCache::class);
+
+        if ($expectException) {
+            $this->expectException(ExportException::class);
+        }
+
+        $manager = new ModFileManager($cache, $directory);
+        $result = $manager->getAllFileNamesOfMod($mod);
+
+        sort($expectedResult);
+        sort($result);
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
      * Provides the data for the getModFileNames test.
      * @return array
      */
