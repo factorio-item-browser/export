@@ -151,21 +151,38 @@ class ParentCombinationFinder
 
         uasort(
             $combinations,
-            static function (Combination $left, Combination $right) use ($modOrders, $combinationOrders): int {
-                $result = $modOrders[$left->getMainModName()] <=> $modOrders[$right->getMainModName()];
-                if ($result === 0) {
-                    $leftOrders = $combinationOrders[$left->getName()];
-                    $rightOrders = $combinationOrders[$right->getName()];
-                    $result = count($leftOrders) <=> count($rightOrders);
-                    while ($result === 0 && count($leftOrders) > 0) {
-                        $result = array_shift($leftOrders) <=> array_shift($rightOrders);
-                    }
-                }
-                return $result;
+            function (Combination $left, Combination $right) use ($modOrders, $combinationOrders): int {
+                return $this->compareCombinations($left, $right, $modOrders, $combinationOrders);
             }
         );
 
         return $combinations;
+    }
+
+    /**
+     * Compares the two specified combinations.
+     * @param Combination $left
+     * @param Combination $right
+     * @param array $modOrders
+     * @param array $combinationOrders
+     * @return int
+     */
+    protected function compareCombinations(
+        Combination $left,
+        Combination $right,
+        array $modOrders,
+        array $combinationOrders
+    ): int {
+        $result = $modOrders[$left->getMainModName()] <=> $modOrders[$right->getMainModName()];
+        if ($result === 0) {
+            $leftOrders = $combinationOrders[$left->getName()];
+            $rightOrders = $combinationOrders[$right->getName()];
+            $result = count($leftOrders) <=> count($rightOrders);
+            while ($result === 0 && count($leftOrders) > 0) {
+                $result = array_shift($leftOrders) <=> array_shift($rightOrders);
+            }
+        }
+        return $result;
     }
 
     /**

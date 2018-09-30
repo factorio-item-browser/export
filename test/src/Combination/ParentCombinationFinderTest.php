@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Combination;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
+use FactorioItemBrowser\Export\Exception\MergerException;
 use FactorioItemBrowser\Export\Merger\MergerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -71,6 +72,61 @@ class ParentCombinationFinderTest extends TestCase
 
         $result = $finder->find($combination);
         $this->assertSame($sortedCombinations, $result);
+    }
+
+    /**
+     * Tests the getMergedParentCombination method.
+     * @throws MergerException
+     * @covers ::getMergedParentCombination
+     */
+    public function testGetMergedParentCombination(): void
+    {
+        $combination = (new Combination())->setName('abc');
+        $parentCombination1 = (new Combination())->setName('def');
+        $parentCombination2 = (new Combination())->setName('ghi');
+        $resultCombination = null;
+
+        /* @var MergerManager|MockObject $mergerManager */
+        $mergerManager = $this->getMockBuilder(MergerManager::class)
+                              ->setMethods(['merge'])
+                              ->disableOriginalConstructor()
+                              ->getMock();
+        $mergerManager->expects($this->exactly(2))
+                      ->method('merge')
+                      ->withConsecutive(
+                          [
+                              $this->callback(function ($combination) use (&$resultCombination): bool {
+                                $resultCombination = $combination;
+                                return $combination instanceof Combination;
+                              }),
+                              $parentCombination1
+                          ],
+                          [
+                              $this->callback(function ($combination) use (&$resultCombination): bool {
+                                  $this->assertSame($resultCombination, $combination);
+                                  return true;
+                              }),
+                              $parentCombination2
+                          ]
+                      );
+
+        /* @var EntityRegistry $combinationRegistry */
+        $combinationRegistry = $this->createMock(EntityRegistry::class);
+        /* @var ModRegistry $modRegistry */
+        $modRegistry = $this->createMock(ModRegistry::class);
+
+        /* @var ParentCombinationFinder|MockObject $finder */
+        $finder = $this->getMockBuilder(ParentCombinationFinder::class)
+                       ->setMethods(['find'])
+                       ->setConstructorArgs([$combinationRegistry, $mergerManager, $modRegistry])
+                       ->getMock();
+        $finder->expects($this->once())
+               ->method('find')
+               ->with($combination)
+               ->willReturn([$parentCombination1, $parentCombination2]);
+
+        $result = $finder->getMergedParentCombination($combination);
+        $this->assertSame($resultCombination, $result);
     }
 
     /**
@@ -257,6 +313,112 @@ class ParentCombinationFinderTest extends TestCase
 
         $finder = new ParentCombinationFinder($combinationRegistry, $mergerManager, $modRegistry);
         $result = $this->invokeMethod($finder, 'isValidParentCombination', $combination, $parentCombination);
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Tests the sortCombinations method.
+     * @throws ReflectionException
+     * @covers ::sortCombinations
+     */
+    public function testSortCombinations(): void
+    {
+        $combination1 = (new Combination())->setName('abc');
+        $combination2 = (new Combination())->setName('def');
+        $combinations = ['ghi' => $combination1, 'jkl' => $combination2];
+        $modOrders = ['mno' => 42];
+        $combinationOrders = ['pqr' => [1337, 7331]];
+        $expectedResult = ['jkl' => $combination2, 'ghi' => $combination1];
+
+        /* @var ParentCombinationFinder|MockObject $finder */
+        $finder = $this->getMockBuilder(ParentCombinationFinder::class)
+                       ->setMethods(['getModOrders', 'getCombinationOrders', 'compareCombinations'])
+                       ->disableOriginalConstructor()
+                       ->getMock();
+        $finder->expects($this->once())
+               ->method('getModOrders')
+               ->willReturn($modOrders);
+        $finder->expects($this->once())
+               ->method('getCombinationOrders')
+               ->with($combinations, $modOrders)
+               ->willReturn($combinationOrders);
+        $finder->expects($this->atLeast(1))
+               ->method('compareCombinations')
+               ->with($combination1, $combination2, $modOrders, $combinationOrders)
+               ->willReturn(1);
+
+        $result = $this->invokeMethod($finder, 'sortCombinations', $combinations);
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Provides the data for the compareCombinations test.
+     * @return array
+     */
+    public function provideCompareCombinations(): array
+    {
+        $modOrders = [
+            'foo' => 7331,
+            'bar' => 1337,
+        ];
+        $combinationOrders = [
+            'def' => [21, 27],
+            'ghi' => [21, 27, 42],
+            'jkl' => [21, 27, 57],
+        ];
+
+        $combination1 = new Combination();
+        $combination1->setName('abc')
+                     ->setMainModName('foo');
+
+        $combination2 = new Combination();
+        $combination2->setName('def')
+                     ->setMainModName('bar');
+
+        $combination3 = new Combination();
+        $combination3->setName('ghi')
+                     ->setMainModName('bar');
+
+        $combination4 = new Combination();
+        $combination4->setName('jkl')
+                     ->setMainModName('bar');
+
+        return [
+            [$combination1, $combination2, $modOrders, $combinationOrders, 1],
+            [$combination2, $combination3, $modOrders, $combinationOrders, -1],
+            [$combination3, $combination4, $modOrders, $combinationOrders, -1],
+            [$combination4, $combination4, $modOrders, $combinationOrders, 0],
+        ];
+    }
+
+    /**
+     * Tests the compareCombinations method.
+     * @param Combination $left
+     * @param Combination $right
+     * @param array $modOrders
+     * @param array $combinationOrders
+     * @param int $expectedResult
+     * @throws ReflectionException
+     * @covers ::compareCombinations
+     * @dataProvider provideCompareCombinations
+     */
+    public function testCompareCombinations(
+        Combination $left,
+        Combination $right,
+        array $modOrders,
+        array $combinationOrders,
+        int $expectedResult
+    ): void {
+        /* @var EntityRegistry $combinationRegistry */
+        $combinationRegistry = $this->createMock(EntityRegistry::class);
+        /* @var MergerManager $mergerManager */
+        $mergerManager = $this->createMock(MergerManager::class);
+        /* @var ModRegistry $modRegistry */
+        $modRegistry = $this->createMock(ModRegistry::class);
+
+        $finder = new ParentCombinationFinder($combinationRegistry, $mergerManager, $modRegistry);
+
+        $result = $this->invokeMethod($finder, 'compareCombinations', $left, $right, $modOrders, $combinationOrders);
         $this->assertSame($expectedResult, $result);
     }
 
