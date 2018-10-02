@@ -124,46 +124,34 @@ class CombinationCreator
     }
 
     /**
-     * Creates the main combination without any optional mods loaded.
-     * @return Combination
-     * @throws ExportException
-     */
-    public function createMainCombination(): Combination
-    {
-        $this->verifyMod();
-
-        return $this->createCombination([]);
-    }
-
-    /**
-     * Verifies that a valid mod has been set up.
-     * @throws ExportException
-     */
-    protected function verifyMod(): void
-    {
-        if ($this->mod === null) {
-            throw new ExportException('Unable to create combination without a mod.');
-        }
-    }
-
-    /**
      * Creates the combinations with the specified number of optional mods.
      * @param int $numberOfOptionalMods
      * @return array|Combination[]
      * @throws ExportException
      */
-    public function createCombinationsWithOptionalMods(int $numberOfOptionalMods): array
+    public function createCombinationsWithNumberOfOptionalMods(int $numberOfOptionalMods): array
     {
         $this->verifyMod();
 
         $result = [];
-        if ($numberOfOptionalMods  >= 1 && $numberOfOptionalMods <= count($this->optionalModNames)) {
-            $combinations = $this->getCombinationsWithNumberOfOptionalMods($numberOfOptionalMods - 1);
-            foreach ($combinations as $combination) {
-                $result = array_merge($result, $this->checkForChildCombinations($combination));
-            }
+        foreach ($this->getCombinationsWithNumberOfOptionalMods($numberOfOptionalMods - 1) as $combination) {
+            $result = array_merge($result, $this->createChildCombinations($combination));
         }
         return $result;
+    }
+
+    /**
+     * Verifies that a valid mod has been set up.
+     * @return bool
+     * @throws ExportException
+     */
+    protected function verifyMod(): bool
+    {
+        if ($this->mod === null) {
+            throw new ExportException('Unable to create combination without a mod.');
+        }
+
+        return true;
     }
 
     /**
@@ -186,11 +174,11 @@ class CombinationCreator
     }
 
     /**
-     * Checks for child combinations having one optional mod more than the specified one.
+     * Creates the child combinations having one optional mod more than the specified one.
      * @param Combination $combination
      * @return array|Combination[]
      */
-    protected function checkForChildCombinations(Combination $combination): array
+    protected function createChildCombinations(Combination $combination): array
     {
         $result = [];
         $loadedOptionalModNames = $combination->getLoadedOptionalModNames();

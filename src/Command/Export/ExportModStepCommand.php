@@ -110,12 +110,7 @@ class ExportModStepCommand extends AbstractCommand
      */
     protected function fetchCombinations(int $step): array
     {
-        if ($step === 0) {
-            $result = [$this->combinationCreator->createMainCombination()];
-        } else {
-            $result = $this->combinationCreator->createCombinationsWithOptionalMods($step);
-        }
-        return $result;
+        return $this->combinationCreator->createCombinationsWithNumberOfOptionalMods($step);
     }
 
     /**
