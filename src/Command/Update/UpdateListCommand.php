@@ -77,6 +77,7 @@ class UpdateListCommand extends AbstractCommand
 
         $this->runCommand(CommandName::UPDATE_DEPENDENCIES, [], $this->console);
         $this->runCommand(CommandName::UPDATE_ORDER, [], $this->console);
+        $this->runCommand(CommandName::EXPORT_PREPARE, [], $this->console);
 
         $this->console->writeLine('Done.');
     }

@@ -57,6 +57,11 @@ return [
                 '<step>' => 'The step of the export.'
             ],
         ],
+        [
+            'name' => CommandName::EXPORT_PREPARE,
+            'handler' => Command\Export\ExportPrepareCommand::class,
+            'short_description' => 'Prepares the exports of mods and combinations.',
+        ],
 
         [
             'name' => CommandName::LIST,

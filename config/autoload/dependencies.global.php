@@ -28,6 +28,7 @@ return [
             Command\Export\ExportModCommand::class => Command\Export\ExportModCommandFactory::class,
             Command\Export\ExportModMetaCommand::class => Command\Export\ExportModMetaCommandFactory::class,
             Command\Export\ExportModStepCommand::class => Command\Export\ExportModStepCommandFactory::class,
+            Command\Export\ExportPrepareCommand::class => Command\Export\ExportPrepareCommandFactory::class,
             Command\Lists\ListCommand::class => Command\Lists\ListCommandFactory::class,
             Command\Reduce\ReduceCombinationCommand::class => Command\Reduce\ReduceCombinationCommandFactory::class,
             Command\Reduce\ReduceModCommand::class => Command\Reduce\ReduceModCommandFactory::class,
@@ -41,6 +42,7 @@ return [
             ExportData\ReducedExportDataService::class => ExportData\ReducedExportDataServiceFactory::class,
 
             Factorio\DumpExtractor::class => InvokableFactory::class,
+            Factorio\DumpInfoGenerator::class => Factorio\DumpInfoGeneratorFactory::class,
             Factorio\Instance::class => Factorio\InstanceFactory::class,
 
             I18n\Translator::class => I18n\TranslatorFactory::class,

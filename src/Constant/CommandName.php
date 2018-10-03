@@ -16,6 +16,7 @@ interface CommandName
     public const EXPORT_MOD = 'export mod <modName>';
     public const EXPORT_MOD_META = 'export mod <modName> meta';
     public const EXPORT_MOD_STEP = 'export mod <modName> step <step>';
+    public const EXPORT_PREPARE = 'export prepare';
 
     public const LIST = 'list';
 
