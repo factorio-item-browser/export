@@ -274,6 +274,66 @@ class RecipeReducerTest extends TestCase
     }
 
     /**
+     * Provides the data for the isEntityEmpty test.
+     * @return array
+     */
+    public function provideIsEntityEmpty(): array
+    {
+        $entity1 = new Recipe();
+
+        $entity2 = new Recipe();
+        $entity2->addIngredient(new Ingredient());
+
+        $entity3 = new Recipe();
+        $entity3->addProduct(new Product());
+
+        $entity4 = new Recipe();
+        $entity4->setIconHash('abc');
+
+        $entity5 = new Recipe();
+        $entity5->getLabels()->setTranslation('en', 'abc');
+
+        $entity6 = new Recipe();
+        $entity6->getDescriptions()->setTranslation('de', 'def');
+
+        return [
+            [$entity1, false, true],
+            [$entity2, false, false],
+            [$entity3, false, false],
+            [$entity4, false, false],
+            [$entity5, false, false],
+            [$entity6, false, false],
+            [new Item(), true, false],
+        ];
+    }
+
+    /**
+     * Tests the isEntityEmpty method.
+     * @param EntityInterface $entity
+     * @param bool $expectException
+     * @param bool $expectedResult
+     * @throws ReflectionException
+     * @covers ::isEntityEmpty
+     * @dataProvider provideIsEntityEmpty
+     */
+    public function testIsEntityEmpty(EntityInterface $entity, bool $expectException, bool $expectedResult): void
+    {
+        if ($expectException) {
+            $this->expectException(ReducerException::class);
+        }
+
+        /* @var EntityRegistry $rawRecipeRegistry */
+        $rawRecipeRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry $reducedRecipeRegistry */
+        $reducedRecipeRegistry = $this->createMock(EntityRegistry::class);
+
+        $reducer = new RecipeReducer($rawRecipeRegistry, $reducedRecipeRegistry);
+        $result = $this->invokeMethod($reducer, 'isEntityEmpty', $entity);
+
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
      * Tests the setHashesToCombination method.
      * @throws ReflectionException
      * @covers ::setHashesToCombination

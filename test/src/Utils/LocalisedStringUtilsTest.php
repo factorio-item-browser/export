@@ -101,4 +101,29 @@ class LocalisedStringUtilsTest extends TestCase
         LocalisedStringUtils::reduce($localisedString, $parentLocalisedString);
         $this->assertEquals($expectedLocalisedString, $localisedString);
     }
+
+    /**
+     * Provides the data for the isEmpty test.
+     * @return array
+     */
+    public function provideIsEmpty(): array
+    {
+        return [
+            [(new LocalisedString())->setTranslation('en', 'abc'), false],
+            [new LocalisedString(), true],
+        ];
+    }
+
+    /**
+     * Tests the isEmpty method.
+     * @param LocalisedString $localisedString
+     * @param bool $expectedResult
+     * @covers ::isEmpty
+     * @dataProvider provideIsEmpty
+     */
+    public function testIsEmpty(LocalisedString $localisedString, bool $expectedResult): void
+    {
+        $result = LocalisedStringUtils::isEmpty($localisedString);
+        $this->assertSame($expectedResult, $result);
+    }
 }

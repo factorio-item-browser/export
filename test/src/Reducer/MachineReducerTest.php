@@ -278,6 +278,62 @@ class MachineReducerTest extends TestCase
 
         $this->invokeMethod($reducer, 'reduceIcon', $machine, $parentMachine);
     }
+    
+    /**
+     * Provides the data for the isEntityEmpty test.
+     * @return array
+     */
+    public function provideIsEntityEmpty(): array
+    {
+        $entity1 = new Machine();
+
+        $entity2 = new Machine();
+        $entity2->setCraftingCategories(['abc', 'def']);
+
+        $entity3 = new Machine();
+        $entity3->setIconHash('abc');
+
+        $entity4 = new Machine();
+        $entity4->getLabels()->setTranslation('en', 'ghi');
+
+        $entity5 = new Machine();
+        $entity5->getDescriptions()->setTranslation('de', 'jkl');
+
+        return [
+            [$entity1, false, true],
+            [$entity2, false, false],
+            [$entity3, false, false],
+            [$entity4, false, false],
+            [$entity5, false, false],
+            [new Item(), true, false],
+        ];
+    }
+
+    /**
+     * Tests the isEntityEmpty method.
+     * @param EntityInterface $entity
+     * @param bool $expectException
+     * @param bool $expectedResult
+     * @throws ReflectionException
+     * @covers ::isEntityEmpty
+     * @dataProvider provideIsEntityEmpty
+     */
+    public function testIsEntityEmpty(EntityInterface $entity, bool $expectException, bool $expectedResult): void
+    {
+        if ($expectException) {
+            $this->expectException(ReducerException::class);
+        }
+
+        /* @var EntityRegistry $rawMachineRegistry */
+        $rawMachineRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry $reducedMachineRegistry */
+        $reducedMachineRegistry = $this->createMock(EntityRegistry::class);
+
+        $reducer = new MachineReducer($rawMachineRegistry, $reducedMachineRegistry);
+        $result = $this->invokeMethod($reducer, 'isEntityEmpty', $entity);
+
+        $this->assertSame($expectedResult, $result);
+    }
 
     /**
      * Tests the setHashesToCombination method.

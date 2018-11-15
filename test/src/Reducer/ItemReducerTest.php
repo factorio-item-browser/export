@@ -249,4 +249,64 @@ class ItemReducerTest extends TestCase
 
         $this->invokeMethod($reducer, 'setHashesToCombination', $combination, $hashes);
     }
+
+    /**
+     * Provides the data for the isEntityEmpty test.
+     * @return array
+     */
+    public function provideIsEntityEmpty(): array
+    {
+        $entity1 = new Item();
+        $entity1->setIsNew(false);
+
+        $entity2 = new Item();
+        $entity2->setIsNew(true);
+
+        $entity3 = new Item();
+        $entity3->setIsNew(false)
+                ->setIconHash('abc');
+
+        $entity4 = new Item();
+        $entity4->setIsNew(false);
+        $entity4->getLabels()->setTranslation('en', 'abc');
+
+        $entity5 = new Item();
+        $entity5->setIsNew(false);
+        $entity5->getDescriptions()->setTranslation('de', 'def');
+
+        return [
+            [$entity1, false, true],
+            [$entity2, false, false],
+            [$entity3, false, false],
+            [$entity4, false, false],
+            [$entity5, false, false],
+            [new Recipe(), true, false],
+        ];
+    }
+
+    /**
+     * Tests the isEntityEmpty method.
+     * @param EntityInterface $entity
+     * @param bool $expectException
+     * @param bool $expectedResult
+     * @throws ReflectionException
+     * @covers ::isEntityEmpty
+     * @dataProvider provideIsEntityEmpty
+     */
+    public function testIsEntityEmpty(EntityInterface $entity, bool $expectException, bool $expectedResult): void
+    {
+        if ($expectException) {
+            $this->expectException(ReducerException::class);
+        }
+
+        /* @var EntityRegistry $rawItemRegistry */
+        $rawItemRegistry = $this->createMock(EntityRegistry::class);
+        /* @var EntityRegistry $reducedItemRegistry */
+        $reducedItemRegistry = $this->createMock(EntityRegistry::class);
+
+        $reducer = new ItemReducer($rawItemRegistry, $reducedItemRegistry);
+        $result = $this->invokeMethod($reducer, 'isEntityEmpty', $entity);
+
+        $this->assertSame($expectedResult, $result);
+    }
 }
