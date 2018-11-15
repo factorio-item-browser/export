@@ -40,6 +40,7 @@ class ItemReducer extends AbstractIdentifiedEntityReducer
             throw new ReducerException('Internal type error.');
         }
 
+        $entity->setIsNew(false); // We are actually reducing, so it never can be a new item.
         $this->reduceTranslations($entity, $parentEntity);
         $this->reduceIcon($entity, $parentEntity);
     }
@@ -72,6 +73,24 @@ class ItemReducer extends AbstractIdentifiedEntityReducer
         if ($item->getIconHash() === $parentItem->getIconHash()) {
             $item->setIconHash('');
         }
+    }
+
+    /**
+     * Returns whether the specified entity is actually empty.
+     * @param EntityInterface $entity
+     * @return bool
+     * @throws ReducerException
+     */
+    protected function isEntityEmpty(EntityInterface $entity): bool
+    {
+        if (!$entity instanceof Item) {
+            throw new ReducerException('Internal type error.');
+        }
+
+        return !$entity->getIsNew()
+            && LocalisedStringUtils::isEmpty($entity->getLabels())
+            && LocalisedStringUtils::isEmpty($entity->getDescriptions())
+            && $entity->getIconHash() === '';
     }
 
     /**

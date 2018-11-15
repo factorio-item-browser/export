@@ -5,6 +5,7 @@ namespace FactorioItemBrowserTest\Export\Merger;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\MergerException;
 use FactorioItemBrowser\Export\Merger\AbstractIdentifiedEntityMerger;
+use FactorioItemBrowser\ExportData\Entity\EntityInterface;
 use FactorioItemBrowser\ExportData\Entity\EntityWithIdentifierInterface;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -68,24 +69,15 @@ class AbstractIdentifiedEntityMergerTest extends TestCase
         $destinationEntity1 = $this->createMock(EntityWithIdentifierInterface::class);
 
         $destinationHashes = ['abc'];
-        $mappedDestinationHashes = ['foo' => $destinationEntity1];
+        $mergedEntities = ['foo' => $destinationEntity1];
         $sourceHashes = ['abc', 'def'];
-        $expectedHashes = ['abc', 'def'];
+        $expectedMergedEntities = ['foo' => $destinationEntity1, 'bar' => $entity2];
+        $entityHashes = ['abc', 'def'];
 
         /* @var Combination $destination */
         $destination = $this->createMock(Combination::class);
         /* @var Combination $source */
         $source = $this->createMock(Combination::class);
-
-        /* @var EntityRegistry|MockObject $entityRegistry */
-        $entityRegistry = $this->getMockBuilder(EntityRegistry::class)
-                               ->setMethods(['set'])
-                               ->disableOriginalConstructor()
-                               ->getMock();
-        $entityRegistry->expects($this->once())
-                       ->method('set')
-                       ->with($this->equalTo($destinationEntity1))
-                       ->willReturn('abc');
 
         /* @var AbstractIdentifiedEntityMerger|MockObject $merger */
         $merger = $this->getMockBuilder(AbstractIdentifiedEntityMerger::class)
@@ -94,9 +86,10 @@ class AbstractIdentifiedEntityMergerTest extends TestCase
                            'mapEntitiesToIdentifier',
                            'fetchEntityFromHash',
                            'mergeEntity',
+                           'getHashesForEntities',
                            'setHashesToCombination',
                        ])
-                       ->setConstructorArgs([$entityRegistry])
+                       ->disableOriginalConstructor()
                        ->getMockForAbstractClass();
 
         $merger->expects($this->exactly(2))
@@ -112,7 +105,7 @@ class AbstractIdentifiedEntityMergerTest extends TestCase
         $merger->expects($this->once())
                ->method('mapEntitiesToIdentifier')
                ->with($destinationHashes)
-               ->willReturn($mappedDestinationHashes);
+               ->willReturn($mergedEntities);
         $merger->expects($this->exactly(2))
                ->method('fetchEntityFromHash')
                ->withConsecutive(
@@ -127,8 +120,12 @@ class AbstractIdentifiedEntityMergerTest extends TestCase
                ->method('mergeEntity')
                ->with($this->equalTo($destinationEntity1), $entity1);
         $merger->expects($this->once())
+               ->method('getHashesForEntities')
+               ->with($expectedMergedEntities)
+               ->willReturn($entityHashes);
+        $merger->expects($this->once())
                ->method('setHashesToCombination')
-               ->with($destination, $expectedHashes);
+               ->with($destination, $entityHashes);
 
         $merger->merge($destination, $source);
     }
@@ -218,16 +215,55 @@ class AbstractIdentifiedEntityMergerTest extends TestCase
                        ->with($hash)
                        ->willReturn($resultGet);
 
-        /* @var AbstractIdentifiedEntityMerger|MockObject $reducer */
-        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityMerger::class)
-                        ->setConstructorArgs([$entityRegistry])
-                        ->getMockForAbstractClass();
+        /* @var AbstractIdentifiedEntityMerger|MockObject $merger */
+        $merger = $this->getMockBuilder(AbstractIdentifiedEntityMerger::class)
+                       ->setConstructorArgs([$entityRegistry])
+                       ->getMockForAbstractClass();
 
         if ($expectException) {
             $this->expectException(MergerException::class);
         }
 
-        $result = $this->invokeMethod($reducer, 'fetchEntityFromHash', $hash);
+        $result = $this->invokeMethod($merger, 'fetchEntityFromHash', $hash);
         $this->assertSame($resultGet, $result);
+    }
+
+    /**
+     * Tests the getHashesForEntities method.
+     * @covers ::getHashesForEntities
+     * @throws ReflectionException
+     */
+    public function testGetHashesForEntities(): void
+    {
+        /* @var EntityInterface $entity1 */
+        $entity1 = $this->createMock(EntityInterface::class);
+        /* @var EntityInterface $entity2 */
+        $entity2 = $this->createMock(EntityInterface::class);
+        $expectedResult = ['abc', 'def'];
+
+        /* @var EntityRegistry|MockObject $entityRegistry */
+        $entityRegistry = $this->getMockBuilder(EntityRegistry::class)
+                               ->setMethods(['set'])
+                               ->disableOriginalConstructor()
+                               ->getMock();
+        $entityRegistry->expects($this->exactly(2))
+                       ->method('set')
+                       ->withConsecutive(
+                           [$entity1],
+                           [$entity2]
+                       )
+                       ->willReturnOnConsecutiveCalls(
+                           'abc',
+                           'def'
+                       );
+
+        /* @var AbstractIdentifiedEntityMerger|MockObject $merger */
+        $merger = $this->getMockBuilder(AbstractIdentifiedEntityMerger::class)
+                       ->setConstructorArgs([$entityRegistry])
+                       ->getMockForAbstractClass();
+
+        $result = $this->invokeMethod($merger, 'getHashesForEntities', [$entity1, $entity2]);
+
+        $this->assertEquals($expectedResult, $result);
     }
 }

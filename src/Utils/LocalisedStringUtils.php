@@ -58,4 +58,14 @@ class LocalisedStringUtils
             }
         }
     }
+
+    /**
+     * Returns whether the localised string is empty.
+     * @param LocalisedString $localisedString
+     * @return bool
+     */
+    public static function isEmpty(LocalisedString $localisedString): bool
+    {
+        return count($localisedString->getTranslations()) === 0;
+    }
 }

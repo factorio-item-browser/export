@@ -62,7 +62,9 @@ abstract class AbstractIdentifiedEntityReducer implements ReducerInterface
             } elseif ($parentEntityHash !== $hash) {
                 $reducedEntity = clone($entity);
                 $this->reduceEntity($reducedEntity, $this->fetchEntityFromHash($parentEntityHash));
-                $reducedHashes[] = $this->rawEntityRegistry->set($reducedEntity);
+                if (!$this->isEntityEmpty($reducedEntity)) {
+                    $reducedHashes[] = $this->rawEntityRegistry->set($reducedEntity);
+                }
             }
         }
         $this->setHashesToCombination($combination, $reducedHashes);
@@ -112,6 +114,13 @@ abstract class AbstractIdentifiedEntityReducer implements ReducerInterface
      * @param EntityInterface $parentEntity
      */
     abstract protected function reduceEntity(EntityInterface $entity, EntityInterface $parentEntity): void;
+
+    /**
+     * Returns whether the specified entity is actually empty.
+     * @param EntityInterface $entity
+     * @return bool
+     */
+    abstract protected function isEntityEmpty(EntityInterface $entity): bool;
 
     /**
      * Sets the hashes to the combination.

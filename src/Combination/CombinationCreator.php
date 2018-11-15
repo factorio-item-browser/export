@@ -133,10 +133,16 @@ class CombinationCreator
     {
         $this->verifyMod();
 
-        $result = [];
-        foreach ($this->getCombinationsWithNumberOfOptionalMods($numberOfOptionalMods - 1) as $combination) {
-            $result = array_merge($result, $this->createChildCombinations($combination));
+        if ($numberOfOptionalMods === 0) {
+            $mainCombination = $this->createCombination([]);
+            $result = [$mainCombination->getName() => $mainCombination];
+        } else {
+            $result = [];
+            foreach ($this->getCombinationsWithNumberOfOptionalMods($numberOfOptionalMods - 1) as $combination) {
+                $result = array_merge($result, $this->createChildCombinations($combination));
+            }
         }
+
         return $result;
     }
 

@@ -42,7 +42,7 @@ class RecipeReducer extends AbstractIdentifiedEntityReducer
         if (!$entity instanceof Recipe || !$parentEntity instanceof Recipe) {
             throw new ReducerException('Internal type error.');
         }
-        
+
         $this->reduceData($entity, $parentEntity);
         $this->reduceTranslations($entity, $parentEntity);
         $this->reduceIcon($entity, $parentEntity);
@@ -104,7 +104,26 @@ class RecipeReducer extends AbstractIdentifiedEntityReducer
             $recipe->setIconHash('');
         }
     }
-    
+
+    /**
+     * Returns whether the specified entity is actually empty.
+     * @param EntityInterface $entity
+     * @return bool
+     * @throws ReducerException
+     */
+    protected function isEntityEmpty(EntityInterface $entity): bool
+    {
+        if (!$entity instanceof Recipe) {
+            throw new ReducerException('Internal type error.');
+        }
+
+        return count($entity->getIngredients()) === 0
+            && count($entity->getProducts()) === 0
+            && LocalisedStringUtils::isEmpty($entity->getLabels())
+            && LocalisedStringUtils::isEmpty($entity->getDescriptions())
+            && $entity->getIconHash() === '';
+    }
+
     /**
      * Sets the hashes to the combination.
      * @param Combination $combination

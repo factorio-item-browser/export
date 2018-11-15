@@ -41,22 +41,22 @@ abstract class AbstractIdentifiedEntityMerger implements MergerInterface
      */
     public function merge(Combination $destination, Combination $source): void
     {
-        $destinationEntities = $this->mapEntitiesToIdentifier($this->getHashesFromCombination($destination));
+        $mergedEntities = $this->mapEntitiesToIdentifier($this->getHashesFromCombination($destination));
 
-        $mergedHashes = [];
         foreach ($this->getHashesFromCombination($source) as $hash) {
             $sourceEntity = $this->fetchEntityFromHash($hash);
             $identifier = $sourceEntity->getIdentifier();
 
-            if (isset($destinationEntities[$identifier])) {
-                $mergedEntity = clone($destinationEntities[$identifier]);
+            if (isset($mergedEntities[$identifier])) {
+                $mergedEntity = clone($mergedEntities[$identifier]);
                 $this->mergeEntity($mergedEntity, $sourceEntity);
-                $mergedHashes[] = $this->entityRegistry->set($mergedEntity);
             } else {
-                $mergedHashes[] = $hash;
+                $mergedEntity = $sourceEntity;
             }
+            $mergedEntities[$identifier] = $mergedEntity;
         }
-        $this->setHashesToCombination($destination, $mergedHashes);
+
+        $this->setHashesToCombination($destination, $this->getHashesForEntities($mergedEntities));
     }
 
     /**
@@ -100,9 +100,23 @@ abstract class AbstractIdentifiedEntityMerger implements MergerInterface
     /**
      * Merges the source entity into the destination one.
      * @param EntityInterface $destination
-     * @param EntityInterface$source
+     * @param EntityInterface $source
      */
     abstract protected function mergeEntity(EntityInterface $destination, EntityInterface $source): void;
+
+    /**
+     * Returns the hashes of the specified entities.
+     * @param array|EntityInterface[] $entities
+     * @return array|string[]
+     */
+    protected function getHashesForEntities(array $entities): array
+    {
+        $result = [];
+        foreach ($entities as $entity) {
+            $result[] = $this->entityRegistry->set($entity);
+        }
+        return $result;
+    }
 
     /**
      * Sets the hashes to the combination.

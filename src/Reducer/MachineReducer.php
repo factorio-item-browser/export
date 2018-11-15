@@ -112,6 +112,24 @@ class MachineReducer extends AbstractIdentifiedEntityReducer
     }
 
     /**
+     * Returns whether the specified entity is actually empty.
+     * @param EntityInterface $entity
+     * @return bool
+     * @throws ReducerException
+     */
+    protected function isEntityEmpty(EntityInterface $entity): bool
+    {
+        if (!$entity instanceof Machine) {
+            throw new ReducerException('Internal type error.');
+        }
+
+        return count($entity->getCraftingCategories()) === 0
+            && LocalisedStringUtils::isEmpty($entity->getLabels())
+            && LocalisedStringUtils::isEmpty($entity->getDescriptions())
+            && $entity->getIconHash() === '';
+    }
+
+    /**
      * Sets the hashes to the combination.
      * @param Combination $combination
      * @param array|string[] $hashes

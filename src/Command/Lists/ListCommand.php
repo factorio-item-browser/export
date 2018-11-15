@@ -84,7 +84,7 @@ class ListCommand extends AbstractCommand
         $this->console->write(ConsoleUtils::formatModName($availableMod->getName(), ': '));
         $this->console->write(ConsoleUtils::formatVersion($availableMod->getVersion(), true));
         if ($exportedMod instanceof Mod) {
-            $this->console->write(ConsoleUtils::formatVersion($exportedMod->getVersion()));
+            $this->console->write(ConsoleUtils::formatVersion($exportedMod->getVersion(), true));
         }
         $this->console->writeLine();
     }
