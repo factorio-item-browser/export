@@ -16,6 +16,11 @@ use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 interface ParserInterface
 {
     /**
+     * Resets any previously aggregated data.
+     */
+    public function reset(): void;
+
+    /**
      * Parses the data from the dump into actual entities.
      * @param DataContainer $dumpData
      */

@@ -54,16 +54,36 @@ class MachineParserTest extends TestCase
     }
 
     /**
-     * Tests the parse method.
+     * Tests the reset method.
      * @throws ReflectionException
+     * @covers ::reset
+     */
+    public function testReset(): void
+    {
+        /* @var IconParser $iconParser */
+        $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
+        /* @var EntityRegistry $machineRegistry */
+        $machineRegistry = $this->createMock(EntityRegistry::class);
+        /* @var Translator $translator */
+        $translator = $this->createMock(Translator::class);
+
+        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
+        $this->injectProperty($parser, 'parsedMachines', ['fail' => new Machine()]);
+
+        $parser->reset();
+
+        $this->assertSame([], $this->extractProperty($parser, 'parsedMachines'));
+    }
+
+    /**
+     * Tests the parse method.
      * @covers ::parse
      */
     public function testParse(): void
     {
         $dumpData = new DataContainer(['abc' => 'def']);
-        $machine1 = (new Machine())->setName('ghi');
-        $machine2 = (new Machine())->setName('jkl');
-        $machines = [$machine1, $machine2];
 
         /* @var MachineParser|MockObject $parser */
         $parser = $this->getMockBuilder(MachineParser::class)
@@ -72,14 +92,12 @@ class MachineParserTest extends TestCase
                        ->getMock();
         $parser->expects($this->once())
                ->method('parseMachines')
-               ->with($dumpData)
-               ->willReturn($machines);
+               ->with($dumpData);
         $parser->expects($this->once())
                ->method('parseFluidBoxes')
-               ->with($dumpData, $machines);
+               ->with($dumpData);
 
         $parser->parse($dumpData);
-        $this->assertEquals($machines, $this->extractProperty($parser, 'parsedMachines'));
     }
 
     /**
@@ -99,11 +117,10 @@ class MachineParserTest extends TestCase
         $machineData2 = new DataContainer(['ghi' => 'jkl']);
         $machine1 = (new Machine())->setName('mno');
         $machine2 = (new Machine())->setName('pqr');
-        $expectedResult = [
+        $expectedMachines = [
             'mno' => $machine1,
             'pqr' => $machine2
         ];
-
 
         /* @var MachineParser|MockObject $parser */
         $parser = $this->getMockBuilder(MachineParser::class)
@@ -121,8 +138,8 @@ class MachineParserTest extends TestCase
                    $machine2
                );
 
-        $result = $this->invokeMethod($parser, 'parseMachines', $dumpData);
-        $this->assertEquals($expectedResult, $result);
+        $this->invokeMethod($parser, 'parseMachines', $dumpData);
+        $this->assertEquals($expectedMachines, $this->extractProperty($parser, 'parsedMachines'));
     }
 
     /**
@@ -261,8 +278,9 @@ class MachineParserTest extends TestCase
         $parser->expects($this->once())
                ->method('parseFluidBox')
                ->with($machine1, $this->equalTo(new DataContainer(['name' => 'Abc'])));
+        $this->injectProperty($parser, 'parsedMachines', $machines);
 
-        $this->invokeMethod($parser, 'parseFluidBoxes', $dumpData, $machines);
+        $this->invokeMethod($parser, 'parseFluidBoxes', $dumpData);
     }
 
     /**

@@ -57,6 +57,30 @@ class RecipeParserTest extends TestCase
     }
 
     /**
+     * Tests the reset method.
+     * @throws ReflectionException
+     * @covers ::reset
+     */
+    public function testReset(): void
+    {
+        /* @var IconParser $iconParser */
+        $iconParser = $this->createMock(IconParser::class);
+        /* @var ItemParser $itemParser */
+        $itemParser = $this->createMock(ItemParser::class);
+        /* @var EntityRegistry $recipeRegistry */
+        $recipeRegistry = $this->createMock(EntityRegistry::class);
+        /* @var Translator $translator */
+        $translator = $this->createMock(Translator::class);
+
+        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
+        $this->injectProperty($parser, 'parsedRecipes', ['fail' => new Recipe()]);
+
+        $parser->reset();
+
+        $this->assertSame([], $this->extractProperty($parser, 'parsedRecipes'));
+    }
+
+    /**
      * Tests the parse method.
      * @throws ReflectionException
      * @covers ::parse
@@ -115,7 +139,6 @@ class RecipeParserTest extends TestCase
                    $recipe3,
                    $recipe4
                );
-        $this->injectProperty($parser, 'parsedRecipes', ['fail' => new Recipe()]);
 
         $parser->parse($dumpData);
         $this->assertEquals($expectedParsedRecipes, $this->extractProperty($parser, 'parsedRecipes'));

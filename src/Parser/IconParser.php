@@ -48,29 +48,41 @@ class IconParser implements ParserInterface
     }
 
     /**
+     * Resets any previously aggregated data.
+     */
+    public function reset(): void
+    {
+        $this->parsedIcons = [];
+        $this->usedIcons = [];
+    }
+
+    /**
      * Parses the data from the dump into actual entities.
      * @param DataContainer $dumpData
      */
     public function parse(DataContainer $dumpData): void
     {
-        $this->parsedIcons = [];
-        $this->usedIcons = [];
-
         foreach ($dumpData->getObjectArray('icons') as $iconData) {
             $icon = $this->parseIcon($iconData);
 
             $name = $iconData->getString('name');
             $type = $iconData->getString('type');
+
             switch ($type) {
                 case EntityType::FLUID:
                 case EntityType::ITEM:
                 case EntityType::RECIPE:
-                    $this->parsedIcons[$this->buildArrayKey($type, $name)] = $icon;
+                    $this->addParsedIcon($type, $name, $icon, true);
+                    break;
+
+                case 'technology':
+                case 'tutorial':
+                    // Types are blacklisted and must not provide any icons.
                     break;
 
                 default:
-                    $this->parsedIcons[$this->buildArrayKey(EntityType::ITEM, $name)] = $icon;
-                    $this->parsedIcons[$this->buildArrayKey(EntityType::MACHINE, $name)] = $icon;
+                    $this->addParsedIcon(EntityType::ITEM, $name, $icon, false);
+                    $this->addParsedIcon(EntityType::MACHINE, $name, $icon, false);
                     break;
             }
         }
@@ -119,6 +131,21 @@ class IconParser implements ParserInterface
     protected function convertColorValue(float $value): float
     {
         return ($value > 1) ? ($value / 255.) : $value;
+    }
+
+    /**
+     * Adds the specified icon to the list of parsed icons.
+     * @param string $type
+     * @param string $name
+     * @param Icon $icon
+     * @param bool $overwriteExistingIcon
+     */
+    protected function addParsedIcon(string $type, string $name, Icon $icon, bool $overwriteExistingIcon): void
+    {
+        $key = $this->buildArrayKey($type, $name);
+        if (!isset($this->parsedIcons[$key]) || $overwriteExistingIcon) {
+            $this->parsedIcons[$key] = $icon;
+        }
     }
 
     /**

@@ -58,12 +58,19 @@ class ItemParser implements ParserInterface
     }
 
     /**
+     * Resets any previously aggregated data.
+     */
+    public function reset(): void
+    {
+        $this->parsedItems = [];
+    }
+
+    /**
      * Parses the data from the dump into actual entities.
      * @param DataContainer $dumpData
      */
     public function parse(DataContainer $dumpData): void
     {
-        $this->parsedItems = [];
         foreach ($dumpData->getObjectArray('items') as $itemData) {
             $item = $this->parseItem($itemData, ItemType::ITEM);
             $this->parsedItems[$item->getIdentifier()] = $item;

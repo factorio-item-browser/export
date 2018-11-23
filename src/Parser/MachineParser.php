@@ -71,28 +71,33 @@ class MachineParser implements ParserInterface
     }
 
     /**
+     * Resets any previously aggregated data.
+     */
+    public function reset(): void
+    {
+        $this->parsedMachines = [];
+    }
+
+    /**
      * Parses the data from the dump into actual entities.
      * @param DataContainer $dumpData
      */
     public function parse(DataContainer $dumpData): void
     {
-        $this->parsedMachines = $this->parseMachines($dumpData);
-        $this->parseFluidBoxes($dumpData, $this->parsedMachines);
+        $this->parseMachines($dumpData);
+        $this->parseFluidBoxes($dumpData);
     }
 
     /**
      * Parses the machines from the dump data.
      * @param DataContainer $dumpData
-     * @return array|Machine[]
      */
-    protected function parseMachines(DataContainer $dumpData): array
+    protected function parseMachines(DataContainer $dumpData): void
     {
-        $machines = [];
         foreach ($dumpData->getObjectArray('machines') as $machineData) {
             $machine = $this->parseMachine($machineData);
-            $machines[$machine->getName()] = $machine;
+            $this->parsedMachines[$machine->getName()] = $machine;
         }
-        return $machines;
     }
 
     /**
@@ -162,14 +167,13 @@ class MachineParser implements ParserInterface
     /**
      * Parses the fluid boxes of the dump.
      * @param DataContainer $dumpData
-     * @param array|Machine[] $machines
      */
-    protected function parseFluidBoxes(DataContainer $dumpData, array $machines): void
+    protected function parseFluidBoxes(DataContainer $dumpData): void
     {
         foreach ($dumpData->getObjectArray('fluidBoxes') as $fluidBoxData) {
             $name = strtolower($fluidBoxData->getString('name'));
-            if (isset($machines[$name])) {
-                $this->parseFluidBox($machines[$name], $fluidBoxData);
+            if (isset($this->parsedMachines[$name])) {
+                $this->parseFluidBox($this->parsedMachines[$name], $fluidBoxData);
             }
         }
     }

@@ -74,12 +74,19 @@ class RecipeParser implements ParserInterface
     }
 
     /**
+     * Resets any previously aggregated data.
+     */
+    public function reset(): void
+    {
+        $this->parsedRecipes = [];
+    }
+
+    /**
      * Parses the data from the dump into actual entities.
      * @param DataContainer $dumpData
      */
     public function parse(DataContainer $dumpData): void
     {
-        $this->parsedRecipes = [];
         foreach ($dumpData->getObjectArray(['recipes', 'normal']) as $recipeData) {
             $recipe = $this->parseRecipe($recipeData, RecipeMode::NORMAL);
             $this->parsedRecipes[$recipe->getIdentifier()] = $recipe;

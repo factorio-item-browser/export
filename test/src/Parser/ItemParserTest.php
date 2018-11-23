@@ -50,6 +50,28 @@ class ItemParserTest extends TestCase
     }
 
     /**
+     * Tests the reset method.
+     * @throws ReflectionException
+     * @covers ::reset
+     */
+    public function testReset(): void
+    {
+        /* @var IconParser $iconParser */
+        $iconParser = $this->createMock(IconParser::class);
+        /* @var EntityRegistry $itemRegistry */
+        $itemRegistry = $this->createMock(EntityRegistry::class);
+        /* @var Translator $translator */
+        $translator = $this->createMock(Translator::class);
+
+        $parser = new ItemParser($iconParser, $itemRegistry, $translator);
+        $this->injectProperty($parser, 'parsedItems', ['fail' => new Item()]);
+
+        $parser->reset();
+
+        $this->assertSame([], $this->extractProperty($parser, 'parsedItems'));
+    }
+
+    /**
      * Tests the parse method.
      * @throws ReflectionException
      * @covers ::parse
@@ -106,7 +128,6 @@ class ItemParserTest extends TestCase
                    $item3,
                    $item4
                );
-        $this->injectProperty($parser, 'parsedItems', ['fail' => new Item()]);
 
         $parser->parse($dumpData);
         $this->assertEquals($expectedParsedItems, $this->extractProperty($parser, 'parsedItems'));

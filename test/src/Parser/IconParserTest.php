@@ -45,8 +45,27 @@ class IconParserTest extends TestCase
     }
 
     /**
-     * Tests the parse method.
+     * Tests the reset method.
      * @throws ReflectionException
+     * @covers ::reset
+     */
+    public function testReset(): void
+    {
+        /* @var EntityRegistry $iconRegistry */
+        $iconRegistry = $this->createMock(EntityRegistry::class);
+
+        $parser = new IconParser($iconRegistry);
+        $this->injectProperty($parser, 'parsedIcons', ['fail' => new Icon()]);
+        $this->injectProperty($parser, 'usedIcons', ['fail' => new Icon()]);
+
+        $parser->reset();
+
+        $this->assertSame([], $this->extractProperty($parser, 'parsedIcons'));
+        $this->assertSame([], $this->extractProperty($parser, 'usedIcons'));
+    }
+
+    /**
+     * Tests the parse method.
      * @covers ::parse
      */
     public function testParse(): void
@@ -55,64 +74,54 @@ class IconParserTest extends TestCase
         $icon2 = (new Icon())->setSize(23);
         $icon3 = (new Icon())->setSize(34);
         $icon4 = (new Icon())->setSize(45);
+        $icon5 = (new Icon())->setSize(56);
+        $icon6 = (new Icon())->setSize(67);
 
         $dumpData = new DataContainer([
             'icons' => [
                 ['name' => 'abc', 'type' => 'fluid'],
                 ['name' => 'def', 'type' => 'item'],
                 ['name' => 'ghi', 'type' => 'recipe'],
-                ['name' => 'jkl', 'type' => 'foo'],
+                ['name' => 'jkl', 'type' => 'technology'],
+                ['name' => 'mno', 'type' => 'tutorial'],
+                ['name' => 'pqr', 'type' => 'foo'],
             ]
         ]);
-        $expectedParsedIcons = [
-            'fluid|abc' => $icon1,
-            'item|def' => $icon2,
-            'recipe|ghi' => $icon3,
-            'item|jkl' => $icon4,
-            'machine|jkl' => $icon4,
-        ];
 
         /* @var IconParser|MockObject $parser */
         $parser = $this->getMockBuilder(IconParser::class)
-                       ->setMethods(['parseIcon', 'buildArrayKey'])
+                       ->setMethods(['parseIcon', 'addParsedIcon'])
                        ->disableOriginalConstructor()
                        ->getMock();
-        $parser->expects($this->exactly(4))
+        $parser->expects($this->exactly(6))
                ->method('parseIcon')
                ->withConsecutive(
                    [$this->equalTo(new DataContainer(['name' => 'abc', 'type' => 'fluid']))],
                    [$this->equalTo(new DataContainer(['name' => 'def', 'type' => 'item']))],
                    [$this->equalTo(new DataContainer(['name' => 'ghi', 'type' => 'recipe']))],
-                   [$this->equalTo(new DataContainer(['name' => 'jkl', 'type' => 'foo']))]
+                   [$this->equalTo(new DataContainer(['name' => 'jkl', 'type' => 'technology']))],
+                   [$this->equalTo(new DataContainer(['name' => 'mno', 'type' => 'tutorial']))],
+                   [$this->equalTo(new DataContainer(['name' => 'pqr', 'type' => 'foo']))]
                )
                ->willReturnOnConsecutiveCalls(
                    $icon1,
                    $icon2,
                    $icon3,
-                   $icon4
+                   $icon4,
+                   $icon5,
+                   $icon6
                );
         $parser->expects($this->exactly(5))
-               ->method('buildArrayKey')
+               ->method('addParsedIcon')
                ->withConsecutive(
-                   ['fluid', 'abc'],
-                   ['item', 'def'],
-                   ['recipe', 'ghi'],
-                   ['item', 'jkl'],
-                   ['machine', 'jkl']
-               )
-               ->willReturnOnConsecutiveCalls(
-                   'fluid|abc',
-                   'item|def',
-                   'recipe|ghi',
-                   'item|jkl',
-                   'machine|jkl'
+                   ['fluid', 'abc', $icon1, true],
+                   ['item', 'def', $icon2, true],
+                   ['recipe', 'ghi', $icon3, true],
+                   ['item', 'pqr', $icon6, false],
+                   ['machine', 'pqr', $icon6, false]
                );
-        $this->injectProperty($parser, 'parsedIcons', ['fail' => new Icon()]);
-        $this->injectProperty($parser, 'usedIcons', ['fail' => new Icon()]);
 
         $parser->parse($dumpData);
-        $this->assertEquals($expectedParsedIcons, $this->extractProperty($parser, 'parsedIcons'));
-        $this->assertEquals([], $this->extractProperty($parser, 'usedIcons'));
     }
 
     /**
@@ -245,6 +254,85 @@ class IconParserTest extends TestCase
         $result = $this->invokeMethod($parser, 'convertColorValue', $value);
         $this->assertSame($expectedResult, $result);
     }
+
+    /**
+     * Provides the data for the addParsedIcon test.
+     * @return array
+     */
+    public function provideAddParsedIcon(): array
+    {
+        $icon1 = (new Icon())->setSize(12);
+        $icon2 = (new Icon())->setSize(23);
+        $icon3 = (new Icon())->setSize(34);
+
+        return [
+            [
+                ['abc' => $icon1, 'def' => $icon2],
+                'ghi',
+                $icon3,
+                false,
+                ['abc' => $icon1, 'def' => $icon2, 'ghi' => $icon3],
+            ],
+            [
+                ['abc' => $icon1, 'def' => $icon2],
+                'ghi',
+                $icon3,
+                true,
+                ['abc' => $icon1, 'def' => $icon2, 'ghi' => $icon3],
+            ],
+            [
+                ['abc' => $icon1, 'def' => $icon2],
+                'abc',
+                $icon3,
+                false,
+                ['abc' => $icon1, 'def' => $icon2],
+            ],
+            [
+                ['abc' => $icon1, 'def' => $icon2],
+                'abc',
+                $icon3,
+                true,
+                ['abc' => $icon3, 'def' => $icon2],
+            ],
+        ];
+    }
+
+    /**
+     * Tests the addParsedIcon method.
+     * @param array|Icon[] $parsedIcons
+     * @param string $key
+     * @param Icon $icon
+     * @param bool $overwriteExistingIcon
+     * @param array|Icon[] $expectedParsedIcons
+     * @throws ReflectionException
+     * @covers ::addParsedIcon
+     * @dataProvider provideAddParsedIcon
+     */
+    public function testAddParsedIcon(
+        array $parsedIcons,
+        string $key,
+        Icon $icon,
+        bool $overwriteExistingIcon,
+        array $expectedParsedIcons
+    ): void {
+        $type = 'foo';
+        $name = 'bar';
+
+        /* @var IconParser|MockObject $parser */
+        $parser = $this->getMockBuilder(IconParser::class)
+                       ->setMethods(['buildArrayKey'])
+                       ->disableOriginalConstructor()
+                       ->getMock();
+        $parser->expects($this->once())
+               ->method('buildArrayKey')
+               ->with($type, $name)
+               ->willReturn($key);
+        $this->injectProperty($parser, 'parsedIcons', $parsedIcons);
+
+        $this->invokeMethod($parser, 'addParsedIcon', $type, $name, $icon, $overwriteExistingIcon);
+        $this->assertEquals($expectedParsedIcons, $this->extractProperty($parser, 'parsedIcons'));
+    }
+
 
     /**
      * Tests the persist method.

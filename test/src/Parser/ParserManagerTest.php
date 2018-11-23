@@ -70,8 +70,10 @@ class ParserManagerTest extends TestCase
 
         /* @var ParserInterface|MockObject $parser1 */
         $parser1 = $this->getMockBuilder(ParserInterface::class)
-                        ->setMethods(['parse', 'check', 'persist'])
+                        ->setMethods(['reset', 'parse', 'check', 'persist'])
                         ->getMockForAbstractClass();
+        $parser1->expects($this->once())
+                ->method('reset');
         $parser1->expects($this->once())
                 ->method('parse')
                 ->with($dumpData);
@@ -83,8 +85,10 @@ class ParserManagerTest extends TestCase
 
         /* @var ParserInterface|MockObject $parser2 */
         $parser2 = $this->getMockBuilder(ParserInterface::class)
-                        ->setMethods(['parse', 'check', 'persist'])
+                        ->setMethods(['reset', 'parse', 'check', 'persist'])
                         ->getMockForAbstractClass();
+        $parser2->expects($this->once())
+                ->method('reset');
         $parser2->expects($this->once())
                 ->method('parse')
                 ->with($dumpData);
