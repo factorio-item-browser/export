@@ -2,8 +2,8 @@
 
 namespace FactorioItemBrowser\Export\Process;
 
+use FactorioItemBrowser\Export\Console\Console;
 use Symfony\Component\Process\Process;
-use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\ColorInterface;
 
 /**
@@ -16,7 +16,7 @@ class CommandProcess extends Process
 {
     /**
      * The console.
-     * @var AdapterInterface|null
+     * @var Console|null
      */
     protected $console;
 
@@ -24,9 +24,9 @@ class CommandProcess extends Process
      * Initializes the process.
      * @param string $commandName
      * @param array $parameters
-     * @param AdapterInterface|null $console
+     * @param Console|null $console
      */
-    public function __construct(string $commandName, array $parameters = [], ?AdapterInterface $console = null)
+    public function __construct(string $commandName, array $parameters = [], ?Console $console = null)
     {
         parent::__construct($this->buildCommandLine($commandName, $parameters), null, ['SUBCMD' => 1], null, null);
         $this->console = $console;
@@ -74,8 +74,8 @@ class CommandProcess extends Process
     {
         $result = $callback;
         $console = $this->console;
-        if ($console instanceof AdapterInterface) {
-            $console->writeLine('Starting process: ' . $this->getCommandLine(), ColorInterface::GRAY);
+        if ($console instanceof Console) {
+            $console->writeCommand($this->getCommandLine());
 
             $result = function (string $type, string $output) use ($callback, $console): void {
                 $console->write($output, $type === self::ERR ? ColorInterface::RED : null);

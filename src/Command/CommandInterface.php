@@ -18,8 +18,8 @@ interface CommandInterface
     /**
      * Invokes the command.
      * @param Route $route
-     * @param AdapterInterface $console
+     * @param AdapterInterface $consoleAdapter
      * @return int
      */
-    public function __invoke(Route $route, AdapterInterface $console): int;
+    public function __invoke(Route $route, AdapterInterface $consoleAdapter): int;
 }

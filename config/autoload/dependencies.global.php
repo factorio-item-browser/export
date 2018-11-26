@@ -26,6 +26,7 @@ return [
             Command\Clean\CleanCacheCommand::class => Command\Clean\CleanCacheCommandFactory::class,
             Command\Export\ExportCombinationCommand::class => Command\Export\ExportCombinationCommandFactory::class,
             Command\Export\ExportModCommand::class => Command\Export\ExportModCommandFactory::class,
+            Command\Export\ExportModWithDependenciesCommand::class => Command\Export\ExportModWithDependenciesCommandFactory::class,
             Command\Export\ExportModMetaCommand::class => Command\Export\ExportModMetaCommandFactory::class,
             Command\Export\ExportModStepCommand::class => Command\Export\ExportModStepCommandFactory::class,
             Command\Export\ExportPrepareCommand::class => Command\Export\ExportPrepareCommandFactory::class,

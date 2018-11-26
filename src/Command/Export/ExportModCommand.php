@@ -3,13 +3,12 @@
 namespace FactorioItemBrowser\Export\Command\Export;
 
 use FactorioItemBrowser\Export\Combination\CombinationCreator;
-use FactorioItemBrowser\Export\Command\AbstractCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
-use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
+use Zend\Console\ColorInterface;
 use ZF\Console\Route;
 
 /**
@@ -18,7 +17,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ExportModCommand extends AbstractCommand
+class ExportModCommand extends AbstractExportModCommand
 {
     use SubCommandTrait;
 
@@ -29,33 +28,28 @@ class ExportModCommand extends AbstractCommand
     protected $combinationCreator;
 
     /**
-     * The registry of the mods.
-     * @var ModRegistry
-     */
-    protected $modRegistry;
-
-    /**
      * Initializes the command.
      * @param CombinationCreator $combinationCreator
      * @param ModRegistry $modRegistry
      */
     public function __construct(CombinationCreator $combinationCreator, ModRegistry $modRegistry)
     {
+        parent::__construct($modRegistry);
+
         $this->combinationCreator = $combinationCreator;
-        $this->modRegistry = $modRegistry;
     }
 
     /**
-     * Executes the command.
+     * Exports the specified mod.
      * @param Route $route
+     * @param Mod $mod
      * @throws ExportException
-     * @throws CommandException
      */
-    protected function execute(Route $route): void
+    protected function exportMod(Route $route, Mod $mod): void
     {
-        $mod = $this->fetchMod($route->getMatchedParam('modName', ''));
-        $this->combinationCreator->setupForMod($mod);
+        $this->console->writeBanner('Exporting Mod: ' . $mod->getName(), ColorInterface::LIGHT_BLUE);
 
+        $this->combinationCreator->setupForMod($mod);
         for ($step = 0; $step <= $this->combinationCreator->getNumberOfOptionalMods(); ++$step) {
             $this->runCommand(CommandName::EXPORT_MOD_STEP, [
                 'modName' => $mod->getName(),
@@ -66,20 +60,5 @@ class ExportModCommand extends AbstractCommand
         $this->runCommand(CommandName::EXPORT_MOD_META, ['modName' => $mod->getName()], $this->console);
         $this->runCommand(CommandName::REDUCE_MOD, ['modName' => $mod->getName()], $this->console);
         $this->runCommand(CommandName::RENDER_MOD_ICONS, ['modName' => $mod->getName()], $this->console);
-    }
-
-    /**
-     * Fetches the mod to the specified name.
-     * @param string $modName
-     * @return Mod
-     * @throws CommandException
-     */
-    protected function fetchMod(string $modName): Mod
-    {
-        $mod = $this->modRegistry->get($modName);
-        if (!$mod instanceof Mod) {
-            throw new CommandException('Mod not known: ' . $modName, 404);
-        }
-        return $mod;
     }
 }

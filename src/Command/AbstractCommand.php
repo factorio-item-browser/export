@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
+use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use Zend\Console\Adapter\AdapterInterface;
@@ -20,34 +21,40 @@ abstract class AbstractCommand implements CommandInterface
 {
     /**
      * The console to use for printing information.
-     * @var AdapterInterface
+     * @var Console
      */
     protected $console;
 
     /**
      * Invokes the command.
      * @param Route $route
-     * @param AdapterInterface $console
+     * @param AdapterInterface $consoleAdapterAdapter
      * @return int
      */
-    public function __invoke(Route $route, AdapterInterface $console): int
+    public function __invoke(Route $route, AdapterInterface $consoleAdapterAdapter): int
     {
-        $this->console = $console;
+        $this->console = $this->createConsole($consoleAdapterAdapter);
         try {
             $this->execute($route);
             $exitCode = 0;
         } catch (CommandException $e) {
-            $console->writeLine(str_pad('', $console->getWidth(), '-'), ColorInterface::YELLOW);
-            $console->writeLine($e->getMessage(), ColorInterface::YELLOW);
-            $console->writeLine(str_pad('', $console->getWidth(), '-'), ColorInterface::YELLOW);
+            $this->console->writeBanner($e->getMessage(), ColorInterface::YELLOW);
             $exitCode = $e->getCode();
         } catch (ExportException $e) {
-            $console->writeLine(str_pad('', $console->getWidth(), '-'), ColorInterface::RED);
-            $console->writeLine($e->getMessage(), ColorInterface::RED);
-            $console->writeLine(str_pad('', $console->getWidth(), '-'), ColorInterface::RED);
+            $this->console->writeBanner($e->getMessage(), ColorInterface::RED);
             $exitCode = 500;
         }
         return $exitCode;
+    }
+
+    /**
+     * Creates the console instance to use.
+     * @param AdapterInterface $consoleAdapter
+     * @return Console
+     */
+    protected function createConsole(AdapterInterface $consoleAdapter): Console
+    {
+        return new Console($consoleAdapter);
     }
 
     /**

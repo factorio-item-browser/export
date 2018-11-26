@@ -6,12 +6,12 @@ namespace FactorioItemBrowserTest\Export\Command;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
+use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Process\CommandProcess;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use Symfony\Component\Process\Process;
-use Zend\Console\Adapter\AdapterInterface;
 
 /**
  * The PHPUnit test of the SubCommandTrait class.
@@ -35,8 +35,8 @@ class SubCommandTraitTest extends TestCase
         $parameters = ['def'];
         $exitCode = 42;
 
-        /* @var AdapterInterface $console */
-        $console = $this->createMock(AdapterInterface::class);
+        /* @var Console $console */
+        $console = $this->createMock(Console::class);
 
         /* @var Process|MockObject $process */
         $process = $this->getMockBuilder(Process::class)
@@ -72,8 +72,8 @@ class SubCommandTraitTest extends TestCase
         $commandName = 'abc';
         $parameters = ['def'];
 
-        /* @var AdapterInterface $console */
-        $console = $this->createMock(AdapterInterface::class);
+        /* @var Console $console */
+        $console = $this->createMock(Console::class);
 
         /* @var SubCommandTrait|MockObject $trait */
         $trait = $this->getMockBuilder(SubCommandTrait::class)

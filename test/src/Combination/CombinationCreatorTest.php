@@ -162,6 +162,31 @@ class CombinationCreatorTest extends TestCase
     }
 
     /**
+     * Tests the createBaseCombination method.
+     * @throws ExportException
+     * @covers ::createBaseCombination
+     */
+    public function testCreateBaseCombination(): void
+    {
+        $combination = (new Combination())->setName('abc');
+
+        /* @var CombinationCreator|MockObject $creator */
+        $creator = $this->getMockBuilder(CombinationCreator::class)
+                        ->setMethods(['verifyMod', 'createCombination'])
+                        ->disableOriginalConstructor()
+                        ->getMock();
+        $creator->expects($this->once())
+                ->method('verifyMod');
+        $creator->expects($this->once())
+                ->method('createCombination')
+                ->with([])
+                ->willReturn($combination);
+
+        $result = $creator->createBaseCombination();
+        $this->assertSame($combination, $result);
+    }
+
+    /**
      * Tests the createCombinationsWithNumberOfOptionalMods method.
      * @throws ExportException
      * @covers ::createCombinationsWithNumberOfOptionalMods

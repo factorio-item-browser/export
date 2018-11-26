@@ -4,10 +4,8 @@ namespace FactorioItemBrowser\Export\Command\Export;
 
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use FactorioItemBrowser\Export\Combination\CombinationCreator;
-use FactorioItemBrowser\Export\Command\AbstractCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
-use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -21,7 +19,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ExportModStepCommand extends AbstractCommand
+class ExportModStepCommand extends AbstractExportModCommand
 {
     use SubCommandTrait;
 
@@ -36,12 +34,6 @@ class ExportModStepCommand extends AbstractCommand
      * @var EntityRegistry
      */
     protected $combinationRegistry;
-
-    /**
-     * The registry of the mods.
-     * @var ModRegistry
-     */
-    protected $modRegistry;
 
     /**
      * The process manager.
@@ -62,21 +54,21 @@ class ExportModStepCommand extends AbstractCommand
         ModRegistry $modRegistry,
         ProcessManager $processManager
     ) {
+        parent::__construct($modRegistry);
+
         $this->combinationCreator = $combinationCreator;
         $this->combinationRegistry = $combinationRegistry;
-        $this->modRegistry = $modRegistry;
         $this->processManager = $processManager;
     }
 
     /**
-     * Executes the command.
+     * Exports the specified mod.
      * @param Route $route
+     * @param Mod $mod
      * @throws ExportException
-     * @throws CommandException
      */
-    protected function execute(Route $route): void
+    protected function exportMod(Route $route, Mod $mod): void
     {
-        $mod = $this->fetchMod($route->getMatchedParam('modName', ''));
         $this->combinationCreator->setupForMod($mod);
 
         $combinations = $this->fetchCombinations((int) $route->getMatchedParam('step', 0));
@@ -88,21 +80,6 @@ class ExportModStepCommand extends AbstractCommand
     }
 
     /**
-     * Fetches the mod to the specified name.
-     * @param string $modName
-     * @return Mod
-     * @throws CommandException
-     */
-    protected function fetchMod(string $modName): Mod
-    {
-        $mod = $this->modRegistry->get($modName);
-        if (!$mod instanceof Mod) {
-            throw new CommandException('Mod not known: ' . $modName, 404);
-        }
-        return $mod;
-    }
-
-    /**
      * Fetches the combinations to export.
      * @param int $step
      * @return array|Combination[]
@@ -110,7 +87,12 @@ class ExportModStepCommand extends AbstractCommand
      */
     protected function fetchCombinations(int $step): array
     {
-        return $this->combinationCreator->createCombinationsWithNumberOfOptionalMods($step);
+        if ($step === 0) {
+            $result = [$this->combinationCreator->createBaseCombination()];
+        } else {
+            $result = $this->combinationCreator->createCombinationsWithNumberOfOptionalMods($step);
+        }
+        return $result;
     }
 
     /**

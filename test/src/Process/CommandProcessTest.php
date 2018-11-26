@@ -9,11 +9,11 @@
 namespace FactorioItemBrowserTest\Export\Process;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
+use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Process\CommandProcess;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
-use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\ColorInterface;
 
 /**
@@ -48,8 +48,8 @@ class CommandProcessTest extends TestCase
                 ->with($commandName, $parameters)
                 ->willReturn($commandLine);
 
-        /* @var AdapterInterface $console */
-        $console = $this->createMock(AdapterInterface::class);
+        /* @var Console $console */
+        $console = $this->createMock(Console::class);
 
         $process->__construct($commandName, $parameters, $console);
 
@@ -57,7 +57,6 @@ class CommandProcessTest extends TestCase
         $this->assertSame($commandLine, $process->getCommandLine());
         $this->assertSame(['SUBCMD' => 1], $process->getEnv());
     }
-
 
     /**
      * Provides the data for the buildCommandLine test.
@@ -107,8 +106,8 @@ class CommandProcessTest extends TestCase
         $callback = 'strval';
         $newCallback = 'intval';
 
-        /* @var AdapterInterface $console */
-        $console = $this->createMock(AdapterInterface::class);
+        /* @var Console $console */
+        $console = $this->createMock(Console::class);
 
         /* @var CommandProcess|MockObject $process */
         $process = $this->getMockBuilder(CommandProcess::class)
@@ -150,12 +149,18 @@ class CommandProcessTest extends TestCase
     {
         $output1 = 'abc';
         $output2 = 'def';
+        $commandLine = 'ghi';
 
         if ($withConsole) {
-            /* @var AdapterInterface|MockObject $console */
-            $console = $this->getMockBuilder(AdapterInterface::class)
-                            ->setMethods(['write'])
-                            ->getMockForAbstractClass();
+            /* @var Console|MockObject $console */
+            $console = $this->getMockBuilder(Console::class)
+                            ->setMethods(['writeCommand', 'write'])
+                            ->disableOriginalConstructor()
+                            ->getMock();
+            $console->expects($this->once())
+                    ->method('writeCommand')
+                    ->with($commandLine);
+
             $console->expects($this->exactly(2))
                     ->method('write')
                     ->withConsecutive(
@@ -179,7 +184,15 @@ class CommandProcessTest extends TestCase
             $callback = null;
         }
 
-        $process = new CommandProcess('foo', [], $console);
+        /* @var CommandProcess|MockObject $process */
+        $process = $this->getMockBuilder(CommandProcess::class)
+                        ->setMethods(['getCommandLine'])
+                        ->setConstructorArgs(['foo', [], $console])
+                        ->getMock();
+        $process->expects($this->any())
+                ->method('getCommandLine')
+                ->willReturn($commandLine);
+
         $result = $this->invokeMethod($process, 'wrapCallback', $callback);
 
         if ($expectCallback) {

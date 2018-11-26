@@ -124,6 +124,18 @@ class CombinationCreator
     }
 
     /**
+     * Creates the base combination.
+     * @return Combination
+     * @throws ExportException
+     */
+    public function createBaseCombination(): Combination
+    {
+        $this->verifyMod();
+
+        return $this->createCombination([]);
+    }
+
+    /**
      * Creates the combinations with the specified number of optional mods.
      * @param int $numberOfOptionalMods
      * @return array|Combination[]
@@ -133,16 +145,10 @@ class CombinationCreator
     {
         $this->verifyMod();
 
-        if ($numberOfOptionalMods === 0) {
-            $mainCombination = $this->createCombination([]);
-            $result = [$mainCombination->getName() => $mainCombination];
-        } else {
-            $result = [];
-            foreach ($this->getCombinationsWithNumberOfOptionalMods($numberOfOptionalMods - 1) as $combination) {
-                $result = array_merge($result, $this->createChildCombinations($combination));
-            }
+        $result = [];
+        foreach ($this->getCombinationsWithNumberOfOptionalMods($numberOfOptionalMods - 1) as $combination) {
+            $result = array_merge($result, $this->createChildCombinations($combination));
         }
-
         return $result;
     }
 

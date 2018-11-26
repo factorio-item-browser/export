@@ -2,8 +2,6 @@
 
 namespace FactorioItemBrowser\Export\Command\Export;
 
-use FactorioItemBrowser\Export\Command\AbstractCommand;
-use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -16,14 +14,8 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ExportModMetaCommand extends AbstractCommand
+class ExportModMetaCommand extends AbstractExportModCommand
 {
-    /**
-     * The registry of the mods.
-     * @var ModRegistry
-     */
-    protected $modRegistry;
-
     /**
      * The translator.
      * @var Translator
@@ -37,38 +29,23 @@ class ExportModMetaCommand extends AbstractCommand
      */
     public function __construct(ModRegistry $modRegistry, Translator $translator)
     {
-        $this->modRegistry = $modRegistry;
+        parent::__construct($modRegistry);
+
         $this->translator = $translator;
     }
 
     /**
-     * Executes the command.
+     * Exports the specified mod.
      * @param Route $route
+     * @param Mod $mod
      * @throws ExportException
-     * @throws CommandException
      */
-    protected function execute(Route $route): void
+    protected function exportMod(Route $route, Mod $mod): void
     {
-        $mod = $this->fetchMod($route->getMatchedParam('modName'));
         $this->translate($mod);
 
         $this->modRegistry->set($mod);
         $this->modRegistry->saveMods();
-    }
-
-    /**
-     * Fetches the mod to the specified name.
-     * @param string $modName
-     * @return Mod
-     * @throws CommandException
-     */
-    protected function fetchMod(string $modName): Mod
-    {
-        $mod = $this->modRegistry->get($modName);
-        if (!$mod instanceof Mod) {
-            throw new CommandException('Mod not known: ' . $modName, 404);
-        }
-        return $mod;
     }
 
     /**

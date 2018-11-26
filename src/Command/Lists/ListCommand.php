@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\Lists;
 
 use FactorioItemBrowser\Export\Command\AbstractCommand;
-use FactorioItemBrowser\Export\Utils\ConsoleUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use ZF\Console\Route;
@@ -81,10 +80,10 @@ class ListCommand extends AbstractCommand
      */
     protected function printMod(Mod $availableMod, ?Mod $exportedMod): void
     {
-        $this->console->write(ConsoleUtils::formatModName($availableMod->getName(), ': '));
-        $this->console->write(ConsoleUtils::formatVersion($availableMod->getVersion(), true));
+        $this->console->write($this->console->formatModName($availableMod->getName(), ': '));
+        $this->console->write($this->console->formatVersion($availableMod->getVersion(), true));
         if ($exportedMod instanceof Mod) {
-            $this->console->write(ConsoleUtils::formatVersion($exportedMod->getVersion(), true));
+            $this->console->write($this->console->formatVersion($exportedMod->getVersion(), true));
         }
         $this->console->writeLine();
     }

@@ -10,7 +10,6 @@ use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Mod\ModReader;
-use FactorioItemBrowser\Export\Utils\ConsoleUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Zend\ProgressBar\Adapter\Console;
@@ -195,10 +194,10 @@ class UpdateListCommand extends AbstractCommand
             }
 
             if ($hasChanged) {
-                $this->console->write(ConsoleUtils::formatModName($newMod->getName(), ': '));
-                $this->console->write(ConsoleUtils::formatVersion($currentVersion, true));
+                $this->console->write($this->console->formatModName($newMod->getName(), ': '));
+                $this->console->write($this->console->formatVersion($currentVersion, true));
                 $this->console->write(' -> ');
-                $this->console->write(ConsoleUtils::formatVersion($newMod->getVersion(), false));
+                $this->console->write($this->console->formatVersion($newMod->getVersion(), false));
                 $this->console->writeLine();
             }
         }

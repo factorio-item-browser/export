@@ -41,6 +41,14 @@ return [
             ],
         ],
         [
+            'name' => CommandName::EXPORT_MOD_DEPENDENCIES,
+            'handler' => Command\Export\ExportModWithDependenciesCommand::class,
+            'short_description' => 'Exports a mod with all mods having it as dependency.',
+            'options_description' => [
+                '<modName>' => 'The name of the mod to be exported.',
+            ],
+        ],
+        [
             'name' => CommandName::EXPORT_MOD_META,
             'handler' => Command\Export\ExportModMetaCommand::class,
             'short_description' => 'Exports the meta data of a mod.',
