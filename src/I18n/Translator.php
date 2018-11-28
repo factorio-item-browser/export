@@ -21,6 +21,11 @@ use Zend\Stdlib\ArrayUtils;
 class Translator
 {
     /**
+     * The fallback value of the locale.
+     */
+    protected const FALLBACK_LOCALE = 'en';
+
+    /**
      * The regular expression used to detect references to other translations.
      */
     protected const REGEXP_REFERENCE = '#__(.+?)__(.+?)__#';
@@ -45,7 +50,7 @@ class Translator
 
     /**
      * The translations of the currently active mods.
-     * @var string[][]
+     * @var array|string[][]
      */
     protected $translations = [];
 
@@ -90,98 +95,172 @@ class Translator
      * @param string $type The type of string to translate.
      * @param string|array $localisedString The raw localised string to translate.
      * @param string|array|null $fallbackLocalisedString The fallback localised string to use.
-     * @return $this
      */
     public function addTranslationsToEntity(
         LocalisedString $entity,
         string $type,
         $localisedString,
         $fallbackLocalisedString = null
-    ) {
+    ): void {
         foreach (array_keys($this->translations) as $locale) {
-            $this->placeholderTranslator->setLocale($locale)
-                                        ->setFallbackLocale('en');
-
-            $value = $this->translate($type, $localisedString, $locale, true);
-            if (strlen($value) === 0 && $fallbackLocalisedString !== null) {
-                $value = $this->translate($type, $fallbackLocalisedString, $locale, true);
-            }
-            if (strlen($value) > 0) {
+            $value = $this->translateWithFallback($locale, $type, $localisedString, $fallbackLocalisedString);
+            if ($value !== '') {
                 $entity->setTranslation($locale, $value);
             }
         }
-        return $this;
+    }
+
+    /**
+     * Translates the localised string with the specified fallback.
+     * @param string $locale
+     * @param string $type
+     * @param string|array $localisedString
+     * @param string|array|null $fallbackLocalisedString
+     * @return string
+     */
+    protected function translateWithFallback(
+        string $locale,
+        string $type,
+        $localisedString,
+        $fallbackLocalisedString
+    ): string {
+        $result = $this->translate($locale, $type, $localisedString, 1);
+        if ($result === '' && $fallbackLocalisedString !== null) {
+            $result = $this->translate($locale, $type, $fallbackLocalisedString, 1);
+        }
+        return $result;
     }
 
     /**
      * Translates the specified string.
-     * @param string $localisedKey
+     * @param string $type
      * @param string|array $localisedString
      * @param string $locale
-     * @param bool $isFirstLevel
+     * @param int $level
      * @return string
      */
-    protected function translate(string $localisedKey, $localisedString, string $locale, bool $isFirstLevel): string
+    protected function translate(string $locale, string $type, $localisedString, int $level): string
     {
-        $result = '';
-        $originalLocalisedString = $localisedString;
-        if (is_string($localisedString)) {
-            $result = $localisedString;
-        } elseif (is_array($localisedString)) {
-            $key = array_shift($localisedString);
-            if ($key === '') {
-                $result = strval(array_shift($localisedString));
-            } else {
-                $parameters = [];
-                $index = 1;
-                foreach ($localisedString as $parameter) {
-                    $parameters['__' . $index . '__'] =
-                        $this->translate($localisedKey, $parameter, $locale, false);
-                    ++$index;
-                }
-
-                $translation = $this->translations[$locale][$key] ?? '';
-                if (count($parameters) === 0) {
-                    $result = $translation;
-                } else {
-                    $result = str_replace(array_keys($parameters), array_values($parameters), $translation);
-                }
-            }
+        $result = $this->translateLocalisedString($locale, $type, $localisedString, $level);
+        if ($result === '' && $locale !== self::FALLBACK_LOCALE && $level > 1) {
+            $result = $this->translateLocalisedString(self::FALLBACK_LOCALE, $type, $localisedString, $level);
         }
-        if (strlen($result) === 0 && $locale !== 'en' && !$isFirstLevel) {
-            // Fall back to English if a translation is not available.
-            $result = $this->translate($localisedKey, $originalLocalisedString, 'en', $isFirstLevel);
-        }
-        return trim($this->resolveReferences($localisedKey, $result, $locale));
+        return trim($this->resolveReferences($locale, $type, $result));
     }
 
     /**
-     * Resolves any references which remain in the specified string.
-     * @param string $key
-     * @param string $string
+     * Translates the localised string.
      * @param string $locale
+     * @param string $type
+     * @param string|array $localisedString
+     * @param int $level
      * @return string
      */
-    protected function resolveReferences(string $key, string $string, string $locale)
+    protected function translateLocalisedString(string $locale, string $type, $localisedString, int $level): string
+    {
+        $result = '';
+        if (is_string($localisedString)) {
+            $result = $localisedString;
+        } elseif (is_array($localisedString)) {
+            $name = array_shift($localisedString);
+            if ($name === '') {
+                $result = (string) array_shift($localisedString);
+            } else {
+                $result = $this->translations[$locale][$name] ?? '';
+                if ($result !== '' && count($localisedString) > 0) {
+                    $result = $this->translateParameters($locale, $type, $result, $localisedString, $level);
+                }
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Translates the parameters in the specified string.
+     * @param string $locale
+     * @param string $type
+     * @param string $string
+     * @param array $parameters
+     * @param int $level
+     * @return string
+     */
+    protected function translateParameters(
+        string $locale,
+        string $type,
+        string $string,
+        array $parameters,
+        int $level
+    ): string {
+        $translatedParameters = [];
+        $index = 1;
+        foreach ($parameters as $parameter) {
+            $translatedParameters['__' . $index . '__'] = $this->translate($locale, $type, $parameter, $level + 1);
+            ++$index;
+        }
+
+        return str_replace(array_keys($translatedParameters), array_values($translatedParameters), $string);
+    }
+
+    /**
+     * Resolves any references which remained in the specified string.
+     * @param string $locale
+     * @param string $type
+     * @param string $string
+     * @return string
+     */
+    protected function resolveReferences(string $locale, string $type, string $string)
     {
         if (preg_match_all(self::REGEXP_REFERENCE, $string, $matches) > 0) {
             for ($i = 0; $i < count($matches[0]); ++$i) {
                 $match = $matches[0][$i];
                 $section = strtolower($matches[1][$i]);
-                $reference = $matches[2][$i];
+                $name = $matches[2][$i];
 
-                $translationKey = $section . '-' . $key . '.' . $reference;
-                if (isset($this->translations[$locale][$translationKey])) {
-                    $string = str_replace($match, $this->translations[$locale][$translationKey], $string);
-                } else {
-                    $languageKey = 'placeholder ' . $section . ' ' . $reference;
-                    $translatedReference = $this->placeholderTranslator->translate($languageKey);
-                    if ($translatedReference !== $languageKey) {
-                        $string = str_replace($match, $translatedReference, $string);
-                    }
+                $translatedReference = $this->translateReference($locale, $section, $type, $name);
+                if ($translatedReference !== null) {
+                    $string = str_replace($match, $translatedReference, $string);
                 }
             }
         }
         return $string;
+    }
+
+    /**
+     * Translates a reference.
+     * @param string $locale
+     * @param string $section
+     * @param string $type
+     * @param string $name
+     * @return string|null
+     */
+    protected function translateReference(string $locale, string $section, string $type, string $name): ?string
+    {
+        $translationKey = $section . '-' . $type . '.' . $name;
+        if (isset($this->translations[$locale][$translationKey])) {
+            $result = $this->translations[$locale][$translationKey];
+        } else {
+            $result = $this->translatePlaceholder($locale, $section, $name);
+        }
+        return $result;
+    }
+
+    /**
+     * Translates a common placeholder provided by the export's language files.
+     * @param string $locale
+     * @param string $section
+     * @param string $name
+     * @return string|null
+     */
+    protected function translatePlaceholder(string $locale, string $section, string $name): ?string
+    {
+        $this->placeholderTranslator->setLocale($locale)
+                                    ->setFallbackLocale(self::FALLBACK_LOCALE);
+
+        $languageKey = implode(' ', ['placeholder', $section, $name]);
+        $result = $this->placeholderTranslator->translate($languageKey);
+        if ($result === $languageKey) {
+            $result = null;
+        }
+        return $result;
     }
 }
