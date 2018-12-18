@@ -7,6 +7,7 @@ namespace FactorioItemBrowserTest\Export\Command\Export;
 use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Export\ExportCombinationCommand;
+use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Factorio\Instance;
 use FactorioItemBrowser\Export\Parser\ParserManager;
@@ -15,7 +16,6 @@ use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
-use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
 /**
@@ -102,13 +102,14 @@ class ExportCombinationCommandTest extends TestCase
                             ->method('set')
                             ->with($combination);
 
-        /* @var AdapterInterface|MockObject $console */
-        $console = $this->getMockBuilder(AdapterInterface::class)
-                        ->setMethods(['writeLine'])
-                        ->getMockForAbstractClass();
+        /* @var Console|MockObject $console */
+        $console = $this->getMockBuilder(Console::class)
+                        ->setMethods(['writeAction'])
+                        ->disableOriginalConstructor()
+                        ->getMock();
         $console->expects($expectParse ? $this->once() : $this->never())
-                ->method('writeLine')
-                ->with('Exporting combination def...');
+                ->method('writeAction')
+                ->with('Exporting combination def');
 
         /* @var Instance|MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)

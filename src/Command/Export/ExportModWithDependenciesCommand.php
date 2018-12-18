@@ -52,7 +52,7 @@ class ExportModWithDependenciesCommand extends AbstractCommand
     {
         $modName = $route->getMatchedParam('modName', '');
         $modNamesToExport = $this->getModNamesToExport($modName);
-        $this->console->writeLine('Exporting ' . count($modNamesToExport) . ' mods...');
+        $this->console->writeAction('Exporting ' . count($modNamesToExport) . ' mods');
 
         $sortedModNames = $this->sortModNames($modNamesToExport);
         $this->runSubCommands($sortedModNames);

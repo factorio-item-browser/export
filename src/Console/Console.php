@@ -7,6 +7,8 @@ namespace FactorioItemBrowser\Export\Console;
 use FactorioItemBrowser\Export\Utils\VersionUtils;
 use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\ColorInterface;
+use Zend\ProgressBar\Adapter\Console as ProgressBarConsole;
+use Zend\ProgressBar\ProgressBar;
 
 /**
  * The wrapper class for the actual console.
@@ -67,6 +69,17 @@ class Console
     }
 
     /**
+     * Writes an action to the console.
+     * @param string $action
+     * @return $this
+     */
+    public function writeAction(string $action)
+    {
+        $this->writeLine(' > ' . $action . '...');
+        return $this;
+    }
+
+    /**
      * Writes a banner with the specified message.
      * @param string $message
      * @param int|null $color
@@ -113,5 +126,15 @@ class Console
     {
         $version = $version === '' ? '' : VersionUtils::normalize($version);
         return str_pad($version, 10, ' ', $padLeft ? STR_PAD_LEFT : STR_PAD_RIGHT);
+    }
+
+    /**
+     * Returns a progress bar instance with the specified number of steps.
+     * @param int $numberOfSteps
+     * @return ProgressBar
+     */
+    public function createProgressBar(int $numberOfSteps): ProgressBar
+    {
+        return new ProgressBar(new ProgressBarConsole(), 0, $numberOfSteps);
     }
 }

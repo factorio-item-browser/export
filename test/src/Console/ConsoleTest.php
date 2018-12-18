@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\ColorInterface;
+use Zend\ProgressBar\Adapter\Console as ProgressBarConsole;
 
 /**
  * The PHPUnit test of the Console class.
@@ -107,6 +108,29 @@ class ConsoleTest extends TestCase
         $this->assertSame($console, $result);
     }
 
+    /**
+     * Tests the writeAction method.
+     * @covers ::writeAction
+     */
+    public function testWriteAction(): void
+    {
+        $action = 'abc';
+        $expectedMessage = ' > abc...';
+
+        /* @var Console|MockObject $console */
+        $console = $this->getMockBuilder(Console::class)
+                        ->setMethods(['writeLine'])
+                        ->disableOriginalConstructor()
+                        ->getMockForAbstractClass();
+        $console->expects($this->once())
+                ->method('writeLine')
+                ->with($expectedMessage, null)
+                ->willReturnSelf();
+
+        $result = $console->writeAction($action);
+        $this->assertSame($console, $result);
+    }
+    
     /**
      * Tests the writeBanner method.
      * @covers ::writeBanner
@@ -229,5 +253,21 @@ class ConsoleTest extends TestCase
 
         $result = $console->formatVersion($version, $padLeft);
         $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Tests the createProgressBar method.
+     * @covers ::createProgressBar
+     */
+    public function testCreateProgressBar(): void
+    {
+        $numberOfSteps = 42;
+
+        /* @var AdapterInterface $consoleAdapter */
+        $consoleAdapter = $this->createMock(AdapterInterface::class);
+        $console = new Console($consoleAdapter);
+
+        $result = $console->createProgressBar($numberOfSteps);
+        $this->assertInstanceOf(ProgressBarConsole::class, $result->getAdapter());
     }
 }

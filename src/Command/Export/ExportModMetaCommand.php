@@ -55,6 +55,8 @@ class ExportModMetaCommand extends AbstractExportModCommand
      */
     protected function translate(Mod $mod): void
     {
+        $this->console->writeAction('Exporting meta data of mod ' . $mod->getName());
+
         $this->translator->loadFromModNames([$mod->getName()]);
         $this->translator->addTranslationsToEntity(
             $mod->getTitles(),

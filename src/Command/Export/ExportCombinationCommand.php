@@ -63,7 +63,7 @@ class ExportCombinationCommand extends AbstractCommand
         $combination = $this->combinationRegistry->get($combinationHash);
 
         if ($combination instanceof Combination) {
-            $this->console->writeLine('Exporting combination ' . $combination->getName() . '...');
+            $this->console->writeAction('Exporting combination ' . $combination->getName());
 
             $dumpData = $this->instance->run($combination);
             $this->parserManager->parse($combination, $dumpData);

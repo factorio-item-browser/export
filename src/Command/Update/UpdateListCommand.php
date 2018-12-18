@@ -12,8 +12,6 @@ use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Mod\ModReader;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
-use Zend\ProgressBar\Adapter\Console;
-use Zend\ProgressBar\ProgressBar;
 use ZF\Console\Route;
 
 /**
@@ -67,18 +65,16 @@ class UpdateListCommand extends AbstractCommand
         $currentMods = $this->getModsFromRegistry($this->modRegistry);
         $modFileNames = $this->modFileManager->getModFileNames();
 
-        $this->console->writeLine('Hashing mod files...');
+        $this->console->writeAction('Hashing mod files');
         $newMods = $this->detectNewMods($modFileNames, $currentMods);
 
-        $this->console->writeLine('Persisting mods...');
+        $this->console->writeAction('Persisting mods');
         $this->setModsToRegistry($newMods, $this->modRegistry);
         $this->printChangesToConsole($newMods, $currentMods);
 
         $this->runCommand(CommandName::UPDATE_DEPENDENCIES, [], $this->console);
         $this->runCommand(CommandName::UPDATE_ORDER, [], $this->console);
         $this->runCommand(CommandName::EXPORT_PREPARE, [], $this->console);
-
-        $this->console->writeLine('Done.');
     }
 
     /**
@@ -107,7 +103,7 @@ class UpdateListCommand extends AbstractCommand
      */
     protected function detectNewMods(array $modFileNames, array $currentMods): array
     {
-        $progressBar = new ProgressBar(new Console(), 0, count($modFileNames));
+        $progressBar = $this->console->createProgressBar(count($modFileNames));
 
         $result = [];
         $currentModsByChecksum = $this->getModsByChecksum($currentMods);
