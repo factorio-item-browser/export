@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\ColorInterface;
+use Zend\ProgressBar\Adapter\AbstractAdapter;
 use Zend\ProgressBar\Adapter\Console as ProgressBarConsole;
 
 /**
@@ -263,11 +264,40 @@ class ConsoleTest extends TestCase
     {
         $numberOfSteps = 42;
 
-        /* @var AdapterInterface $consoleAdapter */
-        $consoleAdapter = $this->createMock(AdapterInterface::class);
-        $console = new Console($consoleAdapter);
+        /* @var AbstractAdapter $progressBarAdapter */
+        $progressBarAdapter = $this->createMock(AbstractAdapter::class);
+
+        /* @var Console|MockObject $console */
+        $console = $this->getMockBuilder(Console::class)
+                        ->setMethods(['createProgressBarAdapter'])
+                        ->disableOriginalConstructor()
+                        ->getMock();
+        $console->expects($this->once())
+                ->method('createProgressBarAdapter')
+                ->willReturn($progressBarAdapter);
 
         $result = $console->createProgressBar($numberOfSteps);
-        $this->assertInstanceOf(ProgressBarConsole::class, $result->getAdapter());
+        $this->assertSame($progressBarAdapter, $result->getAdapter());
+    }
+
+    /**
+     * Tests the createProgressBarAdapter method.
+     * @throws ReflectionException
+     * @covers ::createProgressBarAdapter
+     */
+    public function testCreateProgressBarAdapter(): void
+    {
+        /* @var AdapterInterface|MockObject $consoleAdapter */
+        $consoleAdapter = $this->getMockBuilder(AdapterInterface::class)
+                               ->setMethods(['getWidth'])
+                               ->getMockForAbstractClass();
+        $consoleAdapter->expects($this->once())
+                       ->method('getWidth')
+                       ->willReturn(50);
+
+        $console = new Console($consoleAdapter);
+
+        $result = $this->invokeMethod($console, 'createProgressBarAdapter');
+        $this->assertInstanceOf(ProgressBarConsole::class, $result);
     }
 }

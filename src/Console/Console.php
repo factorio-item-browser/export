@@ -7,6 +7,7 @@ namespace FactorioItemBrowser\Export\Console;
 use FactorioItemBrowser\Export\Utils\VersionUtils;
 use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\ColorInterface;
+use Zend\ProgressBar\Adapter\AbstractAdapter;
 use Zend\ProgressBar\Adapter\Console as ProgressBarConsole;
 use Zend\ProgressBar\ProgressBar;
 
@@ -129,12 +130,21 @@ class Console
     }
 
     /**
-     * Returns a progress bar instance with the specified number of steps.
+     * Creates and returns a progress bar instance with the specified number of steps.
      * @param int $numberOfSteps
      * @return ProgressBar
      */
     public function createProgressBar(int $numberOfSteps): ProgressBar
     {
-        return new ProgressBar(new ProgressBarConsole(), 0, $numberOfSteps);
+        return new ProgressBar($this->createProgressBarAdapter(), 0, $numberOfSteps);
+    }
+
+    /**
+     * Creates and returns the adapter to use for the progress bar.
+     * @return AbstractAdapter
+     */
+    protected function createProgressBarAdapter(): AbstractAdapter
+    {
+        return new ProgressBarConsole(['width' => $this->consoleAdapter->getWidth()]);
     }
 }

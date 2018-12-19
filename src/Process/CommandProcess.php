@@ -28,7 +28,7 @@ class CommandProcess extends Process
      */
     public function __construct(string $commandName, array $parameters = [], ?Console $console = null)
     {
-        parent::__construct($this->buildCommandLine($commandName, $parameters), null, ['SUBCMD' => 1], null, null);
+        parent::__construct($this->buildCommand($commandName, $parameters), null, ['SUBCMD' => 1], null, null);
         $this->console = $console;
     }
 
@@ -36,23 +36,31 @@ class CommandProcess extends Process
      * Builds the command line to use for the process.
      * @param string $commandName
      * @param array $parameters
-     * @return string
+     * @return array
      */
-    protected function buildCommandLine(string $commandName, array $parameters): string
+    protected function buildCommand(string $commandName, array $parameters): array
     {
-        $commandParts = [];
-        foreach ($parameters as $name => $value) {
-            if (is_int($name)) {
-                $commandParts[] = '"' . $value . '"';
-            } elseif (strpos($commandName, '<' . $name . '>') !== false) {
-                $commandName = str_replace('<' . $name . '>', '"' . $value . '"', $commandName);
-            } else {
-                $commandParts[] = '--' . $name . '="' . $value . '"';
+        $commandParts = array_merge(
+            ['php', $_SERVER['SCRIPT_FILENAME']],
+            explode(' ', $commandName)
+        );
+        foreach ($commandParts as $index => $commandPart) {
+            if (substr($commandPart, 0, 1) === '<' && substr($commandPart, -1) === '>') {
+                $name = substr($commandPart, 1, -1);
+                if (isset($parameters[$name])) {
+                    $commandParts[$index] = $parameters[$name];
+                    unset($parameters[$name]);
+                }
             }
         }
-        array_unshift($commandParts, 'php', $_SERVER['SCRIPT_FILENAME'], $commandName);
-
-        return implode(' ', $commandParts);
+        foreach ($parameters as $name => $value) {
+            if (is_int($name)) {
+                $commandParts[] = $value;
+            } else {
+                $commandParts[] = '--' . $name . '=' . $value;
+            }
+        }
+        return $commandParts;
     }
 
     /**

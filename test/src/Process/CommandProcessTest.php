@@ -36,17 +36,18 @@ class CommandProcessTest extends TestCase
     {
         $commandName = 'abc';
         $parameters = ['def' => 'ghi'];
-        $commandLine = 'jkl';
+        $command = ['jkl', 'mno'];
+        $expectedCommandLine = "'jkl' 'mno'";
 
         /* @var CommandProcess|MockObject $process */
         $process = $this->getMockBuilder(CommandProcess::class)
-                        ->setMethods(['buildCommandLine'])
+                        ->setMethods(['buildCommand'])
                         ->disableOriginalConstructor()
                         ->getMock();
         $process->expects($this->once())
-                ->method('buildCommandLine')
+                ->method('buildCommand')
                 ->with($commandName, $parameters)
-                ->willReturn($commandLine);
+                ->willReturn($command);
 
         /* @var Console $console */
         $console = $this->createMock(Console::class);
@@ -54,46 +55,41 @@ class CommandProcessTest extends TestCase
         $process->__construct($commandName, $parameters, $console);
 
         $this->assertSame($console, $this->extractProperty($process, 'console'));
-        $this->assertSame($commandLine, $process->getCommandLine());
+        $this->assertContains($expectedCommandLine, $process->getCommandLine());
         $this->assertSame(['SUBCMD' => 1], $process->getEnv());
     }
 
     /**
-     * Provides the data for the buildCommandLine test.
-     * @return array
-     */
-    public function provideBuildCommandLine(): array
-    {
-        return [
-            ['foo', [], 'foo'],
-            ['foo bar', [], 'foo bar'],
-            ['foo', ['bar'], 'foo "bar"'],
-            ['foo', ['abc' => 'def'], 'foo --abc="def"'],
-            ['foo', ['bar', 'abc' => 'def'], 'foo "bar" --abc="def"'],
-            ['foo <bar>', ['bar' => 'abc'], 'foo "abc"'],
-            ['foo <bar>', ['bar' => 'abc', 'def' => 'ghi', 'jkl'], 'foo "abc" --def="ghi" "jkl"'],
-        ];
-    }
-
-    /**
-     * Tests the buildCommandLine method.
-     * @param string $commandName
-     * @param array $parameters
-     * @param string $expectedCommandLinePart
+     * Tests the buildCommand method.
      * @throws ReflectionException
-     * @covers ::buildCommandLine
-     * @dataProvider provideBuildCommandLine
+     * @covers ::buildCommand
      */
-    public function testBuildCommandLine(
-        string $commandName,
-        array $parameters,
-        string $expectedCommandLinePart
-    ): void {
-        $expectedCommandLine = 'php ' . $_SERVER['SCRIPT_FILENAME'] . ' ' . $expectedCommandLinePart;
+    public function testBuildCommand(): void
+    {
+        $commandName = 'abc def <def> <ghi>';
+        $parameters = [
+            'abc' => 'jkl',
+            'def' => 'mno',
+            'pqr'
+        ];
+        $expectedResult = [
+            'php',
+            $_SERVER['SCRIPT_FILENAME'],
+            'abc',
+            'def',
+            'mno',
+            '<ghi>',
+            '--abc=jkl',
+            'pqr'
+        ];
 
-        $process = new CommandProcess('');
-        $result = $this->invokeMethod($process, 'buildCommandLine', $commandName, $parameters);
-        $this->assertSame($expectedCommandLine, $result);
+        /* @var CommandProcess|MockObject $process */
+        $process = $this->getMockBuilder(CommandProcess::class)
+                        ->disableOriginalConstructor()
+                        ->getMock();
+
+        $result = $this->invokeMethod($process, 'buildCommand', $commandName, $parameters);
+        $this->assertEquals($expectedResult, $result);
     }
 
     /**

@@ -121,14 +121,14 @@ class Instance
      */
     protected function execute(): string
     {
-        $commandLine = implode(' ', [
+        $process = new Process([
             $this->instanceDirectory . '/bin/x64/factorio',
             '--no-log-rotation',
-            '--create dump',
-            '--mod-directory ' . realpath($this->instanceDirectory . '/mods')
+            '--create',
+            'dump',
+            '--mod-directory',
+            realpath($this->instanceDirectory . '/mods')
         ]);
-
-        $process = new Process($commandLine);
         $process->start();
         $process->wait();
 
