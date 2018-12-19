@@ -59,16 +59,6 @@ class Instance
     }
 
     /**
-     * Cleans up the instance.
-     */
-    public function __destruct()
-    {
-        if ($this->instanceDirectory !== null) {
-            $this->removeDirectory($this->instanceDirectory);
-        }
-    }
-
-    /**
      * Runs the combination in a Factorio instance.
      * @param Combination $combination
      * @return DataContainer
@@ -76,24 +66,32 @@ class Instance
      */
     public function run(Combination $combination): DataContainer
     {
-        $this->setUp($combination->calculateHash());
-        $this->setUpMods($combination);
-        $output = $this->execute();
+        try {
+            $this->setUp($combination->calculateHash());
+            $this->setUpMods($combination);
+            $output = $this->execute();
+        } finally {
+            $this->removeInstanceDirectory();
+        }
         return $this->dumpExtractor->extract($output);
     }
 
     /**
      * Sets up the instance.
      * @param string $combinationHash
+     * @throws ExportException
      */
     protected function setUp(string $combinationHash): void
     {
         $this->instanceDirectory = $this->factorioDirectory . '/instances/' . $combinationHash;
-        $this->removeDirectory($this->instanceDirectory);
-        $this->createDirectories($this->instanceDirectory);
+        $this->removeInstanceDirectory();
+
+        $this->createDirectory('bin/x64');
+        $this->createDirectory('mods');
 
         $this->copy('bin/x64/factorio');
         $this->copy('config-path.cfg');
+
         $this->createSymlink('data');
     }
 
@@ -121,29 +119,31 @@ class Instance
      */
     protected function execute(): string
     {
-        $process = new Process([
-            $this->instanceDirectory . '/bin/x64/factorio',
-            '--no-log-rotation',
-            '--create',
-            'dump',
-            '--mod-directory',
-            realpath($this->instanceDirectory . '/mods')
-        ]);
-        $process->start();
-        $process->wait();
-
+        $process = $this->createProcess();
+        $process->run();
         return $process->getOutput();
+    }
+
+    protected function createProcess(): Process
+    {
+        $command = [
+            $this->getInstancePath('bin/x64/factorio'),
+            '--no-log-rotation',
+            '--create=dump',
+            '--mod-directory=' . $this->getInstancePath('mods')
+        ];
+
+        return new Process($command);
     }
 
     /**
      * Removes the specified directory if it exists.
-     * @param string $directory
      */
-    protected function removeDirectory(string $directory): void
+    protected function removeInstanceDirectory(): void
     {
-        if (is_dir($directory)) {
+        if ($this->instanceDirectory !== null && is_dir($this->instanceDirectory)) {
             $files = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
+                new RecursiveDirectoryIterator($this->instanceDirectory, RecursiveDirectoryIterator::SKIP_DOTS),
                 RecursiveIteratorIterator::CHILD_FIRST
             );
 
@@ -155,18 +155,17 @@ class Instance
                     unlink($file->getPathname());
                 }
             }
-            rmdir($directory);
+            rmdir($this->instanceDirectory);
         }
     }
 
     /**
-     * Creates the directories required for the instance to run.
-     * @param string $baseDirectory
+     * Creates the specified directory.
+     * @param string $directory
      */
-    protected function createDirectories(string $baseDirectory): void
+    protected function createDirectory(string $directory): void
     {
-        mkdir($baseDirectory . '/mods', 0777, true);
-        mkdir($baseDirectory . '/bin/x64', 0777, true);
+        mkdir($this->getInstancePath($directory), 0777, true);
     }
 
     /**
@@ -175,21 +174,39 @@ class Instance
      */
     protected function copy(string $directoryOrFile): void
     {
-        $target = (string) realpath($this->factorioDirectory . '/' . $directoryOrFile);
-        $destination = $this->instanceDirectory . '/' . $directoryOrFile;
-        copy($target, $destination);
+        $destination = $this->getInstancePath($directoryOrFile);
+
+        copy($this->getFactorioPath($directoryOrFile), $destination);
         chmod($destination, 0755);
     }
 
     /**
      * Creates a symlink to the specified directory.
      * @param string $directoryOrFile
+     * @codeCoverageIgnore Unable to test symlink with vfsStream.
      */
     protected function createSymlink(string $directoryOrFile): void
     {
-        $target = (string) realpath($this->factorioDirectory . '/' . $directoryOrFile);
-        $link = $this->instanceDirectory . '/' . $directoryOrFile;
+        symlink($this->getFactorioPath($directoryOrFile), $this->getInstancePath($directoryOrFile));
+    }
 
-        symlink($target, $link);
+    /**
+     * Returns the specified directory or file in context of the Factorio game.
+     * @param string $directoryOrFile
+     * @return string
+     */
+    protected function getFactorioPath(string $directoryOrFile): string
+    {
+        return $this->factorioDirectory . '/' . $directoryOrFile;
+    }
+
+    /**
+     * Returns the specified directory or file in context of the instance directory.
+     * @param string $directoryOrFile
+     * @return string
+     */
+    protected function getInstancePath(string $directoryOrFile): string
+    {
+        return $this->instanceDirectory . '/' . $directoryOrFile;
     }
 }
