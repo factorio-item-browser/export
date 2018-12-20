@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Renderer;
 
+use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\Export\Renderer\IconRendererFactory;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
+use Imagine\Gd\Imagine;
+use Imagine\Image\ImagineInterface;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 
 /**
  * The PHPUnit test of the IconRendererFactory class.
@@ -22,6 +26,8 @@ use PHPUnit\Framework\TestCase;
  */
 class IconRendererFactoryTest extends TestCase
 {
+    use ReflectionTrait;
+
     /**
      * Tests the invoking.
      * @covers ::__invoke
@@ -56,7 +62,26 @@ class IconRendererFactoryTest extends TestCase
                       $this->createMock(ModFileManager::class)
                   );
 
-        $factory = new IconRendererFactory();
+        /* @var IconRendererFactory|MockObject $factory */
+        $factory = $this->getMockBuilder(IconRendererFactory::class)
+                        ->setMethods(['createImagine'])
+                        ->getMock();
+        $factory->expects($this->once())
+                ->method('createImagine')
+                ->willReturn($this->createMock(ImagineInterface::class));
+
         $factory($container, IconRenderer::class);
+    }
+
+    /**
+     * Tests the createImagine method.
+     * @throws ReflectionException
+     * @covers ::createImagine
+     */
+    public function testCreateImagine(): void
+    {
+        $factory = new IconRendererFactory();
+        $result = $this->invokeMethod($factory, 'createImagine');
+        $this->assertInstanceOf(Imagine::class, $result);
     }
 }

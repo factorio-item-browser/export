@@ -22,6 +22,7 @@
     "bluepsyduck/symfony-process-manager": "^1.0",
     "factorio-item-browser/common": "^1.0",
     "factorio-item-browser/export-data": "dev-feature/refactor",
+    "imagine/imagine": "^1.2",
     "symfony/process": "^4.1",
     "zendframework/zend-config-aggregator": "^1.0",
     "zendframework/zend-i18n": "^2.7",
