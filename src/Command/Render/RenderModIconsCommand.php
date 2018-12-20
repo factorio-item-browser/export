@@ -71,7 +71,7 @@ class RenderModIconsCommand extends AbstractCommand
         $modName = $route->getMatchedParam('modName', '');
         $iconHashes = $this->fetchIconHashesOfMod($modName);
 
-        $this->console->writeLine('Rendering ' . count($iconHashes) . ' icons...');
+        $this->console->writeAction('Rendering ' . count($iconHashes) . ' icons');
         $this->renderIconsWithHashes($iconHashes);
     }
 

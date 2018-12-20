@@ -76,7 +76,7 @@ class Console
      */
     public function writeAction(string $action)
     {
-        $this->writeLine(' > ' . $action . '...');
+        $this->writeLine('> ' . $action . '...');
         return $this;
     }
 

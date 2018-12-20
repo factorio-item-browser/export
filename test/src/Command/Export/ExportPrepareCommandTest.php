@@ -46,11 +46,11 @@ class ExportPrepareCommandTest extends TestCase
     {
         /* @var AdapterInterface|MockObject $console */
         $console = $this->getMockBuilder(AdapterInterface::class)
-                        ->setMethods(['writeLine'])
+                        ->setMethods(['writeAction'])
                         ->getMockForAbstractClass();
         $console->expects($this->once())
-                ->method('writeLine')
-                ->with('Generating info.json for the dump mod...');
+                ->method('writeAction')
+                ->with('Generating info.json for the dump mod');
 
         /* @var DumpInfoGenerator|MockObject $dumpInfoGenerator */
         $dumpInfoGenerator = $this->getMockBuilder(DumpInfoGenerator::class)

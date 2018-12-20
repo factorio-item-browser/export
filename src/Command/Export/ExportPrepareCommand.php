@@ -37,7 +37,7 @@ class ExportPrepareCommand extends AbstractCommand
      */
     protected function execute(Route $route): void
     {
-        $this->console->writeLine('Generating info.json for the dump mod...');
+        $this->console->writeAction('Generating info.json for the dump mod');
         $this->dumpInfoGenerator->generate();
     }
 }

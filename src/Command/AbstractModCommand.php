@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Command\Export;
+namespace FactorioItemBrowser\Export\Command;
 
-use FactorioItemBrowser\Export\Command\AbstractCommand;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -12,12 +11,12 @@ use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use ZF\Console\Route;
 
 /**
- * The abstract class of the mod exporting commands.
+ * The abstract class of the mod handling commands.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-abstract class AbstractExportModCommand extends AbstractCommand
+abstract class AbstractModCommand extends AbstractCommand
 {
     /**
      * The registry of the mods.
@@ -42,7 +41,7 @@ abstract class AbstractExportModCommand extends AbstractCommand
     protected function execute(Route $route): void
     {
         $mod = $this->fetchMod($route->getMatchedParam('modName', ''));
-        $this->exportMod($route, $mod);
+        $this->processMod($route, $mod);
     }
 
     /**
@@ -51,7 +50,7 @@ abstract class AbstractExportModCommand extends AbstractCommand
      * @param Mod $mod
      * @throws ExportException
      */
-    abstract protected function exportMod(Route $route, Mod $mod): void;
+    abstract protected function processMod(Route $route, Mod $mod): void;
 
     /**
      * Fetches the mod to the specified name.

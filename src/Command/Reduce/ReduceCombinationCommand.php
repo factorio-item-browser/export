@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\Reduce;
 
-use FactorioItemBrowser\Export\Command\AbstractCommand;
-use FactorioItemBrowser\Export\Exception\CommandException;
+use FactorioItemBrowser\Export\Command\AbstractCombinationCommand;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Reducer\ReducerManager;
-use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use ZF\Console\Route;
@@ -19,14 +17,8 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ReduceCombinationCommand extends AbstractCommand
+class ReduceCombinationCommand extends AbstractCombinationCommand
 {
-    /**
-     * The registry of the raw combinations.
-     * @var EntityRegistry
-     */
-    protected $rawCombinationRegistry;
-
     /**
      * The registry of the reduced combinations.
      * @var EntityRegistry
@@ -50,44 +42,27 @@ class ReduceCombinationCommand extends AbstractCommand
         EntityRegistry $reducedCombinationRegistry,
         ReducerManager $reducerManager
     ) {
-        $this->rawCombinationRegistry = $rawCombinationRegistry;
+        parent::__construct($rawCombinationRegistry);
         $this->reducedCombinationRegistry = $reducedCombinationRegistry;
         $this->reducerManager = $reducerManager;
     }
 
     /**
-     * Executes the command.
+     * Exports the specified combination.
      * @param Route $route
+     * @param Combination $combination
      * @throws ExportException
-     * @throws CommandException
      */
-    protected function execute(Route $route): void
+    protected function processCombination(Route $route, Combination $combination): void
     {
-        $combinationHash = $route->getMatchedParam('combinationHash', '');
-        $combination = $this->fetchCombination($combinationHash);
+        $this->console->writeAction('Reducing combination ' . $combination->getName());
         $reducedCombination = $this->reducerManager->reduce($combination);
 
         if ($this->isCombinationEmpty($reducedCombination)) {
-            $this->reducedCombinationRegistry->remove($combinationHash);
+            $this->reducedCombinationRegistry->remove($combination->calculateHash());
         } else {
             $this->reducedCombinationRegistry->set($reducedCombination);
         }
-    }
-
-    /**
-     * Fetches the combination with the specified hash.
-     * @param string $combinationHash
-     * @return Combination
-     * @throws CommandException
-     */
-    protected function fetchCombination(string $combinationHash): Combination
-    {
-        $combination = $this->rawCombinationRegistry->get($combinationHash);
-        if (!$combination instanceof Combination) {
-            throw new CommandException('Cannot find combination with hash #' . $combinationHash);
-        }
-
-        return $combination;
     }
 
     /**
@@ -102,20 +77,5 @@ class ReduceCombinationCommand extends AbstractCommand
             && count($combination->getItemHashes()) === 0
             && count($combination->getMachineHashes()) === 0
             && count($combination->getRecipeHashes()) === 0;
-    }
-
-    /**
-     * Removes the combination hash from the mod.
-     * @param Mod $mod
-     * @param string $combinationHash
-     */
-    protected function removeCombinationHashFromMod(Mod $mod, string $combinationHash): void
-    {
-        $combinationHashes = $mod->getCombinationHashes();
-        $index = array_search($combinationHash, $combinationHashes, true);
-        if ($index !== false) {
-            unset($combinationHashes[$index]);
-        }
-        $mod->setCombinationHashes($combinationHashes);
     }
 }

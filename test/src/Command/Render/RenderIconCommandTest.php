@@ -96,11 +96,11 @@ class RenderIconCommandTest extends TestCase
 
         /* @var AdapterInterface|MockObject $console */
         $console = $this->getMockBuilder(AdapterInterface::class)
-                        ->setMethods(['writeLine'])
+                        ->setMethods(['writeAction'])
                         ->getMockForAbstractClass();
         $console->expects($expectRender ? $this->once() : $this->never())
-                ->method('writeLine')
-                ->with('Rendering icon #abc...');
+                ->method('writeAction')
+                ->with('Rendering icon #abc');
 
         /* @var IconRenderer|MockObject $iconRenderer */
         $iconRenderer = $this->getMockBuilder(IconRenderer::class)

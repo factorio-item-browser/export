@@ -2,9 +2,7 @@
 
 namespace FactorioItemBrowser\Export\Command\Reduce;
 
-use FactorioItemBrowser\Export\Command\AbstractCommand;
-use FactorioItemBrowser\Export\Exception\CommandException;
-use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Command\AbstractModCommand;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -17,14 +15,8 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ReduceModCommand extends AbstractCommand
+class ReduceModCommand extends AbstractModCommand
 {
-    /**
-     * The registry of the raw mods.
-     * @var ModRegistry
-     */
-    protected $rawModRegistry;
-
     /**
      * The registry of the reduced combinations.
      * @var EntityRegistry
@@ -48,40 +40,24 @@ class ReduceModCommand extends AbstractCommand
         EntityRegistry $reducedCombinationRegistry,
         ModRegistry $reducedModRegistry
     ) {
-        $this->rawModRegistry = $rawModRegistry;
+        parent::__construct($rawModRegistry);
         $this->reducedCombinationRegistry = $reducedCombinationRegistry;
         $this->reducedModRegistry = $reducedModRegistry;
     }
 
     /**
-     * Executes the command.
+     * Exports the specified mod.
      * @param Route $route
-     * @throws ExportException
-     * @throws CommandException
+     * @param Mod $rawMod
      */
-    protected function execute(Route $route): void
+    protected function processMod(Route $route, Mod $rawMod): void
     {
-        $rawMod = $this->fetchRawMod($route->getMatchedParam('modName'));
+        $this->console->writeAction('Reducing mod ' . $rawMod->getName());
         $reducedMod = clone($rawMod);
 
         $reducedMod->setCombinationHashes($this->filterCombinationHashes($rawMod->getCombinationHashes()));
         $this->reducedModRegistry->set($reducedMod);
         $this->reducedModRegistry->saveMods();
-    }
-
-    /**
-     * Fetches the raw mod to the specified name.
-     * @param string $modName
-     * @return Mod
-     * @throws CommandException
-     */
-    protected function fetchRawMod(string $modName): Mod
-    {
-        $mod = $this->rawModRegistry->get($modName);
-        if (!$mod instanceof Mod) {
-            throw new CommandException('Mod not known: ' . $modName, 404);
-        }
-        return $mod;
     }
 
     /**

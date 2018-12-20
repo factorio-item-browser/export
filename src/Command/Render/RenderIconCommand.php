@@ -74,7 +74,7 @@ class RenderIconCommand extends AbstractCommand
             throw new CommandException('Icon with hash #' . $hash . ' not found.', 404);
         }
 
-        $this->console->writeLine('Rendering icon #' . $hash . '...');
+        $this->console->writeAction('Rendering icon #' . $hash);
         $renderedIcon = $this->iconRenderer->render($icon, self::ICON_SIZE);
         $this->renderedIconRegistry->set($hash, $renderedIcon);
     }

@@ -4,6 +4,7 @@ namespace FactorioItemBrowser\Export\Command\Export;
 
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use FactorioItemBrowser\Export\Combination\CombinationCreator;
+use FactorioItemBrowser\Export\Command\AbstractModCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Exception\ExportException;
@@ -19,7 +20,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ExportModStepCommand extends AbstractExportModCommand
+class ExportModStepCommand extends AbstractModCommand
 {
     use SubCommandTrait;
 
@@ -67,7 +68,7 @@ class ExportModStepCommand extends AbstractExportModCommand
      * @param Mod $mod
      * @throws ExportException
      */
-    protected function exportMod(Route $route, Mod $mod): void
+    protected function processMod(Route $route, Mod $mod): void
     {
         $this->combinationCreator->setupForMod($mod);
 

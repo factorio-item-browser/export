@@ -116,7 +116,7 @@ class ConsoleTest extends TestCase
     public function testWriteAction(): void
     {
         $action = 'abc';
-        $expectedMessage = ' > abc...';
+        $expectedMessage = '> abc...';
 
         /* @var Console|MockObject $console */
         $console = $this->getMockBuilder(Console::class)

@@ -2,6 +2,7 @@
 
 namespace FactorioItemBrowser\Export\Command\Export;
 
+use FactorioItemBrowser\Export\Command\AbstractModCommand;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -14,7 +15,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ExportModMetaCommand extends AbstractExportModCommand
+class ExportModMetaCommand extends AbstractModCommand
 {
     /**
      * The translator.
@@ -40,7 +41,7 @@ class ExportModMetaCommand extends AbstractExportModCommand
      * @param Mod $mod
      * @throws ExportException
      */
-    protected function exportMod(Route $route, Mod $mod): void
+    protected function processMod(Route $route, Mod $mod): void
     {
         $this->translate($mod);
 
