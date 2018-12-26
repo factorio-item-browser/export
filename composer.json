@@ -21,7 +21,7 @@
     "bluepsyduck/common": "^1.0",
     "bluepsyduck/symfony-process-manager": "^1.0",
     "factorio-item-browser/common": "^1.0",
-    "factorio-item-browser/export-data": "dev-feature/refactor",
+    "factorio-item-browser/export-data": "^2.0",
     "imagine/imagine": "^1.2",
     "symfony/process": "^4.1",
     "zendframework/zend-config-aggregator": "^1.0",
@@ -50,7 +50,7 @@
     }
   },
   "scripts": {
-    "coverage-check": "#coverage-check test/log/clover.xml 100",
+    "coverage-check": "coverage-check test/log/clover.xml 80",
     "install-factorio": "bin/install-factorio.sh",
     "phpcbf": "phpcbf -p --colors",
     "phpcs": "phpcs -p --colors",
@@ -62,7 +62,7 @@
     ],
     "run": "@php bin/cli.php",
     "test": [
-      "@composer validate #--strict",
+      "@composer validate --strict",
       "@phpunit",
       "@coverage-check",
       "@phpcs",
