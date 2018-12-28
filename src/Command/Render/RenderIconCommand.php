@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\Render;
 
 use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
@@ -67,7 +68,7 @@ class RenderIconCommand extends AbstractCommand
      */
     protected function execute(Route $route): void
     {
-        $hash = $route->getMatchedParam('iconHash', '');
+        $hash = $route->getMatchedParam(ParameterName::ICON_HASH, '');
         $icon = $this->iconRegistry->get($hash);
 
         if (!$icon instanceof Icon) {

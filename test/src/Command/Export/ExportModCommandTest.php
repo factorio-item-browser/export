@@ -9,6 +9,7 @@ use FactorioItemBrowser\Export\Combination\CombinationCreator;
 use FactorioItemBrowser\Export\Command\Export\ExportModCommand;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Constant\CommandName;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -91,12 +92,12 @@ class ExportModCommandTest extends TestCase
         $command->expects($this->exactly(6))
                 ->method('runCommand')
                 ->withConsecutive(
-                    [CommandName::EXPORT_MOD_STEP, ['modName' => 'abc', 'step' => 0], $console],
-                    [CommandName::EXPORT_MOD_STEP, ['modName' => 'abc', 'step' => 1], $console],
-                    [CommandName::EXPORT_MOD_STEP, ['modName' => 'abc', 'step' => 2], $console],
-                    [CommandName::EXPORT_MOD_META, ['modName' => 'abc'], $console],
-                    [CommandName::REDUCE_MOD, ['modName' => 'abc'], $console],
-                    [CommandName::RENDER_MOD_ICONS, ['modName' => 'abc'], $console]
+                    [CommandName::EXPORT_MOD_STEP, [ParameterName::MOD_NAME => 'abc', 'step' => 0], $console],
+                    [CommandName::EXPORT_MOD_STEP, [ParameterName::MOD_NAME => 'abc', 'step' => 1], $console],
+                    [CommandName::EXPORT_MOD_STEP, [ParameterName::MOD_NAME => 'abc', 'step' => 2], $console],
+                    [CommandName::EXPORT_MOD_META, [ParameterName::MOD_NAME => 'abc'], $console],
+                    [CommandName::REDUCE_MOD, [ParameterName::MOD_NAME => 'abc'], $console],
+                    [CommandName::RENDER_MOD_ICONS, [ParameterName::MOD_NAME => 'abc'], $console]
                 );
         $this->injectProperty($command, 'console', $console);
 

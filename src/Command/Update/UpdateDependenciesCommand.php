@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\Update;
 
 use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\DependencyReader;
@@ -66,7 +67,7 @@ class UpdateDependenciesCommand extends AbstractCommand
      */
     protected function getModNames(Route $route): array
     {
-        $modName = $route->getMatchedParam('mod', '');
+        $modName = $route->getMatchedParam(ParameterName::MOD_NAME, '');
 
         if ($modName !== '') {
             $result = [$modName];

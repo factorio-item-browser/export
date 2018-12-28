@@ -7,6 +7,7 @@ namespace FactorioItemBrowserTest\Export\Command\Clean;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Cache\AbstractCache;
 use FactorioItemBrowser\Export\Command\Clean\CleanCacheCommand;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -70,7 +71,7 @@ class CleanCacheCommandTest extends TestCase
                       ->getMock();
         $route->expects($this->once())
               ->method('getMatchedParam')
-              ->with('modName', '')
+              ->with(ParameterName::MOD_NAME, '')
               ->willReturn($modName);
 
         /* @var AbstractCache|MockObject $cache */

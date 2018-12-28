@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -40,7 +41,7 @@ abstract class AbstractModCommand extends AbstractCommand
      */
     protected function execute(Route $route): void
     {
-        $mod = $this->fetchMod($route->getMatchedParam('modName', ''));
+        $mod = $this->fetchMod($route->getMatchedParam(ParameterName::MOD_NAME, ''));
         $this->processMod($route, $mod);
     }
 

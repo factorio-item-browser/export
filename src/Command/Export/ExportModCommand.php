@@ -6,6 +6,7 @@ use FactorioItemBrowser\Export\Combination\CombinationCreator;
 use FactorioItemBrowser\Export\Command\AbstractModCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
@@ -56,13 +57,13 @@ class ExportModCommand extends AbstractModCommand
 
         for ($step = 0; $step <= $numberOfOptionalMods; ++$step) {
             $this->runCommand(CommandName::EXPORT_MOD_STEP, [
-                'modName' => $mod->getName(),
-                'step' => $step
+                ParameterName::MOD_NAME => $mod->getName(),
+                ParameterName::STEP => $step
             ], $this->console);
         }
 
-        $this->runCommand(CommandName::EXPORT_MOD_META, ['modName' => $mod->getName()], $this->console);
-        $this->runCommand(CommandName::REDUCE_MOD, ['modName' => $mod->getName()], $this->console);
-        $this->runCommand(CommandName::RENDER_MOD_ICONS, ['modName' => $mod->getName()], $this->console);
+        $this->runCommand(CommandName::EXPORT_MOD_META, [ParameterName::MOD_NAME => $mod->getName()], $this->console);
+        $this->runCommand(CommandName::REDUCE_MOD, [ParameterName::MOD_NAME => $mod->getName()], $this->console);
+        $this->runCommand(CommandName::RENDER_MOD_ICONS, [ParameterName::MOD_NAME => $mod->getName()], $this->console);
     }
 }

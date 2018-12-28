@@ -7,6 +7,7 @@ use FactorioItemBrowser\Export\Combination\CombinationCreator;
 use FactorioItemBrowser\Export\Command\AbstractModCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -72,7 +73,7 @@ class ExportModStepCommand extends AbstractModCommand
     {
         $this->combinationCreator->setupForMod($mod);
 
-        $combinations = $this->fetchCombinations((int) $route->getMatchedParam('step', 0));
+        $combinations = $this->fetchCombinations((int) $route->getMatchedParam(ParameterName::STEP, 0));
         $combinationHashes = $this->exportCombinations($combinations);
 
         $mod->setCombinationHashes(array_merge($mod->getCombinationHashes(), $combinationHashes));
@@ -133,7 +134,7 @@ class ExportModStepCommand extends AbstractModCommand
         foreach ($combinationHashes as $combinationHash) {
             $process = $this->createCommandProcess(
                 $commandName,
-                ['combinationHash' => $combinationHash],
+                [ParameterName::COMBINATION_HASH => $combinationHash],
                 $this->console
             );
             $this->processManager->addProcess($process);

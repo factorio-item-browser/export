@@ -7,6 +7,7 @@ namespace FactorioItemBrowser\Export\Command\Export;
 use FactorioItemBrowser\Export\Command\AbstractCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Mod\DependencyResolver;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use ZF\Console\Route;
@@ -50,7 +51,7 @@ class ExportModWithDependenciesCommand extends AbstractCommand
      */
     protected function execute(Route $route): void
     {
-        $modName = $route->getMatchedParam('modName', '');
+        $modName = $route->getMatchedParam(ParameterName::MOD_NAME, '');
         $modNamesToExport = $this->getModNamesToExport($modName);
         $this->console->writeAction('Exporting ' . count($modNamesToExport) . ' mods');
 
@@ -115,7 +116,7 @@ class ExportModWithDependenciesCommand extends AbstractCommand
         foreach ($modNames as $modName) {
             $this->runCommand(
                 CommandName::EXPORT_MOD,
-                ['modName' => $modName],
+                [ParameterName::MOD_NAME => $modName],
                 $this->console
             );
         }

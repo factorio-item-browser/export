@@ -8,6 +8,7 @@ use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Export\ExportCombinationCommand;
 use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Factorio\Instance;
 use FactorioItemBrowser\Export\Parser\ParserManager;
@@ -86,7 +87,7 @@ class ExportCombinationCommandTest extends TestCase
                       ->getMock();
         $route->expects($this->once())
               ->method('getMatchedParam')
-              ->with('combinationHash', '')
+              ->with(ParameterName::COMBINATION_HASH, '')
               ->willReturn($combinationHash);
 
         /* @var EntityRegistry|MockObject $combinationRegistry */

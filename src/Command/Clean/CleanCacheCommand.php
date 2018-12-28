@@ -6,6 +6,7 @@ namespace FactorioItemBrowser\Export\Command\Clean;
 
 use FactorioItemBrowser\Export\Cache\AbstractCache;
 use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use ZF\Console\Route;
 
 /**
@@ -37,7 +38,7 @@ class CleanCacheCommand extends AbstractCommand
      */
     protected function execute(Route $route): void
     {
-        $modName = $route->getMatchedParam('modName', '');
+        $modName = $route->getMatchedParam(ParameterName::MOD_NAME, '');
         foreach ($this->caches as $cache) {
             if ($modName !== '') {
                 $cache->clearMod($modName);

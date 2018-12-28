@@ -10,6 +10,7 @@ use FactorioItemBrowser\Export\Combination\CombinationCreator;
 use FactorioItemBrowser\Export\Command\Export\ExportModStepCommand;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Constant\CommandName;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -105,7 +106,7 @@ class ExportModStepCommandTest extends TestCase
                       ->getMock();
         $route->expects($this->once())
               ->method('getMatchedParam')
-              ->with('step', 0)
+              ->with(ParameterName::STEP, 0)
               ->willReturn($step);
 
         /* @var EntityRegistry $combinationRegistry */
@@ -305,8 +306,8 @@ class ExportModStepCommandTest extends TestCase
         $command->expects($this->exactly(2))
                 ->method('createCommandProcess')
                 ->withConsecutive(
-                    [$commandName, ['combinationHash' => 'def'], $console],
-                    [$commandName, ['combinationHash' => 'ghi'], $console]
+                    [$commandName, [ParameterName::COMBINATION_HASH => 'def'], $console],
+                    [$commandName, [ParameterName::COMBINATION_HASH => 'ghi'], $console]
                 )
                 ->willReturnOnConsecutiveCalls(
                     $process1,

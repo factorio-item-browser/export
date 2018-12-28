@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Command;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\AbstractCombinationCommand;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -60,7 +61,7 @@ class AbstractCombinationCommandTest extends TestCase
                       ->getMock();
         $route->expects($this->once())
               ->method('getMatchedParam')
-              ->with('combinationHash', '')
+              ->with(ParameterName::COMBINATION_HASH, '')
               ->willReturn($combinationHash);
 
         /* @var AbstractCombinationCommand|MockObject $command */

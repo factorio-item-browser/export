@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -40,7 +41,7 @@ abstract class AbstractCombinationCommand extends AbstractCommand
      */
     protected function execute(Route $route): void
     {
-        $combination = $this->fetchCombination($route->getMatchedParam('combinationHash', ''));
+        $combination = $this->fetchCombination($route->getMatchedParam(ParameterName::COMBINATION_HASH, ''));
         $this->processCombination($route, $combination);
     }
 

@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Command\Update;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Update\UpdateDependenciesCommand;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\DependencyReader;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -129,7 +130,7 @@ class UpdateDependenciesCommandTest extends TestCase
                       ->getMock();
         $route->expects($this->once())
               ->method('getMatchedParam')
-              ->with('mod', '')
+              ->with(ParameterName::MOD_NAME, '')
               ->willReturn($resultGetMatchedParam);
 
         /* @var ModRegistry|MockObject $modRegistry */

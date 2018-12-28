@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Command;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\AbstractModCommand;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
@@ -60,7 +61,7 @@ class AbstractModCommandTest extends TestCase
                       ->getMock();
         $route->expects($this->once())
               ->method('getMatchedParam')
-              ->with('modName', '')
+              ->with(ParameterName::MOD_NAME, '')
               ->willReturn($modName);
 
         /* @var AbstractModCommand|MockObject $command */

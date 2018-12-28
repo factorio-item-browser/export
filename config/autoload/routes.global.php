@@ -16,11 +16,11 @@ return [
     'routes' => [
         [
             'name' => CommandName::CLEAN_CACHE,
-            'route' => '[--mod=]',
+            'route' => '[--modName=]',
             'handler' => Command\Clean\CleanCacheCommand::class,
             'short_description' => 'Cleans the caches.',
             'options_description' => [
-                '--mod=<modName>' => 'The name of the mod to clean the cache for.',
+                '--modName=<modName>' => 'The name of the mod to clean the cache for.',
             ],
         ],
 
@@ -113,11 +113,11 @@ return [
 
         [
             'name' => CommandName::UPDATE_DEPENDENCIES,
-            'route' => '[--mod=]',
+            'route' => '[--modName=]',
             'handler' => Command\Update\UpdateDependenciesCommand::class,
             'short_description' => 'Updates the dependencies of the mods.',
             'options_description' => [
-                '--mod=<modName>' => 'The name of the mod to update the dependencies for.',
+                '--modName=<modName>' => 'The name of the mod to update the dependencies for.',
             ],
         ],
         [

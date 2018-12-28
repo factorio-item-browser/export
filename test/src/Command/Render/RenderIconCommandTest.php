@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Command\Render;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Render\RenderIconCommand;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\Entity\Icon;
@@ -81,7 +82,7 @@ class RenderIconCommandTest extends TestCase
                       ->getMock();
         $route->expects($this->once())
               ->method('getMatchedParam')
-              ->with('iconHash', '')
+              ->with(ParameterName::ICON_HASH, '')
               ->willReturn($iconHash);
 
         /* @var EntityRegistry|MockObject $iconRegistry */
