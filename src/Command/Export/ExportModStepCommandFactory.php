@@ -27,10 +27,10 @@ class ExportModStepCommandFactory implements FactoryInterface
     {
         /* @var CombinationCreator $combinationCreator */
         $combinationCreator = $container->get(CombinationCreator::class);
-        /* @var RawExportDataService $rawExportDataService */
-        $rawExportDataService = $container->get(RawExportDataService::class);
         /* @var ProcessManager $processManager */
         $processManager = $container->get(ProcessManager::class);
+        /* @var RawExportDataService $rawExportDataService */
+        $rawExportDataService = $container->get(RawExportDataService::class);
 
         return new ExportModStepCommand(
             $combinationCreator,

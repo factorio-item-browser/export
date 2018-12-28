@@ -103,18 +103,18 @@ class ExportModStepCommand extends AbstractModCommand
      */
     protected function exportCombinations(array $combinations): array
     {
-        $combinationHashes = $this->getHashesToCombinations($combinations);
-        $this->runCombinationCommands(CommandName::EXPORT_COMBINATION, $combinationHashes);
-        $this->runCombinationCommands(CommandName::REDUCE_COMBINATION, $combinationHashes);
+        $combinationHashes = $this->persistCombinations($combinations);
+        $this->runCombinationsCommand(CommandName::EXPORT_COMBINATION, $combinationHashes);
+        $this->runCombinationsCommand(CommandName::REDUCE_COMBINATION, $combinationHashes);
         return $combinationHashes;
     }
 
     /**
-     * Returns the hashes to the specified combinations.
+     * Persists the specified combinations and returns their hashes.
      * @param array|Combination[] $combinations
      * @return array|string[]
      */
-    protected function getHashesToCombinations(array $combinations): array
+    protected function persistCombinations(array $combinations): array
     {
         $result = [];
         foreach ($combinations as $combination) {
@@ -128,7 +128,7 @@ class ExportModStepCommand extends AbstractModCommand
      * @param string $commandName
      * @param array $combinationHashes
      */
-    protected function runCombinationCommands(string $commandName, array $combinationHashes): void
+    protected function runCombinationsCommand(string $commandName, array $combinationHashes): void
     {
         foreach ($combinationHashes as $combinationHash) {
             $process = $this->createCommandProcess(

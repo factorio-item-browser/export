@@ -51,7 +51,10 @@ class ExportModCommand extends AbstractModCommand
         $this->console->writeBanner('Exporting Mod: ' . $mod->getName(), ColorInterface::LIGHT_BLUE);
 
         $this->combinationCreator->setupForMod($mod);
-        for ($step = 0; $step <= $this->combinationCreator->getNumberOfOptionalMods(); ++$step) {
+        $numberOfOptionalMods = $this->combinationCreator->getNumberOfOptionalMods();
+        $this->console->writeAction('Exporting combinations in ' . ($numberOfOptionalMods + 1) . ' steps');
+
+        for ($step = 0; $step <= $numberOfOptionalMods; ++$step) {
             $this->runCommand(CommandName::EXPORT_MOD_STEP, [
                 'modName' => $mod->getName(),
                 'step' => $step

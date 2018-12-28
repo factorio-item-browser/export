@@ -43,6 +43,7 @@ class ExportModMetaCommand extends AbstractModCommand
      */
     protected function processMod(Route $route, Mod $mod): void
     {
+        $this->console->writeAction('Exporting meta data of mod ' . $mod->getName());
         $this->translate($mod);
 
         $this->modRegistry->set($mod);
@@ -56,8 +57,6 @@ class ExportModMetaCommand extends AbstractModCommand
      */
     protected function translate(Mod $mod): void
     {
-        $this->console->writeAction('Exporting meta data of mod ' . $mod->getName());
-
         $this->translator->loadFromModNames([$mod->getName()]);
         $this->translator->addTranslationsToEntity(
             $mod->getTitles(),
@@ -66,8 +65,8 @@ class ExportModMetaCommand extends AbstractModCommand
         );
         $this->translator->addTranslationsToEntity(
             $mod->getDescriptions(),
-            'mod-descriptions',
-            ['mod-descriptions.' . $mod->getName()]
+            'mod-description',
+            ['mod-description.' . $mod->getName()]
         );
     }
 }
