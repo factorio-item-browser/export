@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\Render;
 
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
-use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Command\AbstractModCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -22,7 +23,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class RenderModIconsCommand extends AbstractCommand
+class RenderModIconsCommand extends AbstractModCommand
 {
     use SubCommandTrait;
 
@@ -31,12 +32,6 @@ class RenderModIconsCommand extends AbstractCommand
      * @var EntityRegistry
      */
     protected $combinationRegistry;
-
-    /**
-     * The registry of the mods.
-     * @var ModRegistry
-     */
-    protected $modRegistry;
 
     /**
      * The process manager.
@@ -55,60 +50,54 @@ class RenderModIconsCommand extends AbstractCommand
         ModRegistry $modRegistry,
         ProcessManager $processManager
     ) {
+        parent::__construct($modRegistry);
+
         $this->combinationRegistry = $combinationRegistry;
-        $this->modRegistry = $modRegistry;
         $this->processManager = $processManager;
     }
 
     /**
-     * Executes the command.
+     * Exports the specified mod.
      * @param Route $route
+     * @param Mod $mod
      * @throws ExportException
-     * @throws CommandException
      */
-    protected function execute(Route $route): void
+    protected function processMod(Route $route, Mod $mod): void
     {
-        $modName = $route->getMatchedParam('modName', '');
-        $iconHashes = $this->fetchIconHashesOfMod($modName);
-
+        $iconHashes = $this->fetchIconHashesOfMod($mod);
         $this->console->writeAction('Rendering ' . count($iconHashes) . ' icons');
         $this->renderIconsWithHashes($iconHashes);
     }
 
     /**
      * Fetches the icon hashes of the mod with the specified name.
-     * @param string $modName
+     * @param Mod $mod
      * @return array|string[]
      * @throws CommandException
      */
-    protected function fetchIconHashesOfMod(string $modName): array
+    protected function fetchIconHashesOfMod(Mod $mod): array
     {
-        $mod = $this->modRegistry->get($modName);
-        if (!$mod instanceof Mod) {
-            throw new CommandException('Mod not found: ' . $modName, 404);
-        }
-
         $iconHashes = [];
         foreach ($mod->getCombinationHashes() as $combinationHash) {
-            $iconHashes = array_merge($iconHashes, $this->fetchIconHashesOfCombination($combinationHash));
+            $combination = $this->fetchCombination($combinationHash);
+            $iconHashes = array_merge($iconHashes, $combination->getIconHashes());
         }
-        return array_unique($iconHashes);
+        return array_values(array_unique($iconHashes));
     }
 
     /**
-     * Fetches the icon hashes of the combination with the specified hash.
+     * Fetches the combination to the specified hash.
      * @param string $combinationHash
-     * @return array|string[]
+     * @return Combination
      * @throws CommandException
      */
-    protected function fetchIconHashesOfCombination(string $combinationHash): array
+    protected function fetchCombination(string $combinationHash): Combination
     {
         $combination = $this->combinationRegistry->get($combinationHash);
         if (!$combination instanceof Combination) {
-            throw new CommandException('Combination not found: #' . $combinationHash);
+            throw new CommandException('Combination hash #' . $combinationHash . ' not known.', 404);
         }
-
-        return $combination->getIconHashes();
+        return $combination;
     }
 
     /**
@@ -118,11 +107,12 @@ class RenderModIconsCommand extends AbstractCommand
     protected function renderIconsWithHashes(array $iconHashes): void
     {
         foreach ($iconHashes as $iconHash) {
-            $this->processManager->addProcess($this->createCommandProcess(
+            $process = $this->createCommandProcess(
                 CommandName::RENDER_ICON,
-                ['iconHash' => $iconHash],
+                [ParameterName::ICON_HASH => $iconHash],
                 $this->console
-            ));
+            );
+            $this->processManager->addProcess($process);
         }
         $this->processManager->waitForAllProcesses();
     }
