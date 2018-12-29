@@ -104,7 +104,7 @@ class ExportModWithDependenciesCommand extends AbstractCommand
     protected function sortModNames(array $modNames): array
     {
         $dependencies = $this->dependencyResolver->resolveMandatoryDependencies($modNames);
-        return array_intersect($dependencies, $modNames);
+        return array_values(array_intersect($dependencies, $modNames));
     }
 
     /**
