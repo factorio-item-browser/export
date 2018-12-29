@@ -76,6 +76,11 @@ return [
             'handler' => Command\Lists\ListCommand::class,
             'short_description' => 'Lists all available mods.',
         ],
+        [
+            'name' => CommandName::LIST_MISSING,
+            'handler' => Command\Lists\ListMissingCommand::class,
+            'short_description' => 'Lists all missing mods which are mandatory dependencies of existing ones.',
+        ],
 
         [
             'name' => CommandName::REDUCE_COMBINATION,

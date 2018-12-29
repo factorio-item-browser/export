@@ -20,6 +20,7 @@ interface CommandName
     public const EXPORT_PREPARE = 'export prepare';
 
     public const LIST = 'list';
+    public const LIST_MISSING = 'list missing';
 
     public const REDUCE_COMBINATION = 'reduce combination <combinationHash>';
     public const REDUCE_MOD = 'reduce mod <modName>';

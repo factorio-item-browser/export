@@ -31,6 +31,7 @@ return [
             Command\Export\ExportModStepCommand::class => Command\Export\ExportModStepCommandFactory::class,
             Command\Export\ExportPrepareCommand::class => Command\Export\ExportPrepareCommandFactory::class,
             Command\Lists\ListCommand::class => Command\Lists\ListCommandFactory::class,
+            Command\Lists\ListMissingCommand::class => Command\Lists\ListMissingCommandFactory::class,
             Command\Reduce\ReduceCombinationCommand::class => Command\Reduce\ReduceCombinationCommandFactory::class,
             Command\Reduce\ReduceModCommand::class => Command\Reduce\ReduceModCommandFactory::class,
             Command\Render\RenderIconCommand::class => Command\Render\RenderIconCommandFactory::class,
