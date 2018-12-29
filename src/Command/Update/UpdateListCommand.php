@@ -7,6 +7,7 @@ namespace FactorioItemBrowser\Export\Command\Update;
 use FactorioItemBrowser\Export\Command\AbstractCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
+use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Mod\ModReader;
@@ -62,14 +63,14 @@ class UpdateListCommand extends AbstractCommand
      */
     protected function execute(Route $route): void
     {
-        $currentMods = $this->getModsFromRegistry($this->modRegistry);
+        $currentMods = $this->getModsFromRegistry();
         $modFileNames = $this->modFileManager->getModFileNames();
 
         $this->console->writeAction('Hashing mod files');
         $newMods = $this->detectNewMods($modFileNames, $currentMods);
 
         $this->console->writeAction('Persisting mods');
-        $this->setModsToRegistry($newMods, $this->modRegistry);
+        $this->setModsToRegistry($newMods);
         $this->printChangesToConsole($newMods, $currentMods);
 
         $this->runCommand(CommandName::UPDATE_DEPENDENCIES, [], $this->console);
@@ -79,14 +80,13 @@ class UpdateListCommand extends AbstractCommand
 
     /**
      * Returns all mods by their names from the registry.
-     * @param ModRegistry $modRegistry
-     * @return array
+     * @return array|Mod[]
      */
-    protected function getModsFromRegistry(ModRegistry $modRegistry): array
+    protected function getModsFromRegistry(): array
     {
         $result = [];
-        foreach ($modRegistry->getAllNames() as $modName) {
-            $mod = $modRegistry->get($modName);
+        foreach ($this->modRegistry->getAllNames() as $modName) {
+            $mod = $this->modRegistry->get($modName);
             if ($mod instanceof Mod) {
                 $result[$modName] = $mod;
             }
@@ -109,9 +109,7 @@ class UpdateListCommand extends AbstractCommand
         $currentModsByChecksum = $this->getModsByChecksum($currentMods);
         foreach ($modFileNames as $modFileName) {
             $newMod = $this->checkModFile($modFileName, $currentModsByChecksum);
-            if ($newMod instanceof Mod) {
-                $result[$newMod->getName()] = $newMod;
-            }
+            $result[$newMod->getName()] = $newMod;
             $progressBar->next();
         }
         $progressBar->finish();
@@ -136,18 +134,17 @@ class UpdateListCommand extends AbstractCommand
      * Checks the specified mod file and returns the new mod if it is currently not known.
      * @param string $modFileName
      * @param array|Mod[] $currentModsByChecksum
-     * @return Mod|null
+     * @return Mod
      * @throws ExportException
      */
-    protected function checkModFile(string $modFileName, array $currentModsByChecksum): ?Mod
+    protected function checkModFile(string $modFileName, array $currentModsByChecksum): Mod
     {
-        $result = null;
         $checksum = $this->modReader->calculateChecksum($modFileName);
         if (isset($currentModsByChecksum[$checksum])) {
             $result = $currentModsByChecksum[$checksum];
         } else {
             $result = $this->modReader->read($modFileName, $checksum);
-            $this->runCommand(CommandName::CLEAN_CACHE, ['mod' => $result->getName()]);
+            $this->runCommand(CommandName::CLEAN_CACHE, [ParameterName::MOD_NAME => $result->getName()]);
         }
         return $result;
     }
@@ -155,22 +152,21 @@ class UpdateListCommand extends AbstractCommand
     /**
      * Sets the mods to the registry.
      * @param array|Mod[] $mods
-     * @param ModRegistry $modRegistry
      */
-    protected function setModsToRegistry(array $mods, ModRegistry $modRegistry): void
+    protected function setModsToRegistry(array $mods): void
     {
-        $currentModNames = array_flip($modRegistry->getAllNames());
+        $currentModNames = array_flip($this->modRegistry->getAllNames());
 
         foreach ($mods as $mod) {
-            $modRegistry->set($mod);
+            $this->modRegistry->set($mod);
             unset($currentModNames[$mod->getName()]);
         }
 
-        foreach ($currentModNames as $modName) {
-            $modRegistry->remove($modName);
+        foreach (array_keys($currentModNames) as $modName) {
+            $this->modRegistry->remove($modName);
         }
 
-        $modRegistry->saveMods();
+        $this->modRegistry->saveMods();
     }
 
     /**
@@ -190,11 +186,12 @@ class UpdateListCommand extends AbstractCommand
             }
 
             if ($hasChanged) {
-                $this->console->write($this->console->formatModName($newMod->getName(), ': '));
-                $this->console->write($this->console->formatVersion($currentVersion, true));
-                $this->console->write(' -> ');
-                $this->console->write($this->console->formatVersion($newMod->getVersion(), false));
-                $this->console->writeLine();
+                $this->console->writeLine(sprintf(
+                    '%s: %s -> %s',
+                    $this->console->formatModName($newMod->getName()),
+                    $this->console->formatVersion($currentVersion, true),
+                    $this->console->formatVersion($newMod->getVersion(), false)
+                ));
             }
         }
     }
