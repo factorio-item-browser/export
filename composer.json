@@ -50,7 +50,7 @@
     }
   },
   "scripts": {
-    "coverage-check": "coverage-check test/log/clover.xml 90",
+    "coverage-check": "coverage-check test/log/clover.xml 100",
     "install-factorio": "bin/install-factorio.sh",
     "phpcbf": "phpcbf -p --colors",
     "phpcs": "phpcs -p --colors",

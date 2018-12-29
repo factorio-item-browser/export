@@ -7,6 +7,7 @@ namespace FactorioItemBrowser\Export\Command\Lists;
 use FactorioItemBrowser\Export\Command\AbstractCommand;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
+use Zend\Console\ColorInterface;
 use ZF\Console\Route;
 
 /**
@@ -46,8 +47,8 @@ class ListCommand extends AbstractCommand
      */
     protected function execute(Route $route): void
     {
-        $mods = $this->getOrderedMods();
-        foreach ($mods as $mod) {
+        $orderedMods = $this->getOrderedMods();
+        foreach ($orderedMods as $mod) {
             $this->printMod($mod, $this->exportedModRegistry->get($mod->getName()));
         }
     }
@@ -62,11 +63,11 @@ class ListCommand extends AbstractCommand
         foreach ($this->availableModRegistry->getAllNames() as $modName) {
             $mod = $this->availableModRegistry->get($modName);
             if ($mod instanceof Mod) {
-                $result[$mod->getName()] = $mod;
+                $result[] = $mod;
             }
         }
 
-        uasort($result, function (Mod $left, Mod $right): int {
+        usort($result, function (Mod $left, Mod $right): int {
             return $left->getOrder() <=> $right->getOrder();
         });
 
@@ -80,11 +81,23 @@ class ListCommand extends AbstractCommand
      */
     protected function printMod(Mod $availableMod, ?Mod $exportedMod): void
     {
-        $this->console->write($this->console->formatModName($availableMod->getName(), ': '));
-        $this->console->write($this->console->formatVersion($availableMod->getVersion(), true));
+        $exportedVersion = '';
+        $color = null;
+
         if ($exportedMod instanceof Mod) {
-            $this->console->write($this->console->formatVersion($exportedMod->getVersion(), true));
+            $exportedVersion = $exportedMod->getVersion();
+            if ($exportedVersion !== $availableMod->getVersion()) {
+                $color = ColorInterface::LIGHT_YELLOW;
+            }
+        } else {
+            $color = ColorInterface::LIGHT_CYAN;
         }
-        $this->console->writeLine();
+
+        $this->console->writeLine(sprintf(
+            '%s: %s -> %s',
+            $this->console->formatModName($availableMod->getName()),
+            $this->console->formatVersion($exportedVersion, true),
+            $this->console->formatVersion($availableMod->getVersion(), false)
+        ), $color);
     }
 }
