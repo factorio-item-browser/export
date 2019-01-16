@@ -110,7 +110,7 @@ class IconReducerTest extends TestCase
             $rawIconRegistry->expects($this->once())
                             ->method('get')
                             ->with('abc')
-                            ->willThrowException(new ReducerException());
+                            ->willReturn(null);
         } else {
             $rawIconRegistry->expects($this->exactly(2))
                             ->method('get')

@@ -44,7 +44,6 @@ class IconReducer implements ReducerInterface
      * Reduces the combination against the parent combination.
      * @param Combination $combination
      * @param Combination $parentCombination
-     * @throws ReducerException
      */
     public function reduce(Combination $combination, Combination $parentCombination): void
     {
