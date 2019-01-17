@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Merger;
 
-use FactorioItemBrowser\ExportData\Entity\Icon;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 
 /**
  * The class merging the icons of combinations.
@@ -13,21 +12,18 @@ use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class IconMerger extends AbstractMerger
+class IconMerger implements MergerInterface
 {
     /**
-     * Merges the source combination data into the destination one.
-     * @param CombinationData $destination
-     * @param CombinationData $source
-     * @return $this
+     * Merges the source combination into the destination one.
+     * @param Combination $destination
+     * @param Combination $source
      */
-    public function merge(CombinationData $destination, CombinationData $source)
+    public function merge(Combination $destination, Combination $source): void
     {
-        foreach ($source->getIcons() as $sourceIcon) {
-            if (!$destination->getIcon($sourceIcon->getHash()) instanceof Icon) {
-                $destination->addIcon(clone($sourceIcon));
-            }
-        }
-        return $this;
+        $destination->setIconHashes(array_values(array_unique(array_merge(
+            $destination->getIconHashes(),
+            $source->getIconHashes()
+        ))));
     }
 }

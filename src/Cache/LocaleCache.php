@@ -15,53 +15,35 @@ use FactorioItemBrowser\Export\Exception\ExportException;
 class LocaleCache extends AbstractCache
 {
     /**
-     * Returns whether the specified mod has translations in the cache.
-     * @param string $modName
-     * @return bool
+     * The filename of the actual translations to use.
      */
-    public function has(string $modName): bool
-    {
-        return file_exists($this->getCacheFileName($modName));
-    }
+    protected const TRANSLATION_FILENAME = 'translation.php';
 
     /**
      * Reads the translations from the cache.
      * @param string $modName
-     * @return array
+     * @return array|null
      */
-    public function read(string $modName): array
+    public function read(string $modName): ?array
     {
-        $result = [];
-        if ($this->has($modName)) {
-            $result = require($this->getCacheFileName($modName));
+        $filePath = $this->getFullFilePath($modName, self::TRANSLATION_FILENAME);
+        $result = null;
+        if (file_exists($filePath) && is_readable($filePath)) {
+            $result = require($filePath);
         }
-        return $result;
+        return is_array($result) ? $result : null;
     }
 
     /**
      * Writes the translations to the cache.
      * @param string $modName
      * @param array $translations
-     * @return $this
      * @throws ExportException
      */
-    public function write(string $modName, array $translations)
+    public function write(string $modName, array $translations): void
     {
-        $filePath = $this->getCacheFileName($modName);
-        $success = file_put_contents($filePath, '<?php return ' . var_export($translations, true) . ';');
-        if (!$success) {
-            throw new ExportException('Unable to cache locale data into file ' . $filePath);
-        }
-        return $this;
-    }
-
-    /**
-     * Returns the full file name of the cache file to use.
-     * @param string $modName
-     * @return string
-     */
-    protected function getCacheFileName(string $modName): string
-    {
-        return $this->getFullFilePath($modName . '.php');
+        $filePath = $this->getFullFilePath($modName, self::TRANSLATION_FILENAME);
+        $contents = '<?php return ' . var_export($translations, true) . ';';
+        $this->writeFile($filePath, $contents);
     }
 }

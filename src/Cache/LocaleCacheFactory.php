@@ -26,6 +26,6 @@ class LocaleCacheFactory implements FactoryInterface
     {
         $config = $container->get('config');
 
-        return new LocaleCache($config['cache']['directory']['locale']);
+        return new LocaleCache($config['cache']['locale']['directory']);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 
@@ -24,14 +25,14 @@ class ParserManager
 
     /**
      * The parsers to use.
-     * @var array|AbstractParser[]
+     * @var array|ParserInterface[]
      */
     protected $parsers;
 
     /**
      * Initializes the parser manager.
      * @param Translator $translator
-     * @param array|AbstractParser[] $parsers
+     * @param array|ParserInterface[] $parsers
      */
     public function __construct(Translator $translator, array $parsers)
     {
@@ -43,14 +44,22 @@ class ParserManager
      * Parses the dump data into the combination.
      * @param Combination $combination
      * @param DataContainer $dumpData
-     * @return $this
+     * @throws ExportException
      */
-    public function parse(Combination $combination, DataContainer $dumpData)
+    public function parse(Combination $combination, DataContainer $dumpData): void
     {
-        $this->translator->setEnabledModNames($combination->getLoadedModNames());
+        $this->translator->loadFromModNames($combination->getLoadedModNames());
         foreach ($this->parsers as $parser) {
-            $parser->parse($combination->getData(), $dumpData);
+            $parser->reset();
         }
-        return $this;
+        foreach ($this->parsers as $parser) {
+            $parser->parse($dumpData);
+        }
+        foreach ($this->parsers as $parser) {
+            $parser->check();
+        }
+        foreach ($this->parsers as $parser) {
+            $parser->persist($combination);
+        }
     }
 }

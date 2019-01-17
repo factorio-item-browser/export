@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Merger;
 
-use FactorioItemBrowser\ExportData\Service\ExportDataService;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
@@ -20,10 +19,10 @@ class MergerManagerFactory implements FactoryInterface
      * The merger classes to use.
      */
     const MERGER_CLASSES = [
-        ItemMerger::class,
-        RecipeMerger::class,
-        MachineMerger::class,
         IconMerger::class,
+        ItemMerger::class,
+        MachineMerger::class,
+        RecipeMerger::class,
     ];
 
     /**
@@ -35,14 +34,11 @@ class MergerManagerFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        /* @var ExportDataService $exportDataService */
-        $exportDataService = $container->get(ExportDataService::class);
-
         $mergers = [];
-        foreach (self::MERGER_CLASSES as $parserClass) {
-            $mergers[] = $container->get($parserClass);
+        foreach (self::MERGER_CLASSES as $mergerClass) {
+            $mergers[] = $container->get($mergerClass);
         }
 
-        return new MergerManager($exportDataService, $mergers);
+        return new MergerManager($mergers);
     }
 }

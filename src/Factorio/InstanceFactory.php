@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Factorio;
 
-use FactorioItemBrowser\Export\Parser\ParserManager;
-use FactorioItemBrowser\Export\Reducer\ReducerManager;
-use FactorioItemBrowser\ExportData\Service\ExportDataService;
+use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use Interop\Container\ContainerInterface;
-use Zend\Console\Console;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
 /**
@@ -20,12 +17,6 @@ use Zend\ServiceManager\Factory\FactoryInterface;
 class InstanceFactory implements FactoryInterface
 {
     /**
-     * The next index to use.
-     * @var int
-     */
-    static protected $nextIndex = 1;
-
-    /**
      * Creates an instance.
      * @param  ContainerInterface $container
      * @param  string $requestedName
@@ -34,25 +25,17 @@ class InstanceFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        /* @var ExportDataService $exportDataService */
-        $exportDataService = $container->get(ExportDataService::class);
+        $config = $container->get('config');
+
         /* @var DumpExtractor $dumpExtractor */
         $dumpExtractor = $container->get(DumpExtractor::class);
-        /* @var ParserManager $parserManager */
-        $parserManager = $container->get(ParserManager::class);
-        /* @var ReducerManager $reducerManager */
-        $reducerManager = $container->get(ReducerManager::class);
-        /* @var Options $options */
-        $options = $container->get(Options::class);
+        /* @var RawExportDataService $rawExportDataService */
+        $rawExportDataService = $container->get(RawExportDataService::class);
 
         return new Instance(
-            $exportDataService,
             $dumpExtractor,
-            $parserManager,
-            $reducerManager,
-            Console::getInstance(),
-            $options,
-            self::$nextIndex++
+            $rawExportDataService->getModRegistry(),
+            $config['factorio']['directory']
         );
     }
 }

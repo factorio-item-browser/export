@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Reducer;
 
+use FactorioItemBrowser\Export\Exception\ReducerException;
 use FactorioItemBrowser\ExportData\Entity\Icon;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 
 /**
  * The class removing any icons which already exist in the parent combination.
@@ -13,22 +15,56 @@ use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class IconReducer extends AbstractReducer
+class IconReducer implements ReducerInterface
 {
     /**
-     * Reduces the specified combination data, removing any data which is identical in the parent combination.
-     * @param CombinationData $combination
-     * @param CombinationData $parentCombination
-     * @return $this
+     * The registry of the raw icons.
+     * @var EntityRegistry
      */
-    public function reduce(CombinationData $combination, CombinationData $parentCombination)
+    protected $rawIconRegistry;
+
+    /**
+     * The registry of the reduced icons.
+     * @var EntityRegistry
+     */
+    protected $reducedIconRegistry;
+
+    /**
+     * Initializes the reducer.
+     * @param EntityRegistry $rawIconRegistry
+     * @param EntityRegistry $reducedIconRegistry
+     */
+    public function __construct(EntityRegistry $rawIconRegistry, EntityRegistry $reducedIconRegistry)
     {
-        foreach ($parentCombination->getIcons() as $parentIcon) {
-            if ($combination->getIcon($parentIcon->getHash()) instanceof Icon) {
-                $combination->removeIcon($parentIcon->getHash());
+        $this->rawIconRegistry = $rawIconRegistry;
+        $this->reducedIconRegistry = $reducedIconRegistry;
+    }
+
+    /**
+     * Reduces the combination against the parent combination.
+     * @param Combination $combination
+     * @param Combination $parentCombination
+     */
+    public function reduce(Combination $combination, Combination $parentCombination): void
+    {
+        $iconHashes = array_values(array_diff($combination->getIconHashes(), $parentCombination->getIconHashes()));
+        $combination->setIconHashes($iconHashes);
+    }
+
+    /**
+     * Persists the data of the specified combination.
+     * @param Combination $combination
+     * @throws ReducerException
+     */
+    public function persist(Combination $combination): void
+    {
+        foreach ($combination->getIconHashes() as $iconHash) {
+            $icon = $this->rawIconRegistry->get($iconHash);
+            if ($icon instanceof Icon) {
+                $this->reducedIconRegistry->set($icon);
+            } else {
+                throw new ReducerException('Cannot find icon with hash #' . $iconHash);
             }
         }
-        $combination->setIcons(array_values($combination->getIcons()));
-        return $this;
     }
 }

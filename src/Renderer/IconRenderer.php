@@ -6,10 +6,19 @@ namespace FactorioItemBrowser\Export\Renderer;
 
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Renderer\Filter\ScaledLayerFilter;
+use FactorioItemBrowser\Export\Renderer\Filter\TintedLayerFilter;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Color;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Mod;
+use FactorioItemBrowser\ExportData\Registry\ModRegistry;
+use Imagine\Filter\FilterInterface;
+use Imagine\Image\Box;
+use Imagine\Image\ImageInterface;
+use Imagine\Image\ImagineInterface;
+use Imagine\Image\Palette\Color\ColorInterface;
+use Imagine\Image\Palette\RGB;
 
 /**
  * The class rendering the layered icons to PNG images.
@@ -22,7 +31,13 @@ class IconRenderer
     /**
      * The regular expression to recognize the image files.
      */
-    private const REGEXP_LAYER_IMAGE = '#^__(.*)__/(.*)$#';
+    protected const REGEXP_LAYER_IMAGE = '#^__(.*)__/(.*)$#';
+
+    /**
+     * The imagine instance.
+     * @var ImagineInterface
+     */
+    protected $imagine;
 
     /**
      * The mod file manager.
@@ -31,12 +46,22 @@ class IconRenderer
     protected $modFileManager;
 
     /**
-     * Initializes the icon renderer.
-     * @param ModFileManager $modFileManager
+     * The mod registry.
+     * @var ModRegistry
      */
-    public function __construct(ModFileManager $modFileManager)
+    protected $modRegistry;
+
+    /**
+     * Initializes the icon renderer.
+     * @param ImagineInterface $imagine
+     * @param ModFileManager $modFileManager
+     * @param ModRegistry $modRegistry
+     */
+    public function __construct(ImagineInterface $imagine, ModFileManager $modFileManager, ModRegistry $modRegistry)
     {
+        $this->imagine = $imagine;
         $this->modFileManager = $modFileManager;
+        $this->modRegistry = $modRegistry;
     }
 
     /**
@@ -48,87 +73,51 @@ class IconRenderer
      */
     public function render(Icon $icon, int $size): string
     {
-        $image = $this->createTransparentLayer($icon->getSize());
-        try {
-            foreach ($icon->getLayers() as $layer) {
-                $this->renderLayer($image, $layer, $icon->getSize());
-            }
-            $image = $this->resizeImage($image, $icon->getSize(), $size);
-            $imageContent = $this->getImageContents($image);
-        } finally {
-            imagedestroy($image);
+        $image = $this->createImage($icon->getSize());
+        foreach ($icon->getLayers() as $layer) {
+            $image = $this->renderLayer($image, $layer, $icon->getSize());
         }
-        return $imageContent;
+
+        $image->resize(new Box($size, $size));
+        return $image->get('png');
     }
 
     /**
-     * Creates and returns a transparent layer ready to be drawn on.
+     * Creates a new transparent image with the specified size.
      * @param int $size
-     * @return resource
+     * @return ImageInterface
      */
-    protected function createTransparentLayer(int $size)
+    protected function createImage(int $size): ImageInterface
     {
-        $layer = imagecreatetruecolor($size, $size);
-        $transparent = imagecolorallocatealpha($layer, 255, 255, 255, 127);
-        imagealphablending($layer, false);
-        imagefilledrectangle($layer, 0, 0, $size, $size, $transparent);
-        return $layer;
+        return $this->imagine->create(new Box($size, $size), (new RGB())->color(0xFFFFFF, 0));
     }
 
     /**
      * Renders the specified layer to the image.
-     * @param resource $image
+     * @param ImageInterface $image
      * @param Layer $layer
      * @param int $size
-     * @return $this
+     * @return ImageInterface
      * @throws ExportException
      */
-    protected function renderLayer($image, Layer $layer, $size)
+    protected function renderLayer(ImageInterface $image, Layer $layer, int $size): ImageInterface
     {
-        $layerImage = $this->createdScaledLayerImage($layer, $size);
-        try {
-            $this->applyTintedLayer($image, $layerImage, $layer->getTintColor(), $size);
-        } finally {
-            imagedestroy($layerImage);
-        }
-        return $this;
+        $scaledLayerFilter = $this->createScaledLayerFilter($layer, $size);
+        $layerImage = $scaledLayerFilter->apply($this->createLayerImage($layer));
+        $tintedLayerFilter = $this->createTintedLayerFilter($layer, $layerImage);
+        return $tintedLayerFilter->apply($image);
     }
 
     /**
-     * Creates the scaled image of the specified layer.
+     * Creates an image instance of the specified layer file.
      * @param Layer $layer
-     * @param int $size
-     * @return resource
+     * @return ImageInterface
      * @throws ExportException
      */
-    protected function createdScaledLayerImage(Layer $layer, int $size)
+    protected function createLayerImage(Layer $layer): ImageInterface
     {
-        $image = $this->createTransparentLayer($size);
-
-        $layerImageContents = $this->loadLayerImage($layer->getFileName());
-        $layerImage = imagecreatefromstring($layerImageContents);
-        $layerWidth = imagesx($layerImage);
-        $layerHeight = imagesy($layerImage);
-
-        $scale = $layer->getScale();
-        $x = ($size - $layerWidth * $scale) / 2 + $layer->getOffsetX();
-        $y = ($size - $layerHeight * $scale) / 2 + $layer->getOffsetY();
-
-        imagealphablending($image, true);
-        imagecopyresampled(
-            $image,
-            $layerImage,
-            (int) $x,
-            (int) $y,
-            0,
-            0,
-            (int) ($layerWidth * $scale),
-            (int) ($layerHeight * $scale),
-            (int) $layerWidth,
-            (int) $layerHeight
-        );
-
-        return $image;
+        $content = $this->loadLayerImage($layer->getFileName());
+        return $this->imagine->load($content);
     }
 
     /**
@@ -139,120 +128,53 @@ class IconRenderer
      */
     protected function loadLayerImage(string $layerFileName): string
     {
-        if (!preg_match(self::REGEXP_LAYER_IMAGE, $layerFileName, $match)) {
+        $count = (int) preg_match(self::REGEXP_LAYER_IMAGE, $layerFileName, $match);
+        if ($count === 0) {
             throw new ExportException('Unable to understand image file name: ' . $layerFileName);
         }
-        $mod = $this->modFileManager->getMod($match[1]);
+
+        $mod = $this->modRegistry->get($match[1]);
         if (!$mod instanceof Mod) {
             throw new ExportException('Mod not known: ' . $match[1]);
         }
-        return $this->modFileManager->getFileContents($mod, $match[2]);
+        return $this->modFileManager->getFile($mod, $match[2]);
     }
 
-
     /**
-     * Applies the layer image with the specified tint color.
-     * @param resource $image
-     * @param resource $layerImage
-     * @param Color $tnt
+     * Creates the filter to scale and offset the layer.
+     * @param Layer $layer
      * @param int $size
-     * @return $this
+     * @return FilterInterface
      */
-    protected function applyTintedLayer($image, $layerImage, Color $tnt, int $size)
+    protected function createScaledLayerFilter(Layer $layer, int $size): FilterInterface
     {
-        imagealphablending($image, false);
-        for ($x = 0; $x < $size; ++$x) {
-            for ($y = 0; $y < $size; ++$y) {
-                $dst = $this->createColorFromPixel($image, $x, $y);
-                $src = $this->createColorFromPixel($layerImage, $x, $y);
-
-                $calculatedColor = new Color();
-                $calculatedColor
-                    ->setRed($src->getRed() * $tnt->getRed() * $src->getAlpha()
-                        + $dst->getRed() * $dst->getAlpha() * (1 - $src->getAlpha() * $tnt->getAlpha()))
-                    ->setGreen($src->getGreen() * $tnt->getGreen() * $src->getAlpha()
-                        + $dst->getGreen() * $dst->getAlpha() * (1 - $src->getAlpha() * $tnt->getAlpha()))
-                    ->setBlue($src->getBlue() * $tnt->getBlue() * $src->getAlpha()
-                        + $dst->getBlue() * $dst->getAlpha() * (1 - $src->getAlpha() * $tnt->getAlpha()))
-                    ->setAlpha($src->getAlpha() + $dst->getAlpha() * (1 - $src->getAlpha() * $tnt->getAlpha()));
-
-                $color = imagecolorallocatealpha(
-                    $image,
-                    max(min(intval($calculatedColor->getRed(255)), 255), 0),
-                    max(min(intval($calculatedColor->getGreen(255)), 255), 0),
-                    max(min(intval($calculatedColor->getBlue(255)), 255), 0),
-                    max(min(intval($calculatedColor->getAlpha(-127)), 127), 0)
-                );
-
-                imagesetpixel($image, $x, $y, $color);
-            }
-        }
-        return $this;
+        $filter = new ScaledLayerFilter($layer, $size);
+        $filter->setImagine($this->imagine);
+        return $filter;
     }
 
     /**
-     * Creates and returns a color instance from the specified pixel of the image.
-     * @param resource $image
-     * @param int $x
-     * @param int $y
-     * @return Color
+     * Creates the filter to apply the tinted layer.
+     * @param Layer $layer
+     * @param ImageInterface $layerImage
+     * @return FilterInterface
      */
-    protected function createColorFromPixel($image, int $x, int $y): Color
+    protected function createTintedLayerFilter(Layer $layer, ImageInterface $layerImage): FilterInterface
     {
-        $color = imagecolorsforindex($image, imagecolorat($image, $x, $y));
-
-        $result = new Color();
-        $result
-            ->setRed($color['red'], 255)
-            ->setGreen($color['green'], 255)
-            ->setBlue($color['blue'], 255)
-            ->setAlpha($color['alpha'], -127);
-
-        return $result;
+        return new TintedLayerFilter($layerImage, $this->convertColor($layer->getTintColor()));
     }
 
     /**
-     * Resize the image to the specified size.
-     * @param resource $image
-     * @param int $originalSize
-     * @param int $requestedSize
-     * @return resource
+     * Converts the specified color to an Imagine instance.
+     * @param Color $color
+     * @return ColorInterface
      */
-    protected function resizeImage($image, int $originalSize, int $requestedSize)
+    protected function convertColor(Color $color): ColorInterface
     {
-        if ($originalSize !== $requestedSize) {
-            $newImage = $this->createTransparentLayer($requestedSize);
-            imagealphablending($newImage, true);
-            imagecopyresampled(
-                $newImage,
-                $image,
-                0,
-                0,
-                0,
-                0,
-                $requestedSize,
-                $requestedSize,
-                $originalSize,
-                $originalSize
-            );
-            imagedestroy($image);
-            $image = $newImage;
-        }
-        return $image;
-    }
-
-    /**
-     * Returns the contents of the specified image.
-     * @param resource $image
-     * @return string
-     */
-    protected function getImageContents($image): string
-    {
-        imagealphablending($image, false);
-        imagesavealpha($image, true);
-
-        ob_start();
-        imagepng($image);
-        return ob_get_clean();
+        return (new RGB())->color([
+            (int) round($color->getRed(255)),
+            (int) round($color->getGreen(255)),
+            (int) round($color->getBlue(255)),
+        ], (int) round($color->getAlpha(100)));
     }
 }

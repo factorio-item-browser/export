@@ -19,11 +19,12 @@ class ParserManagerFactory implements FactoryInterface
     /**
      * The parser classes to use.
      */
-    const PARSER_CLASSES = [
-        ItemParser::class,
-        RecipeParser::class,
-        MachineParser::class,
+    protected const PARSER_CLASSES = [
         IconParser::class,
+
+        ItemParser::class,
+        MachineParser::class,
+        RecipeParser::class,
     ];
 
     /**

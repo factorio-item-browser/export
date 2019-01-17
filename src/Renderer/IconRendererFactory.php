@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Renderer;
 
+use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
+use Imagine\Gd\Imagine;
+use Imagine\Image\ImagineInterface;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
@@ -25,9 +28,20 @@ class IconRendererFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+        /* @var RawExportDataService $exportDataService */
+        $exportDataService = $container->get(RawExportDataService::class);
         /* @var ModFileManager $modFileManager */
         $modFileManager = $container->get(ModFileManager::class);
 
-        return new IconRenderer($modFileManager);
+        return new IconRenderer($this->createImagine(), $modFileManager, $exportDataService->getModRegistry());
+    }
+
+    /**
+     * Creates the Imagine instance to use.
+     * @return ImagineInterface
+     */
+    protected function createImagine(): ImagineInterface
+    {
+        return new Imagine();
     }
 }

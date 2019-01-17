@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Mod;
 
 use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Service\ExportDataService;
+use FactorioItemBrowser\ExportData\Entity\Mod\Dependency;
+use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 
 /**
  * The class resolving the dependencies of mods.
@@ -16,10 +17,10 @@ use FactorioItemBrowser\ExportData\Service\ExportDataService;
 class DependencyResolver
 {
     /**
-     * The export data service.
-     * @var ExportDataService
+     * The mod registry.
+     * @var ModRegistry
      */
-    protected $exportDataService;
+    protected $modRegistry;
 
     /**
      * The resolved mod names.
@@ -29,11 +30,11 @@ class DependencyResolver
 
     /**
      * Initializes the dependency resolver.
-     * @param ExportDataService $exportDataService
+     * @param ModRegistry $modRegistry
      */
-    public function __construct(ExportDataService $exportDataService)
+    public function __construct(ModRegistry $modRegistry)
     {
-        $this->exportDataService = $exportDataService;
+        $this->modRegistry = $modRegistry;
     }
 
     /**
@@ -44,27 +45,25 @@ class DependencyResolver
     public function resolveMandatoryDependencies(array $modNames): array
     {
         $this->resolvedModNames = [];
-        sort($modNames, SORT_NATURAL | SORT_FLAG_CASE);
-        foreach ($modNames as $modName) {
+        foreach ($this->sortModNames($modNames) as $modName) {
             $this->processMod($modNames, $modName, true);
         }
         return array_keys($this->resolvedModNames);
     }
 
     /**
-     * Resolves all optional mods of the specified mod names.
+     * Resolves all optional dependencies of the specified mod names.
      * @param array|string[] $modNames
+     * @param array|string[] $mandatoryModNames
      * @return array|string[]
      */
-    public function resolveOptionalMods(array $modNames): array
+    public function resolveOptionalDependencies(array $modNames, array $mandatoryModNames): array
     {
-        $modNames = $this->resolveMandatoryDependencies($modNames);
-
         $this->resolvedModNames = [];
-        foreach ($modNames as $modName) {
+        foreach ($this->sortModNames($modNames) as $modName) {
             $this->processMod($modNames, $modName, false);
         }
-        return array_values(array_diff(array_keys($this->resolvedModNames), $modNames));
+        return array_values(array_diff(array_keys($this->resolvedModNames), $mandatoryModNames));
     }
 
     /**
@@ -72,30 +71,73 @@ class DependencyResolver
      * @param array $allModNames
      * @param string $modName
      * @param bool $isMandatory
-     * @return $this
      */
-    protected function processMod(array $allModNames, string $modName, bool $isMandatory)
+    protected function processMod(array $allModNames, string $modName, bool $isMandatory): void
     {
-        $mod = $this->exportDataService->getMod($modName);
+        $mod = $this->modRegistry->get($modName);
         if ($mod instanceof Mod) {
-            $requiredModNames = [];
-            foreach ($mod->getDependencies() as $dependency) {
-                $addMandatory = $isMandatory
-                    && ($dependency->getIsMandatory() || in_array($dependency->getRequiredModName(), $allModNames));
-                $addOptional = !$isMandatory && !$dependency->getIsMandatory();
+            $requiredModNames = $this->getRequiredModNames($mod, $allModNames, $isMandatory);
 
-                if (($addMandatory || $addOptional)
-                    && !isset($this->resolvedModNames[$dependency->getRequiredModName()])
-                ) {
-                    $requiredModNames[] = $dependency->getRequiredModName();
-                }
-            }
-            sort($requiredModNames, SORT_NATURAL | SORT_FLAG_CASE);
-            foreach ($requiredModNames as $requiredModName) {
+            foreach ($this->sortModNames($requiredModNames) as $requiredModName) {
                 $this->processMod($allModNames, $requiredModName, $isMandatory);
             }
             $this->resolvedModNames[$modName] = true;
         }
-        return $this;
+    }
+
+    /**
+     * Returns the names of required mods for the specified one.
+     * @param Mod $mod
+     * @param array|string[] $allModNames
+     * @param bool $isMandatory
+     * @return array|string[]
+     */
+    protected function getRequiredModNames(Mod $mod, array $allModNames, bool $isMandatory): array
+    {
+        $result = [];
+        foreach ($mod->getDependencies() as $dependency) {
+            if (!isset($this->resolvedModNames[$dependency->getRequiredModName()])
+                && ($this->isDependencyMandatory($isMandatory, $dependency, $allModNames)
+                    || $this->isDependencyOptional($isMandatory, $dependency))
+            ) {
+                $result[] = $dependency->getRequiredModName();
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Returns whether the dependency is mandatory and must be added.
+     * @param bool $isMandatory
+     * @param Dependency $dependency
+     * @param array|string[] $allModNames
+     * @return bool
+     */
+    protected function isDependencyMandatory(bool $isMandatory, Dependency $dependency, array $allModNames): bool
+    {
+        return $isMandatory
+            && ($dependency->getIsMandatory() || in_array($dependency->getRequiredModName(), $allModNames, true));
+    }
+
+    /**
+     * Returns whether the dependency is optional.
+     * @param bool $isMandatory
+     * @param Dependency $dependency
+     * @return bool
+     */
+    protected function isDependencyOptional(bool $isMandatory, Dependency $dependency): bool
+    {
+        return !$isMandatory && !$dependency->getIsMandatory();
+    }
+
+    /**
+     * Sorts the mod names.
+     * @param array|string[] $modNames
+     * @return array|string[]
+     */
+    protected function sortModNames(array $modNames): array
+    {
+        sort($modNames, SORT_NATURAL | SORT_FLAG_CASE);
+        return $modNames;
     }
 }

@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\Common\Constant\ItemType;
+use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\ExportData\Entity\Item;
-use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
+use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
+use FactorioItemBrowser\ExportData\Utils\EntityUtils;
 
 /**
  * The class parsing the items of the dump.
@@ -14,23 +18,67 @@ use FactorioItemBrowser\ExportData\Entity\Mod\CombinationData;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ItemParser extends AbstractParser
+class ItemParser implements ParserInterface
 {
     /**
-     * Parses the dump data into the combination.
-     * @param CombinationData $combinationData
-     * @param DataContainer $dumpData
-     * @return $this
+     * The icon parser.
+     * @var IconParser
      */
-    public function parse(CombinationData $combinationData, DataContainer $dumpData)
+    protected $iconParser;
+
+    /**
+     * The item registry.
+     * @var EntityRegistry
+     */
+    protected $itemRegistry;
+
+    /**
+     * The translator.
+     * @var Translator
+     */
+    protected $translator;
+
+    /**
+     * The parsed items.
+     * @var array|Item[]
+     */
+    protected $parsedItems = [];
+
+    /**
+     * Initializes the parser.
+     * @param IconParser $iconParser
+     * @param EntityRegistry $itemRegistry
+     * @param Translator $translator
+     */
+    public function __construct(IconParser $iconParser, EntityRegistry $itemRegistry, Translator $translator)
+    {
+        $this->iconParser = $iconParser;
+        $this->itemRegistry = $itemRegistry;
+        $this->translator = $translator;
+    }
+
+    /**
+     * Resets any previously aggregated data.
+     */
+    public function reset(): void
+    {
+        $this->parsedItems = [];
+    }
+
+    /**
+     * Parses the data from the dump into actual entities.
+     * @param DataContainer $dumpData
+     */
+    public function parse(DataContainer $dumpData): void
     {
         foreach ($dumpData->getObjectArray('items') as $itemData) {
-            $combinationData->addItem($this->parseItem($itemData, 'item'));
+            $item = $this->parseItem($itemData, ItemType::ITEM);
+            $this->parsedItems[$item->getIdentifier()] = $item;
         }
-        foreach ($dumpData->getObjectArray('fluids') as $fluidData) {
-            $combinationData->addItem($this->parseItem($fluidData, 'fluid'));
+        foreach ($dumpData->getObjectArray('fluids') as $itemData) {
+            $item = $this->parseItem($itemData, ItemType::FLUID);
+            $this->parsedItems[$item->getIdentifier()] = $item;
         }
-        return $this;
     }
 
     /**
@@ -43,20 +91,78 @@ class ItemParser extends AbstractParser
     {
         $item = new Item();
         $item->setType($type)
-             ->setName($itemData->getString('name'));
+             ->setName(strtolower($itemData->getString('name')));
 
-        $this->translator->addTranslations(
+        $this->addTranslations($item, $itemData);
+        return $item;
+    }
+
+    /**
+     * Adds the translation to the item.
+     * @param Item $item
+     * @param DataContainer $itemData
+     */
+    protected function addTranslations(Item $item, DataContainer $itemData): void
+    {
+        $this->translator->addTranslationsToEntity(
             $item->getLabels(),
             'name',
             $itemData->get(['localised', 'name']),
             $itemData->get(['localised', 'entityName'])
         );
-        $this->translator->addTranslations(
+        $this->translator->addTranslationsToEntity(
             $item->getDescriptions(),
             'description',
             $itemData->get(['localised', 'description']),
             $itemData->get(['localised', 'entityDescription'])
         );
-        return $item;
+    }
+
+    /**
+     * Checks the parsed data.
+     */
+    public function check(): void
+    {
+        foreach ($this->parsedItems as $item) {
+            $this->checkIcon($item);
+        }
+    }
+
+    /**
+     * Checks the icon of the item.
+     * @param Item $item
+     */
+    protected function checkIcon(Item $item): void
+    {
+        $iconHash = $this->iconParser->getIconHashForEntity($item->getType(), $item->getName());
+        if ($iconHash !== null) {
+            $item->setIconHash($iconHash);
+        }
+    }
+
+    /**
+     * Persists the parsed data into the combination.
+     * @param Combination $combination
+     */
+    public function persist(Combination $combination): void
+    {
+        $itemHashes = [];
+        foreach ($this->parsedItems as $item) {
+            $itemHashes[] = $this->itemRegistry->set($item);
+        }
+        $combination->setItemHashes($itemHashes);
+    }
+
+    /**
+     * Returns the items with the specified name.
+     * @param string $name
+     * @return array|Item[]
+     */
+    public function getItemsWithName(string $name): array
+    {
+        return array_values(array_filter([
+            $this->parsedItems[EntityUtils::buildIdentifier([ItemType::ITEM, $name])] ?? null,
+            $this->parsedItems[EntityUtils::buildIdentifier([ItemType::FLUID, $name])] ?? null,
+        ]));
     }
 }

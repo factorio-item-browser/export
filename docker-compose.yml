@@ -1,8 +1,15 @@
-version: "3"
+version: "3.5"
 services:
+  
   php:
     build: ./docker/php
     container_name: fib-ex-php
     image: fib-ex-php
+    networks:
+    - network-fib
     volumes:
       - ".:/project"
+      
+networks:
+  network-fib:
+    name: network-fib

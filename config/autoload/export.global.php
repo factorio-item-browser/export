@@ -12,20 +12,28 @@ namespace FactorioItemBrowser\Export;
  */
 return [
     'cache' => [
-        'directory' => [
-            'locale' => __DIR__ . '/../../data/cache/locale',
+        'locale' => [
+            'directory' => __DIR__ . '/../../data/cache/locale',
+        ],
+        'mod-file' => [
+            'directory' => __DIR__ . '/../../data/cache/mod-file'
         ]
     ],
-    'exportData' => [
-        'directory' => __DIR__ . '/../../data/export',
+    'export-data' => [
+        'raw' => [
+            'directory' => __DIR__ . '/../../data/export/raw',
+        ],
+        'reduced' => [
+            'directory' => __DIR__ . '/../../data/export/reduced',
+        ]
     ],
     'factorio' => [
-        'factorioDirectory' => __DIR__ . '/../../factorio',
-        'modsDirectory' => __DIR__ . '/../../factorio/mods',
-        'instancesDirectory' => __DIR__ . '/../../factorio/instances',
-        'numberOfAttempts' => 2,
-        'numberOfInstances' => 4
+        'directory' => __DIR__ . '/../../factorio',
     ],
     'name' => 'Factorio Item Browser Export',
-    'version' => '1.1.0'
+    'process-manager' => [
+        'process-count' => 4,
+        'poll-interval' => 100,
+    ],
+    'version' => '2.0.0-alpha'
 ];
