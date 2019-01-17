@@ -9,7 +9,7 @@
 - ExportData library to latest version.
 - Rendering of icons from plain GD to Imagine (using GD).
 
-## 1.1.0 - 2018-07-20
+## 1.1.0 - 2018-07-21
 
 ### Added
 
