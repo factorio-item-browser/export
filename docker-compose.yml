@@ -9,7 +9,7 @@ services:
     - network-fib
     volumes:
       - ".:/project"
-      
+
 networks:
   network-fib:
     name: network-fib
