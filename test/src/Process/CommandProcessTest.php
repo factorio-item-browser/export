@@ -99,8 +99,12 @@ class CommandProcessTest extends TestCase
     public function testStart(): void
     {
         $commandLine = 'ls -l';
-        $callback = 'strval';
-        $newCallback = 'floatval';
+        $callback = function($type, $data) {
+            // Nothing to do.
+        };
+        $newCallback = function($type, $data) {
+            // Nothing to do.
+        };
 
         /* @var Console $console */
         $console = $this->createMock(Console::class);
