@@ -93,8 +93,8 @@ class Translator
      * Adds the translations to the specified entity.
      * @param LocalisedString $entity The entity to add the translations to.
      * @param string $type The type of string to translate.
-     * @param string|array $localisedString The raw localised string to translate.
-     * @param string|array|null $fallbackLocalisedString The fallback localised string to use.
+     * @param mixed $localisedString The raw localised string to translate.
+     * @param mixed $fallbackLocalisedString The fallback localised string to use.
      */
     public function addTranslationsToEntity(
         LocalisedString $entity,
@@ -114,8 +114,8 @@ class Translator
      * Translates the localised string with the specified fallback.
      * @param string $locale
      * @param string $type
-     * @param string|array $localisedString
-     * @param string|array|null $fallbackLocalisedString
+     * @param mixed $localisedString
+     * @param mixed $fallbackLocalisedString
      * @return string
      */
     protected function translateWithFallback(
@@ -134,7 +134,7 @@ class Translator
     /**
      * Translates the specified string.
      * @param string $type
-     * @param string|array $localisedString
+     * @param mixed $localisedString
      * @param string $locale
      * @param int $level
      * @return string
@@ -152,7 +152,7 @@ class Translator
      * Translates the localised string.
      * @param string $locale
      * @param string $type
-     * @param string|array $localisedString
+     * @param mixed $localisedString
      * @param int $level
      * @return string
      */
