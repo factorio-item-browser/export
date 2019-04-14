@@ -154,8 +154,8 @@ local prepareMachinePrototype = function(machine)
         -- Furnaces are forced to have exactly one ingredient slot, but it is not set in ingredient_count.
         result.numberOfItemSlots = 1
     elseif machine.ingredient_count == nil then
-        -- -1 means unlimited slots. Mostly only the player.
-        result.numberOfItemSlots = -1
+        -- Player entities do not specify an ingredient_count either, but have unlimited ones.
+        result.numberOfItemSlots = 255
     else
         result.numberOfItemSlots = machine.ingredient_count
     end
