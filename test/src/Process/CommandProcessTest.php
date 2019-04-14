@@ -100,7 +100,7 @@ class CommandProcessTest extends TestCase
     {
         $commandLine = 'ls -l';
         $callback = 'strval';
-        $newCallback = 'intval';
+        $newCallback = 'floatval';
 
         /* @var Console $console */
         $console = $this->createMock(Console::class);
