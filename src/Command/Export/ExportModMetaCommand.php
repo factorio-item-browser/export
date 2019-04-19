@@ -45,9 +45,7 @@ class ExportModMetaCommand extends AbstractModCommand
     {
         $this->console->writeAction('Exporting meta data of mod ' . $mod->getName());
         $this->translate($mod);
-
-        $this->modRegistry->set($mod);
-        $this->modRegistry->saveMods();
+        $this->persistMod($mod);
     }
 
     /**

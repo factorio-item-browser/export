@@ -15,6 +15,7 @@ use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Imagine\Filter\FilterInterface;
+use Imagine\Image\Box;
 use Imagine\Image\BoxInterface;
 use Imagine\Image\ImageInterface;
 use Imagine\Image\ImagineInterface;
@@ -35,89 +36,114 @@ class IconRendererTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked imagine.
+     * @var ImagineInterface&MockObject
+     */
+    protected $imagine;
+
+    /**
+     * The mocked mod file manager.
+     * @var ModFileManager&MockObject
+     */
+    protected $modFileManager;
+
+    /**
+     * The mocked mod registry.
+     * @var ModRegistry&MockObject
+     */
+    protected $modRegistry;
+
+    /**
+     * Sets up the test case.
+     * @throws ReflectionException
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->imagine = $this->createMock(ImagineInterface::class);
+        $this->modFileManager = $this->createMock(ModFileManager::class);
+        $this->modRegistry = $this->createMock(ModRegistry::class);
+    }
+
+    /**
      * Tests the constructing.
      * @covers ::__construct
      * @throws ReflectionException
      */
     public function testConstruct(): void
     {
-        /* @var ImagineInterface $imagine */
-        $imagine = $this->createMock(ImagineInterface::class);
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        $renderer = new IconRenderer($this->imagine, $this->modFileManager, $this->modRegistry);
 
-        $renderer = new IconRenderer($imagine, $modFileManager, $modRegistry);
-
-        $this->assertSame($imagine, $this->extractProperty($renderer, 'imagine'));
-        $this->assertSame($modFileManager, $this->extractProperty($renderer, 'modFileManager'));
-        $this->assertSame($modRegistry, $this->extractProperty($renderer, 'modRegistry'));
+        $this->assertSame($this->imagine, $this->extractProperty($renderer, 'imagine'));
+        $this->assertSame($this->modFileManager, $this->extractProperty($renderer, 'modFileManager'));
+        $this->assertSame($this->modRegistry, $this->extractProperty($renderer, 'modRegistry'));
     }
 
     /**
      * Tests the render method.
      * @throws ExportException
+     * @throws ReflectionException
      * @covers ::render
      */
     public function testRender(): void
     {
         $iconSize = 42;
-        $size = 21;
+        $renderedSize = 1337;
         $imageContent = 'abc';
 
-        /* @var Layer $layer1 */
+        /* @var Layer&MockObject $layer1 */
         $layer1 = $this->createMock(Layer::class);
-        /* @var Layer $layer2 */
+        /* @var Layer&MockObject $layer2 */
         $layer2 = $this->createMock(Layer::class);
-
-        $icon = new Icon();
-        $icon->setSize($iconSize)
-             ->setLayers([$layer1, $layer2]);
-
-        /* @var ImageInterface $image1 */
+        /* @var ImageInterface&MockObject $image1 */
         $image1 = $this->createMock(ImageInterface::class);
-        /* @var ImageInterface $image2 */
+        /* @var ImageInterface&MockObject $image2 */
         $image2 = $this->createMock(ImageInterface::class);
 
-        /* @var ImageInterface|MockObject $image3 */
-        $image3 = $this->getMockBuilder(ImageInterface::class)
-                       ->setMethods(['resize', 'get'])
-                       ->getMockForAbstractClass();
-        $image3->expects($this->once())
-               ->method('resize')
-               ->with($this->callback(function (BoxInterface $box) use ($size): bool {
-                   $this->assertSame($size, $box->getWidth());
-                   $this->assertSame($size, $box->getHeight());
-                   return true;
-               }))
-               ->willReturnSelf();
+        /* @var ImageInterface&MockObject $image3 */
+        $image3 = $this->createMock(ImageInterface::class);
         $image3->expects($this->once())
                ->method('get')
-               ->with('png')
+               ->with($this->identicalTo('png'))
                ->willReturn($imageContent);
+
+        /* @var Icon&MockObject $icon */
+        $icon = $this->createMock(Icon::class);
+        $icon->expects($this->atLeastOnce())
+             ->method('getSize')
+             ->willReturn($iconSize);
+        $icon->expects($this->once())
+             ->method('getLayers')
+             ->willReturn([$layer1, $layer2]);
+        $icon->expects($this->once())
+             ->method('getRenderedSize')
+             ->willReturn($renderedSize);
 
         /* @var IconRenderer|MockObject $renderer */
         $renderer = $this->getMockBuilder(IconRenderer::class)
-                         ->setMethods(['createImage', 'renderLayer'])
-                         ->disableOriginalConstructor()
+                         ->setMethods(['createImage', 'renderLayer', 'resizeImage'])
+                         ->setConstructorArgs([$this->imagine, $this->modFileManager, $this->modRegistry])
                          ->getMock();
         $renderer->expects($this->once())
                  ->method('createImage')
-                 ->with($iconSize)
+                 ->with($this->identicalTo($iconSize))
                  ->willReturn($image1);
         $renderer->expects($this->exactly(2))
                  ->method('renderLayer')
                  ->withConsecutive(
-                     [$image1, $layer1, $iconSize],
-                     [$image2, $layer2, $iconSize]
+                     [$this->identicalTo($image1), $this->identicalTo($layer1), $this->identicalTo($iconSize)],
+                     [$this->identicalTo($image2), $this->identicalTo($layer2), $this->identicalTo($iconSize)]
                  )
                  ->willReturnOnConsecutiveCalls(
                      $image2,
                      $image3
                  );
+        $renderer->expects($this->once())
+                 ->method('resizeImage')
+                 ->with($this->identicalTo($image3), $this->identicalTo($renderedSize));
 
-        $result = $renderer->render($icon, $size);
+        $result = $renderer->render($icon);
         $this->assertSame($imageContent, $result);
     }
 
@@ -133,34 +159,25 @@ class IconRendererTest extends TestCase
         /* @var ImageInterface $image */
         $image = $this->createMock(ImageInterface::class);
 
-        /* @var ImagineInterface|MockObject $imagine */
-        $imagine = $this->getMockBuilder(ImagineInterface::class)
-                        ->setMethods(['create'])
-                        ->getMockForAbstractClass();
-        $imagine->expects($this->once())
-                ->method('create')
-                ->with(
-                    $this->callback(function (BoxInterface $box) use ($size): bool {
-                        $this->assertSame($size, $box->getWidth());
-                        $this->assertSame($size, $box->getHeight());
-                        return true;
-                    }),
-                    $this->callback(function (ColorInterface $color): bool {
-                        $this->assertSame(255, $color->getValue(ColorInterface::COLOR_RED));
-                        $this->assertSame(255, $color->getValue(ColorInterface::COLOR_GREEN));
-                        $this->assertSame(255, $color->getValue(ColorInterface::COLOR_BLUE));
-                        $this->assertSame(0, $color->getAlpha());
-                        return true;
-                    })
-                )
-                ->willReturn($image);
+        $this->imagine->expects($this->once())
+                      ->method('create')
+                      ->with(
+                          $this->callback(function (BoxInterface $box) use ($size): bool {
+                              $this->assertSame($size, $box->getWidth());
+                              $this->assertSame($size, $box->getHeight());
+                              return true;
+                          }),
+                          $this->callback(function (ColorInterface $color): bool {
+                              $this->assertSame(255, $color->getValue(ColorInterface::COLOR_RED));
+                              $this->assertSame(255, $color->getValue(ColorInterface::COLOR_GREEN));
+                              $this->assertSame(255, $color->getValue(ColorInterface::COLOR_BLUE));
+                              $this->assertSame(0, $color->getAlpha());
+                              return true;
+                          })
+                      )
+                      ->willReturn($image);
 
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        $renderer = new IconRenderer($imagine, $modFileManager, $modRegistry);
+        $renderer = new IconRenderer($this->imagine, $this->modFileManager, $this->modRegistry);
         $result = $this->invokeMethod($renderer, 'createImage', $size);
 
         $this->assertSame($image, $result);
@@ -428,5 +445,84 @@ class IconRendererTest extends TestCase
         $this->assertSame(128, $result->getValue(ColorInterface::COLOR_GREEN));
         $this->assertSame(191, $result->getValue(ColorInterface::COLOR_BLUE));
         $this->assertSame(42, $result->getAlpha());
+    }
+
+    /**
+     * Provides the data for the resizeImage test.
+     * @return array
+     */
+    public function provideResizeImage(): array
+    {
+        return [
+            [64, 64, 32],
+            [64, 32, 64],
+        ];
+    }
+
+    /**
+     * Tests the resizeImage method.
+     * @param int $imageSize
+     * @param int $width
+     * @param int $height
+     * @throws ReflectionException
+     * @covers ::resizeImage
+     * @dataProvider provideResizeImage
+     */
+    public function testResizeImage(int $imageSize, int $width, int $height): void
+    {
+        $expectedBox = new Box($imageSize, $imageSize);
+
+        /* @var BoxInterface&MockObject $size */
+        $size = $this->createMock(BoxInterface::class);
+        $size->expects($this->any())
+             ->method('getWidth')
+             ->willReturn($width);
+        $size->expects($this->any())
+             ->method('getHeight')
+             ->willReturn($height);
+
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
+        $image->expects($this->any())
+              ->method('getSize')
+              ->willReturn($size);
+        $image->expects($this->once())
+              ->method('resize')
+              ->with($this->equalTo($expectedBox));
+
+        $renderer = new IconRenderer($this->imagine, $this->modFileManager, $this->modRegistry);
+        $this->invokeMethod($renderer, 'resizeImage', $image, $imageSize);
+    }
+
+    /**
+     * Tests the resizeImage method without actually resizing it.
+     * @throws ReflectionException
+     * @covers ::resizeImage
+     */
+    public function testResizeImageWithoutResizing(): void
+    {
+        $imageSize = 42;
+        $width = 42;
+        $height = 42;
+
+        /* @var BoxInterface&MockObject $size */
+        $size = $this->createMock(BoxInterface::class);
+        $size->expects($this->any())
+             ->method('getWidth')
+             ->willReturn($width);
+        $size->expects($this->any())
+             ->method('getHeight')
+             ->willReturn($height);
+
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
+        $image->expects($this->any())
+              ->method('getSize')
+              ->willReturn($size);
+        $image->expects($this->never())
+              ->method('resize');
+
+        $renderer = new IconRenderer($this->imagine, $this->modFileManager, $this->modRegistry);
+        $this->invokeMethod($renderer, 'resizeImage', $image, $imageSize);
     }
 }

@@ -56,14 +56,27 @@ class ExportModCommand extends AbstractModCommand
         $this->console->writeAction('Exporting combinations in ' . ($numberOfOptionalMods + 1) . ' steps');
 
         for ($step = 0; $step <= $numberOfOptionalMods; ++$step) {
-            $this->runCommand(CommandName::EXPORT_MOD_STEP, [
-                ParameterName::MOD_NAME => $mod->getName(),
-                ParameterName::STEP => $step
-            ], $this->console);
+            $this->runModCommand(CommandName::EXPORT_MOD_STEP, $mod, [ParameterName::STEP => $step]);
         }
 
-        $this->runCommand(CommandName::EXPORT_MOD_META, [ParameterName::MOD_NAME => $mod->getName()], $this->console);
-        $this->runCommand(CommandName::REDUCE_MOD, [ParameterName::MOD_NAME => $mod->getName()], $this->console);
-        $this->runCommand(CommandName::RENDER_MOD_ICONS, [ParameterName::MOD_NAME => $mod->getName()], $this->console);
+        $this->runModCommand(CommandName::EXPORT_MOD_META, $mod);
+        $this->runModCommand(CommandName::EXPORT_MOD_THUMBNAIL, $mod);
+        $this->runModCommand(CommandName::REDUCE_MOD, $mod);
+        $this->runModCommand(CommandName::RENDER_MOD_ICONS, $mod);
+    }
+
+    /**
+     * Runs a command for the mod.
+     * @param string $commandName
+     * @param Mod $mod
+     * @param array $additionalParameters
+     */
+    protected function runModCommand(string $commandName, Mod $mod, array $additionalParameters = []): void
+    {
+        $this->runCommand(
+            $commandName,
+            array_merge([ParameterName::MOD_NAME => $mod->getName()], $additionalParameters),
+            $this->console
+        );
     }
 }

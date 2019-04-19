@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
+use FactorioItemBrowser\Export\Constant\Config;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
@@ -145,7 +146,8 @@ class IconParserTest extends TestCase
         ]);
         $expectedResult = new Icon();
         $expectedResult->setLayers([$layer1, $layer2])
-                       ->setSize(42);
+                       ->setSize(42)
+                       ->setRenderedSize(Config::ICON_SIZE);
 
         /* @var IconParser|MockObject $parser */
         $parser = $this->getMockBuilder(IconParser::class)

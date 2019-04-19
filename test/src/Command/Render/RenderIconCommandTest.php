@@ -7,7 +7,6 @@ namespace FactorioItemBrowserTest\Export\Command\Render;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Render\RenderIconCommand;
 use FactorioItemBrowser\Export\Console\Console;
-use FactorioItemBrowser\Export\Constant\Config;
 use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
@@ -82,7 +81,6 @@ class RenderIconCommandTest extends TestCase
     public function testExecute(): void
     {
         $iconHash = 'abc';
-        $size = 64;
         $renderedIcon = 'def';
 
         /* @var Icon&MockObject $icon */
@@ -90,16 +88,10 @@ class RenderIconCommandTest extends TestCase
 
         /* @var Route&MockObject $route */
         $route = $this->createMock(Route::class);
-        $route->expects($this->exactly(2))
+        $route->expects($this->once())
               ->method('getMatchedParam')
-              ->withConsecutive(
-                  [$this->identicalTo(ParameterName::ICON_HASH), $this->identicalTo('')],
-                  [$this->identicalTo(ParameterName::SIZE), $this->identicalTo(Config::ICON_SIZE)]
-              )
-              ->willReturnOnConsecutiveCalls(
-                  $iconHash,
-                  $size
-              );
+              ->with($this->identicalTo(ParameterName::ICON_HASH), $this->identicalTo(''))
+              ->willReturn($iconHash);
 
         $this->iconRegistry->expects($this->once())
                            ->method('get')
@@ -135,21 +127,14 @@ class RenderIconCommandTest extends TestCase
     public function testExecuteWithoutIcon(): void
     {
         $iconHash = 'abc';
-        $size = 64;
         $icon = null;
 
         /* @var Route&MockObject $route */
         $route = $this->createMock(Route::class);
-        $route->expects($this->exactly(2))
+        $route->expects($this->once())
               ->method('getMatchedParam')
-              ->withConsecutive(
-                  [$this->identicalTo(ParameterName::ICON_HASH), $this->identicalTo('')],
-                  [$this->identicalTo(ParameterName::SIZE), $this->identicalTo(Config::ICON_SIZE)]
-              )
-              ->willReturnOnConsecutiveCalls(
-                  $iconHash,
-                  $size
-              );
+              ->with($this->identicalTo(ParameterName::ICON_HASH), $this->identicalTo(''))
+              ->willReturn($iconHash);
 
         $this->iconRegistry->expects($this->once())
                            ->method('get')

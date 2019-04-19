@@ -9,7 +9,6 @@ use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use FactorioItemBrowser\Export\Command\Render\RenderModIconsCommand;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Constant\CommandName;
-use FactorioItemBrowser\Export\Constant\Config;
 use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -242,7 +241,7 @@ class RenderModIconsCommandTest extends TestCase
                         ->getMock();
         $command->expects($this->once())
                 ->method('createRenderIconProcess')
-                ->with($this->identicalTo($thumbnailHash), $this->identicalTo(Config::THUMBNAIL_SIZE))
+                ->with($this->identicalTo($thumbnailHash))
                 ->willReturn($process);
 
         $this->invokeMethod($command, 'renderThumbnail', $mod);
@@ -307,8 +306,8 @@ class RenderModIconsCommandTest extends TestCase
         $command->expects($this->exactly(2))
                 ->method('createRenderIconProcess')
                 ->withConsecutive(
-                    [$this->identicalTo('abc'), $this->identicalTo(Config::ICON_SIZE)],
-                    [$this->identicalTo('def'), $this->identicalTo(Config::ICON_SIZE)]
+                    [$this->identicalTo('abc')],
+                    [$this->identicalTo('def')]
                 )
                 ->willReturnOnConsecutiveCalls(
                     $process1,
@@ -326,10 +325,8 @@ class RenderModIconsCommandTest extends TestCase
     public function testCreateRenderIconProcess(): void
     {
         $iconHash = 'abc';
-        $size = 42;
         $expectedParameters = [
             ParameterName::ICON_HASH => $iconHash,
-            ParameterName::SIZE => $size,
         ];
 
         /* @var Process&MockObject $process */
@@ -352,7 +349,7 @@ class RenderModIconsCommandTest extends TestCase
                 ->willReturn($process);
         $this->injectProperty($command, 'console', $console);
 
-        $result = $this->invokeMethod($command, 'createRenderIconProcess', $iconHash, $size);
+        $result = $this->invokeMethod($command, 'createRenderIconProcess', $iconHash);
 
         $this->assertSame($process, $result);
     }

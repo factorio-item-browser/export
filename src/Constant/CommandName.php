@@ -17,6 +17,7 @@ interface CommandName
     public const EXPORT_MOD_DEPENDENCIES = 'export mod <modName> with-dependencies';
     public const EXPORT_MOD_META = 'export mod <modName> meta';
     public const EXPORT_MOD_STEP = 'export mod <modName> step <step>';
+    public const EXPORT_MOD_THUMBNAIL = 'export mod <modName> thumbnail';
     public const EXPORT_PREPARE = 'export prepare';
 
     public const LIST = 'list';
@@ -25,7 +26,7 @@ interface CommandName
     public const REDUCE_COMBINATION = 'reduce combination <combinationHash>';
     public const REDUCE_MOD = 'reduce mod <modName>';
 
-    public const RENDER_ICON = 'render icon <iconHash> <size>';
+    public const RENDER_ICON = 'render icon <iconHash>';
     public const RENDER_MOD_ICONS = 'render mod-icons <modName>';
 
     public const UPDATE_DEPENDENCIES = 'update dependencies';

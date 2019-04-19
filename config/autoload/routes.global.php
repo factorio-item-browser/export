@@ -66,6 +66,14 @@ return [
             ],
         ],
         [
+            'name' => CommandName::EXPORT_MOD_THUMBNAIL,
+            'handler' => Command\Export\ExportModThumbnailCommand::class,
+            'short_description' => 'Exports the thumbnail of a mod.',
+            'options_description' => [
+                '<modName>' => 'The name of the mod to be exported.',
+            ],
+        ],
+        [
             'name' => CommandName::EXPORT_PREPARE,
             'handler' => Command\Export\ExportPrepareCommand::class,
             'short_description' => 'Prepares the exports of mods and combinations.',
@@ -105,7 +113,6 @@ return [
             'short_description' => 'Renders an icon.',
             'options_description' => [
                 '<iconHash>' => 'The hash of the icon to render.',
-                '<size>' => 'The wanted size of the rendered icon.',
             ],
         ],
         [

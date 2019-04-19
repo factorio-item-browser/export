@@ -8,7 +8,6 @@ use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use FactorioItemBrowser\Export\Command\AbstractModCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
-use FactorioItemBrowser\Export\Constant\Config;
 use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
@@ -112,8 +111,7 @@ class RenderModIconsCommand extends AbstractModCommand
     protected function renderThumbnail(Mod $mod): void
     {
         if ($mod->getThumbnailHash() !== '') {
-            $process = $this->createRenderIconProcess($mod->getThumbnailHash(), Config::THUMBNAIL_SIZE);
-            $this->processManager->addProcess($process);
+            $this->processManager->addProcess($this->createRenderIconProcess($mod->getThumbnailHash()));
         }
     }
 
@@ -124,24 +122,21 @@ class RenderModIconsCommand extends AbstractModCommand
     protected function renderIconsWithHashes(array $iconHashes): void
     {
         foreach ($iconHashes as $iconHash) {
-            $process = $this->createRenderIconProcess($iconHash, Config::ICON_SIZE);
-            $this->processManager->addProcess($process);
+            $this->processManager->addProcess($this->createRenderIconProcess($iconHash));
         }
     }
 
     /**
      * Creates a process to render an icon.
      * @param string $iconHash
-     * @param int $size
      * @return Process
      */
-    protected function createRenderIconProcess(string $iconHash, int $size): Process
+    protected function createRenderIconProcess(string $iconHash): Process
     {
         return $this->createCommandProcess(
             CommandName::RENDER_ICON,
             [
                 ParameterName::ICON_HASH => $iconHash,
-                ParameterName::SIZE => $size,
             ],
             $this->console
         );

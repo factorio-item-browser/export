@@ -18,6 +18,11 @@ interface Config
     public const ICON_SIZE = 32;
 
     /**
+     * The filename of the mod thumbnail.
+     */
+    public const THUMBNAIL_FILENAME = 'thumbnail.png';
+
+    /**
      * The size of the thumbnails, in pixel.
      */
     public const THUMBNAIL_SIZE = 144;

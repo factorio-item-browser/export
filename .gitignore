@@ -3,6 +3,8 @@
 /test/log
 /vendor
 
+/.phpunit.result.cache
+
 /factorio/*
 !/factorio/mods
 /factorio/mods/*

@@ -67,4 +67,14 @@ abstract class AbstractModCommand extends AbstractCommand
         }
         return $mod;
     }
+
+    /**
+     * Persists the mod into the registry.
+     * @param Mod $mod
+     */
+    protected function persistMod(Mod $mod): void
+    {
+        $this->modRegistry->set($mod);
+        $this->modRegistry->saveMods();
+    }
 }

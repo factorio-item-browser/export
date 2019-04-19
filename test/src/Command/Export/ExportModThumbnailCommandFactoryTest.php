@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\Renderer;
+namespace FactorioItemBrowserTest\Export\Command\Export;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use FactorioItemBrowser\Export\Command\Export\ExportModThumbnailCommand;
+use FactorioItemBrowser\Export\Command\Export\ExportModThumbnailCommandFactory;
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
-use FactorioItemBrowser\Export\Renderer\IconRenderer;
-use FactorioItemBrowser\Export\Renderer\IconRendererFactory;
+use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Imagine\Image\ImagineInterface;
 use Interop\Container\ContainerInterface;
@@ -17,16 +17,14 @@ use PHPUnit\Framework\TestCase;
 use ReflectionException;
 
 /**
- * The PHPUnit test of the IconRendererFactory class.
+ * The PHPUnit test of the ExportModThumbnailCommandFactory class.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Renderer\IconRendererFactory
+ * @coversDefaultClass \FactorioItemBrowser\Export\Command\Export\ExportModThumbnailCommandFactory
  */
-class IconRendererFactoryTest extends TestCase
+class ExportModThumbnailCommandFactoryTest extends TestCase
 {
-    use ReflectionTrait;
-
     /**
      * Tests the invoking.
      * @throws ReflectionException
@@ -34,6 +32,8 @@ class IconRendererFactoryTest extends TestCase
      */
     public function testInvoke(): void
     {
+        /* @var EntityRegistry&MockObject $iconRegistry */
+        $iconRegistry = $this->createMock(EntityRegistry::class);
         /* @var ImagineInterface&MockObject $imagine */
         $imagine = $this->createMock(ImagineInterface::class);
         /* @var ModFileManager&MockObject $modFileManager */
@@ -41,10 +41,13 @@ class IconRendererFactoryTest extends TestCase
         /* @var ModRegistry&MockObject $modRegistry */
         $modRegistry = $this->createMock(ModRegistry::class);
 
-        $expectedResult = new IconRenderer($imagine, $modFileManager, $modRegistry);
+        $expectedResult = new ExportModThumbnailCommand($iconRegistry, $imagine, $modFileManager, $modRegistry);
 
         /* @var RawExportDataService&MockObject $rawExportDataService */
         $rawExportDataService = $this->createMock(RawExportDataService::class);
+        $rawExportDataService->expects($this->once())
+                             ->method('getIconRegistry')
+                             ->willReturn($iconRegistry);
         $rawExportDataService->expects($this->once())
                              ->method('getModRegistry')
                              ->willReturn($modRegistry);
@@ -54,9 +57,9 @@ class IconRendererFactoryTest extends TestCase
         $container->expects($this->exactly(3))
                   ->method('get')
                   ->withConsecutive(
-                      [ImagineInterface::class],
-                      [ModFileManager::class],
-                      [RawExportDataService::class]
+                      [$this->identicalTo(ImagineInterface::class)],
+                      [$this->identicalTo(ModFileManager::class)],
+                      [$this->identicalTo(RawExportDataService::class)]
                   )
                   ->willReturnOnConsecutiveCalls(
                       $imagine,
@@ -64,8 +67,8 @@ class IconRendererFactoryTest extends TestCase
                       $rawExportDataService
                   );
 
-        $factory = new IconRendererFactory();
-        $result = $factory($container, IconRenderer::class);
+        $factory = new ExportModThumbnailCommandFactory();
+        $result = $factory($container, ExportModThumbnailCommand::class);
 
         $this->assertEquals($expectedResult, $result);
     }

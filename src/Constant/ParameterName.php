@@ -15,6 +15,5 @@ interface ParameterName
     public const COMBINATION_HASH = 'combinationHash';
     public const ICON_HASH = 'iconHash';
     public const MOD_NAME = 'modName';
-    public const SIZE = 'size';
     public const STEP = 'step';
 }

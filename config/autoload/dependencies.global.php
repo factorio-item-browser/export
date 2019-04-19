@@ -12,6 +12,7 @@ namespace FactorioItemBrowser\Export;
  */
 
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
+use Imagine\Image\ImagineInterface;
 use Zend\ServiceManager\Factory\InvokableFactory;
 
 return [
@@ -29,6 +30,7 @@ return [
             Command\Export\ExportModWithDependenciesCommand::class => Command\Export\ExportModWithDependenciesCommandFactory::class,
             Command\Export\ExportModMetaCommand::class => Command\Export\ExportModMetaCommandFactory::class,
             Command\Export\ExportModStepCommand::class => Command\Export\ExportModStepCommandFactory::class,
+            Command\Export\ExportModThumbnailCommand::class => Command\Export\ExportModThumbnailCommandFactory::class,
             Command\Export\ExportPrepareCommand::class => Command\Export\ExportPrepareCommandFactory::class,
             Command\Lists\ListCommand::class => Command\Lists\ListCommandFactory::class,
             Command\Lists\ListMissingCommand::class => Command\Lists\ListMissingCommandFactory::class,
@@ -77,6 +79,7 @@ return [
 
             // 3rd-party services
             ProcessManager::class => Process\ProcessManagerFactory::class,
+            ImagineInterface::class => Renderer\ImagineFactory::class,
         ],
     ]
 ];
