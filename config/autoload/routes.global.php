@@ -105,6 +105,7 @@ return [
             'short_description' => 'Renders an icon.',
             'options_description' => [
                 '<iconHash>' => 'The hash of the icon to render.',
+                '<size>' => 'The wanted size of the rendered icon.',
             ],
         ],
         [

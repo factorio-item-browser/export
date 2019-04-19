@@ -8,6 +8,7 @@ use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use FactorioItemBrowser\Export\Command\AbstractModCommand;
 use FactorioItemBrowser\Export\Command\SubCommandTrait;
 use FactorioItemBrowser\Export\Constant\CommandName;
+use FactorioItemBrowser\Export\Constant\Config;
 use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
@@ -15,6 +16,7 @@ use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
+use Symfony\Component\Process\Process;
 use ZF\Console\Route;
 
 /**
@@ -66,7 +68,10 @@ class RenderModIconsCommand extends AbstractModCommand
     {
         $iconHashes = $this->fetchIconHashesOfMod($mod);
         $this->console->writeAction('Rendering ' . count($iconHashes) . ' icons');
+
+        $this->renderThumbnail($mod);
         $this->renderIconsWithHashes($iconHashes);
+        $this->processManager->waitForAllProcesses();
     }
 
     /**
@@ -101,19 +106,44 @@ class RenderModIconsCommand extends AbstractModCommand
     }
 
     /**
+     * Renders the thumbnail of the mod, if available.
+     * @param Mod $mod
+     */
+    protected function renderThumbnail(Mod $mod): void
+    {
+        if ($mod->getThumbnailHash() !== '') {
+            $process = $this->createRenderIconProcess($mod->getThumbnailHash(), Config::THUMBNAIL_SIZE);
+            $this->processManager->addProcess($process);
+        }
+    }
+
+    /**
      * Renders the icons with the specified hashes.
      * @param array|string[] $iconHashes
      */
     protected function renderIconsWithHashes(array $iconHashes): void
     {
         foreach ($iconHashes as $iconHash) {
-            $process = $this->createCommandProcess(
-                CommandName::RENDER_ICON,
-                [ParameterName::ICON_HASH => $iconHash],
-                $this->console
-            );
+            $process = $this->createRenderIconProcess($iconHash, Config::ICON_SIZE);
             $this->processManager->addProcess($process);
         }
-        $this->processManager->waitForAllProcesses();
+    }
+
+    /**
+     * Creates a process to render an icon.
+     * @param string $iconHash
+     * @param int $size
+     * @return Process
+     */
+    protected function createRenderIconProcess(string $iconHash, int $size): Process
+    {
+        return $this->createCommandProcess(
+            CommandName::RENDER_ICON,
+            [
+                ParameterName::ICON_HASH => $iconHash,
+                ParameterName::SIZE => $size,
+            ],
+            $this->console
+        );
     }
 }

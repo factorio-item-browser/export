@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\Render;
 
 use FactorioItemBrowser\Export\Command\AbstractCommand;
+use FactorioItemBrowser\Export\Constant\Config;
 use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Exception\ExportException;
@@ -22,11 +23,6 @@ use ZF\Console\Route;
  */
 class RenderIconCommand extends AbstractCommand
 {
-    /**
-     * The size to render the icons in.
-     */
-    protected const ICON_SIZE = 32;
-
     /**
      * The registry of the icons.
      * @var EntityRegistry
@@ -69,6 +65,7 @@ class RenderIconCommand extends AbstractCommand
     protected function execute(Route $route): void
     {
         $hash = $route->getMatchedParam(ParameterName::ICON_HASH, '');
+        $size = (int) $route->getMatchedParam(ParameterName::SIZE, Config::ICON_SIZE);
         $icon = $this->iconRegistry->get($hash);
 
         if (!$icon instanceof Icon) {
@@ -76,7 +73,7 @@ class RenderIconCommand extends AbstractCommand
         }
 
         $this->console->writeAction('Rendering icon #' . $hash);
-        $renderedIcon = $this->iconRenderer->render($icon, self::ICON_SIZE);
+        $renderedIcon = $this->iconRenderer->render($icon, $size);
         $this->renderedIconRegistry->set($hash, $renderedIcon);
     }
 }
