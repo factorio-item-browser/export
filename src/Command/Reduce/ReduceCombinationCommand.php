@@ -6,7 +6,7 @@ namespace FactorioItemBrowser\Export\Command\Reduce;
 
 use FactorioItemBrowser\Export\Command\AbstractCombinationCommand;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Reducer\ReducerManager;
+use FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use ZF\Console\Route;
@@ -26,25 +26,25 @@ class ReduceCombinationCommand extends AbstractCombinationCommand
     protected $reducedCombinationRegistry;
 
     /**
-     * The reducer manager.
-     * @var ReducerManager
+     * The combination reducer manager.
+     * @var CombinationReducerManager
      */
-    protected $reducerManager;
+    protected $combinationReducerManager;
 
     /**
      * Initializes the command.
      * @param EntityRegistry $rawCombinationRegistry
      * @param EntityRegistry $reducedCombinationRegistry
-     * @param ReducerManager $reducerManager
+     * @param CombinationReducerManager $combinationReducerManager
      */
     public function __construct(
         EntityRegistry $rawCombinationRegistry,
         EntityRegistry $reducedCombinationRegistry,
-        ReducerManager $reducerManager
+        CombinationReducerManager $combinationReducerManager
     ) {
         parent::__construct($rawCombinationRegistry);
         $this->reducedCombinationRegistry = $reducedCombinationRegistry;
-        $this->reducerManager = $reducerManager;
+        $this->combinationReducerManager = $combinationReducerManager;
     }
 
     /**
@@ -56,7 +56,7 @@ class ReduceCombinationCommand extends AbstractCombinationCommand
     protected function processCombination(Route $route, Combination $combination): void
     {
         $this->console->writeAction('Reducing combination ' . $combination->getName());
-        $reducedCombination = $this->reducerManager->reduce($combination);
+        $reducedCombination = $this->combinationReducerManager->reduce($combination);
 
         if ($this->isCombinationEmpty($reducedCombination)) {
             $this->reducedCombinationRegistry->remove($combination->calculateHash());

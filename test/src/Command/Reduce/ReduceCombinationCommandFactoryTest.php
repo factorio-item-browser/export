@@ -8,7 +8,7 @@ use FactorioItemBrowser\Export\Command\Reduce\ReduceCombinationCommand;
 use FactorioItemBrowser\Export\Command\Reduce\ReduceCombinationCommandFactory;
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
-use FactorioItemBrowser\Export\Reducer\ReducerManager;
+use FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManager;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -56,12 +56,12 @@ class ReduceCombinationCommandFactoryTest extends TestCase
                   ->withConsecutive(
                       [RawExportDataService::class],
                       [ReducedExportDataService::class],
-                      [ReducerManager::class]
+                      [CombinationReducerManager::class]
                   )
                   ->willReturnOnConsecutiveCalls(
                       $rawExportDataService,
                       $reducedExportDataService,
-                      $this->createMock(ReducerManager::class)
+                      $this->createMock(CombinationReducerManager::class)
                   );
 
         $factory = new ReduceCombinationCommandFactory();

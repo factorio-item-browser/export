@@ -1,12 +1,12 @@
 <?php
 
-namespace FactorioItemBrowserTest\Export\Reducer;
+namespace FactorioItemBrowserTest\Export\Reducer\Combination;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Reducer\ReducerInterface;
-use FactorioItemBrowser\Export\Reducer\ReducerManager;
+use FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerInterface;
+use FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -17,9 +17,9 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\ReducerManager
+ * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManager
  */
-class ReducerManagerTest extends TestCase
+class CombinationReducerManagerTest extends TestCase
 {
     use ReflectionTrait;
 
@@ -32,13 +32,13 @@ class ReducerManagerTest extends TestCase
     {
         /* @var ParentCombinationFinder $parentCombinationFinder */
         $parentCombinationFinder = $this->createMock(ParentCombinationFinder::class);
-        /* @var ReducerInterface $reducer1 */
-        $reducer1 = $this->createMock(ReducerInterface::class);
-        /* @var ReducerInterface $reducer2 */
-        $reducer2 = $this->createMock(ReducerInterface::class);
+        /* @var CombinationReducerInterface $reducer1 */
+        $reducer1 = $this->createMock(CombinationReducerInterface::class);
+        /* @var CombinationReducerInterface $reducer2 */
+        $reducer2 = $this->createMock(CombinationReducerInterface::class);
         $reducers = [$reducer1, $reducer2];
 
-        $manager = new ReducerManager($parentCombinationFinder, $reducers);
+        $manager = new CombinationReducerManager($parentCombinationFinder, $reducers);
 
         $this->assertSame($parentCombinationFinder, $this->extractProperty($manager, 'parentCombinationFinder'));
         $this->assertSame($reducers, $this->extractProperty($manager, 'reducers'));
@@ -64,8 +64,8 @@ class ReducerManagerTest extends TestCase
                                 ->with($combination)
                                 ->willReturn($mergedParentCombination);
 
-        /* @var ReducerManager|MockObject $manager */
-        $manager = $this->getMockBuilder(ReducerManager::class)
+        /* @var CombinationReducerManager|MockObject $manager */
+        $manager = $this->getMockBuilder(CombinationReducerManager::class)
                         ->setMethods(['reduceCombination'])
                         ->setConstructorArgs([$parentCombinationFinder, []])
                         ->getMock();
@@ -87,16 +87,16 @@ class ReducerManagerTest extends TestCase
         $combination = (new Combination())->setName('abc');
         $parentCombination = (new Combination())->setName('def');
         
-        /* @var ReducerInterface|MockObject $reducer1 */
-        $reducer1 = $this->getMockBuilder(ReducerInterface::class)
+        /* @var CombinationReducerInterface|MockObject $reducer1 */
+        $reducer1 = $this->getMockBuilder(CombinationReducerInterface::class)
                          ->setMethods(['reduce'])
                          ->getMockForAbstractClass();
         $reducer1->expects($this->once())
                  ->method('reduce')
                  ->with($combination, $parentCombination);
 
-        /* @var ReducerInterface|MockObject $reducer2 */
-        $reducer2 = $this->getMockBuilder(ReducerInterface::class)
+        /* @var CombinationReducerInterface|MockObject $reducer2 */
+        $reducer2 = $this->getMockBuilder(CombinationReducerInterface::class)
                          ->setMethods(['reduce'])
                          ->getMockForAbstractClass();
         $reducer2->expects($this->once())
@@ -106,7 +106,7 @@ class ReducerManagerTest extends TestCase
         /* @var ParentCombinationFinder $parentCombinationFinder */
         $parentCombinationFinder = $this->createMock(ParentCombinationFinder::class);
 
-        $manager = new ReducerManager($parentCombinationFinder, [$reducer1, $reducer2]);
+        $manager = new CombinationReducerManager($parentCombinationFinder, [$reducer1, $reducer2]);
 
         $this->invokeMethod($manager, 'reduceCombination', $combination, $parentCombination);
     }

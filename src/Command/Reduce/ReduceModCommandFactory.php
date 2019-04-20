@@ -4,6 +4,7 @@ namespace FactorioItemBrowser\Export\Command\Reduce;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
+use FactorioItemBrowser\Export\Reducer\Mod\ModReducerManager;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
@@ -24,14 +25,16 @@ class ReduceModCommandFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+        /* @var ModReducerManager $modReducerManager */
+        $modReducerManager = $container->get(ModReducerManager::class);
         /* @var RawExportDataService $rawExportDataService */
         $rawExportDataService = $container->get(RawExportDataService::class);
         /* @var ReducedExportDataService $reducedExportDataService */
         $reducedExportDataService = $container->get(ReducedExportDataService::class);
 
         return new ReduceModCommand(
+            $modReducerManager,
             $rawExportDataService->getModRegistry(),
-            $reducedExportDataService->getCombinationRegistry(),
             $reducedExportDataService->getModRegistry()
         );
     }

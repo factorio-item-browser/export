@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Reducer;
+namespace FactorioItemBrowser\Export\Reducer\Combination;
 
 use FactorioItemBrowser\Export\Exception\ReducerException;
 use FactorioItemBrowser\ExportData\Entity\Icon;
@@ -15,7 +15,7 @@ use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class IconReducer implements ReducerInterface
+class IconReducer implements CombinationReducerInterface
 {
     /**
      * The registry of the raw icons.

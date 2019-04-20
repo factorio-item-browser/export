@@ -7,9 +7,8 @@ namespace FactorioItemBrowserTest\Export\Command\Reduce;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Reduce\ReduceModCommand;
 use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Reducer\Mod\ModReducerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -28,24 +27,48 @@ class ReduceModCommandTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked mod reducer manager.
+     * @var ModReducerManager&MockObject
+     */
+    protected $modReducerManager;
+
+    /**
+     * The mocked raw mod registry.
+     * @var ModRegistry&MockObject
+     */
+    protected $rawModRegistry;
+
+    /**
+     * The mocked reduced mod registry.
+     * @var ModRegistry&MockObject
+     */
+    protected $reducedModRegistry;
+
+    /**
+     * Sets up the test case.
+     * @throws ReflectionException
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->modReducerManager = $this->createMock(ModReducerManager::class);
+        $this->rawModRegistry = $this->createMock(ModRegistry::class);
+        $this->reducedModRegistry = $this->createMock(ModRegistry::class);
+    }
+
+    /**
      * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var ModRegistry $rawModRegistry */
-        $rawModRegistry = $this->createMock(ModRegistry::class);
-        /* @var EntityRegistry $reducedCombinationRegistry */
-        $reducedCombinationRegistry = $this->createMock(EntityRegistry::class);
-        /* @var ModRegistry $reducedModRegistry */
-        $reducedModRegistry = $this->createMock(ModRegistry::class);
+        $command = new ReduceModCommand($this->modReducerManager, $this->rawModRegistry, $this->reducedModRegistry);
 
-        $command = new ReduceModCommand($rawModRegistry, $reducedCombinationRegistry, $reducedModRegistry);
-
-        $this->assertSame($rawModRegistry, $this->extractProperty($command, 'modRegistry'));
-        $this->assertSame($reducedCombinationRegistry, $this->extractProperty($command, 'reducedCombinationRegistry'));
-        $this->assertSame($reducedModRegistry, $this->extractProperty($command, 'reducedModRegistry'));
+        $this->assertSame($this->modReducerManager, $this->extractProperty($command, 'modReducerManager'));
+        $this->assertSame($this->rawModRegistry, $this->extractProperty($command, 'modRegistry'));
+        $this->assertSame($this->reducedModRegistry, $this->extractProperty($command, 'reducedModRegistry'));
     }
 
     /**
@@ -55,97 +78,39 @@ class ReduceModCommandTest extends TestCase
      */
     public function testProcessMod(): void
     {
-        $combinationHashes = ['abc', 'def'];
-        $filteredCombinationHashes = ['ghi', 'jkl'];
+        $modName = 'abc';
 
-        $rawMod = new Mod();
-        $rawMod->setName('foo')
-               ->setCombinationHashes($combinationHashes);
-        $expectedReducedMod = new Mod();
-        $expectedReducedMod->setName('foo')
-                           ->setCombinationHashes($filteredCombinationHashes);
-
-        /* @var ModRegistry|MockObject $reducedModRegistry */
-        $reducedModRegistry = $this->getMockBuilder(ModRegistry::class)
-                                   ->setMethods(['set', 'saveMods'])
-                                   ->disableOriginalConstructor()
-                                   ->getMock();
-        $reducedModRegistry->expects($this->once())
-                           ->method('set')
-                           ->with($this->equalTo($expectedReducedMod));
-        $reducedModRegistry->expects($this->once())
-                           ->method('saveMods');
-
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeAction'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
-        $console->expects($this->once())
-                ->method('writeAction')
-                ->with('Reducing mod foo');
-
-        /* @var ModRegistry $rawModRegistry */
-        $rawModRegistry = $this->createMock(ModRegistry::class);
-        /* @var EntityRegistry $reducedCombinationRegistry */
-        $reducedCombinationRegistry = $this->createMock(EntityRegistry::class);
-
-        /* @var ReduceModCommand|MockObject $command */
-        $command = $this->getMockBuilder(ReduceModCommand::class)
-                        ->setMethods(['filterCombinationHashes'])
-                        ->setConstructorArgs([$rawModRegistry, $reducedCombinationRegistry, $reducedModRegistry])
-                        ->getMock();
-        $command->expects($this->once())
-                ->method('filterCombinationHashes')
-                ->with($combinationHashes)
-                ->willReturn($filteredCombinationHashes);
-        $this->injectProperty($command, 'console', $console);
-
-        /* @var Route $route */
+        /* @var Mod&MockObject $reducedMod */
+        $reducedMod = $this->createMock(Mod::class);
+        /* @var Route&MockObject $route */
         $route = $this->createMock(Route::class);
 
+        /* @var Mod&MockObject $rawMod */
+        $rawMod = $this->createMock(Mod::class);
+        $rawMod->expects($this->once())
+               ->method('getName')
+               ->willReturn($modName);
+
+        /* @var Console&MockObject $console */
+        $console = $this->createMock(Console::class);
+        $console->expects($this->once())
+                ->method('writeAction')
+                ->with($this->identicalTo('Reducing mod abc'));
+
+        $this->modReducerManager->expects($this->once())
+                                ->method('reduce')
+                                ->with($this->identicalTo($rawMod))
+                                ->willReturn($reducedMod);
+
+        $this->reducedModRegistry->expects($this->once())
+                                 ->method('set')
+                                 ->with($this->identicalTo($reducedMod));
+        $this->reducedModRegistry->expects($this->once())
+                                 ->method('saveMods');
+
+        $command = new ReduceModCommand($this->modReducerManager, $this->rawModRegistry, $this->reducedModRegistry);
+        $this->injectProperty($command, 'console', $console);
+
         $this->invokeMethod($command, 'processMod', $route, $rawMod);
-    }
-
-    /**
-     * Tests the filterCombinationHashes method.
-     * @throws ReflectionException
-     * @covers ::filterCombinationHashes
-     */
-    public function testFilterCombinationHashes(): void
-    {
-        $combinationHashes = ['abc', 'def', 'ghi'];
-        $expectedResult = ['abc', 'ghi'];
-
-        $combination1 = (new Combination())->setName('jkl');
-        $combination2 = (new Combination())->setName('mno');
-
-        /* @var EntityRegistry|MockObject $reducedCombinationRegistry */
-        $reducedCombinationRegistry = $this->getMockBuilder(EntityRegistry::class)
-                                           ->setMethods(['get'])
-                                           ->disableOriginalConstructor()
-                                           ->getMock();
-        $reducedCombinationRegistry->expects($this->exactly(3))
-                                   ->method('get')
-                                   ->withConsecutive(
-                                       ['abc'],
-                                       ['def'],
-                                       ['ghi']
-                                   )
-                                   ->willReturnOnConsecutiveCalls(
-                                       $combination1,
-                                       null,
-                                       $combination2
-                                   );
-
-        /* @var ModRegistry $rawModRegistry */
-        $rawModRegistry = $this->createMock(ModRegistry::class);
-        /* @var ModRegistry $reducedModRegistry */
-        $reducedModRegistry = $this->createMock(ModRegistry::class);
-
-        $command = new ReduceModCommand($rawModRegistry, $reducedCombinationRegistry, $reducedModRegistry);
-
-        $result = $this->invokeMethod($command, 'filterCombinationHashes', $combinationHashes);
-        $this->assertEquals($expectedResult, $result);
     }
 }

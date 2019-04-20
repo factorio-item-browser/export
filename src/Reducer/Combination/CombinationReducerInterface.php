@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Reducer;
+namespace FactorioItemBrowser\Export\Reducer\Combination;
 
 use FactorioItemBrowser\Export\Exception\ReducerException;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 
 /**
- * The interface of the reducers.
+ * The interface of the combination reducers.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-interface ReducerInterface
+interface CombinationReducerInterface
 {
     /**
      * Reduces the combination against the parent combination.

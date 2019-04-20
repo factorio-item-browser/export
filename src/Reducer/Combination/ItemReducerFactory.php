@@ -2,28 +2,27 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Command\Reduce;
+namespace FactorioItemBrowser\Export\Reducer\Combination;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
-use FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManager;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
 /**
- * The factory of the reduce combination command.
+ * The factory of the item reducer.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ReduceCombinationCommandFactory implements FactoryInterface
+class ItemReducerFactory implements FactoryInterface
 {
     /**
-     * Creates the command.
+     * Creates the reducer.
      * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  null|array $options
-     * @return ReduceCombinationCommand
+     * @return ItemReducer
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
@@ -31,13 +30,10 @@ class ReduceCombinationCommandFactory implements FactoryInterface
         $rawExportDataService = $container->get(RawExportDataService::class);
         /* @var ReducedExportDataService $reducedExportDataService */
         $reducedExportDataService = $container->get(ReducedExportDataService::class);
-        /* @var CombinationReducerManager $reducerManager */
-        $reducerManager = $container->get(CombinationReducerManager::class);
 
-        return new ReduceCombinationCommand(
-            $rawExportDataService->getCombinationRegistry(),
-            $reducedExportDataService->getCombinationRegistry(),
-            $reducerManager
+        return new ItemReducer(
+            $rawExportDataService->getItemRegistry(),
+            $reducedExportDataService->getItemRegistry()
         );
     }
 }

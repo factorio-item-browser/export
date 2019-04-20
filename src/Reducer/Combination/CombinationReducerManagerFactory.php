@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Reducer;
+namespace FactorioItemBrowser\Export\Reducer\Combination;
 
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
 /**
- * The factory of the reducer manager.
+ * The factory of the combination reducer manager.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ReducerManagerFactory implements FactoryInterface
+class CombinationReducerManagerFactory implements FactoryInterface
 {
     /**
      * The reducer classes to use.
@@ -31,7 +31,7 @@ class ReducerManagerFactory implements FactoryInterface
      * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  null|array $options
-     * @return ReducerManager
+     * @return CombinationReducerManager
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
@@ -43,6 +43,6 @@ class ReducerManagerFactory implements FactoryInterface
             $reducers[] = $container->get($reducerClass);
         }
 
-        return new ReducerManager($parentCombinationFinder, $reducers);
+        return new CombinationReducerManager($parentCombinationFinder, $reducers);
     }
 }

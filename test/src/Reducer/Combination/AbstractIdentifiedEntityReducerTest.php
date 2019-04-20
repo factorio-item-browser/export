@@ -1,10 +1,10 @@
 <?php
 
-namespace FactorioItemBrowserTest\Export\Reducer;
+namespace FactorioItemBrowserTest\Export\Reducer\Combination;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ReducerException;
-use FactorioItemBrowser\Export\Reducer\AbstractIdentifiedEntityReducer;
+use FactorioItemBrowser\Export\Reducer\Combination\AbstractIdentifiedEntityCombinationReducer;
 use FactorioItemBrowser\ExportData\Entity\EntityWithIdentifierInterface;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -17,7 +17,7 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\AbstractIdentifiedEntityReducer
+ * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\Combination\AbstractIdentifiedEntityCombinationReducer
  */
 class AbstractIdentifiedEntityReducerTest extends TestCase
 {
@@ -35,8 +35,8 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
         /* @var EntityRegistry $reducedEntityRegistry */
         $reducedEntityRegistry = $this->createMock(EntityRegistry::class);
 
-        /* @var AbstractIdentifiedEntityReducer|MockObject $reducer */
-        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityReducer::class)
+        /* @var AbstractIdentifiedEntityCombinationReducer|MockObject $reducer */
+        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityCombinationReducer::class)
                         ->setConstructorArgs([$rawEntityRegistry, $reducedEntityRegistry])
                         ->getMockForAbstractClass();
 
@@ -106,8 +106,8 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
         /* @var EntityRegistry $reducedEntityRegistry */
         $reducedEntityRegistry = $this->createMock(EntityRegistry::class);
 
-        /* @var AbstractIdentifiedEntityReducer|MockObject $reducer */
-        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityReducer::class)
+        /* @var AbstractIdentifiedEntityCombinationReducer|MockObject $reducer */
+        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityCombinationReducer::class)
                         ->setMethods([
                             'getHashesFromCombination',
                             'mapEntityHashes',
@@ -182,8 +182,8 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
 
         $expectedResult = ['ghi' => 'abc', 'jkl' => 'def'];
 
-        /* @var AbstractIdentifiedEntityReducer|MockObject $reducer */
-        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityReducer::class)
+        /* @var AbstractIdentifiedEntityCombinationReducer|MockObject $reducer */
+        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityCombinationReducer::class)
                         ->setMethods(['fetchEntityFromHash'])
                         ->disableOriginalConstructor()
                         ->getMockForAbstractClass();
@@ -239,8 +239,8 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
         /* @var EntityRegistry $reducedEntityRegistry */
         $reducedEntityRegistry = $this->createMock(EntityRegistry::class);
 
-        /* @var AbstractIdentifiedEntityReducer|MockObject $reducer */
-        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityReducer::class)
+        /* @var AbstractIdentifiedEntityCombinationReducer|MockObject $reducer */
+        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityCombinationReducer::class)
                         ->setConstructorArgs([$rawEntityRegistry, $reducedEntityRegistry])
                         ->getMockForAbstractClass();
 
@@ -283,8 +283,8 @@ class AbstractIdentifiedEntityReducerTest extends TestCase
         /* @var EntityRegistry $rawEntityRegistry */
         $rawEntityRegistry = $this->createMock(EntityRegistry::class);
 
-        /* @var AbstractIdentifiedEntityReducer|MockObject $reducer */
-        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityReducer::class)
+        /* @var AbstractIdentifiedEntityCombinationReducer|MockObject $reducer */
+        $reducer = $this->getMockBuilder(AbstractIdentifiedEntityCombinationReducer::class)
                         ->setMethods(['getHashesFromCombination', 'fetchEntityFromHash'])
                         ->setConstructorArgs([$rawEntityRegistry, $reducedEntityRegistry])
                         ->getMockForAbstractClass();

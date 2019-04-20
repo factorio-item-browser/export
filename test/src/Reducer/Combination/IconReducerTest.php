@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\Reducer;
+namespace FactorioItemBrowserTest\Export\Reducer\Combination;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ReducerException;
-use FactorioItemBrowser\Export\Reducer\IconReducer;
+use FactorioItemBrowser\Export\Reducer\Combination\IconReducer;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
@@ -19,7 +19,7 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\IconReducer
+ * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\Combination\IconReducer
  */
 class IconReducerTest extends TestCase
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace FactorioItemBrowserTest\Export\Reducer;
+namespace FactorioItemBrowserTest\Export\Reducer\Combination;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ReducerException;
-use FactorioItemBrowser\Export\Reducer\RecipeReducer;
+use FactorioItemBrowser\Export\Reducer\Combination\RecipeReducer;
 use FactorioItemBrowser\ExportData\Entity\EntityInterface;
 use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -21,7 +21,7 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\RecipeReducer
+ * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\Combination\RecipeReducer
  */
 class RecipeReducerTest extends TestCase
 {

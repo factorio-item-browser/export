@@ -1,26 +1,26 @@
 <?php
 
-namespace FactorioItemBrowserTest\Export\Reducer;
+namespace FactorioItemBrowserTest\Export\Reducer\Combination;
 
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
-use FactorioItemBrowser\Export\Reducer\IconReducer;
-use FactorioItemBrowser\Export\Reducer\ItemReducer;
-use FactorioItemBrowser\Export\Reducer\MachineReducer;
-use FactorioItemBrowser\Export\Reducer\RecipeReducer;
-use FactorioItemBrowser\Export\Reducer\ReducerManager;
-use FactorioItemBrowser\Export\Reducer\ReducerManagerFactory;
+use FactorioItemBrowser\Export\Reducer\Combination\IconReducer;
+use FactorioItemBrowser\Export\Reducer\Combination\ItemReducer;
+use FactorioItemBrowser\Export\Reducer\Combination\MachineReducer;
+use FactorioItemBrowser\Export\Reducer\Combination\RecipeReducer;
+use FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManager;
+use FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManagerFactory;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The PHPUnit test of the ReducerManagerFactory class.
+ * The PHPUnit test of the CombinationReducerManagerFactory class.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\ReducerManagerFactory
+ * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManagerFactory
  */
-class ReducerManagerFactoryTest extends TestCase
+class CombinationReducerManagerFactoryTest extends TestCase
 {
     /**
      * Tests the invoking.
@@ -49,7 +49,7 @@ class ReducerManagerFactoryTest extends TestCase
                       $this->createMock(RecipeReducer::class)
                   );
 
-        $factory = new ReducerManagerFactory();
-        $factory($container, ReducerManager::class);
+        $factory = new CombinationReducerManagerFactory();
+        $factory($container, CombinationReducerManager::class);
     }
 }

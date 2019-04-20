@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Reducer;
+namespace FactorioItemBrowser\Export\Reducer\Combination;
 
 use FactorioItemBrowser\Export\Exception\ReducerException;
 use FactorioItemBrowser\ExportData\Entity\EntityInterface;
@@ -16,7 +16,7 @@ use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-abstract class AbstractIdentifiedEntityReducer implements ReducerInterface
+abstract class AbstractIdentifiedEntityCombinationReducer implements CombinationReducerInterface
 {
     /**
      * The registry of the raw entities.

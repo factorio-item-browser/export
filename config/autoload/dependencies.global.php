@@ -69,11 +69,14 @@ return [
             Parser\ParserManager::class => Parser\ParserManagerFactory::class,
             Parser\RecipeParser::class => Parser\RecipeParserFactory::class,
 
-            Reducer\IconReducer::class => Reducer\IconReducerFactory::class,
-            Reducer\ItemReducer::class => Reducer\ItemReducerFactory::class,
-            Reducer\MachineReducer::class => Reducer\MachineReducerFactory::class,
-            Reducer\RecipeReducer::class => Reducer\RecipeReducerFactory::class,
-            Reducer\ReducerManager::class => Reducer\ReducerManagerFactory::class,
+            Reducer\Combination\CombinationReducerManager::class => Reducer\Combination\CombinationReducerManagerFactory::class,
+            Reducer\Combination\IconReducer::class => Reducer\Combination\IconReducerFactory::class,
+            Reducer\Combination\ItemReducer::class => Reducer\Combination\ItemReducerFactory::class,
+            Reducer\Combination\MachineReducer::class => Reducer\Combination\MachineReducerFactory::class,
+            Reducer\Combination\RecipeReducer::class => Reducer\Combination\RecipeReducerFactory::class,
+            Reducer\Mod\CombinationReducer::class => Reducer\Mod\CombinationReducerFactory::class,
+            Reducer\Mod\ModReducerManager::class => Reducer\Mod\ModReducerManagerFactory::class,
+            Reducer\Mod\ThumbnailReducer::class => Reducer\Mod\ThumbnailReducerFactory::class,
 
             Renderer\IconRenderer::class => Renderer\IconRendererFactory::class,
 

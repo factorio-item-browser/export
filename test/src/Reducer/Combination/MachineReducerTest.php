@@ -1,10 +1,10 @@
 <?php
 
-namespace FactorioItemBrowserTest\Export\Reducer;
+namespace FactorioItemBrowserTest\Export\Reducer\Combination;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ReducerException;
-use FactorioItemBrowser\Export\Reducer\MachineReducer;
+use FactorioItemBrowser\Export\Reducer\Combination\MachineReducer;
 use FactorioItemBrowser\ExportData\Entity\EntityInterface;
 use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\Machine;
@@ -19,7 +19,7 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\MachineReducer
+ * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\Combination\MachineReducer
  */
 class MachineReducerTest extends TestCase
 {

@@ -7,7 +7,7 @@ namespace FactorioItemBrowserTest\Export\Command\Reduce;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Reduce\ReduceCombinationCommand;
 use FactorioItemBrowser\Export\Console\Console;
-use FactorioItemBrowser\Export\Reducer\ReducerManager;
+use FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -37,14 +37,14 @@ class ReduceCombinationCommandTest extends TestCase
         $rawCombinationRegistry = $this->createMock(EntityRegistry::class);
         /* @var EntityRegistry $reducedCombinationRegistry */
         $reducedCombinationRegistry = $this->createMock(EntityRegistry::class);
-        /* @var ReducerManager $reducerManager */
-        $reducerManager = $this->createMock(ReducerManager::class);
+        /* @var CombinationReducerManager $reducerManager */
+        $reducerManager = $this->createMock(CombinationReducerManager::class);
 
         $command = new ReduceCombinationCommand($rawCombinationRegistry, $reducedCombinationRegistry, $reducerManager);
 
         $this->assertSame($rawCombinationRegistry, $this->extractProperty($command, 'combinationRegistry'));
         $this->assertSame($reducedCombinationRegistry, $this->extractProperty($command, 'reducedCombinationRegistry'));
-        $this->assertSame($reducerManager, $this->extractProperty($command, 'reducerManager'));
+        $this->assertSame($reducerManager, $this->extractProperty($command, 'combinationReducerManager'));
     }
 
     /**
@@ -84,8 +84,8 @@ class ReduceCombinationCommandTest extends TestCase
                     ->method('calculateHash')
                     ->willReturn($combinationHash);
 
-        /* @var ReducerManager|MockObject $reducerManager */
-        $reducerManager = $this->getMockBuilder(ReducerManager::class)
+        /* @var CombinationReducerManager|MockObject $reducerManager */
+        $reducerManager = $this->getMockBuilder(CombinationReducerManager::class)
                                ->setMethods(['reduce'])
                                ->disableOriginalConstructor()
                                ->getMock();
@@ -180,8 +180,8 @@ class ReduceCombinationCommandTest extends TestCase
         $rawCombinationRegistry = $this->createMock(EntityRegistry::class);
         /* @var EntityRegistry $reducedCombinationRegistry */
         $reducedCombinationRegistry = $this->createMock(EntityRegistry::class);
-        /* @var ReducerManager $reducerManager */
-        $reducerManager = $this->createMock(ReducerManager::class);
+        /* @var CombinationReducerManager $reducerManager */
+        $reducerManager = $this->createMock(CombinationReducerManager::class);
 
         $command = new ReduceCombinationCommand($rawCombinationRegistry, $reducedCombinationRegistry, $reducerManager);
 

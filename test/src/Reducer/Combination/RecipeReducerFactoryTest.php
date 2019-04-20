@@ -1,11 +1,11 @@
 <?php
 
-namespace FactorioItemBrowserTest\Export\Reducer;
+namespace FactorioItemBrowserTest\Export\Reducer\Combination;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
-use FactorioItemBrowser\Export\Reducer\RecipeReducer;
-use FactorioItemBrowser\Export\Reducer\RecipeReducerFactory;
+use FactorioItemBrowser\Export\Reducer\Combination\RecipeReducer;
+use FactorioItemBrowser\Export\Reducer\Combination\RecipeReducerFactory;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\RecipeReducerFactory
+ * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\Combination\RecipeReducerFactory
  */
 class RecipeReducerFactoryTest extends TestCase
 {

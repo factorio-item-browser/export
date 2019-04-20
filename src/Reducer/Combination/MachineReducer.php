@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Reducer;
+namespace FactorioItemBrowser\Export\Reducer\Combination;
 
 use FactorioItemBrowser\Common\Constant\EnergyUsageUnit;
 use FactorioItemBrowser\Export\Exception\ReducerException;
@@ -18,7 +18,7 @@ use FactorioItemBrowser\ExportData\Utils\EntityUtils;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class MachineReducer extends AbstractIdentifiedEntityReducer
+class MachineReducer extends AbstractIdentifiedEntityCombinationReducer
 {
     /**
      * Returns the hashes to use from the specified combination.

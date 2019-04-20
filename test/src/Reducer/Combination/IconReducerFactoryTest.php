@@ -1,11 +1,11 @@
 <?php
 
-namespace FactorioItemBrowserTest\Export\Reducer;
+namespace FactorioItemBrowserTest\Export\Reducer\Combination;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
-use FactorioItemBrowser\Export\Reducer\IconReducer;
-use FactorioItemBrowser\Export\Reducer\IconReducerFactory;
+use FactorioItemBrowser\Export\Reducer\Combination\IconReducer;
+use FactorioItemBrowser\Export\Reducer\Combination\IconReducerFactory;
 use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\IconReducerFactory
+ * @coversDefaultClass \FactorioItemBrowser\Export\Reducer\Combination\IconReducerFactory
  */
 class IconReducerFactoryTest extends TestCase
 {

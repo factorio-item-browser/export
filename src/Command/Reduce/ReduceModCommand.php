@@ -3,9 +3,9 @@
 namespace FactorioItemBrowser\Export\Command\Reduce;
 
 use FactorioItemBrowser\Export\Command\AbstractModCommand;
+use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Reducer\Mod\ModReducerManager;
 use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use ZF\Console\Route;
 
@@ -18,10 +18,10 @@ use ZF\Console\Route;
 class ReduceModCommand extends AbstractModCommand
 {
     /**
-     * The registry of the reduced combinations.
-     * @var EntityRegistry
+     * The mod reducer manager.
+     * @var ModReducerManager
      */
-    protected $reducedCombinationRegistry;
+    protected $modReducerManager;
 
     /**
      * The registry of the reduced mods.
@@ -31,17 +31,18 @@ class ReduceModCommand extends AbstractModCommand
 
     /**
      * Initializes the command.
+     * @param ModReducerManager $modReducerManager
      * @param ModRegistry $rawModRegistry
-     * @param EntityRegistry $reducedCombinationRegistry
      * @param ModRegistry $reducedModRegistry
      */
     public function __construct(
+        ModReducerManager $modReducerManager,
         ModRegistry $rawModRegistry,
-        EntityRegistry $reducedCombinationRegistry,
         ModRegistry $reducedModRegistry
     ) {
         parent::__construct($rawModRegistry);
-        $this->reducedCombinationRegistry = $reducedCombinationRegistry;
+
+        $this->modReducerManager = $modReducerManager;
         $this->reducedModRegistry = $reducedModRegistry;
     }
 
@@ -49,31 +50,14 @@ class ReduceModCommand extends AbstractModCommand
      * Exports the specified mod.
      * @param Route $route
      * @param Mod $rawMod
+     * @throws ExportException
      */
     protected function processMod(Route $route, Mod $rawMod): void
     {
         $this->console->writeAction('Reducing mod ' . $rawMod->getName());
-        $reducedMod = clone($rawMod);
+        $reducedMod = $this->modReducerManager->reduce($rawMod);
 
-        $reducedMod->setCombinationHashes($this->filterCombinationHashes($rawMod->getCombinationHashes()));
         $this->reducedModRegistry->set($reducedMod);
         $this->reducedModRegistry->saveMods();
-    }
-
-    /**
-     * Filters the combination hashes to those actually existing in a reduced version.
-     * @param array|string[] $combinationHashes
-     * @return array|string[]
-     */
-    protected function filterCombinationHashes(array $combinationHashes): array
-    {
-        $result = [];
-        foreach ($combinationHashes as $combinationHash) {
-            $combination = $this->reducedCombinationRegistry->get($combinationHash);
-            if ($combination instanceof Combination) {
-                $result[] = $combinationHash;
-            }
-        }
-        return $result;
     }
 }

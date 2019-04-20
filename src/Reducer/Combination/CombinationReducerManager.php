@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Reducer;
+namespace FactorioItemBrowser\Export\Reducer\Combination;
 
 use FactorioItemBrowser\Export\Combination\ParentCombinationFinder;
 use FactorioItemBrowser\Export\Exception\ExportException;
@@ -10,12 +10,12 @@ use FactorioItemBrowser\Export\Exception\ReducerException;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 
 /**
- * The manager of the reducer classes.
+ * The manager of the combination reducer classes.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ReducerManager
+class CombinationReducerManager
 {
     /**
      * The parent combination finder.
@@ -25,14 +25,14 @@ class ReducerManager
 
     /**
      * The reducers to use.
-     * @var array|ReducerInterface[]
+     * @var array|CombinationReducerInterface[]
      */
     protected $reducers;
 
     /**
      * Initializes the reducer manager.
      * @param ParentCombinationFinder $parentCombinationFinder
-     * @param array|ReducerInterface[] $reducers
+     * @param array|CombinationReducerInterface[] $reducers
      */
     public function __construct(ParentCombinationFinder $parentCombinationFinder, array $reducers)
     {
