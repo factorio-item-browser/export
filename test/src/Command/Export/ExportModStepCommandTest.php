@@ -33,27 +33,61 @@ class ExportModStepCommandTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked combination creator.
+     * @var CombinationCreator&MockObject
+     */
+    protected $combinationCreator;
+
+    /**
+     * The mocked combination registry.
+     * @var EntityRegistry&MockObject
+     */
+    protected $combinationRegistry;
+
+    /**
+     * The mocked mod registry.
+     * @var ModRegistry&MockObject
+     */
+    protected $modRegistry;
+
+    /**
+     * The mocked process manager.
+     * @var ProcessManager&MockObject
+     */
+    protected $processManager;
+
+    /**
+     * Sets up the test case.
+     * @throws ReflectionException
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->combinationCreator = $this->createMock(CombinationCreator::class);
+        $this->combinationRegistry = $this->createMock(EntityRegistry::class);
+        $this->modRegistry = $this->createMock(ModRegistry::class);
+        $this->processManager = $this->createMock(ProcessManager::class);
+    }
+
+    /**
      * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var CombinationCreator $combinationCreator */
-        $combinationCreator = $this->createMock(CombinationCreator::class);
-        /* @var EntityRegistry $combinationRegistry */
-        $combinationRegistry = $this->createMock(EntityRegistry::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-        /* @var ProcessManager $processManager */
-        $processManager = $this->createMock(ProcessManager::class);
+        $command = new ExportModStepCommand(
+            $this->combinationCreator,
+            $this->combinationRegistry,
+            $this->modRegistry,
+            $this->processManager
+        );
 
-        $command = new ExportModStepCommand($combinationCreator, $combinationRegistry, $modRegistry, $processManager);
-
-        $this->assertSame($combinationCreator, $this->extractProperty($command, 'combinationCreator'));
-        $this->assertSame($combinationRegistry, $this->extractProperty($command, 'combinationRegistry'));
-        $this->assertSame($modRegistry, $this->extractProperty($command, 'modRegistry'));
-        $this->assertSame($processManager, $this->extractProperty($command, 'processManager'));
+        $this->assertSame($this->combinationCreator, $this->extractProperty($command, 'combinationCreator'));
+        $this->assertSame($this->combinationRegistry, $this->extractProperty($command, 'combinationRegistry'));
+        $this->assertSame($this->modRegistry, $this->extractProperty($command, 'modRegistry'));
+        $this->assertSame($this->processManager, $this->extractProperty($command, 'processManager'));
     }
 
     /**
@@ -65,128 +99,117 @@ class ExportModStepCommandTest extends TestCase
     {
         $step = 42;
         $combinationHashes = ['abc', 'def'];
-        $combinations = [(new Combination())->setName('foo'), (new Combination())->setName('bar')];
+        $combinations = [
+            $this->createMock(Combination::class),
+            $this->createMock(Combination::class),
+        ];
 
-        /* @var Mod|MockObject $mod */
-        $mod = $this->getMockBuilder(Mod::class)
-                    ->setMethods(['getCombinationHashes', 'setCombinationHashes'])
-                    ->disableOriginalConstructor()
-                    ->getMock();
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
         $mod->expects($this->once())
             ->method('getCombinationHashes')
             ->willReturn(['abc', 'ghi']);
         $mod->expects($this->once())
             ->method('setCombinationHashes')
-            ->with(['abc', 'ghi', 'abc', 'def']);
+            ->with($this->equalTo(['abc', 'ghi', 'abc', 'def']));
 
-        /* @var CombinationCreator|MockObject $combinationCreator */
-        $combinationCreator = $this->getMockBuilder(CombinationCreator::class)
-                                   ->setMethods(['setupForMod'])
-                                   ->disableOriginalConstructor()
-                                   ->getMock();
-        $combinationCreator->expects($this->once())
-                           ->method('setupForMod')
-                           ->with($mod);
-
-        /* @var ModRegistry|MockObject $modRegistry */
-        $modRegistry = $this->getMockBuilder(ModRegistry::class)
-                            ->setMethods(['set', 'saveMods'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $modRegistry->expects($this->once())
-                    ->method('set')
-                    ->with($mod);
-        $modRegistry->expects($this->once())
-                    ->method('saveMods');
-
-        /* @var Route|MockObject $route */
-        $route = $this->getMockBuilder(Route::class)
-                      ->setMethods(['getMatchedParam'])
-                      ->disableOriginalConstructor()
-                      ->getMock();
+        /* @var Route&MockObject $route */
+        $route = $this->createMock(Route::class);
         $route->expects($this->once())
               ->method('getMatchedParam')
-              ->with(ParameterName::STEP, 0)
+              ->with($this->identicalTo(ParameterName::STEP), $this->identicalTo(0))
               ->willReturn($step);
 
-        /* @var EntityRegistry $combinationRegistry */
-        $combinationRegistry = $this->createMock(EntityRegistry::class);
-        /* @var ProcessManager $processManager */
-        $processManager = $this->createMock(ProcessManager::class);
+        $this->combinationCreator->expects($this->once())
+                                 ->method('setupForMod')
+                                 ->with($this->identicalTo($mod));
 
         /* @var ExportModStepCommand|MockObject $command */
         $command = $this->getMockBuilder(ExportModStepCommand::class)
-                        ->setMethods(['fetchCombinations', 'exportCombinations'])
-                        ->setConstructorArgs([$combinationCreator, $combinationRegistry, $modRegistry, $processManager])
+                        ->setMethods(['fetchCombinations', 'exportCombinations', 'persistMod'])
+                        ->setConstructorArgs([
+                            $this->combinationCreator,
+                            $this->combinationRegistry,
+                            $this->modRegistry,
+                            $this->processManager,
+                        ])
                         ->getMock();
         $command->expects($this->once())
                 ->method('fetchCombinations')
-                ->with($step)
+                ->with($this->identicalTo($step))
                 ->willReturn($combinations);
         $command->expects($this->once())
                 ->method('exportCombinations')
-                ->with($combinations)
+                ->with($this->identicalTo($combinations))
                 ->willReturn($combinationHashes);
+        $command->expects($this->once())
+                ->method('persistMod')
+                ->with($this->identicalTo($mod));
 
         $this->invokeMethod($command, 'processMod', $route, $mod);
     }
 
     /**
-     * Provides the data for the fetchCombinations test.
-     * @return array
+     * Tests the fetchCombinations method.
+     * @throws ReflectionException
+     * @covers ::fetchCombinations
      */
-    public function provideFetchCombinations(): array
+    public function testFetchCombinations(): void
     {
-        $combination1 = (new Combination())->setName('abc');
-        $combination2 = (new Combination())->setName('def');
+        $step = 42;
 
-        return [
-            [0, $combination1, null, [$combination1]],
-            [42, null, [$combination1, $combination2], [$combination1, $combination2]],
+        $combinations = [
+            $this->createMock(Combination::class),
+            $this->createMock(Combination::class),
         ];
+
+        $this->combinationCreator->expects($this->once())
+                                 ->method('createCombinationsWithNumberOfOptionalMods')
+                                 ->with($this->identicalTo($step))
+                                 ->willReturn($combinations);
+        $this->combinationCreator->expects($this->never())
+                                 ->method('createBaseCombination');
+
+        $command = new ExportModStepCommand(
+            $this->combinationCreator,
+            $this->combinationRegistry,
+            $this->modRegistry,
+            $this->processManager
+        );
+        $result = $this->invokeMethod($command, 'fetchCombinations', $step);
+
+        $this->assertSame($combinations, $result);
     }
 
     /**
      * Tests the fetchCombinations method.
-     * @param int $step
-     * @param Combination|null $resultBaseCombination
-     * @param array|null $resultCombinations
-     * @param array $expectedResult
      * @throws ReflectionException
      * @covers ::fetchCombinations
-     * @dataProvider provideFetchCombinations
      */
-    public function testFetchCombinations(
-        int $step,
-        ?Combination $resultBaseCombination,
-        ?array $resultCombinations,
-        array $expectedResult
-    ): void {
-        /* @var CombinationCreator|MockObject $combinationCreator */
-        $combinationCreator = $this->getMockBuilder(CombinationCreator::class)
-                                   ->setMethods(['createBaseCombination', 'createCombinationsWithNumberOfOptionalMods'])
-                                   ->disableOriginalConstructor()
-                                   ->getMock();
-        $combinationCreator->expects($resultBaseCombination === null ? $this->never() : $this->once())
-                           ->method('createBaseCombination')
-                           ->willReturn($resultBaseCombination);
-        $combinationCreator->expects($resultCombinations === null ? $this->never() : $this->once())
-                           ->method('createCombinationsWithNumberOfOptionalMods')
-                           ->with($step)
-                           ->willReturn($resultCombinations);
+    public function testFetchCombinationsWithStep0(): void
+    {
+        $step = 0;
 
-        /* @var EntityRegistry $combinationRegistry */
-        $combinationRegistry = $this->createMock(EntityRegistry::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-        /* @var ProcessManager $processManager */
-        $processManager = $this->createMock(ProcessManager::class);
+        /* @var Combination&MockObject $baseCombination */
+        $baseCombination = $this->createMock(Combination::class);
 
-        $command = new ExportModStepCommand($combinationCreator, $combinationRegistry, $modRegistry, $processManager);
+        $expectedResult = [$baseCombination];
 
+        $this->combinationCreator->expects($this->once())
+                                 ->method('createBaseCombination')
+                                 ->willReturn($baseCombination);
+        $this->combinationCreator->expects($this->never())
+                                 ->method('createCombinationsWithNumberOfOptionalMods');
+
+        $command = new ExportModStepCommand(
+            $this->combinationCreator,
+            $this->combinationRegistry,
+            $this->modRegistry,
+            $this->processManager
+        );
         $result = $this->invokeMethod($command, 'fetchCombinations', $step);
 
-        $this->assertEquals($expectedResult, $result);
+        $this->assertSame($expectedResult, $result);
     }
 
     /**
@@ -227,35 +250,30 @@ class ExportModStepCommandTest extends TestCase
      */
     public function testPersistCombinations(): void
     {
-        $combination1 = (new Combination())->setName('abc');
-        $combination2 = (new Combination())->setName('def');
+        /* @var Combination&MockObject $combination1 */
+        $combination1 = $this->createMock(Combination::class);
+        /* @var Combination&MockObject $combination2 */
+        $combination2 = $this->createMock(Combination::class);
+
         $expectedResult = ['ghi', 'jkl'];
 
-        /* @var EntityRegistry|MockObject $combinationRegistry */
-        $combinationRegistry = $this->getMockBuilder(EntityRegistry::class)
-                                    ->setMethods(['set'])
-                                    ->disableOriginalConstructor()
-                                    ->getMock();
-        $combinationRegistry->expects($this->exactly(2))
-                            ->method('set')
-                            ->withConsecutive(
-                                [$combination1],
-                                [$combination2]
-                            )
-                            ->willReturnOnConsecutiveCalls(
-                                'ghi',
-                                'jkl'
-                            );
+        $this->combinationRegistry->expects($this->exactly(2))
+                                  ->method('set')
+                                  ->withConsecutive(
+                                      [$this->identicalTo($combination1)],
+                                      [$this->identicalTo($combination2)]
+                                  )
+                                  ->willReturnOnConsecutiveCalls(
+                                      'ghi',
+                                      'jkl'
+                                  );
 
-        /* @var CombinationCreator $combinationCreator */
-        $combinationCreator = $this->createMock(CombinationCreator::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-        /* @var ProcessManager $processManager */
-        $processManager = $this->createMock(ProcessManager::class);
-
-        $command = new ExportModStepCommand($combinationCreator, $combinationRegistry, $modRegistry, $processManager);
-
+        $command = new ExportModStepCommand(
+            $this->combinationCreator,
+            $this->combinationRegistry,
+            $this->modRegistry,
+            $this->processManager
+        );
         $result = $this->invokeMethod($command, 'persistCombinations', [$combination1, $combination2]);
 
         $this->assertEquals($expectedResult, $result);
@@ -270,44 +288,46 @@ class ExportModStepCommandTest extends TestCase
     {
         $commandName = 'abc';
         $combinationHashes = ['def', 'ghi'];
+
         /* @var Process $process1 */
         $process1 = $this->createMock(Process::class);
         /* @var Process $process2 */
         $process2 = $this->createMock(Process::class);
-
-        /* @var ProcessManager|MockObject $processManager */
-        $processManager = $this->getMockBuilder(ProcessManager::class)
-                               ->setMethods(['addProcess', 'waitForAllProcesses'])
-                               ->disableOriginalConstructor()
-                               ->getMock();
-        $processManager->expects($this->exactly(2))
-                       ->method('addProcess')
-                       ->withConsecutive(
-                           [$process1],
-                           [$process2]
-                       );
-        $processManager->expects($this->once())
-                       ->method('waitForAllProcesses');
-
         /* @var Console $console */
         $console = $this->createMock(Console::class);
-        /* @var CombinationCreator $combinationCreator */
-        $combinationCreator = $this->createMock(CombinationCreator::class);
-        /* @var EntityRegistry $combinationRegistry */
-        $combinationRegistry = $this->createMock(EntityRegistry::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+
+        $this->processManager->expects($this->exactly(2))
+                             ->method('addProcess')
+                             ->withConsecutive(
+                                 [$this->identicalTo($process1)],
+                                 [$this->identicalTo($process2)]
+                             );
+        $this->processManager->expects($this->once())
+                             ->method('waitForAllProcesses');
 
         /* @var ExportModStepCommand|MockObject $command */
         $command = $this->getMockBuilder(ExportModStepCommand::class)
                         ->setMethods(['createCommandProcess'])
-                        ->setConstructorArgs([$combinationCreator, $combinationRegistry, $modRegistry, $processManager])
+                        ->setConstructorArgs([
+                            $this->combinationCreator,
+                            $this->combinationRegistry,
+                            $this->modRegistry,
+                            $this->processManager,
+                        ])
                         ->getMock();
         $command->expects($this->exactly(2))
                 ->method('createCommandProcess')
                 ->withConsecutive(
-                    [$commandName, [ParameterName::COMBINATION_HASH => 'def'], $console],
-                    [$commandName, [ParameterName::COMBINATION_HASH => 'ghi'], $console]
+                    [
+                        $this->identicalTo($commandName),
+                        $this->identicalTo([ParameterName::COMBINATION_HASH => 'def']),
+                        $this->identicalTo($console)
+                    ],
+                    [
+                        $this->identicalTo($commandName),
+                        $this->identicalTo([ParameterName::COMBINATION_HASH => 'ghi']),
+                        $this->identicalTo($console)
+                    ]
                 )
                 ->willReturnOnConsecutiveCalls(
                     $process1,

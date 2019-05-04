@@ -23,11 +23,6 @@ use ZF\Console\Route;
 class RenderIconCommand extends AbstractCommand
 {
     /**
-     * The size to render the icons in.
-     */
-    protected const ICON_SIZE = 32;
-
-    /**
      * The registry of the icons.
      * @var EntityRegistry
      */
@@ -76,7 +71,7 @@ class RenderIconCommand extends AbstractCommand
         }
 
         $this->console->writeAction('Rendering icon #' . $hash);
-        $renderedIcon = $this->iconRenderer->render($icon, self::ICON_SIZE);
+        $renderedIcon = $this->iconRenderer->render($icon);
         $this->renderedIconRegistry->set($hash, $renderedIcon);
     }
 }

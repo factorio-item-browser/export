@@ -6,6 +6,7 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Common\Constant\EntityType;
+use FactorioItemBrowser\Export\Constant\Config;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
@@ -99,7 +100,8 @@ class IconParser implements ParserInterface
         foreach ($iconData->getObjectArray('icons') as $layerData) {
             $icon->addLayer($this->parseLayer($layerData));
         }
-        $icon->setSize($iconData->getInteger('iconSize', Icon::DEFAULT_SIZE));
+        $icon->setSize($iconData->getInteger('iconSize', Config::ICON_SIZE))
+             ->setRenderedSize(Config::ICON_SIZE);
         return $icon;
     }
 

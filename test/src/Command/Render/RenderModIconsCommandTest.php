@@ -33,24 +33,48 @@ class RenderModIconsCommandTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked combination registry.
+     * @var EntityRegistry&MockObject
+     */
+    protected $combinationRegistry;
+
+    /**
+     * The mocked mod registry.
+     * @var ModRegistry&MockObject
+     */
+    protected $modRegistry;
+
+    /**
+     * The mocked process manager.
+     * @var ProcessManager&MockObject
+     */
+    protected $processManager;
+
+    /**
+     * Sets up the test case.
+     * @throws ReflectionException
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->combinationRegistry = $this->createMock(EntityRegistry::class);
+        $this->modRegistry = $this->createMock(ModRegistry::class);
+        $this->processManager = $this->createMock(ProcessManager::class);
+    }
+
+    /**
      * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var EntityRegistry $combinationRegistry */
-        $combinationRegistry = $this->createMock(EntityRegistry::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-        /* @var ProcessManager $processManager */
-        $processManager = $this->createMock(ProcessManager::class);
+        $command = new RenderModIconsCommand($this->combinationRegistry, $this->modRegistry, $this->processManager);
 
-        $command = new RenderModIconsCommand($combinationRegistry, $modRegistry, $processManager);
-
-        $this->assertSame($combinationRegistry, $this->extractProperty($command, 'combinationRegistry'));
-        $this->assertSame($modRegistry, $this->extractProperty($command, 'modRegistry'));
-        $this->assertSame($processManager, $this->extractProperty($command, 'processManager'));
+        $this->assertSame($this->combinationRegistry, $this->extractProperty($command, 'combinationRegistry'));
+        $this->assertSame($this->modRegistry, $this->extractProperty($command, 'modRegistry'));
+        $this->assertSame($this->processManager, $this->extractProperty($command, 'processManager'));
     }
 
     /**
@@ -63,31 +87,34 @@ class RenderModIconsCommandTest extends TestCase
         $mod = (new Mod())->setName('abc');
         $iconHashes = ['def', 'ghi'];
 
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeAction'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
+        /* @var Route $route */
+        $route = $this->createMock(Route::class);
+
+        /* @var Console&MockObject $console */
+        $console = $this->createMock(Console::class);
         $console->expects($this->once())
                 ->method('writeAction')
-                ->with('Rendering 2 icons');
+                ->with($this->identicalTo('Rendering 2 icons'));
+
+        $this->processManager->expects($this->once())
+                             ->method('waitForAllProcesses');
 
         /* @var RenderModIconsCommand|MockObject $command */
         $command = $this->getMockBuilder(RenderModIconsCommand::class)
-                        ->setMethods(['fetchIconHashesOfMod', 'renderIconsWithHashes'])
-                        ->disableOriginalConstructor()
+                        ->setMethods(['fetchIconHashesOfMod', 'renderThumbnail', 'renderIconsWithHashes'])
+                        ->setConstructorArgs([$this->combinationRegistry, $this->modRegistry, $this->processManager])
                         ->getMock();
         $command->expects($this->once())
                 ->method('fetchIconHashesOfMod')
-                ->with($mod)
+                ->with($this->identicalTo($mod))
                 ->willReturn($iconHashes);
         $command->expects($this->once())
+                ->method('renderThumbnail')
+                ->with($this->identicalTo($mod));
+        $command->expects($this->once())
                 ->method('renderIconsWithHashes')
-                ->with($iconHashes);
+                ->with($this->identicalTo($iconHashes));
         $this->injectProperty($command, 'console', $console);
-
-        /* @var Route $route */
-        $route = $this->createMock(Route::class);
 
         $this->invokeMethod($command, 'processMod', $route, $mod);
     }
@@ -99,21 +126,36 @@ class RenderModIconsCommandTest extends TestCase
      */
     public function testFetchIconHashesOfMod(): void
     {
-        $mod = (new Mod())->setCombinationHashes(['abc', 'def']);
-        $combination1 = (new Combination())->setIconHashes(['ghi', 'jkl']);
-        $combination2 = (new Combination())->setIconHashes(['ghi', 'mno']);
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
+        $mod->expects($this->once())
+            ->method('getCombinationHashes')
+            ->willReturn(['abc', 'def']);
+
+        /* @var Combination&MockObject $combination1 */
+        $combination1 = $this->createMock(Combination::class);
+        $combination1->expects($this->once())
+                     ->method('getIconHashes')
+                     ->willReturn(['ghi', 'jkl']);
+
+        /* @var Combination&MockObject $combination2 */
+        $combination2 = $this->createMock(Combination::class);
+        $combination2->expects($this->once())
+                     ->method('getIconHashes')
+                     ->willReturn(['ghi', 'mno']);
+
         $expectedResult = ['ghi', 'jkl', 'mno'];
 
         /* @var RenderModIconsCommand|MockObject $command */
         $command = $this->getMockBuilder(RenderModIconsCommand::class)
                         ->setMethods(['fetchCombination'])
-                        ->disableOriginalConstructor()
+                        ->setConstructorArgs([$this->combinationRegistry, $this->modRegistry, $this->processManager])
                         ->getMock();
         $command->expects($this->exactly(2))
                 ->method('fetchCombination')
                 ->withConsecutive(
-                    ['abc'],
-                    ['def']
+                    [$this->identicalTo('abc')],
+                    [$this->identicalTo('def')]
                 )
                 ->willReturnOnConsecutiveCalls(
                     $combination1,
@@ -126,57 +168,114 @@ class RenderModIconsCommandTest extends TestCase
     }
 
     /**
-     * Provides the data for the fetchCombination test.
-     * @return array
+     * Tests the fetchCombination method.
+     * @throws ReflectionException
+     * @covers ::fetchCombination
      */
-    public function provideFetchCombination(): array
+    public function testFetchCombination(): void
     {
-        return [
-            [(new Combination())->setName('abc'), false],
-            [null, true],
-        ];
+        $combinationHash = 'abc';
+
+        /* @var Combination&MockObject $combination */
+        $combination = $this->createMock(Combination::class);
+
+        $this->combinationRegistry->expects($this->once())
+                                  ->method('get')
+                                  ->with($this->identicalTo($combinationHash))
+                                  ->willReturn($combination);
+
+        $command = new RenderModIconsCommand($this->combinationRegistry, $this->modRegistry, $this->processManager);
+        $result = $this->invokeMethod($command, 'fetchCombination', $combinationHash);
+
+        $this->assertSame($combination, $result);
     }
 
     /**
-     * Tests the fetchCombination method.
-     * @param Combination|null $resultGet
-     * @param bool $expectException
+     * Tests the fetchCombination method without an actual combination.
      * @throws ReflectionException
      * @covers ::fetchCombination
-     * @dataProvider provideFetchCombination
      */
-    public function testFetchCombination(?Combination $resultGet, bool $expectException): void
+    public function testFetchCombinationWithoutCombination(): void
     {
-        $combinationHash = 'foo';
+        $combinationHash = 'abc';
+        $combination = null;
 
-        /* @var EntityRegistry|MockObject $combinationRegistry */
-        $combinationRegistry = $this->getMockBuilder(EntityRegistry::class)
-                                    ->setMethods(['get'])
-                                    ->disableOriginalConstructor()
-                                    ->getMock();
-        $combinationRegistry->expects($this->once())
-                            ->method('get')
-                            ->with($combinationHash)
-                            ->willReturn($resultGet);
+        $this->combinationRegistry->expects($this->once())
+                                  ->method('get')
+                                  ->with($this->identicalTo($combinationHash))
+                                  ->willReturn($combination);
 
-        if ($expectException) {
-            $this->expectException(CommandException::class);
-            $this->expectExceptionCode(404);
-        }
+        $this->expectException(CommandException::class);
+        $this->expectExceptionCode(404);
 
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-        /* @var ProcessManager $processManager */
-        $processManager = $this->createMock(ProcessManager::class);
+        $command = new RenderModIconsCommand($this->combinationRegistry, $this->modRegistry, $this->processManager);
+        $this->invokeMethod($command, 'fetchCombination', $combinationHash);
+    }
+
+    /**
+     * Tests the renderThumbnail method.
+     * @throws ReflectionException
+     * @covers ::renderThumbnail
+     */
+    public function testRenderThumbnail(): void
+    {
+        $thumbnailHash = 'abc';
+
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
+        $mod->expects($this->atLeastOnce())
+            ->method('getThumbnailHash')
+            ->willReturn($thumbnailHash);
+
+        /* @var Process&MockObject $process */
+        $process = $this->createMock(Process::class);
+
+        $this->processManager->expects($this->once())
+                             ->method('addProcess')
+                             ->with($this->identicalTo($process));
 
         /* @var RenderModIconsCommand|MockObject $command */
         $command = $this->getMockBuilder(RenderModIconsCommand::class)
-                        ->setConstructorArgs([$combinationRegistry, $modRegistry, $processManager])
-                        ->getMockForAbstractClass();
+                        ->setMethods(['createRenderIconProcess'])
+                        ->setConstructorArgs([$this->combinationRegistry, $this->modRegistry, $this->processManager])
+                        ->getMock();
+        $command->expects($this->once())
+                ->method('createRenderIconProcess')
+                ->with($this->identicalTo($thumbnailHash))
+                ->willReturn($process);
 
-        $result = $this->invokeMethod($command, 'fetchCombination', $combinationHash);
-        $this->assertSame($resultGet, $result);
+        $this->invokeMethod($command, 'renderThumbnail', $mod);
     }
+
+    /**
+     * Tests the renderThumbnail method without an actual thumbnail hash.
+     * @throws ReflectionException
+     * @covers ::renderThumbnail
+     */
+    public function testRenderThumbnailWithoutHash(): void
+    {
+        $thumbnailHash = '';
+
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
+        $mod->expects($this->atLeastOnce())
+            ->method('getThumbnailHash')
+            ->willReturn($thumbnailHash);
+
+        $this->processManager->expects($this->never())
+                             ->method('addProcess');
+
+        /* @var RenderModIconsCommand|MockObject $command */
+        $command = $this->getMockBuilder(RenderModIconsCommand::class)
+                        ->setMethods(['createRenderIconProcess'])
+                        ->setConstructorArgs([$this->combinationRegistry, $this->modRegistry, $this->processManager])
+                        ->getMock();
+        $command->expects($this->never())
+                ->method('createRenderIconProcess');
+
+        $this->invokeMethod($command, 'renderThumbnail', $mod);
+    }
+
 
     /**
      * Tests the renderIconsWithHashes method.
@@ -186,49 +285,72 @@ class RenderModIconsCommandTest extends TestCase
     public function testRenderIconsWithHashes(): void
     {
         $iconHashes = ['abc', 'def'];
-        /* @var Process $process1 */
+
+        /* @var Process&MockObject $process1 */
         $process1 = $this->createMock(Process::class);
-        /* @var Process $process2 */
+        /* @var Process&MockObject $process2 */
         $process2 = $this->createMock(Process::class);
-        /* @var Console $console */
-        $console = $this->createMock(Console::class);
 
-        /* @var ProcessManager|MockObject $processManager */
-        $processManager = $this->getMockBuilder(ProcessManager::class)
-                               ->setMethods(['addProcess', 'waitForAllProcesses'])
-                               ->disableOriginalConstructor()
-                               ->getMock();
-        $processManager->expects($this->exactly(2))
-                       ->method('addProcess')
-                       ->withConsecutive(
-                           [$process1],
-                           [$process2]
-                       );
-        $processManager->expects($this->once())
-                       ->method('waitForAllProcesses');
-
-        /* @var EntityRegistry $combinationRegistry */
-        $combinationRegistry = $this->createMock(EntityRegistry::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        $this->processManager->expects($this->exactly(2))
+                             ->method('addProcess')
+                             ->withConsecutive(
+                                 [$this->identicalTo($process1)],
+                                 [$this->identicalTo($process2)]
+                             );
 
         /* @var RenderModIconsCommand|MockObject $command */
         $command = $this->getMockBuilder(RenderModIconsCommand::class)
-                        ->setMethods(['createCommandProcess'])
-                        ->setConstructorArgs([$combinationRegistry, $modRegistry, $processManager])
+                        ->setMethods(['createRenderIconProcess'])
+                        ->setConstructorArgs([$this->combinationRegistry, $this->modRegistry, $this->processManager])
                         ->getMock();
         $command->expects($this->exactly(2))
-                ->method('createCommandProcess')
+                ->method('createRenderIconProcess')
                 ->withConsecutive(
-                    [CommandName::RENDER_ICON, [ParameterName::ICON_HASH => 'abc'], $console],
-                    [CommandName::RENDER_ICON, [ParameterName::ICON_HASH => 'def'], $console]
+                    [$this->identicalTo('abc')],
+                    [$this->identicalTo('def')]
                 )
                 ->willReturnOnConsecutiveCalls(
                     $process1,
                     $process2
                 );
-        $this->injectProperty($command, 'console', $console);
 
         $this->invokeMethod($command, 'renderIconsWithHashes', $iconHashes);
+    }
+
+    /**
+     * Tests the createRenderIconProcess method.
+     * @throws ReflectionException
+     * @covers ::createRenderIconProcess
+     */
+    public function testCreateRenderIconProcess(): void
+    {
+        $iconHash = 'abc';
+        $expectedParameters = [
+            ParameterName::ICON_HASH => $iconHash,
+        ];
+
+        /* @var Process&MockObject $process */
+        $process = $this->createMock(Process::class);
+        /* @var Console&MockObject $console */
+        $console = $this->createMock(Console::class);
+
+        /* @var RenderModIconsCommand|MockObject $command */
+        $command = $this->getMockBuilder(RenderModIconsCommand::class)
+                        ->setMethods(['createCommandProcess'])
+                        ->setConstructorArgs([$this->combinationRegistry, $this->modRegistry, $this->processManager])
+                        ->getMock();
+        $command->expects($this->once())
+                ->method('createCommandProcess')
+                ->with(
+                    $this->identicalTo(CommandName::RENDER_ICON),
+                    $this->identicalTo($expectedParameters),
+                    $this->identicalTo($console)
+                )
+                ->willReturn($process);
+        $this->injectProperty($command, 'console', $console);
+
+        $result = $this->invokeMethod($command, 'createRenderIconProcess', $iconHash);
+
+        $this->assertSame($process, $result);
     }
 }

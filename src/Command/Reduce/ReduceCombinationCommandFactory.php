@@ -6,7 +6,7 @@ namespace FactorioItemBrowser\Export\Command\Reduce;
 
 use FactorioItemBrowser\Export\ExportData\RawExportDataService;
 use FactorioItemBrowser\Export\ExportData\ReducedExportDataService;
-use FactorioItemBrowser\Export\Reducer\ReducerManager;
+use FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManager;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;
 
@@ -31,8 +31,8 @@ class ReduceCombinationCommandFactory implements FactoryInterface
         $rawExportDataService = $container->get(RawExportDataService::class);
         /* @var ReducedExportDataService $reducedExportDataService */
         $reducedExportDataService = $container->get(ReducedExportDataService::class);
-        /* @var ReducerManager $reducerManager */
-        $reducerManager = $container->get(ReducerManager::class);
+        /* @var CombinationReducerManager $reducerManager */
+        $reducerManager = $container->get(CombinationReducerManager::class);
 
         return new ReduceCombinationCommand(
             $rawExportDataService->getCombinationRegistry(),

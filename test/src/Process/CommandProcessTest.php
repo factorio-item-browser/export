@@ -55,7 +55,7 @@ class CommandProcessTest extends TestCase
         $process->__construct($commandName, $parameters, $console);
 
         $this->assertSame($console, $this->extractProperty($process, 'console'));
-        $this->assertContains($expectedCommandLine, $process->getCommandLine());
+        $this->assertStringContainsString($expectedCommandLine, $process->getCommandLine());
         $this->assertSame(['SUBCMD' => 1], $process->getEnv());
     }
 

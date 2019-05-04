@@ -27,21 +27,40 @@ class ExportModMetaCommandTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked mod registry.
+     * @var ModRegistry&MockObject
+     */
+    protected $modRegistry;
+
+    /**
+     * The mocked translator.
+     * @var Translator&MockObject
+     */
+    protected $translator;
+
+    /**
+     * Sets up the test case.
+     * @throws ReflectionException
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->modRegistry = $this->createMock(ModRegistry::class);
+        $this->translator = $this->createMock(Translator::class);
+    }
+
+    /**
      * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
+        $command = new ExportModMetaCommand($this->modRegistry, $this->translator);
 
-        $command = new ExportModMetaCommand($modRegistry, $translator);
-
-        $this->assertSame($modRegistry, $this->extractProperty($command, 'modRegistry'));
-        $this->assertSame($translator, $this->extractProperty($command, 'translator'));
+        $this->assertSame($this->modRegistry, $this->extractProperty($command, 'modRegistry'));
+        $this->assertSame($this->translator, $this->extractProperty($command, 'translator'));
     }
 
     /**
@@ -51,43 +70,35 @@ class ExportModMetaCommandTest extends TestCase
      */
     public function testProcessMod(): void
     {
-        $mod = (new Mod())->setName('abc');
-
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeAction'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
-        $console->expects($this->once())
-                ->method('writeAction')
-                ->with('Exporting meta data of mod abc');
-
-        /* @var ModRegistry|MockObject $modRegistry */
-        $modRegistry = $this->getMockBuilder(ModRegistry::class)
-                            ->setMethods(['set', 'saveMods'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $modRegistry->expects($this->once())
-                    ->method('set')
-                    ->with($mod);
-        $modRegistry->expects($this->once())
-                    ->method('saveMods');
-
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        /* @var ExportModMetaCommand|MockObject $command */
-        $command = $this->getMockBuilder(ExportModMetaCommand::class)
-                        ->setMethods(['translate'])
-                        ->setConstructorArgs([$modRegistry, $translator])
-                        ->getMock();
-        $command->expects($this->once())
-                ->method('translate')
-                ->with($mod);
-        $this->injectProperty($command, 'console', $console);
+        $modName = 'abc';
 
         /* @var Route $route */
         $route = $this->createMock(Route::class);
+
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
+        $mod->expects($this->once())
+            ->method('getName')
+            ->willReturn($modName);
+
+        /* @var Console&MockObject $console */
+        $console = $this->createMock(Console::class);
+        $console->expects($this->once())
+                ->method('writeAction')
+                ->with($this->identicalTo('Exporting meta data of mod abc'));
+
+        /* @var ExportModMetaCommand|MockObject $command */
+        $command = $this->getMockBuilder(ExportModMetaCommand::class)
+                        ->setMethods(['translate', 'persistMod'])
+                        ->setConstructorArgs([$this->modRegistry, $this->translator])
+                        ->getMock();
+        $command->expects($this->once())
+                ->method('translate')
+                ->with($this->identicalTo($mod));
+        $command->expects($this->once())
+                ->method('persistMod')
+                ->with($this->identicalTo($mod));
+        $this->injectProperty($command, 'console', $console);
 
         $this->invokeMethod($command, 'processMod', $route, $mod);
     }
@@ -103,26 +114,25 @@ class ExportModMetaCommandTest extends TestCase
         $mod->getTitles()->setTranslation('en', 'def');
         $mod->getDescriptions()->setTranslation('de', 'ghi');
 
-        /* @var Translator|MockObject $translator */
-        $translator = $this->getMockBuilder(Translator::class)
-                           ->setMethods(['loadFromModNames', 'addTranslationsToEntity'])
-                           ->disableOriginalConstructor()
-                           ->getMock();
-        $translator->expects($this->once())
-                   ->method('loadFromModNames')
-                   ->with(['abc']);
-        $translator->expects($this->exactly(2))
-                   ->method('addTranslationsToEntity')
-                   ->withConsecutive(
-                       [$mod->getTitles(), 'mod-name', ['mod-name.abc']],
-                       [$mod->getDescriptions(), 'mod-description', ['mod-description.abc']]
-                   );
+        $this->translator->expects($this->once())
+                         ->method('loadFromModNames')
+                         ->with($this->identicalTo(['abc']));
+        $this->translator->expects($this->exactly(2))
+                         ->method('addTranslationsToEntity')
+                         ->withConsecutive(
+                             [
+                                 $this->identicalTo($mod->getTitles()),
+                                 $this->identicalTo('mod-name'),
+                                 $this->identicalTo(['mod-name.abc'])
+                             ],
+                             [
+                                 $this->identicalTo($mod->getDescriptions()),
+                                 $this->identicalTo('mod-description'),
+                                 $this->identicalTo(['mod-description.abc'])
+                             ]
+                         );
 
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        $command = new ExportModMetaCommand($modRegistry, $translator);
-
+        $command = new ExportModMetaCommand($this->modRegistry, $this->translator);
         $this->invokeMethod($command, 'translate', $mod);
     }
 }

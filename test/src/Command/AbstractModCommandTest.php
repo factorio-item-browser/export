@@ -27,21 +27,35 @@ class AbstractModCommandTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked mod registry.
+     * @var ModRegistry&MockObject
+     */
+    protected $modRegistry;
+
+    /**
+     * Sets up the test case.
+     * @throws ReflectionException
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->modRegistry = $this->createMock(ModRegistry::class);
+    }
+
+    /**
      * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        /* @var AbstractModCommand|MockObject $command */
+        /* @var AbstractModCommand&MockObject $command */
         $command = $this->getMockBuilder(AbstractModCommand::class)
-                        ->setConstructorArgs([$modRegistry])
+                        ->setConstructorArgs([$this->modRegistry])
                         ->getMockForAbstractClass();
 
-        $this->assertSame($modRegistry, $this->extractProperty($command, 'modRegistry'));
+        $this->assertSame($this->modRegistry, $this->extractProperty($command, 'modRegistry'));
     }
 
     /**
@@ -54,77 +68,103 @@ class AbstractModCommandTest extends TestCase
         $modName = 'abc';
         $mod = (new Mod())->setName('def');
 
-        /* @var Route|MockObject $route */
-        $route = $this->getMockBuilder(Route::class)
-                      ->setMethods(['getMatchedParam'])
-                      ->disableOriginalConstructor()
-                      ->getMock();
+        /* @var Route&MockObject $route */
+        $route = $this->createMock(Route::class);
         $route->expects($this->once())
               ->method('getMatchedParam')
-              ->with(ParameterName::MOD_NAME, '')
+              ->with($this->identicalTo(ParameterName::MOD_NAME), $this->identicalTo(''))
               ->willReturn($modName);
 
         /* @var AbstractModCommand|MockObject $command */
         $command = $this->getMockBuilder(AbstractModCommand::class)
                         ->setMethods(['fetchMod', 'processMod'])
-                        ->disableOriginalConstructor()
+                        ->setConstructorArgs([$this->modRegistry])
                         ->getMockForAbstractClass();
         $command->expects($this->once())
                 ->method('fetchMod')
-                ->with($modName)
+                ->with($this->identicalTo($modName))
                 ->willReturn($mod);
         $command->expects($this->once())
                 ->method('processMod')
-                ->with($route, $mod);
+                ->with($this->identicalTo($route), $this->identicalTo($mod));
 
         $this->invokeMethod($command, 'execute', $route);
     }
 
     /**
-     * Provides the data for the fetchMod test.
-     * @return array
-     */
-    public function provideFetchMod(): array
-    {
-        return [
-            [(new Mod())->setName('abc'), false],
-            [null, true],
-        ];
-    }
-
-    /**
      * Tests the fetchMod method.
-     * @param Mod|null $resultGet
-     * @param bool $expectException
      * @throws ReflectionException
      * @covers ::fetchMod
-     * @dataProvider provideFetchMod
      */
-    public function testFetchMod(?Mod $resultGet, bool $expectException): void
+    public function testFetchMod(): void
     {
-        $modName = 'foo';
+        $modName = 'abc';
 
-        /* @var ModRegistry|MockObject $modRegistry */
-        $modRegistry = $this->getMockBuilder(ModRegistry::class)
-                            ->setMethods(['get'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $modRegistry->expects($this->once())
-                    ->method('get')
-                    ->with($modName)
-                    ->willReturn($resultGet);
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
 
-        if ($expectException) {
-            $this->expectException(CommandException::class);
-            $this->expectExceptionCode(404);
-        }
+        $this->modRegistry->expects($this->once())
+                          ->method('get')
+                          ->with($this->identicalTo($modName))
+                          ->willReturn($mod);
 
-        /* @var AbstractModCommand|MockObject $command */
+        /* @var AbstractModCommand&MockObject $command */
         $command = $this->getMockBuilder(AbstractModCommand::class)
-                        ->setConstructorArgs([$modRegistry])
+                        ->setConstructorArgs([$this->modRegistry])
                         ->getMockForAbstractClass();
 
         $result = $this->invokeMethod($command, 'fetchMod', $modName);
-        $this->assertSame($resultGet, $result);
+
+        $this->assertSame($mod, $result);
+    }
+
+    /**
+     * Tests the fetchMod method without an actual mod.
+     * @throws ReflectionException
+     * @covers ::fetchMod
+     */
+    public function testFetchModWithoutMod(): void
+    {
+        $modName = 'abc';
+        $mod = null;
+
+        $this->modRegistry->expects($this->once())
+                          ->method('get')
+                          ->with($this->identicalTo($modName))
+                          ->willReturn($mod);
+
+        $this->expectException(CommandException::class);
+        $this->expectExceptionCode(404);
+
+        /* @var AbstractModCommand&MockObject $command */
+        $command = $this->getMockBuilder(AbstractModCommand::class)
+                        ->setConstructorArgs([$this->modRegistry])
+                        ->getMockForAbstractClass();
+
+        $this->invokeMethod($command, 'fetchMod', $modName);
+    }
+
+    /**
+     * Tests the persistMod method.
+     * @throws ReflectionException
+     * @covers ::persistMod
+     */
+    public function testPersistMod(): void
+    {
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
+
+        $this->modRegistry->expects($this->once())
+                          ->method('set')
+                          ->with($this->identicalTo($mod));
+        $this->modRegistry->expects($this->once())
+                          ->method('saveMods');
+
+        /* @var AbstractModCommand&MockObject $command */
+        $command = $this->getMockBuilder(AbstractModCommand::class)
+                        ->setConstructorArgs([$this->modRegistry])
+                        ->getMockForAbstractClass();
+
+        $this->invokeMethod($command, 'persistMod', $mod);
     }
 }

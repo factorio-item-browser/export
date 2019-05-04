@@ -30,21 +30,40 @@ class ExportModCommandTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked combination creator.
+     * @var CombinationCreator&MockObject
+     */
+    protected $combinationCreator;
+
+    /**
+     * The mocked mod registry.
+     * @var ModRegistry&MockObject
+     */
+    protected $modRegistry;
+
+    /**
+     * Sets up the test case.
+     * @throws ReflectionException
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->combinationCreator = $this->createMock(CombinationCreator::class);
+        $this->modRegistry = $this->createMock(ModRegistry::class);
+    }
+
+    /**
      * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var CombinationCreator $combinationCreator */
-        $combinationCreator = $this->createMock(CombinationCreator::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        $command = new ExportModCommand($this->combinationCreator, $this->modRegistry);
 
-        $command = new ExportModCommand($combinationCreator, $modRegistry);
-
-        $this->assertSame($combinationCreator, $this->extractProperty($command, 'combinationCreator'));
-        $this->assertSame($modRegistry, $this->extractProperty($command, 'modRegistry'));
+        $this->assertSame($this->combinationCreator, $this->extractProperty($command, 'combinationCreator'));
+        $this->assertSame($this->modRegistry, $this->extractProperty($command, 'modRegistry'));
     }
 
     /**
@@ -54,56 +73,121 @@ class ExportModCommandTest extends TestCase
      */
     public function testProcessMod(): void
     {
-        $mod = (new Mod())->setName('abc');
         $numberOfOptionalMods = 2;
+        $modName = 'abc';
 
-        /* @var CombinationCreator|MockObject $combinationCreator */
-        $combinationCreator = $this->getMockBuilder(CombinationCreator::class)
-                                   ->setMethods(['setupForMod', 'getNumberOfOptionalMods'])
-                                   ->disableOriginalConstructor()
-                                   ->getMock();
-        $combinationCreator->expects($this->once())
-                           ->method('setupForMod')
-                           ->with($mod);
-        $combinationCreator->expects($this->once())
-                           ->method('getNumberOfOptionalMods')
-                           ->willReturn($numberOfOptionalMods);
+        /* @var Route&MockObject $route */
+        $route = $this->createMock(Route::class);
 
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeBanner', 'writeAction'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
+        $mod->expects($this->once())
+            ->method('getName')
+            ->willReturn($modName);
+
+        $this->combinationCreator->expects($this->once())
+                                ->method('setupForMod')
+                                ->with($this->identicalTo($mod));
+        $this->combinationCreator->expects($this->once())
+                                 ->method('getNumberOfOptionalMods')
+                                 ->willReturn($numberOfOptionalMods);
+
+        /* @var Console&MockObject $console */
+        $console = $this->createMock(Console::class);
         $console->expects($this->once())
                 ->method('writeBanner')
-                ->with('Exporting Mod: abc', ColorInterface::LIGHT_BLUE);
+                ->with($this->identicalTo('Exporting Mod: abc'), $this->identicalTo(ColorInterface::LIGHT_BLUE));
         $console->expects($this->once())
                 ->method('writeAction')
-                ->with('Exporting combinations in 3 steps');
+                ->with($this->identicalTo('Exporting combinations in 3 steps'));
 
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        /* @var ExportModCommand|MockObject $command */
+        $command = $this->getMockBuilder(ExportModCommand::class)
+                        ->setMethods(['runModCommand'])
+                        ->setConstructorArgs([$this->combinationCreator, $this->modRegistry])
+                        ->getMock();
+        $command->expects($this->exactly(7))
+                ->method('runModCommand')
+                ->withConsecutive(
+                    [
+                        $this->identicalTo(CommandName::EXPORT_MOD_STEP),
+                        $this->identicalTo($mod),
+                        $this->identicalTo([ParameterName::STEP => 0]),
+                    ],
+                    [
+                        $this->identicalTo(CommandName::EXPORT_MOD_STEP),
+                        $this->identicalTo($mod),
+                        $this->identicalTo([ParameterName::STEP => 1]),
+                    ],
+                    [
+                        $this->identicalTo(CommandName::EXPORT_MOD_STEP),
+                        $this->identicalTo($mod),
+                        $this->identicalTo([ParameterName::STEP => 2]),
+                    ],
+                    [
+                        $this->identicalTo(CommandName::EXPORT_MOD_META),
+                        $this->identicalTo($mod),
+                        $this->identicalTo([]),
+                    ],
+                    [
+                        $this->identicalTo(CommandName::EXPORT_MOD_THUMBNAIL),
+                        $this->identicalTo($mod),
+                        $this->identicalTo([]),
+                    ],
+                    [
+                        $this->identicalTo(CommandName::REDUCE_MOD),
+                        $this->identicalTo($mod),
+                        $this->identicalTo([]),
+                    ],
+                    [
+                        $this->identicalTo(CommandName::RENDER_MOD_ICONS),
+                        $this->identicalTo($mod),
+                        $this->identicalTo([]),
+                    ]
+                );
+        $this->injectProperty($command, 'console', $console);
+
+        $this->invokeMethod($command, 'processMod', $route, $mod);
+    }
+
+    /**
+     * Tests the runModCommand method.
+     * @throws ReflectionException
+     * @covers ::runModCommand
+     */
+    public function testRunModCommand(): void
+    {
+        $commandName = 'abc';
+        $modName = 'def';
+        $additionalParameters = ['ghi' => 'jkl'];
+        $expectedParameters = [
+            ParameterName::MOD_NAME => 'def',
+            'ghi' => 'jkl',
+        ];
+
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
+        $mod->expects($this->once())
+            ->method('getName')
+            ->willReturn($modName);
+
+        /* @var Console&MockObject $console */
+        $console = $this->createMock(Console::class);
 
         /* @var ExportModCommand|MockObject $command */
         $command = $this->getMockBuilder(ExportModCommand::class)
                         ->setMethods(['runCommand'])
-                        ->setConstructorArgs([$combinationCreator, $modRegistry])
+                        ->setConstructorArgs([$this->combinationCreator, $this->modRegistry])
                         ->getMock();
-        $command->expects($this->exactly(6))
+        $command->expects($this->once())
                 ->method('runCommand')
-                ->withConsecutive(
-                    [CommandName::EXPORT_MOD_STEP, [ParameterName::MOD_NAME => 'abc', 'step' => 0], $console],
-                    [CommandName::EXPORT_MOD_STEP, [ParameterName::MOD_NAME => 'abc', 'step' => 1], $console],
-                    [CommandName::EXPORT_MOD_STEP, [ParameterName::MOD_NAME => 'abc', 'step' => 2], $console],
-                    [CommandName::EXPORT_MOD_META, [ParameterName::MOD_NAME => 'abc'], $console],
-                    [CommandName::REDUCE_MOD, [ParameterName::MOD_NAME => 'abc'], $console],
-                    [CommandName::RENDER_MOD_ICONS, [ParameterName::MOD_NAME => 'abc'], $console]
+                ->with(
+                    $this->identicalTo($commandName),
+                    $this->equalTo($expectedParameters),
+                    $this->identicalTo($console)
                 );
         $this->injectProperty($command, 'console', $console);
 
-        /* @var Route $route */
-        $route = $this->createMock(Route::class);
-
-        $this->invokeMethod($command, 'processMod', $route, $mod);
+        $this->invokeMethod($command, 'runModCommand', $commandName, $mod, $additionalParameters);
     }
 }

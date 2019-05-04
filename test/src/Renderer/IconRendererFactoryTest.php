@@ -10,7 +10,6 @@ use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\Export\Renderer\IconRendererFactory;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
-use Imagine\Gd\Imagine;
 use Imagine\Image\ImagineInterface;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -30,58 +29,44 @@ class IconRendererFactoryTest extends TestCase
 
     /**
      * Tests the invoking.
+     * @throws ReflectionException
      * @covers ::__invoke
      */
     public function testInvoke(): void
     {
-        /* @var ModRegistry $modRegistry */
+        /* @var ImagineInterface&MockObject $imagine */
+        $imagine = $this->createMock(ImagineInterface::class);
+        /* @var ModFileManager&MockObject $modFileManager */
+        $modFileManager = $this->createMock(ModFileManager::class);
+        /* @var ModRegistry&MockObject $modRegistry */
         $modRegistry = $this->createMock(ModRegistry::class);
 
-        /* @var RawExportDataService|MockObject $rawExportDataService */
-        $rawExportDataService = $this->getMockBuilder(RawExportDataService::class)
-                                     ->setMethods(['getModRegistry'])
-                                     ->disableOriginalConstructor()
-                                     ->getMock();
+        $expectedResult = new IconRenderer($imagine, $modFileManager, $modRegistry);
+
+        /* @var RawExportDataService&MockObject $rawExportDataService */
+        $rawExportDataService = $this->createMock(RawExportDataService::class);
         $rawExportDataService->expects($this->once())
                              ->method('getModRegistry')
                              ->willReturn($modRegistry);
 
-
-        /* @var ContainerInterface|MockObject $container */
-        $container = $this->getMockBuilder(ContainerInterface::class)
-                          ->setMethods(['get'])
-                          ->getMockForAbstractClass();
-        $container->expects($this->exactly(2))
+        /* @var ContainerInterface&MockObject $container */
+        $container = $this->createMock(ContainerInterface::class);
+        $container->expects($this->exactly(3))
                   ->method('get')
                   ->withConsecutive(
-                      [RawExportDataService::class],
-                      [ModFileManager::class]
+                      [ImagineInterface::class],
+                      [ModFileManager::class],
+                      [RawExportDataService::class]
                   )
                   ->willReturnOnConsecutiveCalls(
-                      $rawExportDataService,
-                      $this->createMock(ModFileManager::class)
+                      $imagine,
+                      $modFileManager,
+                      $rawExportDataService
                   );
 
-        /* @var IconRendererFactory|MockObject $factory */
-        $factory = $this->getMockBuilder(IconRendererFactory::class)
-                        ->setMethods(['createImagine'])
-                        ->getMock();
-        $factory->expects($this->once())
-                ->method('createImagine')
-                ->willReturn($this->createMock(ImagineInterface::class));
-
-        $factory($container, IconRenderer::class);
-    }
-
-    /**
-     * Tests the createImagine method.
-     * @throws ReflectionException
-     * @covers ::createImagine
-     */
-    public function testCreateImagine(): void
-    {
         $factory = new IconRendererFactory();
-        $result = $this->invokeMethod($factory, 'createImagine');
-        $this->assertInstanceOf(Imagine::class, $result);
+        $result = $factory($container, IconRenderer::class);
+
+        $this->assertEquals($expectedResult, $result);
     }
 }

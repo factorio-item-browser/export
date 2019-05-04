@@ -12,6 +12,7 @@ namespace FactorioItemBrowser\Export;
  */
 
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
+use Imagine\Image\ImagineInterface;
 use Zend\ServiceManager\Factory\InvokableFactory;
 
 return [
@@ -29,6 +30,7 @@ return [
             Command\Export\ExportModWithDependenciesCommand::class => Command\Export\ExportModWithDependenciesCommandFactory::class,
             Command\Export\ExportModMetaCommand::class => Command\Export\ExportModMetaCommandFactory::class,
             Command\Export\ExportModStepCommand::class => Command\Export\ExportModStepCommandFactory::class,
+            Command\Export\ExportModThumbnailCommand::class => Command\Export\ExportModThumbnailCommandFactory::class,
             Command\Export\ExportPrepareCommand::class => Command\Export\ExportPrepareCommandFactory::class,
             Command\Lists\ListCommand::class => Command\Lists\ListCommandFactory::class,
             Command\Lists\ListMissingCommand::class => Command\Lists\ListMissingCommandFactory::class,
@@ -67,16 +69,20 @@ return [
             Parser\ParserManager::class => Parser\ParserManagerFactory::class,
             Parser\RecipeParser::class => Parser\RecipeParserFactory::class,
 
-            Reducer\IconReducer::class => Reducer\IconReducerFactory::class,
-            Reducer\ItemReducer::class => Reducer\ItemReducerFactory::class,
-            Reducer\MachineReducer::class => Reducer\MachineReducerFactory::class,
-            Reducer\RecipeReducer::class => Reducer\RecipeReducerFactory::class,
-            Reducer\ReducerManager::class => Reducer\ReducerManagerFactory::class,
+            Reducer\Combination\CombinationReducerManager::class => Reducer\Combination\CombinationReducerManagerFactory::class,
+            Reducer\Combination\IconReducer::class => Reducer\Combination\IconReducerFactory::class,
+            Reducer\Combination\ItemReducer::class => Reducer\Combination\ItemReducerFactory::class,
+            Reducer\Combination\MachineReducer::class => Reducer\Combination\MachineReducerFactory::class,
+            Reducer\Combination\RecipeReducer::class => Reducer\Combination\RecipeReducerFactory::class,
+            Reducer\Mod\CombinationReducer::class => Reducer\Mod\CombinationReducerFactory::class,
+            Reducer\Mod\ModReducerManager::class => Reducer\Mod\ModReducerManagerFactory::class,
+            Reducer\Mod\ThumbnailReducer::class => Reducer\Mod\ThumbnailReducerFactory::class,
 
             Renderer\IconRenderer::class => Renderer\IconRendererFactory::class,
 
             // 3rd-party services
             ProcessManager::class => Process\ProcessManagerFactory::class,
+            ImagineInterface::class => Renderer\ImagineFactory::class,
         ],
     ]
 ];

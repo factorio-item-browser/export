@@ -77,8 +77,7 @@ class ExportModStepCommand extends AbstractModCommand
         $combinationHashes = $this->exportCombinations($combinations);
 
         $mod->setCombinationHashes(array_merge($mod->getCombinationHashes(), $combinationHashes));
-        $this->modRegistry->set($mod);
-        $this->modRegistry->saveMods();
+        $this->persistMod($mod);
     }
 
     /**

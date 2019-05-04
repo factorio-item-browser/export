@@ -67,18 +67,17 @@ class IconRenderer
     /**
      * Renders the specified icon.
      * @param Icon $icon
-     * @param int $size
      * @return string
      * @throws ExportException
      */
-    public function render(Icon $icon, int $size): string
+    public function render(Icon $icon): string
     {
         $image = $this->createImage($icon->getSize());
         foreach ($icon->getLayers() as $layer) {
             $image = $this->renderLayer($image, $layer, $icon->getSize());
         }
 
-        $image->resize(new Box($size, $size));
+        $this->resizeImage($image, $icon->getRenderedSize());
         return $image->get('png');
     }
 
@@ -176,5 +175,17 @@ class IconRenderer
             (int) round($color->getGreen(255)),
             (int) round($color->getBlue(255)),
         ], (int) round($color->getAlpha(100)));
+    }
+
+    /**
+     * Resizes the image if it does not already have the desired size.
+     * @param ImageInterface $image
+     * @param int $size
+     */
+    protected function resizeImage(ImageInterface $image, int $size): void
+    {
+        if ($image->getSize()->getWidth() !== $size || $image->getSize()->getHeight() !== $size) {
+            $image->resize(new Box($size, $size));
+        }
     }
 }
