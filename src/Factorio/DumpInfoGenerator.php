@@ -2,6 +2,7 @@
 
 namespace FactorioItemBrowser\Export\Factorio;
 
+use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Registry\ModRegistry;
@@ -59,7 +60,7 @@ class DumpInfoGenerator
      */
     protected function fetchBaseMod(): Mod
     {
-        $result = $this->modRegistry->get('base');
+        $result = $this->modRegistry->get(Constant::MOD_NAME_BASE);
         if ($result === null) {
             throw new ExportException('Base mod not known.');
         }

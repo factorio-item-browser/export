@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Mod;
 
 use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\Common\Test\ReflectionTrait;
+use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\DependencyReader;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
@@ -64,7 +65,7 @@ class DependencyReaderTest extends TestCase
         $dependency2 = new Dependency();
         $dependency2->setRequiredModName('def');
         $expectedResult = [
-            'base' => $baseDependency,
+            Constant::MOD_NAME_BASE => $baseDependency,
             'abc' => $dependency1,
             'def' => $dependency2,
         ];
@@ -86,7 +87,7 @@ class DependencyReaderTest extends TestCase
                        ->getMock();
         $reader->expects($this->once())
                ->method('createDependency')
-               ->with('base', '', true)
+               ->with(Constant::MOD_NAME_BASE, '', true)
                ->willReturn($baseDependency);
         $reader->expects($this->exactly(3))
                ->method('parseDependency')
