@@ -23,8 +23,8 @@ script.on_init(function()
     dump = {}
     for _, machine in pairs(game.entity_prototypes) do
         if (machine.valid and (machine.crafting_categories ~= nil)) then
-            -- Only allow the player called "player" and ignore all other pseudo-players
-            if (machine.type ~= 'player' or machine.name == 'player') then
+            -- Only allow the character called "character" and ignore all other pseudo-characters
+            if (machine.type ~= 'character' or machine.name == 'character') then
                 local preparedMachine = dumper.prepareMachinePrototype(machine)
                 dump[machine.name] = preparedMachine
             end
