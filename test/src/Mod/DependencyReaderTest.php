@@ -158,7 +158,7 @@ class DependencyReaderTest extends TestCase
         $reader->expects($resultCreateDependency === null ? $this->never() : $this->once())
                ->method('createDependency')
                ->with($expectedModName, $expectedVersion, $expectedIsMandatory)
-               ->willReturn($resultCreateDependency);
+               ->willReturn($resultCreateDependency === null ? new Dependency() : $resultCreateDependency);
 
         if ($expectException) {
             $this->expectException(ExportException::class);
