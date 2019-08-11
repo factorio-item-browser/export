@@ -3,6 +3,7 @@
 namespace FactorioItemBrowserTest\Export\Factorio;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
+use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Factorio\DumpInfoGenerator;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -47,7 +48,7 @@ class DumpInfoGeneratorTest extends TestCase
      */
     public function testGenerate(): void
     {
-        $baseMod = (new Mod())->setName('base');
+        $baseMod = (new Mod())->setName(Constant::MOD_NAME_BASE);
         $json = ['abc' => 'def'];
 
         /* @var DumpInfoGenerator|MockObject $generator */
@@ -76,7 +77,7 @@ class DumpInfoGeneratorTest extends TestCase
     public function provideFetchBaseMod(): array
     {
         return [
-            [(new Mod())->setName('base'), false],
+            [(new Mod())->setName(Constant::MOD_NAME_BASE), false],
             [null, true],
         ];
     }
@@ -98,7 +99,7 @@ class DumpInfoGeneratorTest extends TestCase
                             ->getMock();
         $modRegistry->expects($this->once())
                     ->method('get')
-                    ->with('base')
+                    ->with(Constant::MOD_NAME_BASE)
                     ->willReturn($baseMod);
 
         if ($expectException) {

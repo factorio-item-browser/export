@@ -348,7 +348,7 @@ class TranslatorTest extends TestCase
         $translator->expects($resultTranslateParameters === null ? $this->never() : $this->once())
                    ->method('translateParameters')
                    ->with($locale, $type, $expectedString, $expectedParameters, $level)
-                   ->willReturn($resultTranslateParameters);
+                   ->willReturn($resultTranslateParameters === null ? '' : $resultTranslateParameters);
         $this->injectProperty($translator, 'translations', $translations);
 
         $result = $this->invokeMethod(

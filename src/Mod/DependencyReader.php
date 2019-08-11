@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Mod;
 
+use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Utils\VersionUtils;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -48,8 +49,8 @@ class DependencyReader
         $infoJson = $this->modFileManager->getInfoJson($mod);
 
         $result = [];
-        if ($mod->getName() !== 'base') {
-            $result['base'] = $this->createDependency('base', '', true);
+        if ($mod->getName() !== Constant::MOD_NAME_BASE) {
+            $result[Constant::MOD_NAME_BASE] = $this->createDependency(Constant::MOD_NAME_BASE, '', true);
         }
         foreach ($infoJson->getArray('dependencies') as $dependencyString) {
             $dependency = $this->parseDependency($dependencyString);

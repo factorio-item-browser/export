@@ -31,24 +31,47 @@ class UpdateListCommandTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked mod file manager.
+     * @var ModFileManager&MockObject
+     */
+    protected $modFileManager;
+
+    /**
+     * The mocked mod reader.
+     * @var ModReader&MockObject
+     */
+    protected $modReader;
+
+    /**
+     * The mocked mod registry.
+     * @var ModRegistry&MockObject
+     */
+    protected $modRegistry;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->modFileManager = $this->createMock(ModFileManager::class);
+        $this->modReader = $this->createMock(ModReader::class);
+        $this->modRegistry = $this->createMock(ModRegistry::class);
+    }
+
+    /**
      * Tests the constructing.
      * @covers ::__construct
      * @throws ReflectionException
      */
     public function testConstruct(): void
     {
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-        /* @var ModReader $modReader */
-        $modReader = $this->createMock(ModReader::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        $command = new UpdateListCommand($this->modFileManager, $this->modReader, $this->modRegistry);
 
-        $command = new UpdateListCommand($modFileManager, $modReader, $modRegistry);
-
-        $this->assertSame($modFileManager, $this->extractProperty($command, 'modFileManager'));
-        $this->assertSame($modReader, $this->extractProperty($command, 'modReader'));
-        $this->assertSame($modRegistry, $this->extractProperty($command, 'modRegistry'));
+        $this->assertSame($this->modFileManager, $this->extractProperty($command, 'modFileManager'));
+        $this->assertSame($this->modReader, $this->extractProperty($command, 'modReader'));
+        $this->assertSame($this->modRegistry, $this->extractProperty($command, 'modRegistry'));
     }
 
     /**
@@ -62,20 +85,12 @@ class UpdateListCommandTest extends TestCase
         $currentMods = [(new Mod())->setName('ghi'), (new Mod())->setName('jkl')];
         $newMods = [(new Mod())->setName('mno'), (new Mod())->setName('pqr')];
 
-        /* @var ModFileManager|MockObject $modFileManager */
-        $modFileManager = $this->getMockBuilder(ModFileManager::class)
-                               ->setMethods(['getModFileNames'])
-                               ->disableOriginalConstructor()
-                               ->getMock();
-        $modFileManager->expects($this->once())
-                       ->method('getModFileNames')
-                       ->willReturn($modFileNames);
+        $this->modFileManager->expects($this->once())
+                             ->method('getModFileNames')
+                             ->willReturn($modFileNames);
 
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeAction'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
+        /* @var Console&MockObject $console */
+        $console = $this->createMock(Console::class);
         $console->expects($this->exactly(2))
                 ->method('writeAction')
                 ->withConsecutive(
@@ -83,15 +98,10 @@ class UpdateListCommandTest extends TestCase
                     ['Persisting mods']
                 );
 
-        /* @var ModReader $modReader */
-        $modReader = $this->createMock(ModReader::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
         /* @var UpdateListCommand|MockObject $command */
         $command = $this->getMockBuilder(UpdateListCommand::class)
                         ->setMethods(['getModsFromRegistry', 'detectNewMods', 'printChangesToConsole', 'runCommand'])
-                        ->setConstructorArgs([$modFileManager, $modReader, $modRegistry])
+                        ->setConstructorArgs([$this->modFileManager, $this->modReader, $this->modRegistry])
                         ->getMock();
         $command->expects($this->once())
                 ->method('getModsFromRegistry')
@@ -133,32 +143,22 @@ class UpdateListCommandTest extends TestCase
             'def' => $mod2,
         ];
 
-        /* @var ModRegistry|MockObject $modRegistry */
-        $modRegistry = $this->getMockBuilder(ModRegistry::class)
-                            ->setMethods(['getAllNames', 'get'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $modRegistry->expects($this->once())
-                    ->method('getAllNames')
-                    ->willReturn($modNames);
-        $modRegistry->expects($this->exactly(2))
-                    ->method('get')
-                    ->withConsecutive(
-                        ['abc'],
-                        ['def']
-                    )
-                    ->willReturnOnConsecutiveCalls(
-                        $mod1,
-                        $mod2
-                    );
+        $this->modRegistry->expects($this->once())
+                          ->method('getAllNames')
+                          ->willReturn($modNames);
+        $this->modRegistry->expects($this->exactly(2))
+                          ->method('get')
+                          ->withConsecutive(
+                              ['abc'],
+                              ['def']
+                          )
+                          ->willReturnOnConsecutiveCalls(
+                              $mod1,
+                              $mod2
+                          );
 
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-        /* @var ModReader $modReader */
-        $modReader = $this->createMock(ModReader::class);
-
-        $command = new UpdateListCommand($modFileManager, $modReader, $modRegistry);
-        $result = $this->invokeMethod($command, 'getModsFromRegistry', $modRegistry);
+        $command = new UpdateListCommand($this->modFileManager, $this->modReader, $this->modRegistry);
+        $result = $this->invokeMethod($command, 'getModsFromRegistry');
         $this->assertEquals($expectedResult, $result);
     }
 
@@ -176,21 +176,15 @@ class UpdateListCommandTest extends TestCase
         $newMod2 = (new Mod())->setName('pqr');
         $expectedResult = ['mno' => $newMod1, 'pqr' => $newMod2];
 
-        /* @var ProgressBar|MockObject $progressBar */
-        $progressBar = $this->getMockBuilder(ProgressBar::class)
-                            ->setMethods(['next', 'finish'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
+        /* @var ProgressBar&MockObject $progressBar */
+        $progressBar = $this->createMock(ProgressBar::class);
         $progressBar->expects($this->exactly(2))
                     ->method('next');
         $progressBar->expects($this->once())
                     ->method('finish');
 
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['createProgressBar'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
+        /* @var Console&MockObject $console */
+        $console = $this->createMock(Console::class);
         $console->expects($this->once())
                 ->method('createProgressBar')
                 ->with(2)
@@ -199,7 +193,7 @@ class UpdateListCommandTest extends TestCase
         /* @var UpdateListCommand|MockObject $command */
         $command = $this->getMockBuilder(UpdateListCommand::class)
                         ->setMethods(['getModsByChecksum', 'checkModFile'])
-                        ->disableOriginalConstructor()
+                        ->setConstructorArgs([$this->modFileManager, $this->modReader, $this->modRegistry])
                         ->getMock();
         $command->expects($this->once())
                 ->method('getModsByChecksum')
@@ -234,86 +228,95 @@ class UpdateListCommandTest extends TestCase
         $mods = [$mod1, $mod2];
         $expectedResult = ['abc' => $mod1, 'def' => $mod2];
 
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-        /* @var ModReader $modReader */
-        $modReader = $this->createMock(ModReader::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        $command = new UpdateListCommand($modFileManager, $modReader, $modRegistry);
+        $command = new UpdateListCommand($this->modFileManager, $this->modReader, $this->modRegistry);
         $result = $this->invokeMethod($command, 'getModsByChecksum', $mods);
 
         $this->assertEquals($expectedResult, $result);
     }
 
     /**
-     * Provides the data for the checkModFile test.
-     * @return array
-     */
-    public function provideCheckModFile(): array
-    {
-        $mod1 = (new Mod())->setName('abc');
-        $mod2 = (new Mod())->setName('def');
-
-        return [
-            ['ghi', ['jkl' => $mod1, 'mno' => $mod2], 'jkl', null, null, $mod1],
-            ['ghi', ['jkl' => $mod1], 'mno', $mod2, 'def', $mod2],
-        ];
-    }
-
-    /**
      * Tests the checkModFile method.
-     * @param string $modFileName
-     * @param array $currentModsByChecksum
-     * @param string $calculatedChecksum
-     * @param Mod|null $readMod
-     * @param string|null $cleanCacheModName
-     * @param Mod $expectedResult
      * @throws ReflectionException
      * @covers ::checkModFile
-     * @dataProvider provideCheckModFile
      */
-    public function testCheckModFile(
-        string $modFileName,
-        array $currentModsByChecksum,
-        string $calculatedChecksum,
-        ?Mod $readMod,
-        ?string $cleanCacheModName,
-        Mod $expectedResult
-    ): void {
-        /* @var ModReader|MockObject $modReader */
-        $modReader = $this->getMockBuilder(ModReader::class)
-                          ->setMethods(['calculateChecksum', 'read'])
-                          ->disableOriginalConstructor()
-                          ->getMock();
-        $modReader->expects($this->once())
-                  ->method('calculateChecksum')
-                  ->with($modFileName)
-                  ->willReturn($calculatedChecksum);
-        $modReader->expects($readMod === null ? $this->never() : $this->once())
-                  ->method('read')
-                  ->with($modFileName, $calculatedChecksum)
-                  ->willReturn($readMod);
+    public function testCheckModFileWithMatch(): void
+    {
+        $modFileName = 'abc';
+        $checksum = 'def';
 
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
 
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        $currentModsByChecksum = [
+            $checksum => $mod,
+            'foo' => $this->createMock(Mod::class),
+        ];
+
+        $this->modReader->expects($this->once())
+                        ->method('calculateChecksum')
+                        ->with($this->identicalTo($modFileName))
+                        ->willReturn($checksum);
+        $this->modReader->expects($this->never())
+                        ->method('read');
 
         /* @var UpdateListCommand|MockObject $command */
         $command = $this->getMockBuilder(UpdateListCommand::class)
                         ->setMethods(['runCommand'])
-                        ->setConstructorArgs([$modFileManager, $modReader, $modRegistry])
+                        ->setConstructorArgs([$this->modFileManager, $this->modReader, $this->modRegistry])
                         ->getMock();
-        $command->expects($cleanCacheModName === null ? $this->never() : $this->once())
-                ->method('runCommand')
-                ->with(CommandName::CLEAN_CACHE, [ParameterName::MOD_NAME => $cleanCacheModName], null);
+        $command->expects($this->never())
+                ->method('runCommand');
 
         $result = $this->invokeMethod($command, 'checkModFile', $modFileName, $currentModsByChecksum);
 
-        $this->assertSame($expectedResult, $result);
+        $this->assertSame($mod, $result);
+    }
+
+    /**
+     * Tests the checkModFile method.
+     * @throws ReflectionException
+     * @covers ::checkModFile
+     */
+    public function testCheckModFileWithoutMatch(): void
+    {
+        $modFileName = 'abc';
+        $checksum = 'def';
+        $modName = 'ghi';
+
+        /* @var Mod&MockObject $mod */
+        $mod = $this->createMock(Mod::class);
+        $mod->expects($this->once())
+            ->method('getName')
+            ->willReturn($modName);
+
+        $currentModsByChecksum = [
+            'foo' => $this->createMock(Mod::class),
+        ];
+
+        $this->modReader->expects($this->once())
+                        ->method('calculateChecksum')
+                        ->with($this->identicalTo($modFileName))
+                        ->willReturn($checksum);
+        $this->modReader->expects($this->once())
+                        ->method('read')
+                        ->with($this->identicalTo($modFileName), $this->identicalTo($checksum))
+                        ->willReturn($mod);
+
+        /* @var UpdateListCommand|MockObject $command */
+        $command = $this->getMockBuilder(UpdateListCommand::class)
+                        ->setMethods(['runCommand'])
+                        ->setConstructorArgs([$this->modFileManager, $this->modReader, $this->modRegistry])
+                        ->getMock();
+        $command->expects($this->once())
+                ->method('runCommand')
+                ->with(
+                    $this->identicalTo(CommandName::CLEAN_CACHE),
+                    $this->equalTo([ParameterName::MOD_NAME => $modName])
+                );
+
+        $result = $this->invokeMethod($command, 'checkModFile', $modFileName, $currentModsByChecksum);
+
+        $this->assertSame($mod, $result);
     }
 
     /**
@@ -327,32 +330,22 @@ class UpdateListCommandTest extends TestCase
         $mod2 = (new Mod())->setName('def');
         $allModNames = ['abc', 'ghi'];
 
-        /* @var ModRegistry|MockObject $modRegistry */
-        $modRegistry = $this->getMockBuilder(ModRegistry::class)
-                            ->setMethods(['getAllNames', 'set', 'remove', 'saveMods'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $modRegistry->expects($this->once())
-                    ->method('getAllNames')
-                    ->willReturn($allModNames);
-        $modRegistry->expects($this->exactly(2))
-                    ->method('set')
-                    ->withConsecutive(
-                        [$mod1],
-                        [$mod2]
-                    );
-        $modRegistry->expects($this->once())
-                    ->method('remove')
-                    ->with('ghi');
-        $modRegistry->expects($this->once())
-                    ->method('saveMods');
+        $this->modRegistry->expects($this->once())
+                          ->method('getAllNames')
+                          ->willReturn($allModNames);
+        $this->modRegistry->expects($this->exactly(2))
+                          ->method('set')
+                          ->withConsecutive(
+                              [$mod1],
+                              [$mod2]
+                          );
+        $this->modRegistry->expects($this->once())
+                          ->method('remove')
+                          ->with('ghi');
+        $this->modRegistry->expects($this->once())
+                          ->method('saveMods');
 
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-        /* @var ModReader $modReader */
-        $modReader = $this->createMock(ModReader::class);
-
-        $command = new UpdateListCommand($modFileManager, $modReader, $modRegistry);
+        $command = new UpdateListCommand($this->modFileManager, $this->modReader, $this->modRegistry);
 
         $this->invokeMethod($command, 'setModsToRegistry', [$mod1, $mod2]);
     }
@@ -387,11 +380,8 @@ class UpdateListCommandTest extends TestCase
         ];
         $newMods = [$mod1, $mod2, $mod3b];
 
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeLine', 'formatModName', 'formatVersion'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
+        /* @var Console&MockObject $console */
+        $console = $this->createMock(Console::class);
         $console->expects($this->exactly(2))
                 ->method('writeLine')
                 ->withConsecutive(
@@ -423,14 +413,7 @@ class UpdateListCommandTest extends TestCase
                     '6.5.4'
                 );
 
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-        /* @var ModReader $modReader */
-        $modReader = $this->createMock(ModReader::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        $command = new UpdateListCommand($modFileManager, $modReader, $modRegistry);
+        $command = new UpdateListCommand($this->modFileManager, $this->modReader, $this->modRegistry);
         $this->injectProperty($command, 'console', $console);
 
         $this->invokeMethod($command, 'printChangesToConsole', $newMods, $currentMods);

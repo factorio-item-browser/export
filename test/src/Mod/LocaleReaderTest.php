@@ -48,8 +48,8 @@ class LocaleReaderTest extends TestCase
     public function provideRead(): array
     {
         return [
-            [['abc' => 'def'], false, null, ['abc' => 'def']],
-            [[], false, null, []],
+            [['abc' => 'def'], false, [], ['abc' => 'def']],
+            [[], false, [], []],
             [null, true, ['abc' => 'def'], ['abc' => 'def']],
         ];
     }
@@ -58,13 +58,13 @@ class LocaleReaderTest extends TestCase
      * Tests the read method.
      * @param array|null $resultCache
      * @param bool $expectRead
-     * @param array|null $resultRead
+     * @param array $resultRead
      * @param array $expectedResult
      * @throws ExportException
      * @covers ::read
      * @dataProvider provideRead
      */
-    public function testRead(?array $resultCache, bool $expectRead, ?array $resultRead, array $expectedResult): void
+    public function testRead(?array $resultCache, bool $expectRead, array $resultRead, array $expectedResult): void
     {
         $modName = 'abc';
         $mod = (new Mod())->setName($modName);

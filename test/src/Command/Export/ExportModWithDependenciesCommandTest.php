@@ -28,21 +28,39 @@ class ExportModWithDependenciesCommandTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked dependency resolver.
+     * @var DependencyResolver&MockObject
+     */
+    protected $dependencyResolver;
+
+    /**
+     * The mocked mod registry.
+     * @var ModRegistry&MockObject
+     */
+    protected $modRegistry;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->dependencyResolver = $this->createMock(DependencyResolver::class);
+        $this->modRegistry = $this->createMock(ModRegistry::class);
+    }
+
+    /**
      * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var DependencyResolver $dependencyResolver */
-        $dependencyResolver = $this->createMock(DependencyResolver::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        $command = new ExportModWithDependenciesCommand($this->dependencyResolver, $this->modRegistry);
 
-        $command = new ExportModWithDependenciesCommand($dependencyResolver, $modRegistry);
-
-        $this->assertSame($dependencyResolver, $this->extractProperty($command, 'dependencyResolver'));
-        $this->assertSame($modRegistry, $this->extractProperty($command, 'modRegistry'));
+        $this->assertSame($this->dependencyResolver, $this->extractProperty($command, 'dependencyResolver'));
+        $this->assertSame($this->modRegistry, $this->extractProperty($command, 'modRegistry'));
     }
 
     /**
@@ -56,21 +74,15 @@ class ExportModWithDependenciesCommandTest extends TestCase
         $modNamesToExport = ['def', 'ghi'];
         $sortedModNamesToExport = ['jkl', 'mno'];
 
-        /* @var Route|MockObject $route */
-        $route = $this->getMockBuilder(Route::class)
-                      ->setMethods(['getMatchedParam'])
-                      ->disableOriginalConstructor()
-                      ->getMock();
+        /* @var Route&MockObject $route */
+        $route = $this->createMock(Route::class);
         $route->expects($this->once())
               ->method('getMatchedParam')
               ->with(ParameterName::MOD_NAME, '')
               ->willReturn($modName);
 
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeAction'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
+        /* @var Console&MockObject $console */
+        $console = $this->createMock(Console::class);
         $console->expects($this->once())
                 ->method('writeAction')
                 ->with('Exporting 2 mods');
@@ -78,7 +90,7 @@ class ExportModWithDependenciesCommandTest extends TestCase
         /* @var ExportModWithDependenciesCommand|MockObject $command */
         $command = $this->getMockBuilder(ExportModWithDependenciesCommand::class)
                         ->setMethods(['getModNamesToExport', 'sortModNames', 'runSubCommands'])
-                        ->disableOriginalConstructor()
+                        ->setConstructorArgs([$this->dependencyResolver, $this->modRegistry])
                         ->getMock();
         $command->expects($this->once())
                 ->method('getModNamesToExport')
@@ -107,22 +119,14 @@ class ExportModWithDependenciesCommandTest extends TestCase
         $allModNames = ['def', 'abc', 'ghi'];
         $expectedResult = ['def', 'abc'];
 
-        /* @var ModRegistry|MockObject $modRegistry */
-        $modRegistry = $this->getMockBuilder(ModRegistry::class)
-                            ->setMethods(['getAllNames'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $modRegistry->expects($this->once())
-                    ->method('getAllNames')
-                    ->willReturn($allModNames);
-
-        /* @var DependencyResolver $dependencyResolver */
-        $dependencyResolver = $this->createMock(DependencyResolver::class);
+        $this->modRegistry->expects($this->once())
+                          ->method('getAllNames')
+                          ->willReturn($allModNames);
 
         /* @var ExportModWithDependenciesCommand|MockObject $command */
         $command = $this->getMockBuilder(ExportModWithDependenciesCommand::class)
                         ->setMethods(['hasDependency'])
-                        ->setConstructorArgs([$dependencyResolver, $modRegistry])
+                        ->setConstructorArgs([$this->dependencyResolver, $this->modRegistry])
                         ->getMock();
         $command->expects($this->exactly(2))
                 ->method('hasDependency')
@@ -141,57 +145,81 @@ class ExportModWithDependenciesCommandTest extends TestCase
     }
 
     /**
-     * Provides the data for the hasDependency test.
-     * @return array
+     * Tests the hasDependency method.
+     * @throws ReflectionException
+     * @covers ::hasDependency
      */
-    public function provideHasDependency(): array
+    public function testHasDependencyWithMandatoryDependency(): void
     {
-        return [
-            ['abc', 'def', ['abc', 'ghi'], null, true],
-            ['abc', 'def', ['ghi'], ['abc', 'jkl'], true],
-            ['abc', 'def', ['ghi'], ['jkl'], false],
-        ];
+        $requiredModName = 'abc';
+        $modNameToCheck = 'def';
+        $mandatoryDependencies = ['abc', 'ghi'];
+
+        $this->dependencyResolver->expects($this->once())
+                                 ->method('resolveMandatoryDependencies')
+                                 ->with($this->equalTo([$modNameToCheck]))
+                                 ->willReturn($mandatoryDependencies);
+        $this->dependencyResolver->expects($this->never())
+                                 ->method('resolveOptionalDependencies');
+
+        $command = new ExportModWithDependenciesCommand($this->dependencyResolver, $this->modRegistry);
+        $result = $this->invokeMethod($command, 'hasDependency', $requiredModName, $modNameToCheck);
+
+        $this->assertTrue($result);
     }
 
     /**
      * Tests the hasDependency method.
-     * @param string $requiredModName
-     * @param string $modNameToCheck
-     * @param array $resultMandatory
-     * @param array|null $resultOptional
-     * @param bool $expectedResult
      * @throws ReflectionException
      * @covers ::hasDependency
-     * @dataProvider provideHasDependency
      */
-    public function testHasDependency(
-        string $requiredModName,
-        string $modNameToCheck,
-        array $resultMandatory,
-        ?array $resultOptional,
-        bool $expectedResult
-    ): void {
-        /* @var DependencyResolver|MockObject $dependencyResolver */
-        $dependencyResolver = $this->getMockBuilder(DependencyResolver::class)
-                                   ->setMethods(['resolveMandatoryDependencies', 'resolveOptionalDependencies'])
-                                   ->disableOriginalConstructor()
-                                   ->getMock();
-        $dependencyResolver->expects($this->once())
-                           ->method('resolveMandatoryDependencies')
-                           ->with([$modNameToCheck])
-                           ->willReturn($resultMandatory);
-        $dependencyResolver->expects($resultOptional === null ? $this->never() : $this->once())
-                           ->method('resolveOptionalDependencies')
-                           ->with([$modNameToCheck], $resultMandatory)
-                           ->willReturn($resultOptional);
+    public function testHasDependencyWithOptionalDependency(): void
+    {
+        $requiredModName = 'abc';
+        $modNameToCheck = 'def';
+        $mandatoryDependencies = ['def', 'ghi'];
+        $optionalDependencies = ['abc', 'jkl'];
 
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        $this->dependencyResolver->expects($this->once())
+                                 ->method('resolveMandatoryDependencies')
+                                 ->with($this->equalTo([$modNameToCheck]))
+                                 ->willReturn($mandatoryDependencies);
+        $this->dependencyResolver->expects($this->once())
+                                 ->method('resolveOptionalDependencies')
+                                 ->with($this->equalTo([$modNameToCheck]), $this->identicalTo($mandatoryDependencies))
+                                 ->willReturn($optionalDependencies);
 
-        $command = new ExportModWithDependenciesCommand($dependencyResolver, $modRegistry);
+        $command = new ExportModWithDependenciesCommand($this->dependencyResolver, $this->modRegistry);
         $result = $this->invokeMethod($command, 'hasDependency', $requiredModName, $modNameToCheck);
 
-        $this->assertSame($expectedResult, $result);
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Tests the hasDependency method.
+     * @throws ReflectionException
+     * @covers ::hasDependency
+     */
+    public function testHasDependencyWithoutDependency(): void
+    {
+        $requiredModName = 'abc';
+        $modNameToCheck = 'def';
+        $mandatoryDependencies = ['def', 'ghi'];
+        $optionalDependencies = ['jkl'];
+
+        $this->dependencyResolver->expects($this->once())
+                                 ->method('resolveMandatoryDependencies')
+                                 ->with($this->equalTo([$modNameToCheck]))
+                                 ->willReturn($mandatoryDependencies);
+        $this->dependencyResolver->expects($this->once())
+                                 ->method('resolveOptionalDependencies')
+                                 ->with($this->equalTo([$modNameToCheck]), $this->identicalTo($mandatoryDependencies))
+                                 ->willReturn($optionalDependencies);
+
+        $command = new ExportModWithDependenciesCommand($this->dependencyResolver, $this->modRegistry);
+        $result = $this->invokeMethod($command, 'hasDependency', $requiredModName, $modNameToCheck);
+
+        $this->assertFalse($result);
     }
 
     /**
@@ -205,20 +233,12 @@ class ExportModWithDependenciesCommandTest extends TestCase
         $resultDependencies = ['def', 'ghi', 'abc'];
         $expectedResult = ['def', 'abc'];
 
-        /* @var DependencyResolver|MockObject $dependencyResolver */
-        $dependencyResolver = $this->getMockBuilder(DependencyResolver::class)
-                                   ->setMethods(['resolveMandatoryDependencies'])
-                                   ->disableOriginalConstructor()
-                                   ->getMock();
-        $dependencyResolver->expects($this->once())
-                           ->method('resolveMandatoryDependencies')
-                           ->with($modNames)
-                           ->willReturn($resultDependencies);
+        $this->dependencyResolver->expects($this->once())
+                                 ->method('resolveMandatoryDependencies')
+                                 ->with($modNames)
+                                 ->willReturn($resultDependencies);
 
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        $command = new ExportModWithDependenciesCommand($dependencyResolver, $modRegistry);
+        $command = new ExportModWithDependenciesCommand($this->dependencyResolver, $this->modRegistry);
         $result = $this->invokeMethod($command, 'sortModNames', $modNames);
 
         $this->assertEquals($expectedResult, $result);
@@ -239,7 +259,7 @@ class ExportModWithDependenciesCommandTest extends TestCase
         /* @var ExportModWithDependenciesCommand|MockObject $command */
         $command = $this->getMockBuilder(ExportModWithDependenciesCommand::class)
                         ->setMethods(['runCommand'])
-                        ->disableOriginalConstructor()
+                        ->setConstructorArgs([$this->dependencyResolver, $this->modRegistry])
                         ->getMock();
         $command->expects($this->exactly(2))
                 ->method('runCommand')
