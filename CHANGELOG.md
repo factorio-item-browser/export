@@ -9,6 +9,10 @@
 - ExportData library to latest version.
 - Rendering of icons from plain GD to Imagine (using GD).
 
+## Fixed
+
+- Game-internal change from "player" to "character".
+
 ## 1.1.0 - 2018-07-21
 
 ### Added
