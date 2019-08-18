@@ -21,7 +21,7 @@ class DependencyReader
     /**
      * The regular expression used for the dependencies.
      */
-    protected const REGEXP_DEPENDENCY = '#^(\?)?\s*([a-zA-Z0-9\-_ ]+)\s*([<=>]*)\s*([0-9.]*)$#';
+    protected const REGEXP_DEPENDENCY = '#^(\(?\?\)?)?\s*([a-zA-Z0-9\-_ ]+)\s*([<=>]*)\s*([0-9.]*)$#';
 
     /**
      * The mod file manager.
@@ -78,7 +78,7 @@ class DependencyReader
 
         $dependency = null;
         if ($match[3] !== '<') {
-            $dependency = $this->createDependency(trim($match[2]), $match[4], $match[1] !== '?');
+            $dependency = $this->createDependency(trim($match[2]), $match[4], strlen($match[1]) === 0);
         }
         return $dependency;
     }

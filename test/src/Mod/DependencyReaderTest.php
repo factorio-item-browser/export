@@ -116,12 +116,14 @@ class DependencyReaderTest extends TestCase
         $dependency->setRequiredModName('test');
 
         return [
-            ['test', false, 'test', '', true, $dependency, $dependency],
-            ['test>=1.2.3', false, 'test', '1.2.3', true, $dependency, $dependency],
-            ['test>1.2.3', false, 'test', '1.2.3', true, $dependency, $dependency],
-            ['test >= 1.2.3', false, 'test', '1.2.3', true, $dependency, $dependency],
-            ['?test', false, 'test', '', false, $dependency, $dependency],
-            ['?test >= 1.2.3', false, 'test', '1.2.3', false, $dependency, $dependency],
+            ['test',              false, 'test', '',      true, $dependency, $dependency],
+            ['test>=1.2.3',       false, 'test', '1.2.3', true, $dependency, $dependency],
+            ['test>1.2.3',        false, 'test', '1.2.3', true, $dependency, $dependency],
+            ['test >= 1.2.3',     false, 'test', '1.2.3', true, $dependency, $dependency],
+            ['?test',             false, 'test', '',      false, $dependency, $dependency],
+            ['?test >= 1.2.3',    false, 'test', '1.2.3', false, $dependency, $dependency],
+            ['(?) test',          false, 'test', '',      false, $dependency, $dependency],
+            ['(?) test >= 1.2.3', false, 'test', '1.2.3', false, $dependency, $dependency],
 
             ['test < 1.2.3', false, 'test', '1.2.3', true, null, null],
             ['test < fail', true, null, null, null, null, null],
