@@ -4,7 +4,7 @@ namespace FactorioItemBrowserTest\Export\I18n;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\I18n\LocaleReader;
-use FactorioItemBrowser\Export\Mod\NewModFileManager;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -22,7 +22,7 @@ class LocaleReaderTest extends TestCase
 
     /**
      * The mocked mod file manager.
-     * @var NewModFileManager&MockObject
+     * @var ModFileManager&MockObject
      */
     protected $modFileManager;
 
@@ -33,7 +33,7 @@ class LocaleReaderTest extends TestCase
     {
         parent::setUp();
 
-        $this->modFileManager = $this->createMock(NewModFileManager::class);
+        $this->modFileManager = $this->createMock(ModFileManager::class);
     }
 
     /**

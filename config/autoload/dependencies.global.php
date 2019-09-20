@@ -29,7 +29,7 @@ return [
             I18n\LocaleReader::class => AutoWireFactory::class,
             I18n\Translator::class => AutoWireFactory::class,
 
-            Mod\NewModFileManager::class => AutoWireFactory::class,
+            Mod\ModFileManager::class => AutoWireFactory::class,
 
             Renderer\IconRenderer::class => AutoWireFactory::class,
 
@@ -73,7 +73,6 @@ return [
 
             Mod\DependencyReader::class => Mod\DependencyReaderFactory::class,
             Mod\DependencyResolver::class => Mod\DependencyResolverFactory::class,
-            Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
             Mod\ModReader::class => Mod\ModReaderFactory::class,
 
             Parser\IconParser::class => Parser\IconParserFactory::class,

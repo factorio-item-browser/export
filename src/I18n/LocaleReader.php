@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\I18n;
 
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Mod\NewModFileManager;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 
 /**
  * The class reading the locales from the mod files.
@@ -37,15 +37,15 @@ class LocaleReader
 
     /**
      * The mod file manager.
-     * @var NewModFileManager
+     * @var ModFileManager
      */
     protected $modFileManager;
 
     /**
      * Initializes the reader.
-     * @param NewModFileManager $modFileManager
+     * @param ModFileManager $modFileManager
      */
-    public function __construct(NewModFileManager $modFileManager)
+    public function __construct(ModFileManager $modFileManager)
     {
         $this->modFileManager = $modFileManager;
     }

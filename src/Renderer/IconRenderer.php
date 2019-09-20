@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Renderer;
 
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Mod\NewModFileManager;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Renderer\Filter\ScaledLayerFilter;
 use FactorioItemBrowser\Export\Renderer\Filter\TintedLayerFilter;
 use FactorioItemBrowser\ExportData\Entity\Icon;
@@ -39,16 +39,16 @@ class IconRenderer
 
     /**
      * The mod file manager.
-     * @var NewModFileManager
+     * @var ModFileManager
      */
     protected $modFileManager;
 
     /**
      * Initializes the icon renderer.
      * @param ImagineInterface $imagine
-     * @param NewModFileManager $modFileManager
+     * @param ModFileManager $modFileManager
      */
-    public function __construct(ImagineInterface $imagine, NewModFileManager $modFileManager)
+    public function __construct(ImagineInterface $imagine, ModFileManager $modFileManager)
     {
         $this->imagine = $imagine;
         $this->modFileManager = $modFileManager;

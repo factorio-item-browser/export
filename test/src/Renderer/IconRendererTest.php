@@ -6,7 +6,7 @@ namespace FactorioItemBrowserTest\Export\Renderer;
 
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Mod\NewModFileManager;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Renderer\Filter\ScaledLayerFilter;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\Entity\Icon;
@@ -41,7 +41,7 @@ class IconRendererTest extends TestCase
 
     /**
      * The mocked mod file manager.
-     * @var NewModFileManager&MockObject
+     * @var ModFileManager&MockObject
      */
     protected $modFileManager;
 
@@ -53,7 +53,7 @@ class IconRendererTest extends TestCase
         parent::setUp();
 
         $this->imagine = $this->createMock(ImagineInterface::class);
-        $this->modFileManager = $this->createMock(NewModFileManager::class);
+        $this->modFileManager = $this->createMock(ModFileManager::class);
     }
 
     /**
