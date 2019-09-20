@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Renderer;
 
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Mod\NewModFileManager;
 use FactorioItemBrowser\Export\Renderer\Filter\ScaledLayerFilter;
 use FactorioItemBrowser\Export\Renderer\Filter\TintedLayerFilter;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Color;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
-use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Imagine\Filter\FilterInterface;
 use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
@@ -41,27 +39,19 @@ class IconRenderer
 
     /**
      * The mod file manager.
-     * @var ModFileManager
+     * @var NewModFileManager
      */
     protected $modFileManager;
 
     /**
-     * The mod registry.
-     * @var ModRegistry
-     */
-    protected $modRegistry;
-
-    /**
      * Initializes the icon renderer.
      * @param ImagineInterface $imagine
-     * @param ModFileManager $modFileManager
-     * @param ModRegistry $modRegistry
+     * @param NewModFileManager $modFileManager
      */
-    public function __construct(ImagineInterface $imagine, ModFileManager $modFileManager, ModRegistry $modRegistry)
+    public function __construct(ImagineInterface $imagine, NewModFileManager $modFileManager)
     {
         $this->imagine = $imagine;
         $this->modFileManager = $modFileManager;
-        $this->modRegistry = $modRegistry;
     }
 
     /**
@@ -131,12 +121,7 @@ class IconRenderer
         if ($count === 0) {
             throw new ExportException('Unable to understand image file name: ' . $layerFileName);
         }
-
-        $mod = $this->modRegistry->get($match[1]);
-        if (!$mod instanceof Mod) {
-            throw new ExportException('Mod not known: ' . $match[1]);
-        }
-        return $this->modFileManager->getFile($mod, $match[2]);
+        return $this->modFileManager->readFile($match[1], $match[2]);
     }
 
     /**
@@ -160,7 +145,7 @@ class IconRenderer
      */
     protected function createTintedLayerFilter(Layer $layer, ImageInterface $layerImage): FilterInterface
     {
-        return new TintedLayerFilter($layerImage, $this->convertColor($layer->getTintColor()));
+        return new TintedLayerFilter($layerImage, $this->convertColor($layer->getTint()));
     }
 
     /**

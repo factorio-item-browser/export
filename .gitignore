@@ -3,6 +3,7 @@
 /test/log
 /vendor
 
+/config/autoload/factorio-mod-portal-client.*.php
 /.phpunit.result.cache
 
 /factorio/*

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export;
 
+use FactorioItemBrowser\Export\Constant\ConfigKey;
+
 /**
  * The configuration of the export scripts.
  *
@@ -11,6 +13,13 @@ namespace FactorioItemBrowser\Export;
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
 return [
+    ConfigKey::PROJECT => [
+        ConfigKey::EXPORT => [
+            ConfigKey::MOD_FILE_MANAGER_WORKING_DIRECTORY => __DIR__ . '/../../data/mods',
+        ],
+    ],
+
+
     'cache' => [
         'locale' => [
             'directory' => __DIR__ . '/../../data/cache/locale',

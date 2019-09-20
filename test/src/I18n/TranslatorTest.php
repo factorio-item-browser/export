@@ -7,10 +7,8 @@ namespace FactorioItemBrowserTest\Export\I18n;
 use BluePsyduck\Common\Test\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\I18n\Translator;
-use FactorioItemBrowser\Export\Mod\LocaleReader;
+use FactorioItemBrowser\Export\I18n\LocaleReader;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
-use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -28,23 +26,39 @@ class TranslatorTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked locale reader.
+     * @var LocaleReader&MockObject
+     */
+    protected $localeReader;
+
+    /**
+     * The mocked placeholder translator.
+     * @var ZendTranslator&MockObject
+     */
+    protected $placeholderTranslator;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->localeReader = $this->createMock(LocaleReader::class);
+        $this->placeholderTranslator = $this->createMock(ZendTranslator::class);
+    }
+
+    /**
      * Tests the constructing.
      * @covers ::__construct
      * @throws ReflectionException
      */
     public function testConstruct(): void
     {
-        /* @var LocaleReader $localeReader */
-        $localeReader = $this->createMock(LocaleReader::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-        /* @var ZendTranslator $placeholderTranslator */
-        $placeholderTranslator = $this->createMock(ZendTranslator::class);
+        $translator = new Translator($this->localeReader, $this->placeholderTranslator);
 
-        $command = new Translator($localeReader, $modRegistry, $placeholderTranslator);
-        $this->assertSame($localeReader, $this->extractProperty($command, 'localeReader'));
-        $this->assertSame($modRegistry, $this->extractProperty($command, 'modRegistry'));
-        $this->assertSame($placeholderTranslator, $this->extractProperty($command, 'placeholderTranslator'));
+        $this->assertSame($this->localeReader, $this->extractProperty($translator, 'localeReader'));
+        $this->assertSame($this->placeholderTranslator, $this->extractProperty($translator, 'placeholderTranslator'));
     }
 
     /**
@@ -55,9 +69,7 @@ class TranslatorTest extends TestCase
      */
     public function testLoadFromModNames(): void
     {
-        $mod1 = (new Mod())->setName('abc');
-        $mod2 = (new Mod())->setName('def');
-        $modNames = ['abc', 'def', 'ghi'];
+        $modNames = ['abc', 'def'];
 
         $translations1 = [
             'jkl' => [
@@ -85,44 +97,18 @@ class TranslatorTest extends TestCase
             ],
         ];
 
-        /* @var ModRegistry|MockObject $modRegistry */
-        $modRegistry = $this->getMockBuilder(ModRegistry::class)
-                            ->setMethods(['get'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $modRegistry->expects($this->exactly(3))
-                    ->method('get')
-                    ->withConsecutive(
-                        ['abc'],
-                        ['def'],
-                        ['ghi']
-                    )
-                    ->willReturnOnConsecutiveCalls(
-                        $mod1,
-                        $mod2,
-                        null
-                    );
+        $this->localeReader->expects($this->exactly(2))
+                           ->method('read')
+                           ->withConsecutive(
+                               [$this->identicalTo('abc')],
+                               [$this->identicalTo('def')]
+                           )
+                           ->willReturnOnConsecutiveCalls(
+                               $translations1,
+                               $translations2
+                           );
 
-        /* @var LocaleReader|MockObject $localeReader */
-        $localeReader = $this->getMockBuilder(LocaleReader::class)
-                             ->setMethods(['read'])
-                             ->disableOriginalConstructor()
-                             ->getMock();
-        $localeReader->expects($this->exactly(2))
-                     ->method('read')
-                     ->withConsecutive(
-                         [$mod1],
-                         [$mod2]
-                     )
-                     ->willReturnOnConsecutiveCalls(
-                         $translations1,
-                         $translations2
-                     );
-
-        /* @var ZendTranslator $placeholderTranslator */
-        $placeholderTranslator = $this->createMock(ZendTranslator::class);
-
-        $translator = new Translator($localeReader, $modRegistry, $placeholderTranslator);
+        $translator = new Translator($this->localeReader, $this->placeholderTranslator);
         $this->injectProperty($translator, 'translations', ['foo' => 'bar']);
 
         $translator->loadFromModNames($modNames);
@@ -146,29 +132,41 @@ class TranslatorTest extends TestCase
             'pqr' => 'rqp',
         ];
 
-        /* @var LocalisedString|MockObject $entity */
-        $entity = $this->getMockBuilder(LocalisedString::class)
-                       ->setMethods(['setTranslation'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
+        /* @var LocalisedString&MockObject $entity */
+        $entity = $this->createMock(LocalisedString::class);
         $entity->expects($this->exactly(2))
-               ->method('setTranslation')
+               ->method('addTranslation')
                ->withConsecutive(
-                   ['jkl', 'stu'],
-                   ['pqr', 'vwx']
+                   [$this->identicalTo('jkl'), $this->identicalTo('stu')],
+                   [$this->identicalTo('pqr'), $this->identicalTo('vwx')]
                );
 
-        /* @var Translator|MockObject $translator */
+        /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
                            ->setMethods(['translateWithFallback'])
-                           ->disableOriginalConstructor()
+                           ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($this->exactly(3))
                    ->method('translateWithFallback')
                    ->withConsecutive(
-                       ['jkl', $type, $localisedString, $fallbackLocalisedString],
-                       ['mno', $type, $localisedString, $fallbackLocalisedString],
-                       ['pqr', $type, $localisedString, $fallbackLocalisedString]
+                       [
+                           $this->identicalTo('jkl'),
+                           $this->identicalTo($type),
+                           $this->identicalTo($localisedString),
+                           $this->identicalTo($fallbackLocalisedString),
+                       ],
+                       [
+                           $this->identicalTo('mno'),
+                           $this->identicalTo($type),
+                           $this->identicalTo($localisedString),
+                           $this->identicalTo($fallbackLocalisedString),
+                       ],
+                       [
+                           $this->identicalTo('pqr'),
+                           $this->identicalTo($type),
+                           $this->identicalTo($localisedString),
+                           $this->identicalTo($fallbackLocalisedString),
+                       ]
                    )
                    ->willReturnOnConsecutiveCalls(
                        'stu',
@@ -211,16 +209,26 @@ class TranslatorTest extends TestCase
         $type = 'def';
         $localisedString = 'ghi';
 
-        /* @var Translator|MockObject $translator */
+        /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
                            ->setMethods(['translate'])
-                           ->disableOriginalConstructor()
+                           ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($this->exactly(count($resultsTranslate)))
                    ->method('translate')
                    ->withConsecutive(
-                       [$locale, $type, $localisedString, 1],
-                       [$locale, $type, $fallbackLocalisedString, 1]
+                       [
+                           $this->identicalTo($locale),
+                           $this->identicalTo($type),
+                           $this->identicalTo($localisedString),
+                           $this->identicalTo(1),
+                       ],
+                       [
+                           $this->identicalTo($locale),
+                           $this->identicalTo($type),
+                           $this->identicalTo($fallbackLocalisedString),
+                           $this->identicalTo(1),
+                       ]
                    )
                    ->willReturnOnConsecutiveCalls(
                        ...$resultsTranslate
@@ -271,23 +279,37 @@ class TranslatorTest extends TestCase
         $localisedString = 'bar';
         $resultResolveReferences = 'zyx';
 
-        /* @var Translator|MockObject $translator */
+        /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
                            ->setMethods(['translateLocalisedString', 'resolveReferences'])
-                           ->disableOriginalConstructor()
+                           ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($this->exactly(count($resultsTranslate)))
                    ->method('translateLocalisedString')
                    ->withConsecutive(
-                       [$locale, $type, $localisedString, $level],
-                       ['en', $type, $localisedString, $level]
+                       [
+                           $this->identicalTo($locale),
+                           $this->identicalTo($type),
+                           $this->identicalTo($localisedString),
+                           $this->identicalTo($level),
+                       ],
+                       [
+                           $this->identicalTo('en'),
+                           $this->identicalTo($type),
+                           $this->identicalTo($localisedString),
+                           $this->identicalTo($level),
+                       ]
                    )
                    ->willReturnOnConsecutiveCalls(
                        ...$resultsTranslate
                    );
         $translator->expects($this->once())
                    ->method('resolveReferences')
-                   ->with($locale, $type, $paramResolveReferences)
+                   ->with(
+                       $this->identicalTo($locale),
+                       $this->identicalTo($type),
+                       $this->identicalTo($paramResolveReferences)
+                   )
                    ->willReturn($resultResolveReferences);
 
         $result = $this->invokeMethod($translator, 'translate', $locale, $type, $localisedString, $level);
@@ -340,14 +362,20 @@ class TranslatorTest extends TestCase
         $type = 'foo';
         $level = 42;
 
-        /* @var Translator|MockObject $translator */
+        /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
                            ->setMethods(['translateParameters'])
-                           ->disableOriginalConstructor()
+                           ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($resultTranslateParameters === null ? $this->never() : $this->once())
                    ->method('translateParameters')
-                   ->with($locale, $type, $expectedString, $expectedParameters, $level)
+                   ->with(
+                       $this->identicalTo($locale),
+                       $this->identicalTo($type),
+                       $this->identicalTo($expectedString),
+                       $this->identicalTo($expectedParameters),
+                       $this->identicalTo($level)
+                   )
                    ->willReturn($resultTranslateParameters === null ? '' : $resultTranslateParameters);
         $this->injectProperty($translator, 'translations', $translations);
 
@@ -376,16 +404,26 @@ class TranslatorTest extends TestCase
         $level = 42;
         $expectedResult = 'ghi rqp jkl uts mno';
 
-        /* @var Translator|MockObject $translator */
+        /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
                            ->setMethods(['translate'])
-                           ->disableOriginalConstructor()
+                           ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($this->exactly(2))
                    ->method('translate')
                    ->withConsecutive(
-                       [$locale, $type, 'pqr', 43],
-                       [$locale, $type, 'stu', 43]
+                       [
+                           $this->identicalTo($locale),
+                           $this->identicalTo($type),
+                           $this->identicalTo('pqr'),
+                           $this->identicalTo(43),
+                       ],
+                       [
+                           $this->identicalTo($locale),
+                           $this->identicalTo($type),
+                           $this->identicalTo('stu'),
+                           $this->identicalTo(43),
+                       ]
                    )
                    ->willReturnOnConsecutiveCalls(
                        'rqp',
@@ -408,16 +446,26 @@ class TranslatorTest extends TestCase
         $string = 'ghi __jkl__mno__ pqr __stu__vwx__ yza';
         $expectedResult = 'ghi bcd pqr __stu__vwx__ yza';
 
-        /* @var Translator|MockObject $translator */
+        /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
                            ->setMethods(['translateReference'])
-                           ->disableOriginalConstructor()
+                           ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($this->exactly(2))
                    ->method('translateReference')
                    ->withConsecutive(
-                       [$locale, 'jkl', $type, 'mno'],
-                       [$locale, 'stu', $type, 'vwx']
+                       [
+                           $this->identicalTo($locale),
+                           $this->identicalTo('jkl'),
+                           $this->identicalTo($type),
+                           $this->identicalTo('mno'),
+                       ],
+                       [
+                           $this->identicalTo($locale),
+                           $this->identicalTo('stu'),
+                           $this->identicalTo($type),
+                           $this->identicalTo('vwx'),
+                       ]
                    )
                    ->willReturnOnConsecutiveCalls(
                        'bcd',
@@ -471,14 +519,14 @@ class TranslatorTest extends TestCase
         ?string $resultPlaceholder,
         ?string $expectedResult
     ): void {
-        /* @var Translator|MockObject $translator */
+        /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
                            ->setMethods(['translatePlaceholder'])
-                           ->disableOriginalConstructor()
+                           ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($expectPlaceholder ? $this->once() : $this->never())
                    ->method('translatePlaceholder')
-                   ->with($locale, $section, $name)
+                   ->with($this->identicalTo($locale), $this->identicalTo($section), $this->identicalTo($name))
                    ->willReturn($resultPlaceholder);
         $this->injectProperty($translator, 'translations', $translations);
 
@@ -518,31 +566,22 @@ class TranslatorTest extends TestCase
         string $resultTranslate,
         ?string $expectedResult
     ): void {
-        /* @var ZendTranslator|MockObject $placeholderTranslator */
-        $placeholderTranslator = $this->getMockBuilder(ZendTranslator::class)
-                                      ->setMethods(['setLocale', 'setFallbackLocale', 'translate'])
-                                      ->disableOriginalConstructor()
-                                      ->getMock();
-        $placeholderTranslator->expects($this->once())
-                              ->method('setLocale')
-                              ->with($locale)
-                              ->willReturnSelf();
-        $placeholderTranslator->expects($this->once())
-                              ->method('setFallbackLocale')
-                              ->with('en')
-                              ->willReturnSelf();
-        $placeholderTranslator->expects($this->once())
-                              ->method('translate')
-                              ->with($expectedLanguageKey)
-                              ->willReturn($resultTranslate);
+        $this->placeholderTranslator->expects($this->once())
+                                    ->method('setLocale')
+                                    ->with($locale)
+                                    ->willReturnSelf();
+        $this->placeholderTranslator->expects($this->once())
+                                    ->method('setFallbackLocale')
+                                    ->with('en')
+                                    ->willReturnSelf();
+        $this->placeholderTranslator->expects($this->once())
+                                    ->method('translate')
+                                    ->with($expectedLanguageKey)
+                                    ->willReturn($resultTranslate);
 
-        /* @var LocaleReader $localeReader */
-        $localeReader = $this->createMock(LocaleReader::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        $translator = new Translator($localeReader, $modRegistry, $placeholderTranslator);
+        $translator = new Translator($this->localeReader, $this->placeholderTranslator);
         $result = $this->invokeMethod($translator, 'translatePlaceholder', $locale, $section, $name);
+
         $this->assertSame($expectedResult, $result);
     }
 }

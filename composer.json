@@ -19,9 +19,11 @@
     "ext-PDO": "*",
     "ext-zip": "*",
     "bluepsyduck/common": "^1.0",
+    "bluepsyduck/factorio-mod-portal-client": "^1.0",
     "bluepsyduck/symfony-process-manager": "^1.0",
+    "doctrine/cache": "^1.8",
     "factorio-item-browser/common": "^1.2",
-    "factorio-item-browser/export-data": "^2.1",
+    "factorio-item-browser/export-data": "dev-project-phoenix",
     "imagine/imagine": "^1.2",
     "symfony/process": "^4.1",
     "zendframework/zend-config-aggregator": "^1.0",
@@ -57,8 +59,8 @@
     "phpstan": "phpstan analyse --no-interaction --ansi",
     "phpunit": "phpunit --colors=always --coverage-html=test/log --coverage-clover=test/log/clover.xml",
     "post-autoload-dump": [
-      "mkdir -p data/cache data/export factorio/instances",
-      "chmod 0777 data/cache data/export factorio/instances factorio/mods/Dump_1.0.0"
+      "mkdir -p data/cache data/export data/mods factorio/instances",
+      "chmod 0777 data/cache data/export data/mods factorio/instances factorio/mods/Dump_1.0.0"
     ],
     "run": "@php bin/cli.php",
     "test": [

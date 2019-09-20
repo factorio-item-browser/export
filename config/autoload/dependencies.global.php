@@ -12,13 +12,29 @@ namespace FactorioItemBrowser\Export;
  */
 
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
+use BluePsyduck\ZendAutoWireFactory\AutoWireFactory;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use Imagine\Image\ImagineInterface;
+use Zend\I18n\Translator\Translator;
+use Zend\I18n\Translator\TranslatorInterface;
 use Zend\ServiceManager\Factory\InvokableFactory;
+use function BluePsyduck\ZendAutoWireFactory\readConfig;
 
 return [
     'dependencies' => [
+        'aliases' => [
+            Translator::class . ' $placeholderTranslator' => TranslatorInterface::class
+        ],
         'factories'  => [
-            Cache\LocaleCache::class => Cache\LocaleCacheFactory::class,
+            I18n\LocaleReader::class => AutoWireFactory::class,
+            I18n\Translator::class => AutoWireFactory::class,
+
+            Mod\NewModFileManager::class => AutoWireFactory::class,
+
+            Renderer\IconRenderer::class => AutoWireFactory::class,
+
+
+
             Cache\ModFileCache::class => Cache\ModFileCacheFactory::class,
 
             Combination\CombinationCreator::class => Combination\CombinationCreatorFactory::class,
@@ -49,8 +65,6 @@ return [
             Factorio\DumpInfoGenerator::class => Factorio\DumpInfoGeneratorFactory::class,
             Factorio\Instance::class => Factorio\InstanceFactory::class,
 
-            I18n\Translator::class => I18n\TranslatorFactory::class,
-
             Merger\IconMerger::class => InvokableFactory::class,
             Merger\ItemMerger::class => Merger\ItemMergerFactory::class,
             Merger\MachineMerger::class => Merger\MachineMergerFactory::class,
@@ -59,7 +73,6 @@ return [
 
             Mod\DependencyReader::class => Mod\DependencyReaderFactory::class,
             Mod\DependencyResolver::class => Mod\DependencyResolverFactory::class,
-            Mod\LocaleReader::class => Mod\LocaleReaderFactory::class,
             Mod\ModFileManager::class => Mod\ModFileManagerFactory::class,
             Mod\ModReader::class => Mod\ModReaderFactory::class,
 
@@ -78,11 +91,12 @@ return [
             Reducer\Mod\ModReducerManager::class => Reducer\Mod\ModReducerManagerFactory::class,
             Reducer\Mod\ThumbnailReducer::class => Reducer\Mod\ThumbnailReducerFactory::class,
 
-            Renderer\IconRenderer::class => Renderer\IconRendererFactory::class,
-
             // 3rd-party services
             ProcessManager::class => Process\ProcessManagerFactory::class,
             ImagineInterface::class => Renderer\ImagineFactory::class,
+
+            // Auto-wire helpers
+            'string $modFileManagerWorkingDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::MOD_FILE_MANAGER_WORKING_DIRECTORY),
         ],
     ]
 ];
