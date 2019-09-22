@@ -70,17 +70,6 @@ class Console
     }
 
     /**
-     * Writes an action to the console.
-     * @param string $action
-     * @return $this
-     */
-    public function writeAction(string $action)
-    {
-        $this->writeLine('> ' . $action . '...');
-        return $this;
-    }
-
-    /**
      * Writes a banner with the specified message.
      * @param string $message
      * @param int|null $color
@@ -92,6 +81,40 @@ class Console
              ->writeLine(' ' . $message, $color)
              ->writeHorizontalLine('-', $color);
         return $this;
+    }
+
+    /**
+     * Write a headline to the console, including an underline.
+     * @param string $headline
+     * @param mixed ...$parameters
+     */
+    public function writeHeadline(string $headline, ...$parameters)
+    {
+        $this->writeLine();
+        $this->writeLine(' ' . sprintf($headline, ...$parameters));
+        $this->writeHorizontalLine('-');
+    }
+
+    /**
+     * Writes an action to the console.
+     * @param string $action
+     * @param array $parameters
+     * @return $this
+     */
+    public function writeAction(string $action, ...$parameters)
+    {
+        $this->writeLine(sprintf('> ' . $action . '...', ...$parameters));
+        return $this;
+    }
+
+    /**
+     * Writes a simple message, like a comment, to the console.
+     * @param string $message
+     * @param mixed ...$parameters
+     */
+    public function writeMessage(string $message, ...$parameters)
+    {
+        $this->writeLine('# ' . sprintf($message, ...$parameters));
     }
 
     /**

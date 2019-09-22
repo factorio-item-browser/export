@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Mod;
 
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
+use FactorioItemBrowser\Export\Exception\InvalidModFileException;
 use ZipArchive;
 
 /**
@@ -16,18 +18,23 @@ use ZipArchive;
 class ModFileManager
 {
     /**
+     * The regular expression used to match the mod directory.
+     */
+    protected const REGEXP_MOD_DIRECTORY = '#^(.*)_\d+\.\d+\.\d+/#';
+
+    /**
      * The directory to store the mod files in.
      * @var string
      */
-    protected $workingDirectory;
+    protected $modsDirectory;
 
     /**
      * Initializes the manager.
-     * @param string $modFileManagerWorkingDirectory
+     * @param string $modsDirectory
      */
-    public function __construct(string $modFileManagerWorkingDirectory)
+    public function __construct(string $modsDirectory)
     {
-        $this->workingDirectory = $modFileManagerWorkingDirectory;
+        $this->modsDirectory = $modsDirectory;
     }
 
     /**
@@ -40,13 +47,13 @@ class ModFileManager
         $zipArchive = new ZipArchive();
         $success = $zipArchive->open($modZipPath);
         if (!$success || $zipArchive->numFiles === 0) {
-            throw new ExportException('Unable to read mod zip file thingy');
+            throw new InvalidModFileException($modZipPath, 'Unable to open zip file.');
         }
 
         try {
             $firstStat = $zipArchive->statIndex(0);
-            if (!preg_match('#^(.*)_\d+\.\d+\.\d+/#', $firstStat['name'], $match)) {
-                throw new ExportException('Unable to determine mod name from zip archive');
+            if (!preg_match(self::REGEXP_MOD_DIRECTORY, $firstStat['name'], $match)) {
+                throw new InvalidModFileException($modZipPath, 'Unable to determine mod directory.');
             }
             $modDirectory = $match[0];
             $modDirectoryLength = strlen($modDirectory);
@@ -122,7 +129,7 @@ class ModFileManager
     {
         $filePath = $this->getModFilePath($modName, $fileName);
         if (!file_exists($filePath)) {
-            throw new ExportException(sprintf('File %s not found in mod %s.', $fileName, $modName));
+            throw new FileNotFoundInModException($modName, $fileName);
         }
         return (string) file_get_contents($filePath);
     }
@@ -134,7 +141,7 @@ class ModFileManager
      */
     protected function getModDirectory(string $modName): string
     {
-        return $this->workingDirectory . '/' . $modName . '/';
+        return $this->modsDirectory . '/' . $modName . '/';
     }
 
     /**

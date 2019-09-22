@@ -59,8 +59,8 @@
     "phpstan": "phpstan analyse --no-interaction --ansi",
     "phpunit": "phpunit --colors=always --coverage-html=test/log --coverage-clover=test/log/clover.xml",
     "post-autoload-dump": [
-      "mkdir -p data/cache data/export data/mods factorio/instances",
-      "chmod 0777 data/cache data/export data/mods factorio/instances factorio/mods/Dump_1.0.0"
+      "mkdir -p data/cache data/export data/mods data/temp factorio/instances",
+      "chmod 0777 data/cache data/export data/mods data/temp factorio/instances factorio/mods/Dump_1.0.0"
     ],
     "run": "@php bin/cli.php",
     "test": [

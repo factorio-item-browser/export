@@ -23,7 +23,22 @@ interface ConfigKey
     public const EXPORT = 'export';
 
     /**
-     * The key holding the working directory of the mod file manager.
+     * The key holding the directories of the project.
      */
-    public const MOD_FILE_MANAGER_WORKING_DIRECTORY = 'mod-file-manager-working-directory';
+    public const DIRECTORIES = 'directories';
+
+    /**
+     * The key holding the mods directory.
+     */
+    public const DIRECTORY_MODS = 'mods';
+
+    /**
+     * The key holding the temp directory.
+     */
+    public const DIRECTORY_TEMP = 'temp';
+
+    /**
+     * The key holding the number of parallel downloads to use.
+     */
+    public const PARALLEL_DOWNLOADS = 'parallel-downloads';
 }

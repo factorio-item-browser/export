@@ -15,6 +15,8 @@ use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\ZendAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use Imagine\Image\ImagineInterface;
+use Zend\Console\Adapter\AdapterInterface;
+use Zend\Console\Console as ZendConsole;
 use Zend\I18n\Translator\Translator;
 use Zend\I18n\Translator\TranslatorInterface;
 use Zend\ServiceManager\Factory\InvokableFactory;
@@ -25,10 +27,13 @@ return [
         'aliases' => [
             Translator::class . ' $placeholderTranslator' => TranslatorInterface::class
         ],
-        'factories'  => [
+        'factories' => [
+            Console\Console::class => AutoWireFactory::class,
+
             I18n\LocaleReader::class => AutoWireFactory::class,
             I18n\Translator::class => AutoWireFactory::class,
 
+            Mod\ModDownloader::class => AutoWireFactory::class,
             Mod\ModFileManager::class => AutoWireFactory::class,
 
             Renderer\IconRenderer::class => AutoWireFactory::class,
@@ -95,7 +100,12 @@ return [
             ImagineInterface::class => Renderer\ImagineFactory::class,
 
             // Auto-wire helpers
-            'string $modFileManagerWorkingDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::MOD_FILE_MANAGER_WORKING_DIRECTORY),
+            'string $modsDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
+            'string $tempDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),
+            'int $numberOfParallelDownloads' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_DOWNLOADS),
+        ],
+        'services' => [
+            AdapterInterface::class => ZendConsole::getInstance(),
         ],
     ]
 ];

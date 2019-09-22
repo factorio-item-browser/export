@@ -15,7 +15,11 @@ use FactorioItemBrowser\Export\Constant\ConfigKey;
 return [
     ConfigKey::PROJECT => [
         ConfigKey::EXPORT => [
-            ConfigKey::MOD_FILE_MANAGER_WORKING_DIRECTORY => __DIR__ . '/../../data/mods',
+            ConfigKey::DIRECTORIES => [
+                ConfigKey::DIRECTORY_MODS => __DIR__ . '/../../data/mods',
+                ConfigKey::DIRECTORY_TEMP => __DIR__ . '/../../data/temp',
+            ],
+            ConfigKey::PARALLEL_DOWNLOADS => 4,
         ],
     ],
 
