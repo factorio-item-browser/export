@@ -1,0 +1,24 @@
+FactorioItemBrowser\Export\Entity\Dump\Machine:
+  access_type: public_method
+  exclusion_policy: all
+  properties:
+    name:
+      type: string
+    localisedName:
+      type: LocalisedString
+    localisedDescription:
+      type: LocalisedString
+    craftingCategories:
+      type: array<string>
+    craftingSpeed:
+      type: float
+    itemSlots:
+      type: integer
+    fluidInputSlots:
+      type: integer
+    fluidOutputSlots:
+      type: integer
+    moduleSlots:
+      type: integer
+    energyUsage:
+      type: float

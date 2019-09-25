@@ -1,0 +1,18 @@
+FactorioItemBrowser\Export\Entity\Dump\Recipe:
+  access_type: public_method
+  exclusion_policy: all
+  properties:
+    name:
+      type: string
+    localisedName:
+      type: LocalisedString
+    localisedDescription:
+      type: LocalisedString
+    craftingTime:
+      type: float
+    craftingCategory:
+      type: string
+    ingredients:
+      type: array<FactorioItemBrowser\Export\Entity\Dump\Ingredient>
+    products:
+      type: array<FactorioItemBrowser\Export\Entity\Dump\Product>
