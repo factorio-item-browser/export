@@ -5,6 +5,6 @@ FactorioItemBrowser\Export\Entity\Dump\Fluid:
     name:
       type: string
     localisedName:
-      type: LocalisedString
+      type: raw
     localisedDescription:
-      type: LocalisedString
+      type: raw

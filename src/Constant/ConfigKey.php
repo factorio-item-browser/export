@@ -38,6 +38,11 @@ interface ConfigKey
     public const DIRECTORY_TEMP = 'temp';
 
     /**
+     * The key holding the cache directory.
+     */
+    public const DIRECTORY_CACHE = 'cache';
+
+    /**
      * The key holding the number of parallel downloads to use.
      */
     public const PARALLEL_DOWNLOADS = 'parallel-downloads';

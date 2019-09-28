@@ -1,6 +1,6 @@
 /.idea
 /data/*
-/test/log
+/test/coverage
 /vendor
 
 /config/autoload/factorio-mod-portal-client.*.php

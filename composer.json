@@ -48,7 +48,9 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "FactorioItemBrowserTest\\Export\\": "test/src"
+      "FactorioItemBrowserTest\\Export\\": "test/src",
+      "FactorioItemBrowserTestAsset\\Export\\": "test/asset",
+      "FactorioItemBrowserTestSerializer\\Export\\": "test/serializer"
     }
   },
   "scripts": {
@@ -57,15 +59,16 @@
     "phpcbf": "phpcbf -p --colors",
     "phpcs": "phpcs -p --colors",
     "phpstan": "phpstan analyse --no-interaction --ansi",
-    "phpunit": "phpunit --colors=always --coverage-html=test/log --coverage-clover=test/log/clover.xml",
+    "test-unit": "phpunit --testsuite unit-test --colors=always --coverage-html=test/coverage --coverage-clover=test/coverage/clover.xml",
+    "test-serialize": "phpunit --testsuite serializer-test --colors=always",
     "post-autoload-dump": [
       "mkdir -p data/cache data/export data/mods data/temp factorio/instances",
       "chmod 0777 data/cache data/export data/mods data/temp factorio/instances factorio/mods/Dump_1.0.0"
     ],
-    "run": "@php bin/cli.php",
     "test": [
       "@composer validate --strict",
-      "@phpunit",
+      "@test-unit",
+      "@test-serialize",
       "@coverage-check",
       "@phpcs",
       "@phpstan"

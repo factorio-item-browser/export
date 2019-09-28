@@ -5,9 +5,9 @@ FactorioItemBrowser\Export\Entity\Dump\Recipe:
     name:
       type: string
     localisedName:
-      type: LocalisedString
+      type: raw
     localisedDescription:
-      type: LocalisedString
+      type: raw
     craftingTime:
       type: float
     craftingCategory:

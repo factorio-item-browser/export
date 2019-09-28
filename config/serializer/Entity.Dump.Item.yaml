@@ -5,10 +5,10 @@ FactorioItemBrowser\Export\Entity\Dump\Item:
     name:
       type: string
     localisedName:
-      type: LocalisedString
+      type: raw
     localisedDescription:
-      type: LocalisedString
+      type: raw
     localisedEntityName:
-      type: LocalisedString
+      type: raw
     localisedEntityDescription:
-      type: LocalisedString
+      type: raw

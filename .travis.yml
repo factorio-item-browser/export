@@ -3,8 +3,8 @@ language: php
 matrix:
   fast_finish: true
   include:
-    - php: 7.2
-    - php: 7.3
+    - php: '7.2'
+    - php: '7.3'
 
 cache:
   directories:
@@ -15,7 +15,8 @@ install:
 
 script:
   - composer validate --strict
-  - vendor/bin/phpunit --coverage-clover=coverage.xml
+  - vendor/bin/phpunit --testsuite=unit-test --coverage-clover=coverage.xml
+  - vendor/bin/phpunit --testsuite=serializer-test
   - vendor/bin/coverage-check coverage.xml 100
   - vendor/bin/phpcs -np --colors
   - vendor/bin/phpstan analyse --no-interaction

@@ -5,9 +5,9 @@ FactorioItemBrowser\Export\Entity\Dump\Machine:
     name:
       type: string
     localisedName:
-      type: LocalisedString
+      type: raw
     localisedDescription:
-      type: LocalisedString
+      type: raw
     craftingCategories:
       type: array<string>
     craftingSpeed:
