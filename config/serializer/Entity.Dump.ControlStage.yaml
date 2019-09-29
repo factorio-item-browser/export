@@ -1,0 +1,14 @@
+FactorioItemBrowser\Export\Entity\Dump\ControlStage:
+  access_type: public_method
+  exclusion_policy: all
+  properties:
+    items:
+      type: array<FactorioItemBrowser\Export\Entity\Dump\Item>
+    fluids:
+      type: array<FactorioItemBrowser\Export\Entity\Dump\Fluid>
+    machines:
+      type: array<FactorioItemBrowser\Export\Entity\Dump\Machine>
+    normalRecipes:
+      type: array<FactorioItemBrowser\Export\Entity\Dump\Recipe>
+    expensiveRecipes:
+      type: array<FactorioItemBrowser\Export\Entity\Dump\Recipe>

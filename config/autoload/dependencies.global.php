@@ -15,6 +15,7 @@ use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\ZendAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use Imagine\Image\ImagineInterface;
+use JMS\Serializer\SerializerInterface;
 use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\Console as ZendConsole;
 use Zend\I18n\Translator\Translator;
@@ -29,6 +30,8 @@ return [
         ],
         'factories' => [
             Console\Console::class => AutoWireFactory::class,
+
+            Factorio\DumpExtractor::class => AutoWireFactory::class,
 
             I18n\LocaleReader::class => AutoWireFactory::class,
             I18n\Translator::class => AutoWireFactory::class,
@@ -66,7 +69,6 @@ return [
             ExportData\RawExportDataService::class => ExportData\RawExportDataServiceFactory::class,
             ExportData\ReducedExportDataService::class => ExportData\ReducedExportDataServiceFactory::class,
 
-            Factorio\DumpExtractor::class => InvokableFactory::class,
             Factorio\DumpInfoGenerator::class => Factorio\DumpInfoGeneratorFactory::class,
             Factorio\Instance::class => Factorio\InstanceFactory::class,
 
@@ -96,8 +98,9 @@ return [
             Reducer\Mod\ThumbnailReducer::class => Reducer\Mod\ThumbnailReducerFactory::class,
 
             // 3rd-party services
-            ProcessManager::class => Process\ProcessManagerFactory::class,
             ImagineInterface::class => Renderer\ImagineFactory::class,
+            ProcessManager::class => Process\ProcessManagerFactory::class,
+            SerializerInterface::class . ' $exportSerializer' => Serializer\SerializerFactory::class,
 
             // Auto-wire helpers
             'string $modsDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),

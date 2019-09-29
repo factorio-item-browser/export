@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Factorio;
 
-use BluePsyduck\Common\Data\DataContainer;
-use FactorioItemBrowser\Export\Exception\DumpException;
+use Exception;
+use FactorioItemBrowser\Export\Entity\Dump\ControlStage;
+use FactorioItemBrowser\Export\Entity\Dump\DataStage;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\InternalException;
+use FactorioItemBrowser\Export\Exception\InvalidDumpException;
+use JMS\Serializer\SerializerInterface;
 
 /**
  * The class for extracting all dumps from the game output.
@@ -18,103 +24,104 @@ class DumpExtractor
     /**
      * The placeholder marking the begin of a dump.
      */
-    protected const PLACEHOLDER_BEGIN = '%name%>>>---';
+    protected const PLACEHOLDER_BEGIN = '>>>%s>>>';
 
     /**
      * The placeholder marking the end of a dump.
      */
-    protected const PLACEHOLDER_END = '---<<<%name%';
+    protected const PLACEHOLDER_END = '<<<%s<<<';
 
+    /**
+     * The regular expression used to detect the checksums for the mod loading order.
+     */
+    protected const REGEX_CHECKSUM = '#^\s+[0-9.]+ Checksum of (.*): \d+$#m';
+
+    /**
+     * The serializer.
+     * @var SerializerInterface
+     */
+    protected $serializer;
+
+    /**
+     * DumpExtractor constructor.
+     * @param SerializerInterface $exportSerializer
+     */
+    public function __construct(SerializerInterface $exportSerializer)
+    {
+        $this->serializer = $exportSerializer;
+    }
     /**
      * Extracts all dumps from the specified output.
      * @param string $output
-     * @return DataContainer
-     * @throws DumpException
+     * @return Dump
+     * @throws ExportException
      */
-    public function extract(string $output): DataContainer
+    public function extract(string $output): Dump
     {
-        return new DataContainer([
-            'items' => $this->extractDumpData($output, 'ITEMS'),
-            'fluids' => $this->extractDumpData($output, 'FLUIDS'),
-            'recipes' => [
-                'normal' => $this->extractDumpData($output, 'RECIPES_NORMAL'),
-                'expensive' => $this->extractDumpData($output, 'RECIPES_EXPENSIVE')
-            ],
-            'machines' => $this->extractDumpData($output, 'MACHINES'),
-            'icons' => $this->extractDumpData($output, 'ICONS'),
-            'fluidBoxes' => $this->extractDumpData($output, 'FLUID_BOXES')
-        ]);
+        $dataStageData = $this->extractRawDumpData($output, 'data');
+        $controlStageData = $this->extractRawDumpData($output, 'control');
+
+        $result = new Dump();
+        $result->setModNames($this->detectModOrder($output))
+               ->setDataStage($this->parseDump('data', $dataStageData, DataStage::class))
+               ->setControlStage($this->parseDump('control', $controlStageData, ControlStage::class));
+        return $result;
     }
 
     /**
-     * Extracts the actual dump from the specified output.
+     * Extracts the raw dump data from the output using predefined placeholders.
      * @param string $output
-     * @param string $name
-     * @return array
-     * @throws DumpException
-     */
-    protected function extractDumpData(string $output, string $name): array
-    {
-        $dump = $this->extractRawDump($output, $name);
-        return $this->parseDump($name, $dump);
-    }
-
-    /**
-     * Extracts the raw dump string from the output.
-     * @param string $output
-     * @param string $name
+     * @param string $stage
      * @return string
-     * @throws DumpException
+     * @throws ExportException
      */
-    protected function extractRawDump(string $output, string $name): string
+    protected function extractRawDumpData(string $output, string $stage): string
     {
-        $startPosition = $this->getStartPosition($output, $name);
-        $endPosition = $this->getEndPosition($output, $name);
-        if ($startPosition === null || $endPosition === null || $endPosition < $startPosition) {
-            throw new DumpException($name, 'Cannot locate placeholders.', $output);
+        $placeholderStart = sprintf(self::PLACEHOLDER_BEGIN, strtoupper($stage));
+        $placeholderEnd = sprintf(self::PLACEHOLDER_END, strtoupper($stage));
+
+        $startPosition = strpos($output, $placeholderStart);
+        $endPosition = strpos($output, $placeholderEnd);
+
+        if ($startPosition === false || $endPosition === false || $endPosition < $startPosition) {
+            throw new InvalidDumpException($stage, 'Unable to locate data in log file.');
         }
+
+        $startPosition += strlen($placeholderStart);
         return substr($output, $startPosition, $endPosition - $startPosition);
     }
 
     /**
-     * Returns the start position of the dump with the specified name.
-     * @param string $output
-     * @param string $name
-     * @return int|null
+     * Parses the dump data into an object.
+     * @param string $stage
+     * @param string $dumpData
+     * @param string $className
+     * @return mixed
+     * @throws InvalidDumpException
      */
-    protected function getStartPosition(string $output, string $name): ?int
+    protected function parseDump(string $stage, string $dumpData, string $className)
     {
-        $placeholder = str_replace('%name%', $name, self::PLACEHOLDER_BEGIN);
-        $position = strpos($output, $placeholder);
-        return ($position === false) ? null : ($position + strlen($placeholder));
-    }
-
-    /**
-     * Returns the end position of the dump with the specified name.
-     * @param string $output
-     * @param string $name
-     * @return int|null
-     */
-    protected function getEndPosition(string $output, string $name): ?int
-    {
-        $placeholder = str_replace('%name%', $name, self::PLACEHOLDER_END);
-        $position = strpos($output, $placeholder);
-        return ($position === false) ? null : $position;
-    }
-
-    /**
-     * Parses the dump to an array of data.
-     * @param string $name
-     * @param string $dump
-     * @return array
-     * @throws DumpException
-     */
-    protected function parseDump(string $name, string $dump): array
-    {
-        $result = @json_decode($dump, true);
-        if (!is_array($result)) {
-            throw new DumpException($name, 'Invalid JSON string.');
+        try {
+            $result = $this->serializer->deserialize($dumpData, $className, 'json');
+        } catch (Exception $e) {
+            throw new InvalidDumpException($stage, $e->getMessage(), $e);
         }
         return $result;
+    }
+
+    /**
+     * Detects the mod order from the output.
+     * @param string $output
+     * @return array|string[]
+     * @throws ExportException
+     */
+    protected function detectModOrder(string $output): array
+    {
+        $success = preg_match_all(self::REGEX_CHECKSUM, $output, $matches);
+        if ($success === false || $success === 0) {
+            throw new InternalException('Unable to detect mod order.');
+        }
+
+        return $matches[1];
     }
 }
