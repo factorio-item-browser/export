@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
-use BluePsyduck\Common\Data\DataContainer;
-use FactorioItemBrowser\Common\Constant\ItemType;
-use FactorioItemBrowser\Export\I18n\Translator;
-use FactorioItemBrowser\ExportData\Entity\Item;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
-use FactorioItemBrowser\ExportData\Utils\EntityUtils;
+use FactorioItemBrowser\Common\Constant\EntityType;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Entity\Dump\Fluid as DumpFluid;
+use FactorioItemBrowser\Export\Entity\Dump\Item as DumpItem;
+use FactorioItemBrowser\ExportData\Entity\Combination;
+use FactorioItemBrowser\ExportData\Entity\Item as ExportItem;
 
 /**
- * The class parsing the items of the dump.
+ * The parser of the items and fluids.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
@@ -27,142 +26,97 @@ class ItemParser implements ParserInterface
     protected $iconParser;
 
     /**
-     * The item registry.
-     * @var EntityRegistry
+     * The translation parser.
+     * @var TranslationParser
      */
-    protected $itemRegistry;
-
-    /**
-     * The translator.
-     * @var Translator
-     */
-    protected $translator;
-
-    /**
-     * The parsed items.
-     * @var array|Item[]
-     */
-    protected $parsedItems = [];
+    protected $translationParser;
 
     /**
      * Initializes the parser.
      * @param IconParser $iconParser
-     * @param EntityRegistry $itemRegistry
-     * @param Translator $translator
+     * @param TranslationParser $translationParser
      */
-    public function __construct(IconParser $iconParser, EntityRegistry $itemRegistry, Translator $translator)
+    public function __construct(IconParser $iconParser, TranslationParser $translationParser)
     {
         $this->iconParser = $iconParser;
-        $this->itemRegistry = $itemRegistry;
-        $this->translator = $translator;
+        $this->translationParser = $translationParser;
     }
 
     /**
-     * Resets any previously aggregated data.
+     * Prepares the parser to be able to later parse the dump.
+     * @param Dump $dump
      */
-    public function reset(): void
+    public function prepare(Dump $dump): void
     {
-        $this->parsedItems = [];
     }
 
     /**
-     * Parses the data from the dump into actual entities.
-     * @param DataContainer $dumpData
-     */
-    public function parse(DataContainer $dumpData): void
-    {
-        foreach ($dumpData->getObjectArray('items') as $itemData) {
-            $item = $this->parseItem($itemData, ItemType::ITEM);
-            $this->parsedItems[$item->getIdentifier()] = $item;
-        }
-        foreach ($dumpData->getObjectArray('fluids') as $itemData) {
-            $item = $this->parseItem($itemData, ItemType::FLUID);
-            $this->parsedItems[$item->getIdentifier()] = $item;
-        }
-    }
-
-    /**
-     * Parses the specified data into an item entity.
-     * @param DataContainer $itemData
-     * @param string $type
-     * @return Item
-     */
-    protected function parseItem(DataContainer $itemData, string $type): Item
-    {
-        $item = new Item();
-        $item->setType($type)
-             ->setName(strtolower($itemData->getString('name')));
-
-        $this->addTranslations($item, $itemData);
-        return $item;
-    }
-
-    /**
-     * Adds the translation to the item.
-     * @param Item $item
-     * @param DataContainer $itemData
-     */
-    protected function addTranslations(Item $item, DataContainer $itemData): void
-    {
-        $this->translator->addTranslationsToEntity(
-            $item->getLabels(),
-            'name',
-            $itemData->get(['localised', 'name']),
-            $itemData->get(['localised', 'entityName'])
-        );
-        $this->translator->addTranslationsToEntity(
-            $item->getDescriptions(),
-            'description',
-            $itemData->get(['localised', 'description']),
-            $itemData->get(['localised', 'entityDescription'])
-        );
-    }
-
-    /**
-     * Checks the parsed data.
-     */
-    public function check(): void
-    {
-        foreach ($this->parsedItems as $item) {
-            $this->checkIcon($item);
-        }
-    }
-
-    /**
-     * Checks the icon of the item.
-     * @param Item $item
-     */
-    protected function checkIcon(Item $item): void
-    {
-        $iconHash = $this->iconParser->getIconHashForEntity($item->getType(), $item->getName());
-        if ($iconHash !== null) {
-            $item->setIconHash($iconHash);
-        }
-    }
-
-    /**
-     * Persists the parsed data into the combination.
+     * Parses the data from the dump into the combination.
+     * @param Dump $dump
      * @param Combination $combination
      */
-    public function persist(Combination $combination): void
+    public function parse(Dump $dump, Combination $combination): void
     {
-        $itemHashes = [];
-        foreach ($this->parsedItems as $item) {
-            $itemHashes[] = $this->itemRegistry->set($item);
+        foreach ($dump->getControlStage()->getItems() as $dumpItem) {
+            $combination->addItem($this->mapItem($dumpItem));
         }
-        $combination->setItemHashes($itemHashes);
+        foreach ($dump->getControlStage()->getFluids() as $dumpFluid) {
+            $combination->addItem($this->mapFluid($dumpFluid));
+        }
     }
 
     /**
-     * Returns the items with the specified name.
-     * @param string $name
-     * @return array|Item[]
+     * Maps the dump item to an export one.
+     * @param DumpItem $dumpItem
+     * @return ExportItem
      */
-    public function getItemsWithName(string $name): array
+    protected function mapItem(DumpItem $dumpItem): ExportItem
     {
-        return array_values(array_filter([
-            $this->parsedItems[EntityUtils::buildIdentifier([ItemType::ITEM, $name])] ?? null,
-            $this->parsedItems[EntityUtils::buildIdentifier([ItemType::FLUID, $name])] ?? null,
-        ]));
+        $exportItem = new ExportItem();
+        $exportItem->setType(EntityType::ITEM)
+                   ->setName(strtolower($dumpItem->getName()))
+                   ->setIconHash($this->iconParser->getIconHash(EntityType::ITEM, strtolower($dumpItem->getName())));
+
+        $this->translationParser->translateNames(
+            $exportItem->getLabels(),
+            $dumpItem->getLocalisedName(),
+            $dumpItem->getLocalisedEntityName()
+        );
+        $this->translationParser->translateDescriptions(
+            $exportItem->getDescriptions(),
+            $dumpItem->getLocalisedDescription(),
+            $dumpItem->getLocalisedEntityDescription()
+        );
+
+        return $exportItem;
+    }
+
+    /**
+     * Maps the dump fluid to an export item.
+     * @param DumpFluid $dumpFluid
+     * @return ExportItem
+     */
+    protected function mapFluid(DumpFluid $dumpFluid): ExportItem
+    {
+        $exportItem = new ExportItem();
+        $exportItem->setType(EntityType::FLUID)
+                   ->setName(strtolower($dumpFluid->getName()))
+                   ->setIconHash($this->iconParser->getIconHash(EntityType::FLUID, strtolower($dumpFluid->getName())));
+
+        $this->translationParser->translateNames($exportItem->getLabels(), $dumpFluid->getLocalisedName());
+        $this->translationParser->translateDescriptions(
+            $exportItem->getDescriptions(),
+            $dumpFluid->getLocalisedDescription()
+        );
+
+        return $exportItem;
+    }
+
+    /**
+     * Validates the data in the combination as a second parsing step.
+     * @param Combination $combination
+     */
+    public function validate(Combination $combination): void
+    {
     }
 }

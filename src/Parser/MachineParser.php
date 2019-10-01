@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
-use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Common\Constant\EnergyUsageUnit;
 use FactorioItemBrowser\Common\Constant\EntityType;
-use FactorioItemBrowser\Export\I18n\Translator;
-use FactorioItemBrowser\Export\Utils\LocalisedStringUtils;
-use FactorioItemBrowser\ExportData\Entity\LocalisedString;
-use FactorioItemBrowser\ExportData\Entity\Machine;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Entity\Dump\Machine as DumpMachine;
+use FactorioItemBrowser\ExportData\Entity\Combination;
+use FactorioItemBrowser\ExportData\Entity\Machine as ExportMachine;
 
 /**
- * The class parsing the machines of the dump.
+ * The parser of the machines.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
@@ -29,217 +26,97 @@ class MachineParser implements ParserInterface
     protected $iconParser;
 
     /**
-     * The item parser.
-     * @var ItemParser
+     * The translation parser.
+     * @var TranslationParser
      */
-    protected $itemParser;
-
-    /**
-     * The machine registry.
-     * @var EntityRegistry
-     */
-    protected $machineRegistry;
-
-    /**
-     * The translator.
-     * @var Translator
-     */
-    protected $translator;
-
-    /**
-     * @var array|Machine[]
-     */
-    protected $parsedMachines = [];
+    protected $translationParser;
 
     /**
      * Initializes the parser.
      * @param IconParser $iconParser
-     * @param ItemParser $itemParser
-     * @param EntityRegistry $machineRegistry
-     * @param Translator $translator
+     * @param TranslationParser $translationParser
      */
-    public function __construct(
-        IconParser $iconParser,
-        ItemParser $itemParser,
-        EntityRegistry $machineRegistry,
-        Translator $translator
-    ) {
+    public function __construct(IconParser $iconParser, TranslationParser $translationParser)
+    {
         $this->iconParser = $iconParser;
-        $this->itemParser = $itemParser;
-        $this->machineRegistry = $machineRegistry;
-        $this->translator = $translator;
+        $this->translationParser = $translationParser;
     }
 
     /**
-     * Resets any previously aggregated data.
+     * Prepares the parser to be able to later parse the dump.
+     * @param Dump $dump
      */
-    public function reset(): void
+    public function prepare(Dump $dump): void
     {
-        $this->parsedMachines = [];
     }
 
     /**
-     * Parses the data from the dump into actual entities.
-     * @param DataContainer $dumpData
+     * Parses the data from the dump into the combination.
+     * @param Dump $dump
+     * @param Combination $combination
      */
-    public function parse(DataContainer $dumpData): void
+    public function parse(Dump $dump, Combination $combination): void
     {
-        $this->parseMachines($dumpData);
-        $this->parseFluidBoxes($dumpData);
-    }
-
-    /**
-     * Parses the machines from the dump data.
-     * @param DataContainer $dumpData
-     */
-    protected function parseMachines(DataContainer $dumpData): void
-    {
-        foreach ($dumpData->getObjectArray('machines') as $machineData) {
-            $machine = $this->parseMachine($machineData);
-            $this->parsedMachines[$machine->getName()] = $machine;
+        foreach ($dump->getControlStage()->getMachines() as $dumpMachine) {
+            $combination->addMachine($this->mapMachine($dumpMachine));
         }
     }
 
     /**
-     * Parses the specified data into an machine entity.
-     * @param DataContainer $machineData
-     * @return Machine
+     * Maps the dump machine to an export one.
+     * @param DumpMachine $dumpMachine
+     * @return ExportMachine
      */
-    protected function parseMachine(DataContainer $machineData): Machine
+    protected function mapMachine(DumpMachine $dumpMachine): ExportMachine
     {
-        $machine = new Machine();
-        $machine->setName(strtolower($machineData->getString('name')))
-                ->setCraftingSpeed($machineData->getFloat('craftingSpeed', 1.))
-                ->setNumberOfItemSlots($machineData->getInteger('numberOfItemSlots', 0))
-                ->setNumberOfModuleSlots($machineData->getInteger('numberOfModuleSlots', 0));
+        $exportMachine = new ExportMachine();
+        $exportMachine->setName(strtolower($dumpMachine->getName()))
+                      ->setCraftingCategories($dumpMachine->getCraftingCategories())
+                      ->setCraftingSpeed($dumpMachine->getCraftingSpeed())
+                      ->setNumberOfItemSlots($dumpMachine->getItemSlots())
+                      ->setNumberOfFluidInputSlots($dumpMachine->getFluidInputSlots())
+                      ->setNumberOfFluidOutputSlots($dumpMachine->getFluidOutputSlots())
+                      ->setNumberOfModuleSlots($dumpMachine->getModuleSlots())
+                      ->setIconHash(
+                          $this->iconParser->getIconHash(EntityType::MACHINE, strtolower($dumpMachine->getName()))
+                      );
 
-        foreach ($machineData->getArray('craftingCategories') as $craftingCategory => $isEnabled) {
-            if ((bool) $isEnabled && strlen($craftingCategory) > 0) {
-                $machine->addCraftingCategory($craftingCategory);
-            }
-        }
-        $this->parseEnergyUsage($machine, $machineData);
-        $this->addTranslations($machine, $machineData);
+        $this->mapEnergyUsage($exportMachine, $dumpMachine->getEnergyUsage());
+        $this->translationParser->translateNames($exportMachine->getLabels(), $dumpMachine->getLocalisedName());
+        $this->translationParser->translateNames(
+            $exportMachine->getDescriptions(),
+            $dumpMachine->getLocalisedDescription()
+        );
 
-        return $machine;
+        return $exportMachine;
     }
 
     /**
      * Parses the energy usage into the specified machine.
-     * @param Machine $machine
-     * @param DataContainer $machineData
+     * @param ExportMachine $exportMachine
+     * @param float $energyUsage
      */
-    protected function parseEnergyUsage(Machine $machine, DataContainer $machineData): void
+    protected function mapEnergyUsage(ExportMachine $exportMachine, float $energyUsage): void
     {
-        $energyUsage = $machineData->getFloat('energyUsage', 0.); // Float because numbers may be bigger than 64bit
-        if ($energyUsage > 0) {
-            $units = EnergyUsageUnit::ORDERED_UNITS;
+        $units = EnergyUsageUnit::ORDERED_UNITS;
+        $currentUnit = array_shift($units);
+        while ($energyUsage >= 1000 && count($units) > 0) {
+            $energyUsage /= 1000;
             $currentUnit = array_shift($units);
-            while ($energyUsage >= 1000 && count($units) > 0) {
-                $energyUsage /= 1000;
-                $currentUnit = array_shift($units);
-            }
-
-            $machine->setEnergyUsage(round($energyUsage, 3))
-                    ->setEnergyUsageUnit($currentUnit);
         }
+
+        $exportMachine->setEnergyUsage(round($energyUsage, 3))
+                      ->setEnergyUsageUnit($currentUnit);
     }
 
     /**
-     * Adds the translations to the machine.
-     * @param Machine $machine
-     * @param DataContainer $machineData
-     */
-    protected function addTranslations(Machine $machine, DataContainer $machineData): void
-    {
-        $this->translator->addTranslationsToEntity(
-            $machine->getLabels(),
-            'name',
-            $machineData->get(['localised', 'name'])
-        );
-        $this->translator->addTranslationsToEntity(
-            $machine->getDescriptions(),
-            'description',
-            $machineData->get(['localised', 'description'])
-        );
-    }
-
-    /**
-     * Parses the fluid boxes of the dump.
-     * @param DataContainer $dumpData
-     */
-    protected function parseFluidBoxes(DataContainer $dumpData): void
-    {
-        foreach ($dumpData->getObjectArray('fluidBoxes') as $fluidBoxData) {
-            $name = strtolower($fluidBoxData->getString('name'));
-            if (isset($this->parsedMachines[$name])) {
-                $this->parseFluidBox($this->parsedMachines[$name], $fluidBoxData);
-            }
-        }
-    }
-
-    /**
-     * Parses the fluid box data into the machine.
-     * @param Machine $machine
-     * @param DataContainer $fluidBoxData
-     */
-    protected function parseFluidBox(Machine $machine, DataContainer $fluidBoxData): void
-    {
-        $machine->setNumberOfFluidInputSlots($fluidBoxData->getInteger('input'))
-                ->setNumberOfFluidOutputSlots($fluidBoxData->getInteger('output'));
-    }
-
-    /**
-     * Checks the parsed data.
-     */
-    public function check(): void
-    {
-        foreach ($this->parsedMachines as $machine) {
-            $this->checkIcon($machine);
-            $this->checkTranslation($machine);
-        }
-    }
-
-    /**
-     * Checks the icon of the machine.
-     * @param Machine $machine
-     */
-    protected function checkIcon(Machine $machine): void
-    {
-        $iconHash = $this->iconParser->getIconHashForEntity(EntityType::MACHINE, $machine->getName());
-        if ($iconHash !== null) {
-            $machine->setIconHash($iconHash);
-        }
-    }
-
-    /**
-     * Checks the translation of the machine.
-     * @param Machine $machine
-     */
-    protected function checkTranslation(Machine $machine): void
-    {
-        foreach ($this->itemParser->getItemsWithName($machine->getName()) as $item) {
-            if (LocalisedStringUtils::areEqual($machine->getLabels(), $item->getLabels())
-                && LocalisedStringUtils::areEqual($machine->getDescriptions(), $item->getDescriptions())
-            ) {
-                $machine->setLabels(new LocalisedString())
-                        ->setDescriptions(new LocalisedString());
-                $item->setProvidesMachineLocalisation(true);
-                break;
-            }
-        }
-    }
-    
-    /**
-     * Persists the parsed data into the combination.
+     * Validates the data in the combination as a second parsing step.
      * @param Combination $combination
      */
-    public function persist(Combination $combination): void
+    public function validate(Combination $combination): void
     {
-        $machineHashes = [];
-        foreach ($this->parsedMachines as $machine) {
-            $machineHashes[] = $this->machineRegistry->set($machine);
+        foreach ($combination->getMachines() as $machine) {
+            $machine->setIconHash($this->iconParser->getIconHash(EntityType::MACHINE, $machine->getName()));
         }
-        $combination->setMachineHashes($machineHashes);
     }
 }

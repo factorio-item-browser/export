@@ -21,6 +21,14 @@ return [
                 ConfigKey::DIRECTORY_TEMP => __DIR__ . '/../../data/temp',
             ],
             ConfigKey::PARALLEL_DOWNLOADS => 4,
+            ConfigKey::PARSERS => [
+                Parser\IconParser::class,
+                Parser\ItemParser::class,
+                Parser\MachineParser::class,
+                Parser\ModParser::class,
+                Parser\RecipeParser::class,
+                Parser\TranslationParser::class,
+            ],
         ],
     ],
 

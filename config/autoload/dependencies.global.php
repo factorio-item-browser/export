@@ -21,6 +21,7 @@ use Zend\Console\Console as ZendConsole;
 use Zend\I18n\Translator\Translator;
 use Zend\I18n\Translator\TranslatorInterface;
 use Zend\ServiceManager\Factory\InvokableFactory;
+use function BluePsyduck\ZendAutoWireFactory\injectAliasArray;
 use function BluePsyduck\ZendAutoWireFactory\readConfig;
 
 return [
@@ -33,13 +34,24 @@ return [
 
             Factorio\DumpExtractor::class => AutoWireFactory::class,
 
+            Helper\HashingHelper::class => AutoWireFactory::class,
+
             I18n\LocaleReader::class => AutoWireFactory::class,
             I18n\Translator::class => AutoWireFactory::class,
 
             Mod\ModDownloader::class => AutoWireFactory::class,
             Mod\ModFileManager::class => AutoWireFactory::class,
 
+            Parser\IconParser::class => AutoWireFactory::class,
+            Parser\ItemParser::class => AutoWireFactory::class,
+            Parser\MachineParser::class => AutoWireFactory::class,
+            Parser\ModParser::class => AutoWireFactory::class,
+            Parser\ParserManager::class => AutoWireFactory::class,
+            Parser\RecipeParser::class => AutoWireFactory::class,
+            Parser\TranslationParser::class => AutoWireFactory::class,
+
             Renderer\IconRenderer::class => AutoWireFactory::class,
+
 
 
 
@@ -82,12 +94,6 @@ return [
             Mod\DependencyResolver::class => Mod\DependencyResolverFactory::class,
             Mod\ModReader::class => Mod\ModReaderFactory::class,
 
-            Parser\IconParser::class => Parser\IconParserFactory::class,
-            Parser\ItemParser::class => Parser\ItemParserFactory::class,
-            Parser\MachineParser::class => Parser\MachineParserFactory::class,
-            Parser\ParserManager::class => Parser\ParserManagerFactory::class,
-            Parser\RecipeParser::class => Parser\RecipeParserFactory::class,
-
             Reducer\Combination\CombinationReducerManager::class => Reducer\Combination\CombinationReducerManagerFactory::class,
             Reducer\Combination\IconReducer::class => Reducer\Combination\IconReducerFactory::class,
             Reducer\Combination\ItemReducer::class => Reducer\Combination\ItemReducerFactory::class,
@@ -103,9 +109,10 @@ return [
             SerializerInterface::class . ' $exportSerializer' => Serializer\SerializerFactory::class,
 
             // Auto-wire helpers
+            'array $exportParsers' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARSERS),
+            'int $numberOfParallelDownloads' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_DOWNLOADS),
             'string $modsDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
             'string $tempDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),
-            'int $numberOfParallelDownloads' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_DOWNLOADS),
         ],
         'services' => [
             AdapterInterface::class => ZendConsole::getInstance(),

@@ -46,4 +46,9 @@ interface ConfigKey
      * The key holding the number of parallel downloads to use.
      */
     public const PARALLEL_DOWNLOADS = 'parallel-downloads';
+
+    /**
+     * The key holding the parser classes.
+     */
+    public const PARSERS = 'parsers';
 }

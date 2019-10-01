@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
-use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\I18n\Translator;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\ExportData\Entity\Combination;
 
 /**
  * The manager of the parser classes.
@@ -18,12 +17,6 @@ use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 class ParserManager
 {
     /**
-     * The translator.
-     * @var Translator
-     */
-    protected $translator;
-
-    /**
      * The parsers to use.
      * @var array|ParserInterface[]
      */
@@ -31,35 +24,29 @@ class ParserManager
 
     /**
      * Initializes the parser manager.
-     * @param Translator $translator
-     * @param array|ParserInterface[] $parsers
+     * @param array|ParserInterface[] $exportParsers
      */
-    public function __construct(Translator $translator, array $parsers)
+    public function __construct(array $exportParsers)
     {
-        $this->translator = $translator;
-        $this->parsers = $parsers;
+        $this->parsers = $exportParsers;
     }
 
     /**
-     * Parses the dump data into the combination.
+     * Parses the dump into the combination.
+     * @param Dump $dump
      * @param Combination $combination
-     * @param DataContainer $dumpData
      * @throws ExportException
      */
-    public function parse(Combination $combination, DataContainer $dumpData): void
+    public function parse(Dump $dump, Combination $combination): void
     {
-        $this->translator->loadFromModNames($combination->getLoadedModNames());
         foreach ($this->parsers as $parser) {
-            $parser->reset();
+            $parser->prepare($dump);
         }
         foreach ($this->parsers as $parser) {
-            $parser->parse($dumpData);
+            $parser->parse($dump, $combination);
         }
         foreach ($this->parsers as $parser) {
-            $parser->check();
-        }
-        foreach ($this->parsers as $parser) {
-            $parser->persist($combination);
+            $parser->validate($combination);
         }
     }
 }
