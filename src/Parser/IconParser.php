@@ -86,6 +86,8 @@ class IconParser implements ParserInterface
      */
     protected function mapIcon(DumpIcon $dumpIcon): ExportIcon
     {
+        // @todo Icon size seems to be sometimes at layer level, not at top level. Dump mod may need adjustments.
+
         $exportIcon = new ExportIcon();
         $exportIcon->setSize($dumpIcon->getSize())
                    ->setRenderedSize(self::RENDERED_SIZE);
@@ -168,7 +170,7 @@ class IconParser implements ParserInterface
      */
     public function validate(Combination $combination): void
     {
-        $combination->setIcons(array_values($this->usedIcons));
+        $combination->setIcons(array_merge($combination->getIcons(), array_values($this->usedIcons)));
     }
 
     /**

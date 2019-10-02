@@ -119,8 +119,8 @@ class RecipeParser implements ParserInterface
             $exportRecipe->getDescriptions(),
             $dumpRecipe->getLocalisedDescription()
         );
-        $this->mapIconHash($exportRecipe);
 
+        $exportRecipe->setIconHash($this->mapIconHash($exportRecipe));
         return $exportRecipe;
     }
 
@@ -157,8 +157,9 @@ class RecipeParser implements ParserInterface
     /**
      * Maps the icon hash to the recipe.
      * @param ExportRecipe $recipe
+     * @return string
      */
-    protected function mapIconHash(ExportRecipe $recipe): void
+    protected function mapIconHash(ExportRecipe $recipe): string
     {
         $iconHash = $this->iconParser->getIconHash(EntityType::RECIPE, $recipe->getName());
 
@@ -168,7 +169,7 @@ class RecipeParser implements ParserInterface
             $iconHash = $this->iconParser->getIconHash($firstProduct->getType(), $firstProduct->getName());
         }
 
-        $recipe->setIconHash($iconHash);
+        return $iconHash;
     }
 
     /**

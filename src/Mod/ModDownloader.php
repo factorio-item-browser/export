@@ -159,7 +159,11 @@ class ModDownloader
     protected function getReleaseForDownload(Mod $mod): ?Release
     {
         $result = null;
-        $currentVersion = $this->modFileManager->getVersion($mod->getName());
+        try {
+            $currentVersion = $this->modFileManager->getInfo($mod->getName())->getVersion();
+        } catch (ExportException $e) {
+            $currentVersion = '';
+        }
         $release = $this->findLatestRelease($mod);
         if ($currentVersion === '' || VersionUtils::compare($release->getVersion(), $currentVersion) > 0) {
             $result = $release;

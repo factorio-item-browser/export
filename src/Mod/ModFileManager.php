@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Mod;
 
+use Exception;
+use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
 use FactorioItemBrowser\Export\Exception\InvalidModFileException;
+use JMS\Serializer\SerializerInterface;
 use ZipArchive;
 
 /**
@@ -18,9 +21,20 @@ use ZipArchive;
 class ModFileManager
 {
     /**
+     * The filename of the info file.
+     */
+    protected const FILENAME_INFO = 'info.json';
+
+    /**
      * The regular expression used to match the mod directory.
      */
     protected const REGEXP_MOD_DIRECTORY = '#^(.*)_\d+\.\d+\.\d+/#';
+
+    /**
+     * The serializer.
+     * @var SerializerInterface
+     */
+    protected $serializer;
 
     /**
      * The directory to store the mod files in.
@@ -30,10 +44,12 @@ class ModFileManager
 
     /**
      * Initializes the manager.
+     * @param SerializerInterface $exportSerializer
      * @param string $modsDirectory
      */
-    public function __construct(string $modsDirectory)
+    public function __construct(SerializerInterface $exportSerializer, string $modsDirectory)
     {
+        $this->serializer = $exportSerializer;
         $this->modsDirectory = $modsDirectory;
     }
 
@@ -80,22 +96,20 @@ class ModFileManager
     }
 
     /**
-     * Returns the version of the mod which is locally available. If the mod is not available, an empty string is
-     * returned.
+     * Returns the info from the mod.
      * @param string $modName
-     * @return string
+     * @return InfoJson
+     * @throws ExportException
      */
-    public function getVersion(string $modName): string
+    public function getInfo(string $modName): InfoJson
     {
-        $result = '';
+        $contents = $this->readFile($modName, self::FILENAME_INFO);
 
-        $fileName = $this->getModFilePath($modName, 'info.json');
-        if (file_exists($fileName)) {
-            $json = json_decode(file_get_contents($fileName), true);
-            $result = $json['version'] ?? '';
+        try {
+            return $this->serializer->deserialize($contents, InfoJson::class, 'json');
+        } catch (Exception $e) {
+            throw new ExportException('Invalid info.json file.'); // @todo Custom exception.
         }
-
-        return $result;
     }
 
     /**

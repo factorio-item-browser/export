@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Parser;
 
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Helper\HashingHelper;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Entity\Combination;
+use FactorioItemBrowser\ExportData\Entity\Icon;
+use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 
 /**
@@ -28,6 +32,12 @@ class ModParser implements ParserInterface
     protected const THUMBNAIL_FILENAME = 'thumbnail.png';
 
     /**
+     * The hashing helper.
+     * @var HashingHelper
+     */
+    protected $hashingHelper;
+
+    /**
      * The mod file manager.
      * @var ModFileManager
      */
@@ -41,11 +51,16 @@ class ModParser implements ParserInterface
 
     /**
      * Initializes the parser.
+     * @param HashingHelper $hashingHelper
      * @param ModFileManager $modFileManager
      * @param TranslationParser $translationParser
      */
-    public function __construct(ModFileManager $modFileManager, TranslationParser $translationParser)
-    {
+    public function __construct(
+        HashingHelper $hashingHelper,
+        ModFileManager $modFileManager,
+        TranslationParser $translationParser
+    ) {
+        $this->hashingHelper = $hashingHelper;
         $this->modFileManager = $modFileManager;
         $this->translationParser = $translationParser;
     }
@@ -62,30 +77,68 @@ class ModParser implements ParserInterface
      * Parses the data from the dump into the combination.
      * @param Dump $dump
      * @param Combination $combination
+     * @throws ExportException
      */
     public function parse(Dump $dump, Combination $combination): void
     {
         foreach ($dump->getModNames() as $modName) {
-            $combination->addMod($this->createEntity($modName));
+            $mod = $this->mapMod($modName);
+            $thumbnail = $this->mapThumbnail($mod);
+            if ($thumbnail !== null) {
+                $mod->setThumbnailHash($thumbnail->getHash());
+                $combination->addIcon($thumbnail);
+            }
+            $combination->addMod($mod);
         }
     }
 
     /**
-     * Creates the mod entity of the specified name.
+     * Maps the mod entity of the specified name.
      * @param string $modName
      * @return Mod
+     * @throws ExportException
      */
-    protected function createEntity(string $modName): Mod
+    protected function mapMod(string $modName): Mod
     {
+        $info = $this->modFileManager->getInfo($modName);
+
         $mod = new Mod();
         $mod->setName($modName)
-            ->setVersion($this->modFileManager->getVersion($modName));
+            ->setVersion($info->getVersion())
+            ->setAuthor($info->getAuthor());
 
-        // @todo Read English translation from info.json file.
+        $mod->getTitles()->addTranslation('en', $info->getTitle());
+        $mod->getDescriptions()->addTranslation('en', $info->getDescription());
+
         $this->translationParser->translateModNames($mod->getTitles(), $modName);
         $this->translationParser->translateModDescriptions($mod->getDescriptions(), $modName);
 
         return $mod;
+    }
+
+    /**
+     * Maps the thumbnail of the mod to an entity, if there is one to map.
+     * @param Mod $mod
+     * @return Icon|null
+     */
+    protected function mapThumbnail(Mod $mod): ?Icon
+    {
+        try {
+            $this->modFileManager->readFile($mod->getName(), self::THUMBNAIL_FILENAME);
+        } catch (ExportException $e) {
+            return null;
+        }
+
+        $layer = new Layer();
+        $layer->setFileName(sprintf('__%s__/%s', $mod->getName(), self::THUMBNAIL_FILENAME));
+
+        $thumbnail = new Icon();
+        $thumbnail->setSize(self::RENDERED_THUMBNAIL_SIZE)
+                  ->setRenderedSize(self::RENDERED_THUMBNAIL_SIZE)
+                  ->addLayer($layer);
+
+        $thumbnail->setHash($this->hashingHelper->hashIcon($thumbnail));
+        return $thumbnail;
     }
 
     /**
