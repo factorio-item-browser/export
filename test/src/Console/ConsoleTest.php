@@ -134,7 +134,7 @@ class ConsoleTest extends TestCase
     
     /**
      * Tests the writeBanner method.
-     * @covers ::writeBanner
+     * @covers ::writeHeadline
      */
     public function testWriteBanner(): void
     {
@@ -156,7 +156,7 @@ class ConsoleTest extends TestCase
                 ->with($expectedMessage, $color)
                 ->willReturnSelf();
 
-        $result = $console->writeBanner($message, $color);
+        $result = $console->writeHeadline($message, $color);
         $this->assertSame($console, $result);
     }
 

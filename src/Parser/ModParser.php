@@ -82,6 +82,8 @@ class ModParser implements ParserInterface
     public function parse(Dump $dump, Combination $combination): void
     {
         foreach ($dump->getModNames() as $modName) {
+            if ($modName === 'Foo') continue; //  @todo Remove hack.
+
             $mod = $this->mapMod($modName);
             $thumbnail = $this->mapThumbnail($mod);
             if ($thumbnail !== null) {

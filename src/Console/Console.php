@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Console;
 
+use Exception;
 use FactorioItemBrowser\Export\Utils\VersionUtils;
 use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\ColorInterface;
@@ -70,29 +71,30 @@ class Console
     }
 
     /**
-     * Writes a banner with the specified message.
+     * Writes a headline with the specified message.
      * @param string $message
-     * @param int|null $color
+     * @param array|string[] $parameters
      * @return $this
      */
-    public function writeBanner(string $message, ?int $color = null)
+    public function writeHeadline(string $message, ...$parameters): self
     {
-        $this->writeHorizontalLine('-', $color)
-             ->writeLine(' ' . $message, $color)
-             ->writeHorizontalLine('-', $color);
+        $this->writeLine()
+             ->writeHorizontalLine('-', ColorInterface::LIGHT_YELLOW)
+             ->writeLine(' ' . sprintf($message, ...$parameters), ColorInterface::LIGHT_YELLOW)
+             ->writeHorizontalLine('-', ColorInterface::LIGHT_YELLOW);
         return $this;
     }
 
     /**
-     * Write a headline to the console, including an underline.
-     * @param string $headline
+     * Writes a step to the console.
+     * @param string $step
      * @param mixed ...$parameters
      */
-    public function writeHeadline(string $headline, ...$parameters)
+    public function writeStep(string $step, ...$parameters)
     {
         $this->writeLine();
-        $this->writeLine(' ' . sprintf($headline, ...$parameters));
-        $this->writeHorizontalLine('-');
+        $this->writeLine(' ' . sprintf($step, ...$parameters), ColorInterface::LIGHT_BLUE);
+        $this->writeHorizontalLine('-', ColorInterface::LIGHT_BLUE);
     }
 
     /**
@@ -123,51 +125,21 @@ class Console
      * @param int|null $color
      * @return $this
      */
-    public function writeHorizontalLine(string $character, ?int $color = null)
+    protected function writeHorizontalLine(string $character, ?int $color = null)
     {
         $this->writeLine(str_pad('', $this->consoleAdapter->getWidth(), $character), $color);
         return $this;
     }
 
-    /**
-     * Formats the mod name for the console.
-     * @param string $modName
-     * @param string $suffix
-     * @return string
-     */
-    public function formatModName(string $modName, string $suffix = ''): string
+    public function writeException(Exception $e): void
     {
-        return str_pad($modName, 64, ' ', STR_PAD_LEFT) . $suffix;
-    }
-
-    /**
-     * Formats the version for the console.
-     * @param string $version
-     * @param bool $padLeft
-     * @return string
-     */
-    public function formatVersion(string $version, bool $padLeft = false): string
-    {
-        $version = $version === '' ? '' : VersionUtils::normalize($version);
-        return str_pad($version, 10, ' ', $padLeft ? STR_PAD_LEFT : STR_PAD_RIGHT);
-    }
-
-    /**
-     * Creates and returns a progress bar instance with the specified number of steps.
-     * @param int $numberOfSteps
-     * @return ProgressBar
-     */
-    public function createProgressBar(int $numberOfSteps): ProgressBar
-    {
-        return new ProgressBar($this->createProgressBarAdapter(), 0, $numberOfSteps);
-    }
-
-    /**
-     * Creates and returns the adapter to use for the progress bar.
-     * @return AbstractAdapter
-     */
-    protected function createProgressBarAdapter(): AbstractAdapter
-    {
-        return new ProgressBarConsole(['width' => $this->consoleAdapter->getWidth()]);
+        $this->writeLine()
+             ->writeHorizontalLine('-', ColorInterface::LIGHT_RED)
+             ->writeLine(
+                 sprintf(' %s: %s', substr(strrchr(get_class($e), '\\'), 1), $e->getMessage()),
+                 ColorInterface::LIGHT_RED
+             )
+             ->writeHorizontalLine('-', ColorInterface::LIGHT_RED)
+             ->writeLine($e->getTraceAsString(), ColorInterface::RED);
     }
 }

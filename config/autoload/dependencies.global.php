@@ -30,6 +30,8 @@ return [
             Translator::class . ' $placeholderTranslator' => TranslatorInterface::class
         ],
         'factories' => [
+            Command\ProcessCommand::class => AutoWireFactory::class,
+
             Console\Console::class => AutoWireFactory::class,
 
             Factorio\DumpExtractor::class => AutoWireFactory::class,
@@ -52,25 +54,6 @@ return [
 
             Renderer\IconRenderer::class => AutoWireFactory::class,
 
-
-
-            Command\Clean\CleanCacheCommand::class => Command\Clean\CleanCacheCommandFactory::class,
-            Command\Export\ExportCombinationCommand::class => Command\Export\ExportCombinationCommandFactory::class,
-            Command\Export\ExportModCommand::class => Command\Export\ExportModCommandFactory::class,
-            Command\Export\ExportModWithDependenciesCommand::class => Command\Export\ExportModWithDependenciesCommandFactory::class,
-            Command\Export\ExportModMetaCommand::class => Command\Export\ExportModMetaCommandFactory::class,
-            Command\Export\ExportModStepCommand::class => Command\Export\ExportModStepCommandFactory::class,
-            Command\Export\ExportModThumbnailCommand::class => Command\Export\ExportModThumbnailCommandFactory::class,
-            Command\Export\ExportPrepareCommand::class => Command\Export\ExportPrepareCommandFactory::class,
-            Command\Lists\ListCommand::class => Command\Lists\ListCommandFactory::class,
-            Command\Lists\ListMissingCommand::class => Command\Lists\ListMissingCommandFactory::class,
-            Command\Reduce\ReduceCombinationCommand::class => Command\Reduce\ReduceCombinationCommandFactory::class,
-            Command\Reduce\ReduceModCommand::class => Command\Reduce\ReduceModCommandFactory::class,
-            Command\Render\RenderIconCommand::class => Command\Render\RenderIconCommandFactory::class,
-            Command\Render\RenderModIconsCommand::class => Command\Render\RenderModIconsCommandFactory::class,
-            Command\Update\UpdateDependenciesCommand::class => Command\Update\UpdateDependenciesCommandFactory::class,
-            Command\Update\UpdateListCommand::class => Command\Update\UpdateListCommandFactory::class,
-            Command\Update\UpdateOrderCommand::class => Command\Update\UpdateOrderCommandFactory::class,
 
             Factorio\DumpInfoGenerator::class => Factorio\DumpInfoGeneratorFactory::class,
             Factorio\Instance::class => Factorio\InstanceFactory::class,

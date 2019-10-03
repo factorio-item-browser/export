@@ -88,8 +88,6 @@ class ModDownloader
      */
     public function download(array $modNames): void
     {
-        $this->console->writeHeadline('Downloading %d mods', count($modNames));
-
         $mods = $this->fetchMetaData($modNames);
         $this->verifyMods($modNames, $mods);
 
