@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
+use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\Combination;
@@ -17,6 +18,12 @@ use FactorioItemBrowser\ExportData\Entity\Combination;
 class ParserManager
 {
     /**
+     * The console.
+     * @var Console
+     */
+    protected $console;
+
+    /**
      * The parsers to use.
      * @var array|ParserInterface[]
      */
@@ -24,10 +31,12 @@ class ParserManager
 
     /**
      * Initializes the parser manager.
+     * @param Console $console
      * @param array|ParserInterface[] $exportParsers
      */
-    public function __construct(array $exportParsers)
+    public function __construct(Console $console, array $exportParsers)
     {
+        $this->console = $console;
         $this->parsers = $exportParsers;
     }
 
@@ -39,12 +48,17 @@ class ParserManager
      */
     public function parse(Dump $dump, Combination $combination): void
     {
+        $this->console->writeAction('Preparing');
         foreach ($this->parsers as $parser) {
             $parser->prepare($dump);
         }
+
+        $this->console->writeAction('Parsing');
         foreach ($this->parsers as $parser) {
             $parser->parse($dump, $combination);
         }
+
+        $this->console->writeAction('Validating');
         foreach ($this->parsers as $parser) {
             $parser->validate($combination);
         }

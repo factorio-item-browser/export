@@ -75,7 +75,7 @@ class ModFileManager
             $modDirectoryLength = strlen($modDirectory);
             $modName = $match[1];
 
-            $targetDirectory = $this->getModDirectory($modName);
+            $targetDirectory = $this->getLocalDirectory($modName);
             if (is_dir($targetDirectory)) {
                 exec(sprintf('rm -rf "%s"', $targetDirectory));
             }
@@ -83,7 +83,7 @@ class ModFileManager
             for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
                 $stat = $zipArchive->statIndex($i);
                 if ($stat['size'] > 0 && substr($stat['name'], 0, $modDirectoryLength) === $modDirectory) {
-                    $fileName = $targetDirectory . substr($stat['name'], $modDirectoryLength);
+                    $fileName = $targetDirectory . '/' . substr($stat['name'], $modDirectoryLength);
                     if (!is_dir(dirname($fileName))) {
                         mkdir(dirname($fileName), 0777, true);
                     }
@@ -120,7 +120,7 @@ class ModFileManager
      */
     public function findFiles(string $modName, string $globPattern): array
     {
-        $modDirectory = $this->getModDirectory($modName);
+        $modDirectory = $this->getLocalDirectory($modName) . '/';
         $modDirectoryLength = strlen($modDirectory);
 
         $result = glob($modDirectory . $globPattern);
@@ -153,9 +153,9 @@ class ModFileManager
      * @param string $modName
      * @return string
      */
-    protected function getModDirectory(string $modName): string
+    public function getLocalDirectory(string $modName): string
     {
-        return $this->modsDirectory . '/' . $modName . '/';
+        return $this->modsDirectory . '/' . $modName;
     }
 
     /**
@@ -166,6 +166,6 @@ class ModFileManager
      */
     protected function getModFilePath(string $modName, string $fileName): string
     {
-        return $this->getModDirectory($modName) . $fileName;
+        return $this->getLocalDirectory($modName) . '/' . $fileName;
     }
 }

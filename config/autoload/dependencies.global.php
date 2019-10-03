@@ -11,7 +11,6 @@ namespace FactorioItemBrowser\Export;
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
 
-use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\ZendAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use Imagine\Image\ImagineInterface;
@@ -20,7 +19,6 @@ use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\Console as ZendConsole;
 use Zend\I18n\Translator\Translator;
 use Zend\I18n\Translator\TranslatorInterface;
-use Zend\ServiceManager\Factory\InvokableFactory;
 use function BluePsyduck\ZendAutoWireFactory\injectAliasArray;
 use function BluePsyduck\ZendAutoWireFactory\readConfig;
 
@@ -35,6 +33,7 @@ return [
             Console\Console::class => AutoWireFactory::class,
 
             Factorio\DumpExtractor::class => AutoWireFactory::class,
+            Factorio\Instance::class => AutoWireFactory::class,
 
             Helper\HashingHelper::class => AutoWireFactory::class,
 
@@ -54,18 +53,17 @@ return [
 
             Renderer\IconRenderer::class => AutoWireFactory::class,
 
-
-            Factorio\DumpInfoGenerator::class => Factorio\DumpInfoGeneratorFactory::class,
-            Factorio\Instance::class => Factorio\InstanceFactory::class,
-
             // 3rd-party services
             ImagineInterface::class => Renderer\ImagineFactory::class,
-            ProcessManager::class => Process\ProcessManagerFactory::class,
             SerializerInterface::class . ' $exportSerializer' => Serializer\SerializerFactory::class,
 
             // Auto-wire helpers
             'array $exportParsers' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARSERS),
+
             'int $numberOfParallelDownloads' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_DOWNLOADS),
+
+            'string $factorioDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO),
+            'string $instancesDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
             'string $modsDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
             'string $tempDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),
         ],

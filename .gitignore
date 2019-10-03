@@ -5,9 +5,3 @@
 
 /config/autoload/factorio-mod-portal-client.*.php
 /.phpunit.result.cache
-
-/factorio/*
-!/factorio/mods
-/factorio/mods/*
-!/factorio/mods/Dump_1.0.0
-/factorio/mods/Dump_1.0.0/info.json

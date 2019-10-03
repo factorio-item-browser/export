@@ -88,6 +88,7 @@ class ModDownloader
      */
     public function download(array $modNames): void
     {
+        $this->console->writeAction('Loading meta information from the Mod Portal');
         $mods = $this->fetchMetaData($modNames);
         $this->verifyMods($modNames, $mods);
 

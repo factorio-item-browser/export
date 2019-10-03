@@ -28,6 +28,21 @@ interface ConfigKey
     public const DIRECTORIES = 'directories';
 
     /**
+     * The key holding the cache directory.
+     */
+    public const DIRECTORY_CACHE = 'cache';
+
+    /**
+     * The key holding the directory of the installed Factorio game.
+     */
+    public const DIRECTORY_FACTORIO = 'factorio';
+
+    /**
+     * The key holding the instances directory.
+     */
+    public const DIRECTORY_INSTANCES = 'instances';
+
+    /**
      * The key holding the mods directory.
      */
     public const DIRECTORY_MODS = 'mods';
@@ -36,11 +51,6 @@ interface ConfigKey
      * The key holding the temp directory.
      */
     public const DIRECTORY_TEMP = 'temp';
-
-    /**
-     * The key holding the cache directory.
-     */
-    public const DIRECTORY_CACHE = 'cache';
 
     /**
      * The key holding the number of parallel downloads to use.

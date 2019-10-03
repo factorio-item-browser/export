@@ -16,4 +16,6 @@ use Zend\ConfigAggregator\ConfigAggregator;
 return [
     ConfigAggregator::ENABLE_CACHE => false,
     'debug' => true,
+    'name' => 'Factorio Item Browser Export',
+    'version' => '2.0.0-alpha'
 ];

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Factorio;
 
-use BluePsyduck\Common\Data\DataContainer;
+use FactorioItemBrowser\Common\Constant\Constant;
+use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Registry\ModRegistry;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
+use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Process\Process;
 
 /**
@@ -22,16 +22,28 @@ use Symfony\Component\Process\Process;
 class Instance
 {
     /**
+     * The console.
+     * @var Console
+     */
+    protected $console;
+
+    /**
      * The dump extractor.
      * @var DumpExtractor
      */
     protected $dumpExtractor;
 
     /**
-     * The mod registry.
-     * @var ModRegistry
+     * The mod file manager.
+     * @var ModFileManager
      */
-    protected $modRegistry;
+    protected $modFileManager;
+
+    /**
+     * The serializer.
+     * @var SerializerInterface
+     */
+    protected $serializer;
 
     /**
      * The directory containing the actual Factorio game.
@@ -40,50 +52,74 @@ class Instance
     protected $factorioDirectory;
 
     /**
-     * The directory of the instance.
-     * @var string|null
+     * The directory of the instances.
+     * @var string
      */
-    protected $instanceDirectory;
+    protected $instancesDirectory;
+
+    /**
+     * The directory for the combination instance.
+     * @var string
+     */
+    protected $combinationInstanceDirectory = '';
 
     /**
      * Initializes the instance.
+     * @param Console $console
      * @param DumpExtractor $dumpExtractor
-     * @param ModRegistry $modRegistry
+     * @param ModFileManager $modFileManager
+     * @param SerializerInterface $exportSerializer
      * @param string $factorioDirectory
+     * @param string $instancesDirectory
      */
-    public function __construct(DumpExtractor $dumpExtractor, ModRegistry $modRegistry, string $factorioDirectory)
-    {
+    public function __construct(
+        Console $console,
+        DumpExtractor $dumpExtractor,
+        ModFileManager $modFileManager,
+        SerializerInterface $exportSerializer,
+        string $factorioDirectory,
+        string $instancesDirectory
+    ) {
+        $this->console = $console;
         $this->dumpExtractor = $dumpExtractor;
-        $this->modRegistry = $modRegistry;
+        $this->modFileManager = $modFileManager;
+        $this->serializer = $exportSerializer;
         $this->factorioDirectory = $factorioDirectory;
+        $this->instancesDirectory = $instancesDirectory;
     }
 
     /**
-     * Runs the combination in a Factorio instance.
-     * @param Combination $combination
-     * @return DataContainer
+     * Runs the Factorio instance.
+     * @param string $combinationHash
+     * @param array $modNames
+     * @return Dump
      * @throws ExportException
      */
-    public function run(Combination $combination): DataContainer
+    public function run(string $combinationHash, array $modNames): Dump
     {
         try {
-            $this->setUp($combination->calculateHash());
-            $this->setUpMods($combination);
+            $this->console->writeAction('Preparing Factorio instance');
+            $this->combinationInstanceDirectory = $this->instancesDirectory . '/' . $combinationHash;
+
+            $this->setUpInstance();
+            $this->setUpMods($modNames);
+            $this->setupDumpMod($modNames);
+
+            $this->console->writeAction('Launching Factorio');
             $output = $this->execute();
         } finally {
             $this->removeInstanceDirectory();
         }
+
+        $this->console->writeAction('Extracting dumped data');
         return $this->dumpExtractor->extract($output);
     }
 
     /**
      * Sets up the instance.
-     * @param string $combinationHash
-     * @throws ExportException
      */
-    protected function setUp(string $combinationHash): void
+    protected function setUpInstance(): void
     {
-        $this->instanceDirectory = $this->factorioDirectory . '/instances/' . $combinationHash;
         $this->removeInstanceDirectory();
 
         $this->createDirectory('bin/x64');
@@ -92,25 +128,47 @@ class Instance
         $this->copy('bin/x64/factorio');
         $this->copy('config-path.cfg');
 
-        $this->createSymlink('data');
+        $this->createFactorioSymlink('data');
     }
 
     /**
      * Sets up the mods to use for the combination.
-     * @param Combination $combination
+     * @param array $modNames
      * @throws ExportException
      */
-    protected function setUpMods(Combination $combination): void
+    protected function setUpMods(array $modNames): void
     {
-        foreach ($combination->getLoadedModNames() as $modName) {
-            $mod = $this->modRegistry->get($modName);
-            if (!$mod instanceof Mod) {
-                throw new ExportException('Mod not known: ' . $modName);
-            }
-
-            $this->createSymlink('mods/' . $mod->getFileName());
+        foreach ($modNames as $modName) {
+            $this->createModSymlink($modName);
         }
-        $this->createSymlink('mods/Dump_1.0.0');
+    }
+
+    /**
+     * Sets up the dump mod to be used.
+     * @param array|string[] $modNames
+     * @throws ExportException
+     */
+    protected function setupDumpMod(array $modNames): void
+    {
+        $baseInfo = $this->modFileManager->getInfo(Constant::MOD_NAME_BASE);
+
+        $info = new InfoJson();
+        $info->setName('Dump')
+             ->setAuthor('factorio-item-browser')
+             ->setVersion('1.0.0')
+             ->setFactorioVersion($baseInfo->getVersion())
+             ->setDependencies($modNames);
+
+        exec(sprintf(
+            'cp -r "%s" "%s"',
+            __DIR__ . '/../../lua/dump',
+            $this->getInstancePath('mods/Dump_1.0.0')
+        ));
+
+        file_put_contents(
+            $this->getInstancePath('mods/Dump_1.0.0/info.json'),
+            $this->serializer->serialize($info, 'json')
+        );
     }
 
     /**
@@ -124,6 +182,10 @@ class Instance
         return $process->getOutput();
     }
 
+    /**
+     * Creates the process which will actually run Factorio.
+     * @return Process
+     */
     protected function createProcess(): Process
     {
         $command = [
@@ -141,21 +203,8 @@ class Instance
      */
     protected function removeInstanceDirectory(): void
     {
-        if ($this->instanceDirectory !== null && is_dir($this->instanceDirectory)) {
-            $files = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($this->instanceDirectory, RecursiveDirectoryIterator::SKIP_DOTS),
-                RecursiveIteratorIterator::CHILD_FIRST
-            );
-
-            foreach ($files as $file) {
-                /* @var \SplFileInfo $file */
-                if ($file->isDir() && !$file->isLink()) {
-                    rmdir($file->getPathname());
-                } else {
-                    unlink($file->getPathname());
-                }
-            }
-            rmdir($this->instanceDirectory);
+        if (is_dir($this->combinationInstanceDirectory)) {
+            exec(sprintf('rm -rf "%s"', $this->combinationInstanceDirectory));
         }
     }
 
@@ -181,13 +230,27 @@ class Instance
     }
 
     /**
-     * Creates a symlink to the specified directory.
+     * Creates a symlink to the specified directory or file of the Factorio game.
      * @param string $directoryOrFile
      * @codeCoverageIgnore Unable to test symlink with vfsStream.
      */
-    protected function createSymlink(string $directoryOrFile): void
+    protected function createFactorioSymlink(string $directoryOrFile): void
     {
         symlink($this->getFactorioPath($directoryOrFile), $this->getInstancePath($directoryOrFile));
+    }
+
+    /**
+     * Creates a symlink to the specified mod name.
+     * @param string $modName
+     * @throws ExportException
+     * @codeCoverageIgnore Unable to test symlink with vfsStream.
+     */
+    protected function createModSymlink(string $modName): void
+    {
+        $info = $this->modFileManager->getInfo($modName);
+        $source = $this->modFileManager->getLocalDirectory($modName);
+        $destination = $this->getInstancePath(sprintf('mods/%s_%s', $modName, $info->getVersion()));
+        symlink($source, $destination);
     }
 
     /**
@@ -207,6 +270,6 @@ class Instance
      */
     protected function getInstancePath(string $directoryOrFile): string
     {
-        return $this->instanceDirectory . '/' . $directoryOrFile;
+        return $this->combinationInstanceDirectory . '/' . $directoryOrFile;
     }
 }

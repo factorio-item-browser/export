@@ -6,8 +6,9 @@ namespace FactorioItemBrowser\Export\Command;
 
 use Exception;
 use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Factorio\DumpExtractor;
+use FactorioItemBrowser\Export\Factorio\Instance;
 use FactorioItemBrowser\Export\Mod\ModDownloader;
 use FactorioItemBrowser\Export\Parser\ParserManager;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
@@ -31,12 +32,6 @@ class ProcessCommand implements CommandInterface
     protected $console;
 
     /**
-     * The dump extractor.
-     * @var DumpExtractor
-     */
-    protected $dumpExtractor;
-
-    /**
      * The export data service.
      * @var ExportDataService
      */
@@ -47,6 +42,12 @@ class ProcessCommand implements CommandInterface
      * @var IconRenderer
      */
     protected $iconRenderer;
+
+    /**
+     * The instance.
+     * @var Instance
+     */
+    protected $instance;
 
     /**
      * The mod downloader.
@@ -62,22 +63,22 @@ class ProcessCommand implements CommandInterface
 
     /**
      * ProcessCommand constructor.
-     * @param DumpExtractor $dumpExtractor
      * @param ExportDataService $exportDataService
      * @param IconRenderer $iconRenderer
+     * @param Instance $instance
      * @param ModDownloader $modDownloader
      * @param ParserManager $parserManager
      */
     public function __construct(
-        DumpExtractor $dumpExtractor,
         ExportDataService $exportDataService,
         IconRenderer $iconRenderer,
+        Instance $instance,
         ModDownloader $modDownloader,
         ParserManager $parserManager
     ) {
-        $this->dumpExtractor = $dumpExtractor;
         $this->exportDataService = $exportDataService;
         $this->iconRenderer = $iconRenderer;
+        $this->instance = $instance;
         $this->modDownloader = $modDownloader;
         $this->parserManager = $parserManager;
     }
@@ -100,6 +101,9 @@ class ProcessCommand implements CommandInterface
         }
     }
 
+    /**
+     * @throws ExportException
+     */
     protected function execute(): void
     {
             $combinationHash = 'foo';
@@ -109,11 +113,9 @@ class ProcessCommand implements CommandInterface
 
             $modNames = explode(',', 'base,bobenemies,boblibrary,clock,FNEI,YARM,boblocale,bobores,bobtech,bobplates,bobassembly,bobclasses,bobelectronics,bobgreenhouse,boblogistics,bobmining,bobpower,bobmodules');
             $this->downloadMods($modNames);
-            $dump = $this->dumpExtractor->extract(file_get_contents(__DIR__ . '/../../data/log.txt'));
-            $this->parserManager->parse($dump, $export->getCombination());
-
+            $dump = $this->runFactorio($export, $modNames);
+            $this->parseDump($export, $dump);
             $this->renderIcons($export);
-
 
             $fileName = $export->persist();
             echo 'Exported combination to: ' . $fileName . PHP_EOL;
@@ -128,6 +130,31 @@ class ProcessCommand implements CommandInterface
     {
         $this->console->writeStep('Downloading %d mods', count($modNames));
         $this->modDownloader->download($modNames);
+    }
+
+    /**
+     * Runs the Factorio game to dump all the data.
+     * @param ExportData $export
+     * @param array|string[] $modNames
+     * @return Dump
+     * @throws ExportException
+     */
+    protected function runFactorio(ExportData $export, array $modNames): Dump
+    {
+        $this->console->writeStep('Running Factorio');
+        return $this->instance->run($export->getCombination()->getHash(), $modNames);
+    }
+
+    /**
+     * Parses the dumped data into the export.
+     * @param ExportData $export
+     * @param Dump $dump
+     * @throws ExportException
+     */
+    protected function parseDump(ExportData $export, Dump $dump): void
+    {
+        $this->console->writeStep('Parsing dumped data');
+        $this->parserManager->parse($dump, $export->getCombination());
     }
 
     /**

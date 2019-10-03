@@ -122,6 +122,11 @@ class DumpExtractor
             throw new InternalException('Unable to detect mod order.');
         }
 
+        $lastMod = array_pop($matches[1]);
+        if ($lastMod !== 'Dump') {
+            throw new InternalException('The Dump mod is not the last loaded mod.');
+        }
+
         return $matches[1];
     }
 }

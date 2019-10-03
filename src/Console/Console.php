@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Console;
 
 use Exception;
-use FactorioItemBrowser\Export\Utils\VersionUtils;
 use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\ColorInterface;
-use Zend\ProgressBar\Adapter\AbstractAdapter;
-use Zend\ProgressBar\Adapter\Console as ProgressBarConsole;
-use Zend\ProgressBar\ProgressBar;
 
 /**
  * The wrapper class for the actual console.
@@ -93,7 +89,7 @@ class Console
     public function writeStep(string $step, ...$parameters)
     {
         $this->writeLine();
-        $this->writeLine(' ' . sprintf($step, ...$parameters), ColorInterface::LIGHT_BLUE);
+        $this->writeLine(sprintf($step, ...$parameters), ColorInterface::LIGHT_BLUE);
         $this->writeHorizontalLine('-', ColorInterface::LIGHT_BLUE);
     }
 
