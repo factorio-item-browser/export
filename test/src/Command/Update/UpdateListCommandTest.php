@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Command\Update;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Update\UpdateListCommand;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Constant\CommandName;

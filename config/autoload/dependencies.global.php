@@ -54,12 +54,6 @@ return [
 
 
 
-
-            Cache\ModFileCache::class => Cache\ModFileCacheFactory::class,
-
-            Combination\CombinationCreator::class => Combination\CombinationCreatorFactory::class,
-            Combination\ParentCombinationFinder::class => Combination\ParentCombinationFinderFactory::class,
-
             Command\Clean\CleanCacheCommand::class => Command\Clean\CleanCacheCommandFactory::class,
             Command\Export\ExportCombinationCommand::class => Command\Export\ExportCombinationCommandFactory::class,
             Command\Export\ExportModCommand::class => Command\Export\ExportModCommandFactory::class,
@@ -78,30 +72,8 @@ return [
             Command\Update\UpdateListCommand::class => Command\Update\UpdateListCommandFactory::class,
             Command\Update\UpdateOrderCommand::class => Command\Update\UpdateOrderCommandFactory::class,
 
-            ExportData\RawExportDataService::class => ExportData\RawExportDataServiceFactory::class,
-            ExportData\ReducedExportDataService::class => ExportData\ReducedExportDataServiceFactory::class,
-
             Factorio\DumpInfoGenerator::class => Factorio\DumpInfoGeneratorFactory::class,
             Factorio\Instance::class => Factorio\InstanceFactory::class,
-
-            Merger\IconMerger::class => InvokableFactory::class,
-            Merger\ItemMerger::class => Merger\ItemMergerFactory::class,
-            Merger\MachineMerger::class => Merger\MachineMergerFactory::class,
-            Merger\MergerManager::class => Merger\MergerManagerFactory::class,
-            Merger\RecipeMerger::class => Merger\RecipeMergerFactory::class,
-
-            Mod\DependencyReader::class => Mod\DependencyReaderFactory::class,
-            Mod\DependencyResolver::class => Mod\DependencyResolverFactory::class,
-            Mod\ModReader::class => Mod\ModReaderFactory::class,
-
-            Reducer\Combination\CombinationReducerManager::class => Reducer\Combination\CombinationReducerManagerFactory::class,
-            Reducer\Combination\IconReducer::class => Reducer\Combination\IconReducerFactory::class,
-            Reducer\Combination\ItemReducer::class => Reducer\Combination\ItemReducerFactory::class,
-            Reducer\Combination\MachineReducer::class => Reducer\Combination\MachineReducerFactory::class,
-            Reducer\Combination\RecipeReducer::class => Reducer\Combination\RecipeReducerFactory::class,
-            Reducer\Mod\CombinationReducer::class => Reducer\Mod\CombinationReducerFactory::class,
-            Reducer\Mod\ModReducerManager::class => Reducer\Mod\ModReducerManagerFactory::class,
-            Reducer\Mod\ThumbnailReducer::class => Reducer\Mod\ThumbnailReducerFactory::class,
 
             // 3rd-party services
             ImagineInterface::class => Renderer\ImagineFactory::class,

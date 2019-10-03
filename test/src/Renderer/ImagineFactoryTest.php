@@ -23,7 +23,6 @@ class ImagineFactoryTest extends TestCase
 {
     /**
      * Tests the invoking.
-     * @throws ReflectionException
      * @covers ::__invoke
      */
     public function testInvoke(): void

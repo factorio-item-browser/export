@@ -4,54 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eeb39a1f59ec8783c576bc152fe561c4",
+    "content-hash": "15b67431f3e8263c04b603c32713ac7e",
     "packages": [
-        {
-            "name": "bluepsyduck/common",
-            "version": "1.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/BluePsyduck/Common.git",
-                "reference": "84b2bc7d48e1ae52109ac4f7dbf94168c6305708"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/BluePsyduck/Common/zipball/84b2bc7d48e1ae52109ac4f7dbf94168c6305708",
-                "reference": "84b2bc7d48e1ae52109ac4f7dbf94168c6305708",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.0.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^6.0 || ^7.0",
-                "squizlabs/php_codesniffer": "^3.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "BluePsyduck\\Common\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-3.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "BluePsyduck",
-                    "email": "bluepsyduck@gmx.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Some classes commonly used in other projects.",
-            "homepage": "https://github.com/BluePsyduck/Common",
-            "keywords": [
-                "BluePsyduck",
-                "common"
-            ],
-            "time": "2018-06-17T07:35:35+00:00"
-        },
         {
             "name": "bluepsyduck/factorio-mod-portal-client",
             "version": "1.1.0",
@@ -258,16 +212,16 @@
         },
         {
             "name": "doctrine/annotations",
-            "version": "v1.7.0",
+            "version": "v1.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/annotations.git",
-                "reference": "fa4c4e861e809d6a1103bd620cce63ed91aedfeb"
+                "reference": "904dca4eb10715b92569fbcd79e201d5c349b6bc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/annotations/zipball/fa4c4e861e809d6a1103bd620cce63ed91aedfeb",
-                "reference": "fa4c4e861e809d6a1103bd620cce63ed91aedfeb",
+                "url": "https://api.github.com/repos/doctrine/annotations/zipball/904dca4eb10715b92569fbcd79e201d5c349b6bc",
+                "reference": "904dca4eb10715b92569fbcd79e201d5c349b6bc",
                 "shasum": ""
             },
             "require": {
@@ -276,7 +230,7 @@
             },
             "require-dev": {
                 "doctrine/cache": "1.*",
-                "phpunit/phpunit": "^7.5@dev"
+                "phpunit/phpunit": "^7.5"
             },
             "type": "library",
             "extra": {
@@ -322,7 +276,7 @@
                 "docblock",
                 "parser"
             ],
-            "time": "2019-08-08T18:11:40+00:00"
+            "time": "2019-10-01T18:55:10+00:00"
         },
         {
             "name": "doctrine/cache",
@@ -2499,6 +2453,54 @@
         }
     ],
     "packages-dev": [
+        {
+            "name": "bluepsyduck/test-helper",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/BluePsyduck/test-helper.git",
+                "reference": "177678acbf03e59bc77ebe8846e8aec4c6049981"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/BluePsyduck/test-helper/zipball/177678acbf03e59bc77ebe8846e8aec4c6049981",
+                "reference": "177678acbf03e59bc77ebe8846e8aec4c6049981",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.0 || ^7.0 || ^8.0",
+                "rregeer/phpunit-coverage-check": "^0.1",
+                "squizlabs/php_codesniffer": "^3.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "BluePsyduck\\TestHelper\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "BluePsyduck",
+                    "email": "bluepsyduck@gmx.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Some traits helping with testing using PHPUnit.",
+            "homepage": "https://github.com/BluePsyduck/test-helper",
+            "keywords": [
+                "BluePsyduck",
+                "helper",
+                "phpunit"
+            ],
+            "time": "2019-04-23T16:47:27+00:00"
+        },
         {
             "name": "composer/xdebug-handler",
             "version": "1.3.3",

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Renderer\Filter;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Renderer\Filter\ScaledLayerFilter;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use Imagine\Image\Box;

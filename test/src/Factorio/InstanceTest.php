@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Factorio;
 
 use BluePsyduck\Common\Data\DataContainer;
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Factorio\DumpExtractor;
 use FactorioItemBrowser\Export\Factorio\Instance;

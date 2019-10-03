@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Command\Render;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use FactorioItemBrowser\Export\Command\Render\RenderModIconsCommand;
 use FactorioItemBrowser\Export\Console\Console;

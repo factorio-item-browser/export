@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\I18n;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\I18n\Translator;
 use FactorioItemBrowser\Export\I18n\LocaleReader;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Command\Reduce;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Reduce\ReduceCombinationCommand;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Reducer\Combination\CombinationReducerManager;

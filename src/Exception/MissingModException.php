@@ -38,6 +38,6 @@ class MissingModException extends ExportException
             $message = sprintf(self::MESSAGE, $modName);
         }
 
-        parent::__construct(sprintf(self::MESSAGE, $message), 0, $previous);
+        parent::__construct($message, 0, $previous);
     }
 }

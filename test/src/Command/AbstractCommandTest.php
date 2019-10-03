@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Command;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use Exception;
 use FactorioItemBrowser\Export\Command\AbstractCommand;
 use FactorioItemBrowser\Export\Console\Console;

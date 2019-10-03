@@ -2,7 +2,7 @@
 
 namespace FactorioItemBrowserTest\Export\Command\Export;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Export\ExportPrepareCommand;
 use FactorioItemBrowser\Export\Factorio\DumpInfoGenerator;
 use PHPUnit\Framework\MockObject\MockObject;

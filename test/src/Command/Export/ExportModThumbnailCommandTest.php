@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Command\Export;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Export\ExportModThumbnailCommand;
 use FactorioItemBrowser\Export\Constant\Config;
 use FactorioItemBrowser\Export\Exception\ExportException;

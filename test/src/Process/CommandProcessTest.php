@@ -8,7 +8,7 @@
 
 namespace FactorioItemBrowserTest\Export\Process;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Process\CommandProcess;
 use PHPUnit\Framework\MockObject\MockObject;

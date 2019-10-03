@@ -2,7 +2,7 @@
 
 namespace FactorioItemBrowserTest\Export\I18n;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\I18n\LocaleReader;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use PHPUnit\Framework\MockObject\MockObject;

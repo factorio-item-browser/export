@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Command\Update;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\Update\UpdateDependenciesCommand;
 use FactorioItemBrowser\Export\Constant\ParameterName;
 use FactorioItemBrowser\Export\Exception\ExportException;

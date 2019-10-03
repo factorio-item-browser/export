@@ -2,7 +2,7 @@
 
 namespace FactorioItemBrowserTest\Export\Factorio;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Factorio\DumpInfoGenerator;

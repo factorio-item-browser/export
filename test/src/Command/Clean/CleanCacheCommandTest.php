@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Command\Clean;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Cache\AbstractCache;
 use FactorioItemBrowser\Export\Command\Clean\CleanCacheCommand;
 use FactorioItemBrowser\Export\Constant\ParameterName;

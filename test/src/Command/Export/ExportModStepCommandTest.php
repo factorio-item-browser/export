@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Command\Export;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use FactorioItemBrowser\Export\Combination\CombinationCreator;
 use FactorioItemBrowser\Export\Command\Export\ExportModStepCommand;

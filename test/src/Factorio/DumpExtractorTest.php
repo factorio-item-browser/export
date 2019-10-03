@@ -2,7 +2,7 @@
 
 namespace FactorioItemBrowserTest\Export\Factorio;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use Exception;
 use FactorioItemBrowser\Export\Entity\Dump\ControlStage;
 use FactorioItemBrowser\Export\Entity\Dump\DataStage;
