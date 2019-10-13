@@ -1,7 +1,8 @@
 /.idea
+/config/autoload/production
 /data/*
 /test/coverage
 /vendor
 
-/config/autoload/factorio-mod-portal-client.*.php
+/config/autoload/development/factorio-mod-portal-client.local.php
 /.phpunit.result.cache

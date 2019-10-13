@@ -23,6 +23,7 @@
     "doctrine/cache": "^1.8",
     "factorio-item-browser/common": "^1.2",
     "factorio-item-browser/export-data": "dev-project-phoenix",
+    "factorio-item-browser/export-queue-client": "^1.0",
     "imagine/imagine": "^1.2",
     "symfony/process": "^4.1",
     "zendframework/zend-config-aggregator": "^1.0",
@@ -62,8 +63,8 @@
     "test-unit": "phpunit --testsuite unit-test --colors=always --coverage-html=test/coverage --coverage-clover=test/coverage/clover.xml",
     "test-serialize": "phpunit --testsuite serializer-test --colors=always",
     "post-autoload-dump": [
-      "mkdir -p data/cache data/export data/mods data/temp factorio/instances",
-      "chmod 0777 data/cache data/export data/mods data/temp factorio/instances factorio/mods/Dump_1.0.0"
+      "mkdir -p data/cache data/mods data/temp data/instances",
+      "chmod 0777 data/cache data/mods data/temp data/instances"
     ],
     "test": [
       "@composer validate --strict",

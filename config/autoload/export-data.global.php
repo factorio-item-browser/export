@@ -15,7 +15,7 @@ return [
     ConfigKey::PROJECT => [
         ConfigKey::EXPORT_DATA => [
             ConfigKey::CACHE_DIR => __DIR__ . '/../../data/cache/export-data',
-            ConfigKey::WORKING_DIRECTORY => __DIR__ . '/../../data/export-data',
+            ConfigKey::WORKING_DIRECTORY => __DIR__ . '/../../data/temp',
         ],
     ],
 ];

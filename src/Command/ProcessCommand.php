@@ -106,19 +106,19 @@ class ProcessCommand implements CommandInterface
      */
     protected function execute(): void
     {
-            $combinationHash = 'foo';
-            $export = $this->exportDataService->createExport($combinationHash);
+        $combinationHash = 'bar';
+        $export = $this->exportDataService->createExport($combinationHash);
 
-            $this->console->writeHeadline('Processing combination %s', $combinationHash);
+        $this->console->writeHeadline('Processing combination %s', $combinationHash);
 
-            $modNames = explode(',', 'base,bobenemies,boblibrary,clock,FNEI,YARM,boblocale,bobores,bobtech,bobplates,bobassembly,bobclasses,bobelectronics,bobgreenhouse,boblogistics,bobmining,bobpower,bobmodules');
-            $this->downloadMods($modNames);
-            $dump = $this->runFactorio($export, $modNames);
-            $this->parseDump($export, $dump);
-            $this->renderIcons($export);
+        $modNames = explode(',', 'base,IndustrialRevolution');
+        $this->downloadMods($modNames);
+        $dump = $this->runFactorio($export, $modNames);
+        $this->parseDump($export, $dump);
+        $this->renderIcons($export);
 
-            $fileName = $export->persist();
-            echo 'Exported combination to: ' . $fileName . PHP_EOL;
+        $fileName = $export->persist();
+        echo 'Exported combination to: ' . $fileName . PHP_EOL;
     }
 
     /**

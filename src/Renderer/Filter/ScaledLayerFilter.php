@@ -51,8 +51,11 @@ class ScaledLayerFilter extends ImagineAware implements FilterInterface
     public function apply(ImageInterface $layerImage)
     {
         $layerImage = $this->scaleLayer($layerImage);
+//        $layerImage->save('./foo1.png');
         $layerImage = $this->offsetLayer($layerImage);
+//        $layerImage->save('./foo2.png');
         $layerImage = $this->cropLayer($layerImage);
+//        $layerImage->save('./foo3.png');
         return $layerImage;
     }
 
