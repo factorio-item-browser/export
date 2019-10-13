@@ -588,12 +588,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-queue-client.git",
-                "reference": "fa641be30ae0951bc0e7bb9de9c0fb27a6ed4b49"
+                "reference": "01742536fcc14455b7cbe69e43b174d469b58c1d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-queue-client/zipball/fa641be30ae0951bc0e7bb9de9c0fb27a6ed4b49",
-                "reference": "fa641be30ae0951bc0e7bb9de9c0fb27a6ed4b49",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-queue-client/zipball/01742536fcc14455b7cbe69e43b174d469b58c1d",
+                "reference": "01742536fcc14455b7cbe69e43b174d469b58c1d",
                 "shasum": ""
             },
             "require": {
@@ -644,7 +644,7 @@
                 "export",
                 "queue"
             ],
-            "time": "2019-10-13T10:13:38+00:00"
+            "time": "2019-10-13T11:47:28+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -2698,8 +2698,8 @@
             "authors": [
                 {
                     "name": "Frank Kleine",
-                    "role": "Developer",
-                    "homepage": "http://frankkleine.de/"
+                    "homepage": "http://frankkleine.de/",
+                    "role": "Developer"
                 }
             ],
             "description": "Virtual file system to mock the real file system in unit tests.",
@@ -4115,8 +4115,8 @@
             "authors": [
                 {
                     "name": "Sebastian Bergmann",
-                    "role": "lead",
-                    "email": "sebastian@phpunit.de"
+                    "email": "sebastian@phpunit.de",
+                    "role": "lead"
                 }
             ],
             "description": "Utility class for timing",
@@ -4911,8 +4911,8 @@
             "authors": [
                 {
                     "name": "Sebastian Bergmann",
-                    "role": "lead",
-                    "email": "sebastian@phpunit.de"
+                    "email": "sebastian@phpunit.de",
+                    "role": "lead"
                 }
             ],
             "description": "Collection of value objects that represent the types of the PHP type system",

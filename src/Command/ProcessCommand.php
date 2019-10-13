@@ -8,12 +8,19 @@ use Exception;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Factorio\Instance;
 use FactorioItemBrowser\Export\Mod\ModDownloader;
 use FactorioItemBrowser\Export\Parser\ParserManager;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\ExportData;
 use FactorioItemBrowser\ExportData\ExportDataService;
+use FactorioItemBrowser\ExportQueue\Client\Client\Facade;
+use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
+use FactorioItemBrowser\ExportQueue\Client\Entity\Job;
+use FactorioItemBrowser\ExportQueue\Client\Exception\ClientException;
+use FactorioItemBrowser\ExportQueue\Client\Request\Job\ListRequest;
+use FactorioItemBrowser\ExportQueue\Client\Request\Job\UpdateRequest;
 use Zend\Console\Adapter\AdapterInterface;
 use ZF\Console\Route;
 
@@ -26,16 +33,16 @@ use ZF\Console\Route;
 class ProcessCommand implements CommandInterface
 {
     /**
-     * The console.
-     * @var Console
-     */
-    protected $console;
-
-    /**
      * The export data service.
      * @var ExportDataService
      */
     protected $exportDataService;
+
+    /**
+     * The export queue facade.
+     * @var Facade
+     */
+    protected $exportQueueFacade;
 
     /**
      * The icon renderer.
@@ -62,8 +69,15 @@ class ProcessCommand implements CommandInterface
     protected $parserManager;
 
     /**
+     * The console.
+     * @var Console
+     */
+    protected $console;
+
+    /**
      * ProcessCommand constructor.
      * @param ExportDataService $exportDataService
+     * @param Facade $exportQueueFacade
      * @param IconRenderer $iconRenderer
      * @param Instance $instance
      * @param ModDownloader $modDownloader
@@ -71,12 +85,14 @@ class ProcessCommand implements CommandInterface
      */
     public function __construct(
         ExportDataService $exportDataService,
+        Facade $exportQueueFacade,
         IconRenderer $iconRenderer,
         Instance $instance,
         ModDownloader $modDownloader,
         ParserManager $parserManager
     ) {
         $this->exportDataService = $exportDataService;
+        $this->exportQueueFacade = $exportQueueFacade;
         $this->iconRenderer = $iconRenderer;
         $this->instance = $instance;
         $this->modDownloader = $modDownloader;
@@ -102,23 +118,61 @@ class ProcessCommand implements CommandInterface
     }
 
     /**
+     * Executes the command.
      * @throws ExportException
      */
     protected function execute(): void
     {
-        $combinationHash = 'bar';
-        $export = $this->exportDataService->createExport($combinationHash);
+        $exportJob = $this->fetchExportJob();
+        if ($exportJob === null) {
+            $this->console->writeMessage('No export job to process. Done.');
+            return;
+        }
 
-        $this->console->writeHeadline('Processing combination %s', $combinationHash);
+        $this->console->writeHeadline('Processing combination %s', $exportJob->getCombinationId());
+        $export = $this->exportDataService->createExport($exportJob->getCombinationId());
 
-        $modNames = explode(',', 'base,IndustrialRevolution');
-        $this->downloadMods($modNames);
-        $dump = $this->runFactorio($export, $modNames);
+        $exportJob = $this->updateExportJob($exportJob, JobStatus::DOWNLOADING);
+        $this->downloadMods($exportJob->getModNames());
+        $exportJob = $this->updateExportJob($exportJob, JobStatus::PROCESSING);
+        $dump = $this->runFactorio($export, $exportJob->getModNames());
         $this->parseDump($export, $dump);
         $this->renderIcons($export);
 
+        $exportJob = $this->updateExportJob($exportJob, JobStatus::UPLOADING);
         $fileName = $export->persist();
         echo 'Exported combination to: ' . $fileName . PHP_EOL;
+    }
+
+    /**
+     * Fetches the next export job to process from the queue.
+     * @return Job|null
+     * @throws InternalException
+     */
+    protected function fetchExportJob(): ?Job
+    {
+        $this->console->writeAction('Fetching export job from queue');
+
+        $request = new ListRequest();
+        $request->setStatus(JobStatus::QUEUED)
+                ->setLimit(1);
+
+        try {
+            $response = $this->exportQueueFacade->getJobList($request);
+            return $response->getJobs()[0] ?? null;
+        } catch (ClientException $e) {
+            throw new InternalException('Failed to fetch export job from queue.', $e);
+        }
+    }
+
+    protected function updateExportJob(Job $exportJob, string $status, string $errorMessage = ''): Job
+    {
+        $request = new UpdateRequest();
+        $request->setJobId($exportJob->getId())
+                ->setStatus($status)
+                ->setErrorMessage($errorMessage);
+
+        return $this->exportQueueFacade->updateJob($request);
     }
 
     /**
