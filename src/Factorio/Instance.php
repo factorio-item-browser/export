@@ -191,7 +191,7 @@ class Instance
         $command = [
             $this->getInstancePath('bin/x64/factorio'),
             '--no-log-rotation',
-            '--create=dump',
+            '--create=' . $this->getInstancePath('dump'),
             '--mod-directory=' . $this->getInstancePath('mods')
         ];
 

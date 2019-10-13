@@ -145,8 +145,14 @@ function map.icon(prototype)
 
     if prototype.icons then
         -- "icons" are the layers overlaying each other to form the final icon.
+
+        -- If the first icon has an icon_size set, it actually overwrites the top-level one.
+        if prototype.icons[1].icon_size then
+            icon.size = prototype.icons[1].icon_size
+        end
+
         for _, layer in pairs(prototype.icons) do
-            table.insert(icon.layers, map.layer(layer))
+            table.insert(icon.layers, map.layer(layer, icon.size))
         end
     elseif prototype.icon then
         -- When "icon" is specified, then it represents the only, not-manipulated layer of the final icon.
@@ -163,13 +169,22 @@ end
 
 --- Maps an icon layer from the prototype.
 -- @param prototype table: The prototype to map.
+-- @param size int: The size of the icon for relative scaling.
 -- @return table: The mapped data.
-function map.layer(prototype)
+-- @todo There is some strange correlation going on between the first layer and all other ones which needs to get addressed while dumping.
+function map.layer(prototype, size)
+    local scale
+    if prototype.icon_size then
+        scale = size / prototype.icon_size * (prototype.scale or 1.)
+    else
+        scale = prototype.icon_size
+    end
+
     local layer = {
         file = prototype.icon,
         shift_x = nil,
         shift_y = nil,
-        scale = prototype.scale,
+        scale = scale,
         tint_red = nil,
         tint_green = nil,
         tint_blue = nil,
