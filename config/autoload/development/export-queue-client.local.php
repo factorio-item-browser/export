@@ -18,7 +18,7 @@ return [
             ConfigKey::CACHE_DIR => __DIR__ . '/../../data/cache/export-queue-client',
             ConfigKey::OPTIONS => [
                 ConfigKey::OPTION_API_URL => 'http://fib-eq-php',
-                ConfigKey::OPTION_API_KEY => 'factorio-item-browser',
+                ConfigKey::OPTION_API_KEY => 'debug',
             ],
         ],
     ],

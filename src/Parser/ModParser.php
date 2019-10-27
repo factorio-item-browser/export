@@ -6,7 +6,7 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Helper\HashingHelper;
+use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\Entity\Icon;
@@ -32,10 +32,10 @@ class ModParser implements ParserInterface
     protected const THUMBNAIL_FILENAME = 'thumbnail.png';
 
     /**
-     * The hashing helper.
-     * @var HashingHelper
+     * The hash calculator.
+     * @var HashCalculator
      */
-    protected $hashingHelper;
+    protected $hashCalculator;
 
     /**
      * The mod file manager.
@@ -51,16 +51,16 @@ class ModParser implements ParserInterface
 
     /**
      * Initializes the parser.
-     * @param HashingHelper $hashingHelper
+     * @param HashCalculator $hashCalculator
      * @param ModFileManager $modFileManager
      * @param TranslationParser $translationParser
      */
     public function __construct(
-        HashingHelper $hashingHelper,
+        HashCalculator $hashCalculator,
         ModFileManager $modFileManager,
         TranslationParser $translationParser
     ) {
-        $this->hashingHelper = $hashingHelper;
+        $this->hashCalculator = $hashCalculator;
         $this->modFileManager = $modFileManager;
         $this->translationParser = $translationParser;
     }
@@ -82,12 +82,10 @@ class ModParser implements ParserInterface
     public function parse(Dump $dump, Combination $combination): void
     {
         foreach ($dump->getModNames() as $modName) {
-            if ($modName === 'Foo') continue; //  @todo Remove hack.
-
             $mod = $this->mapMod($modName);
             $thumbnail = $this->mapThumbnail($mod);
             if ($thumbnail !== null) {
-                $mod->setThumbnailHash($thumbnail->getHash());
+                $mod->setThumbnailId($thumbnail->getId());
                 $combination->addIcon($thumbnail);
             }
             $combination->addMod($mod);
@@ -139,7 +137,7 @@ class ModParser implements ParserInterface
                   ->setRenderedSize(self::RENDERED_THUMBNAIL_SIZE)
                   ->addLayer($layer);
 
-        $thumbnail->setHash($this->hashingHelper->hashIcon($thumbnail));
+        $thumbnail->setId($this->hashCalculator->hashIcon($thumbnail));
         return $thumbnail;
     }
 

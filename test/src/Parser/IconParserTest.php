@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Parser;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
-use FactorioItemBrowser\Export\Helper\HashingHelper;
+use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -23,10 +23,10 @@ class IconParserTest extends TestCase
     use ReflectionTrait;
 
     /**
-     * The mocked hashing helper.
-     * @var HashingHelper&MockObject
+     * The mocked hash calculator.
+     * @var HashCalculator&MockObject
      */
-    protected $hashingHelper;
+    protected $hashCalculator;
 
     /**
      * Sets up the test case.
@@ -35,7 +35,7 @@ class IconParserTest extends TestCase
     {
         parent::setUp();
 
-        $this->hashingHelper = $this->createMock(HashingHelper::class);
+        $this->hashCalculator = $this->createMock(HashCalculator::class);
     }
 
     /**
@@ -45,9 +45,9 @@ class IconParserTest extends TestCase
      */
     public function testConstruct(): void
     {
-        $parser = new IconParser($this->hashingHelper);
+        $parser = new IconParser($this->hashCalculator);
 
-        $this->assertSame($this->hashingHelper, $this->extractProperty($parser, 'hashingHelper'));
+        $this->assertSame($this->hashCalculator, $this->extractProperty($parser, 'hashCalculator'));
     }
 
 

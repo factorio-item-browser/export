@@ -10,7 +10,7 @@ use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Ingredient as DumpIngredient;
 use FactorioItemBrowser\Export\Entity\Dump\Product as DumpProduct;
 use FactorioItemBrowser\Export\Entity\Dump\Recipe as DumpRecipe;
-use FactorioItemBrowser\Export\Helper\HashingHelper;
+use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\Entity\Recipe as ExportRecipe;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient as ExportIngredient;
@@ -25,10 +25,10 @@ use FactorioItemBrowser\ExportData\Entity\Recipe\Product as ExportProduct;
 class RecipeParser implements ParserInterface
 {
     /**
-     * The hashing helper.
-     * @var HashingHelper
+     * The hash calculator.
+     * @var HashCalculator
      */
-    protected $hashingHelper;
+    protected $hashCalculator;
 
     /**
      * The icon parser.
@@ -44,16 +44,16 @@ class RecipeParser implements ParserInterface
 
     /**
      * Initializes the parser.
-     * @param HashingHelper $hashingHelper
+     * @param HashCalculator $hashCalculator
      * @param IconParser $iconParser
      * @param TranslationParser $translationParser
      */
     public function __construct(
-        HashingHelper $hashingHelper,
+        HashCalculator $hashCalculator,
         IconParser $iconParser,
         TranslationParser $translationParser
     ) {
-        $this->hashingHelper = $hashingHelper;
+        $this->hashCalculator = $hashCalculator;
         $this->iconParser = $iconParser;
         $this->translationParser = $translationParser;
     }
@@ -85,8 +85,8 @@ class RecipeParser implements ParserInterface
             $normalRecipe = $normalRecipes[$expensiveRecipe->getName()] ?? null;
 
             if ($normalRecipe === null
-                || $this->hashingHelper->hashRecipe($normalRecipe)
-                    !== $this->hashingHelper->hashRecipe($expensiveRecipe)
+                || $this->hashCalculator->hashRecipe($normalRecipe)
+                    !== $this->hashCalculator->hashRecipe($expensiveRecipe)
             ) {
                 $combination->addRecipe($expensiveRecipe);
             }
@@ -120,7 +120,7 @@ class RecipeParser implements ParserInterface
             $dumpRecipe->getLocalisedDescription()
         );
 
-        $exportRecipe->setIconHash($this->mapIconHash($exportRecipe));
+        $exportRecipe->setIconId($this->mapIconHash($exportRecipe));
         return $exportRecipe;
     }
 
@@ -161,12 +161,12 @@ class RecipeParser implements ParserInterface
      */
     protected function mapIconHash(ExportRecipe $recipe): string
     {
-        $iconHash = $this->iconParser->getIconHash(EntityType::RECIPE, $recipe->getName());
+        $iconHash = $this->iconParser->getIconId(EntityType::RECIPE, $recipe->getName());
 
         // If the recipe does not have an own icon, it may fall back to its first product's icon.
         if ($iconHash === '' && count($recipe->getProducts()) > 0) {
             $firstProduct = $recipe->getProducts()[0];
-            $iconHash = $this->iconParser->getIconHash($firstProduct->getType(), $firstProduct->getName());
+            $iconHash = $this->iconParser->getIconId($firstProduct->getType(), $firstProduct->getName());
         }
 
         return $iconHash;

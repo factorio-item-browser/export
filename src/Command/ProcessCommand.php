@@ -196,7 +196,7 @@ class ProcessCommand implements CommandInterface
     protected function runFactorio(ExportData $export, array $modNames): Dump
     {
         $this->console->writeStep('Running Factorio');
-        return $this->instance->run($export->getCombination()->getHash(), $modNames);
+        return $this->instance->run($export->getCombination()->getId(), $modNames);
     }
 
     /**
@@ -221,7 +221,7 @@ class ProcessCommand implements CommandInterface
         $this->console->writeStep('Rendering %d icons', count($export->getCombination()->getIcons()));
 
         foreach ($export->getCombination()->getIcons() as $icon) {
-            $this->console->writeAction('Rendering icon %s', $icon->getHash());
+            $this->console->writeAction('Rendering icon %s', $icon->getId());
             $export->addRenderedIcon($icon, $this->iconRenderer->render($icon));
         }
     }

@@ -77,8 +77,8 @@ class MachineParser implements ParserInterface
                       ->setNumberOfFluidInputSlots($dumpMachine->getFluidInputSlots())
                       ->setNumberOfFluidOutputSlots($dumpMachine->getFluidOutputSlots())
                       ->setNumberOfModuleSlots($dumpMachine->getModuleSlots())
-                      ->setIconHash(
-                          $this->iconParser->getIconHash(EntityType::MACHINE, strtolower($dumpMachine->getName()))
+                      ->setIconId(
+                          $this->iconParser->getIconId(EntityType::MACHINE, strtolower($dumpMachine->getName()))
                       );
 
         $this->mapEnergyUsage($exportMachine, $dumpMachine->getEnergyUsage());
@@ -116,7 +116,7 @@ class MachineParser implements ParserInterface
     public function validate(Combination $combination): void
     {
         foreach ($combination->getMachines() as $machine) {
-            $machine->setIconHash($this->iconParser->getIconHash(EntityType::MACHINE, $machine->getName()));
+            $machine->setIconId($this->iconParser->getIconId(EntityType::MACHINE, $machine->getName()));
         }
     }
 }

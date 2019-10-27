@@ -7,14 +7,15 @@ namespace FactorioItemBrowser\Export\Helper;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use JMS\Serializer\SerializerInterface;
+use Ramsey\Uuid\Uuid;
 
 /**
- * The helper class for hashing some entities.
+ * The class calculating hashes for some entities.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class HashingHelper
+class HashCalculator
 {
     /**
      * The serializer.
@@ -39,7 +40,7 @@ class HashingHelper
     public function hashIcon(Icon $icon): string
     {
         $icon = clone($icon);
-        $icon->setHash('')
+        $icon->setId('')
              ->setRenderedSize(0);
 
         return $this->hashEntity($icon);
@@ -55,7 +56,7 @@ class HashingHelper
         $recipe = clone($recipe);
         $recipe->setName('')
                ->setMode('')
-               ->setIconHash('');
+               ->setIconId('');
 
         return $this->hashEntity($recipe);
     }
@@ -67,6 +68,6 @@ class HashingHelper
      */
     protected function hashEntity(object $entity): string
     {
-        return substr(hash('md5', $this->serializer->serialize($entity, 'json')), 0, 16);
+        return Uuid::fromString(hash('md5', $this->serializer->serialize($entity, 'json')))->toString();
     }
 }

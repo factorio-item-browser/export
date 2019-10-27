@@ -35,7 +35,7 @@ return [
             Factorio\DumpExtractor::class => AutoWireFactory::class,
             Factorio\Instance::class => AutoWireFactory::class,
 
-            Helper\HashingHelper::class => AutoWireFactory::class,
+            Helper\HashCalculator::class => AutoWireFactory::class,
 
             I18n\LocaleReader::class => AutoWireFactory::class,
             I18n\Translator::class => AutoWireFactory::class,

@@ -8,7 +8,7 @@ use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Icon as DumpIcon;
 use FactorioItemBrowser\Export\Entity\Dump\Layer as DumpLayer;
-use FactorioItemBrowser\Export\Helper\HashingHelper;
+use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\Entity\Icon as ExportIcon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer as ExportLayer;
@@ -35,10 +35,10 @@ class IconParser implements ParserInterface
     ];
 
     /**
-     * The hashing helper.
-     * @var HashingHelper
+     * The hash calculator.
+     * @var HashCalculator
      */
-    protected $hashingHelper;
+    protected $hashCalculator;
 
     /**
      * The parsed icons.
@@ -54,11 +54,11 @@ class IconParser implements ParserInterface
 
     /**
      * Initializes the parser.
-     * @param HashingHelper $hashingHelper
+     * @param HashCalculator $hashCalculator
      */
-    public function __construct(HashingHelper $hashingHelper)
+    public function __construct(HashCalculator $hashCalculator)
     {
-        $this->hashingHelper = $hashingHelper;
+        $this->hashCalculator = $hashCalculator;
     }
 
     /**
@@ -94,7 +94,7 @@ class IconParser implements ParserInterface
             $exportIcon->addLayer($this->mapLayer($dumpLayer));
         }
 
-        $exportIcon->setHash($this->hashingHelper->hashIcon($exportIcon));
+        $exportIcon->setId($this->hashCalculator->hashIcon($exportIcon));
         return $exportIcon;
     }
 
@@ -172,18 +172,18 @@ class IconParser implements ParserInterface
     }
 
     /**
-     * Returns the icon hash for the specified type and name, if available.
+     * Returns the icon id for the specified type and name, if available.
      * @param string $type
      * @param string $name
      * @return string
      */
-    public function getIconHash(string $type, string $name): string
+    public function getIconId(string $type, string $name): string
     {
         $result = '';
         $icon = $this->parsedIcons[$type][$name] ?? null;
         if ($icon !== null) {
-            $this->usedIcons[$icon->getHash()] = $icon;
-            $result = $icon->getHash();
+            $this->usedIcons[$icon->getId()] = $icon;
+            $result = $icon->getId();
         }
         return $result;
     }
