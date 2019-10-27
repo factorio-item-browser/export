@@ -60,7 +60,7 @@ function map.machine(prototype)
         -- Character entities do not specify an ingredient_count, but actually have unlimited ones.
         machine.item_slots = 255
     else
-        machine.item_slots = machine.ingredient_count
+        machine.item_slots = prototype.ingredient_count
     end
 
     for _, fluidbox in pairs(prototype.fluidbox_prototypes) do
