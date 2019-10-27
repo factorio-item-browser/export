@@ -108,10 +108,18 @@ class RecipeParser implements ParserInterface
                      ->setCraftingCategory($dumpRecipe->getCraftingCategory());
 
         foreach ($dumpRecipe->getIngredients() as $dumpIngredient) {
-            $exportRecipe->addIngredient($this->mapIngredient($dumpIngredient));
+            $exportIngredient = $this->mapIngredient($dumpIngredient);
+            if ($exportIngredient->getAmount() > 0) {
+                $exportRecipe->addIngredient($this->mapIngredient($dumpIngredient));
+            }
         }
         foreach ($dumpRecipe->getProducts() as $dumpProduct) {
-            $exportRecipe->addProduct($this->mapProduct($dumpProduct));
+            $exportProduct = $this->mapProduct($dumpProduct);
+            $productAmount = ($exportProduct->getAmountMin() + $exportProduct->getAmountMax())
+                / 2 * $exportProduct->getProbability();
+            if ($productAmount > 0) {
+                $exportRecipe->addProduct($this->mapProduct($dumpProduct));
+            }
         }
 
         $this->translationParser->translateNames($exportRecipe->getLabels(), $dumpRecipe->getLocalisedName());
