@@ -19,7 +19,7 @@ class DataStageTest extends TestCase
 {
     /**
      * Tests the constructing.
-     * @covers ::__construct
+     * @coversNothing
      */
     public function testConstruct(): void
     {

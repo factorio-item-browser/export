@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Factorio;
 
-use BluePsyduck\Common\Data\DataContainer;
 use BluePsyduck\TestHelper\ReflectionTrait;
+use FactorioItemBrowser\Common\Constant\Constant;
+use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Factorio\DumpExtractor;
 use FactorioItemBrowser\Export\Factorio\Instance;
-use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Registry\ModRegistry;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
+use JMS\Serializer\SerializerInterface;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -30,217 +32,237 @@ class InstanceTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked console.
+     * @var Console&MockObject
+     */
+    protected $console;
+
+    /**
+     * The mocked dump extractor.
+     * @var DumpExtractor&MockObject
+     */
+    protected $dumpExtractor;
+
+    /**
+     * The mocked mod file manager.
+     * @var ModFileManager&MockObject
+     */
+    protected $modFileManager;
+
+    /**
+     * The mocked serializer.
+     * @var SerializerInterface&MockObject
+     */
+    protected $serializer;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->console = $this->createMock(Console::class);
+        $this->dumpExtractor = $this->createMock(DumpExtractor::class);
+        $this->modFileManager = $this->createMock(ModFileManager::class);
+        $this->serializer = $this->createMock(SerializerInterface::class);
+    }
+
+
+    /**
      * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var DumpExtractor $dumpExtractor */
-        $dumpExtractor = $this->createMock(DumpExtractor::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-        $factorioDirectory = 'abc';
+        $factorioDirectory = 'foo';
+        $instancesDirectory = 'bar';
 
-        $instance = new Instance($dumpExtractor, $modRegistry, $factorioDirectory);
+        $instance = new Instance(
+            $this->console,
+            $this->dumpExtractor,
+            $this->modFileManager,
+            $this->serializer,
+            $factorioDirectory,
+            $instancesDirectory
+        );
 
-        $this->assertSame($dumpExtractor, $this->extractProperty($instance, 'dumpExtractor'));
-        $this->assertSame($modRegistry, $this->extractProperty($instance, 'modRegistry'));
+        $this->assertSame($this->console, $this->extractProperty($instance, 'console'));
+        $this->assertSame($this->dumpExtractor, $this->extractProperty($instance, 'dumpExtractor'));
+        $this->assertSame($this->modFileManager, $this->extractProperty($instance, 'modFileManager'));
+        $this->assertSame($this->serializer, $this->extractProperty($instance, 'serializer'));
         $this->assertSame($factorioDirectory, $this->extractProperty($instance, 'factorioDirectory'));
-    }
-
-    /**
-     * Provides the data for the run test.
-     * @return array
-     */
-    public function provideRun(): array
-    {
-        return [
-            [false],
-            [true],
-        ];
+        $this->assertSame($instancesDirectory, $this->extractProperty($instance, 'instancesDirectory'));
     }
 
     /**
      * Tests the run method.
-     * @param bool $withException
      * @throws ExportException
+     * @throws ReflectionException
      * @covers ::run
-     * @dataProvider provideRun
      */
-    public function testRun(bool $withException): void
+    public function testRun(): void
     {
-        $hash = 'abc';
-        $output = 'def';
-        $dump = new DataContainer(['ghi' => 'jkl']);
+        $instancesDirectory = 'abc';
+        $combinationId = 'def';
+        $modNames = ['ghi', 'jkl'];
+        $output = 'mno';
+        $expectedCombinationInstanceDirectory = 'abc/def';
 
-        /* @var Combination|MockObject $combination */
-        $combination = $this->getMockBuilder(Combination::class)
-                            ->setMethods(['calculateHash'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $combination->expects($this->once())
-                    ->method('calculateHash')
-                    ->willReturn($hash);
+        /* @var Dump&MockObject $dump */
+        $dump = $this->createMock(Dump::class);
 
-        /* @var DumpExtractor|MockObject $dumpExtractor */
-        $dumpExtractor = $this->getMockBuilder(DumpExtractor::class)
-                              ->setMethods(['extract'])
-                              ->disableOriginalConstructor()
-                              ->getMock();
-        $dumpExtractor->expects($withException ? $this->never() : $this->once())
-                      ->method('extract')
-                      ->with($output)
-                      ->willReturn($dump);
+        $this->console->expects($this->exactly(3))
+                      ->method('writeAction')
+                      ->withConsecutive(
+                          [$this->identicalTo('Preparing Factorio instance')],
+                          [$this->identicalTo('Launching Factorio')],
+                          [$this->identicalTo('Extracting dumped data')]
+                      );
 
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        $this->dumpExtractor->expects($this->once())
+                            ->method('extract')
+                            ->with($this->identicalTo($output))
+                            ->willReturn($dump);
 
-        /* @var Instance|MockObject $instance */
+        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
-                         ->setMethods(['setUp', 'setUpMods', 'execute', 'removeInstanceDirectory'])
-                         ->setConstructorArgs([$dumpExtractor, $modRegistry, 'foo'])
+                         ->onlyMethods([
+                             'setupInstance',
+                             'setUpMods',
+                             'setUpDumpMod',
+                             'execute',
+                             'removeInstanceDirectory',
+                         ])
+                         ->setConstructorArgs([
+                             $this->console,
+                             $this->dumpExtractor,
+                             $this->modFileManager,
+                             $this->serializer,
+                             'foo',
+                             $instancesDirectory,
+                         ])
                          ->getMock();
-        if ($withException) {
-            $instance->expects($this->once())
-                     ->method('setUp')
-                     ->with($hash)
-                     ->willThrowException(new ExportException());
-        } else {
-            $instance->expects($this->once())
-                     ->method('setUp')
-                     ->with($hash);
-        }
-        $instance->expects($withException ? $this->never() : $this->once())
+        $instance->expects($this->once())
+                 ->method('setUpInstance');
+        $instance->expects($this->once())
                  ->method('setUpMods')
-                 ->with($combination);
-        $instance->expects($withException ? $this->never() : $this->once())
+                 ->with($this->identicalTo($modNames));
+        $instance->expects($this->once())
+                 ->method('setUpDumpMod')
+                 ->with($this->identicalTo($modNames));
+        $instance->expects($this->once())
                  ->method('execute')
                  ->willReturn($output);
         $instance->expects($this->once())
                  ->method('removeInstanceDirectory');
 
-        if ($withException) {
-            $this->expectException(ExportException::class);
-        }
+        $result = $instance->run($combinationId, $modNames);
 
-        $result = $instance->run($combination);
         $this->assertSame($dump, $result);
+        $this->assertSame(
+            $expectedCombinationInstanceDirectory,
+            $this->extractProperty($instance, 'combinationInstanceDirectory')
+        );
     }
 
     /**
-     * Tests the setUp method.
+     * Tests the setUpInstance method.
      * @throws ReflectionException
-     * @covers ::setUp
+     * @covers ::setUpInstance
      */
-    public function testSetUp(): void
+    public function testSetUpInstance(): void
     {
-        $combinationHash = 'abc';
-        $factorioDirectory = 'def';
-        $expectedInstanceDirectory = 'def/instances/abc';
-
-        /* @var DumpExtractor $dumpExtractor */
-        $dumpExtractor = $this->createMock(DumpExtractor::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        /* @var Instance|MockObject $instance */
+        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
-                         ->setMethods(['removeInstanceDirectory', 'createDirectory', 'copy', 'createSymlink'])
-                         ->setConstructorArgs([$dumpExtractor, $modRegistry, $factorioDirectory])
+                         ->onlyMethods(['removeInstanceDirectory', 'createDirectory', 'copy', 'createFactorioSymlink'])
+                         ->disableOriginalConstructor()
                          ->getMock();
         $instance->expects($this->once())
                  ->method('removeInstanceDirectory');
         $instance->expects($this->exactly(2))
                  ->method('createDirectory')
                  ->withConsecutive(
-                     ['bin/x64'],
-                     ['mods']
+                     [$this->identicalTo('bin/x64')],
+                     [$this->identicalTo('mods')]
                  );
         $instance->expects($this->exactly(2))
                  ->method('copy')
                  ->withConsecutive(
-                     ['bin/x64/factorio'],
-                     ['config-path.cfg']
+                     [$this->identicalTo('bin/x64/factorio')],
+                     [$this->identicalTo('config-path.cfg')]
                  );
         $instance->expects($this->once())
-                 ->method('createSymlink')
-                 ->with('data');
+                 ->method('createFactorioSymlink')
+                 ->with($this->identicalTo('data'));
 
-        $this->invokeMethod($instance, 'setUp', $combinationHash);
-        $this->assertSame($expectedInstanceDirectory, $this->extractProperty($instance, 'instanceDirectory'));
-    }
-
-    /**
-     * Provides the data for the setUpMods test.
-     * @return array
-     */
-    public function provideSetUpMods(): array
-    {
-        return [
-            [false],
-            [true],
-        ];
+        $this->invokeMethod($instance, 'setUpInstance');
     }
 
     /**
      * Tests the setUpMods method.
-     * @param bool $withException
      * @throws ReflectionException
      * @covers ::setUpMods
-     * @dataProvider provideSetUpMods
      */
-    public function testSetUpMods(bool $withException): void
+    public function testSetUpMods(): void
     {
-        $mod1 = (new Mod())->setFileName('abc.zip');
-        $mod2 = (new Mod())->setFileName('def.zip');
         $modNames = ['abc', 'def'];
-        $combination = (new Combination())->setLoadedModNames($modNames);
 
-        /* @var ModRegistry|MockObject $modRegistry */
-        $modRegistry = $this->getMockBuilder(ModRegistry::class)
-                            ->setMethods(['get'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        if ($withException) {
-            $modRegistry->expects($this->once())
-                        ->method('get')
-                        ->with('abc')
-                        ->willReturn(null);
-        } else {
-            $modRegistry->expects($this->exactly(2))
-                        ->method('get')
-                        ->withConsecutive(
-                            ['abc'],
-                            ['def']
-                        )
-                        ->willReturnOnConsecutiveCalls(
-                            $mod1,
-                            $mod2
-                        );
-        }
-
-        /* @var DumpExtractor $dumpExtractor */
-        $dumpExtractor = $this->createMock(DumpExtractor::class);
-
-        /* @var Instance|MockObject $instance */
+        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
-                         ->setMethods(['createSymlink'])
-                         ->setConstructorArgs([$dumpExtractor, $modRegistry, 'foo'])
+                         ->onlyMethods(['createModSymlink'])
+                         ->disableOriginalConstructor()
                          ->getMock();
-        $instance->expects($withException ? $this->never() : $this->exactly(3))
-                 ->method('createSymlink')
+        $instance->expects($this->exactly(2))
+                 ->method('createModSymlink')
                  ->withConsecutive(
-                     ['mods/abc.zip'],
-                     ['mods/def.zip'],
-                     ['mods/Dump_1.0.0']
+                     [$this->identicalTo('abc')],
+                     [$this->identicalTo('def')]
                  );
 
-        if ($withException) {
-            $this->expectException(ExportException::class);
-        }
+        $this->invokeMethod($instance, 'setUpMods', $modNames);
+    }
 
-        $this->invokeMethod($instance, 'setUpMods', $combination);
+    /**
+     * Tests the createDumpInfoJson method.
+     * @throws ReflectionException
+     * @covers ::createDumpInfoJson
+     */
+    public function testCreateDumpInfoJson(): void
+    {
+        $baseVersion = '1.2.3';
+        $modNames = ['abc', 'def'];
+
+        /* @var InfoJson&MockObject $baseInfo */
+        $baseInfo = $this->createMock(InfoJson::class);
+        $baseInfo->expects($this->once())
+                 ->method('getVersion')
+                 ->willReturn($baseVersion);
+
+        $this->modFileManager->expects($this->once())
+                             ->method('getInfo')
+                             ->with($this->identicalTo(Constant::MOD_NAME_BASE))
+                             ->willReturn($baseInfo);
+
+        $expectedResult = new InfoJson();
+        $expectedResult->setName('Dump')
+                       ->setAuthor('factorio-item-browser')
+                       ->setVersion('1.0.0')
+                       ->setFactorioVersion($baseVersion)
+                       ->setDependencies($modNames);
+
+        $instance = new Instance(
+            $this->console,
+            $this->dumpExtractor,
+            $this->modFileManager,
+            $this->serializer,
+            'foo',
+            'bar'
+        );
+
+        $result = $this->invokeMethod($instance, 'createDumpInfoJson', $modNames);
+        $this->assertEquals($expectedResult, $result);
     }
 
     /**
@@ -254,7 +276,7 @@ class InstanceTest extends TestCase
 
         /* @var Process|MockObject $process */
         $process = $this->getMockBuilder(Process::class)
-                        ->setMethods(['run', 'getOutput'])
+                        ->onlyMethods(['run', 'getOutput'])
                         ->disableOriginalConstructor()
                         ->getMock();
         $process->expects($this->once())
@@ -265,7 +287,7 @@ class InstanceTest extends TestCase
 
         /* @var Instance|MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
-                         ->setMethods(['createProcess'])
+                         ->onlyMethods(['createProcess'])
                          ->disableOriginalConstructor()
                          ->getMock();
         $instance->expects($this->once())
@@ -273,6 +295,7 @@ class InstanceTest extends TestCase
                  ->willReturn($process);
 
         $result = $this->invokeMethod($instance, 'execute');
+
         $this->assertSame($output, $result);
     }
 
@@ -283,70 +306,30 @@ class InstanceTest extends TestCase
      */
     public function testCreateProcess(): void
     {
-        $expectedCommandLine = "'abc' '--no-log-rotation' '--create=dump' '--mod-directory=def'";
+        $expectedCommandLine = "'abc' '--no-log-rotation' '--create=def' '--mod-directory=ghi'";
 
         /* @var Instance|MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
-                         ->setMethods(['getInstancePath'])
+                         ->onlyMethods(['getInstancePath'])
                          ->disableOriginalConstructor()
                          ->getMock();
-        $instance->expects($this->exactly(2))
+        $instance->expects($this->exactly(3))
                  ->method('getInstancePath')
                  ->withConsecutive(
                      ['bin/x64/factorio'],
+                     ['dump'],
                      ['mods']
                  )
                  ->willReturnOnConsecutiveCalls(
                      'abc',
-                     'def'
+                     'def',
+                     'ghi'
                  );
 
         /* @var Process $result */
         $result = $this->invokeMethod($instance, 'createProcess');
 
         $this->assertSame($expectedCommandLine, $result->getCommandLine());
-    }
-
-    /**
-     * Tests the removeInstanceDirectory method.
-     * @throws ReflectionException
-     * @covers ::removeInstanceDirectory
-     */
-    public function testRemoveInstanceDirectory(): void
-    {
-        $directory = vfsStream::setup('root', null, [
-            'instance' => [
-                'abc' => [
-                    'def' => 'ghi',
-                    'jkl' => [
-                        'mno' => 'pqr'
-                    ]
-                ],
-                'stu' => 'vwx'
-            ]
-        ]);
-        $directoriesToRemove = [
-            'instance/abc/def',
-            'instance/abc/jkl/mno',
-            'instance/stu',
-            'instance',
-        ];
-        foreach ($directoriesToRemove as $path) {
-            $this->assertTrue($directory->hasChild($path));
-        }
-
-        /* @var DumpExtractor $dumpExtractor */
-        $dumpExtractor = $this->createMock(DumpExtractor::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        $instance = new Instance($dumpExtractor, $modRegistry, 'foo');
-        $this->injectProperty($instance, 'instanceDirectory', vfsStream::url('root/instance'));
-
-        $this->invokeMethod($instance, 'removeInstanceDirectory');
-        foreach ($directoriesToRemove as $path) {
-            $this->assertFalse($directory->hasChild($path));
-        }
     }
 
     /**
@@ -360,7 +343,7 @@ class InstanceTest extends TestCase
 
         /* @var Instance|MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
-                         ->setMethods(['getInstancePath'])
+                         ->onlyMethods(['getInstancePath'])
                          ->disableOriginalConstructor()
                          ->getMock();
         $instance->expects($this->once())
@@ -369,7 +352,9 @@ class InstanceTest extends TestCase
                  ->willReturn(vfsStream::url('root/abc'));
 
         $this->assertFalse($directory->hasChild('abc'));
+
         $this->invokeMethod($instance, 'createDirectory', 'abc');
+
         $this->assertTrue($directory->hasChild('abc'));
     }
 
@@ -388,14 +373,13 @@ class InstanceTest extends TestCase
                 'ghi' => 'jkl',
             ],
         ]);
-
         $directoryOrFile = 'abc';
         $factorioPath = vfsStream::url('root/factorio/abc');
         $instancePath = vfsStream::url('root/instance/abc');
 
         /* @var Instance|MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
-                         ->setMethods(['getFactorioPath', 'getInstancePath'])
+                         ->onlyMethods(['getFactorioPath', 'getInstancePath'])
                          ->disableOriginalConstructor()
                          ->getMock();
         $instance->expects($this->once())
@@ -408,7 +392,9 @@ class InstanceTest extends TestCase
                  ->willReturn($instancePath);
 
         $this->assertFalse($root->hasChild('instance/abc'));
+
         $this->invokeMethod($instance, 'copy', $directoryOrFile);
+
         $this->assertTrue($root->hasChild('instance/abc'));
     }
 
@@ -420,20 +406,23 @@ class InstanceTest extends TestCase
     public function testGetFactorioPath(): void
     {
         $factorioDirectory = 'abc';
-        $directoryOrFile = 'def';
+        $fileName = 'def';
         $expectedResult = 'abc/def';
 
-        /* @var DumpExtractor $dumpExtractor */
-        $dumpExtractor = $this->createMock(DumpExtractor::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        $instance = new Instance(
+            $this->console,
+            $this->dumpExtractor,
+            $this->modFileManager,
+            $this->serializer,
+            $factorioDirectory,
+            'bar'
+        );
 
-        $instance = new Instance($dumpExtractor, $modRegistry, $factorioDirectory);
+        $result = $this->invokeMethod($instance, 'getFactorioPath', $fileName);
 
-        $result = $this->invokeMethod($instance, 'getFactorioPath', $directoryOrFile);
         $this->assertSame($expectedResult, $result);
     }
-    
+
     /**
      * Tests the getInstancePath method.
      * @throws ReflectionException
@@ -441,19 +430,22 @@ class InstanceTest extends TestCase
      */
     public function testGetInstancePath(): void
     {
-        $instanceDirectory = 'abc';
-        $directoryOrFile = 'def';
+        $combinationInstanceDirectory = 'abc';
+        $fileName = 'def';
         $expectedResult = 'abc/def';
 
-        /* @var DumpExtractor $dumpExtractor */
-        $dumpExtractor = $this->createMock(DumpExtractor::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
+        $instance = new Instance(
+            $this->console,
+            $this->dumpExtractor,
+            $this->modFileManager,
+            $this->serializer,
+            'foo',
+            'bar'
+        );
+        $this->injectProperty($instance, 'combinationInstanceDirectory', $combinationInstanceDirectory);
 
-        $instance = new Instance($dumpExtractor, $modRegistry, 'foo');
-        $this->injectProperty($instance, 'instanceDirectory', $instanceDirectory);
+        $result = $this->invokeMethod($instance, 'getInstancePath', $fileName);
 
-        $result = $this->invokeMethod($instance, 'getInstancePath', $directoryOrFile);
         $this->assertSame($expectedResult, $result);
     }
 }

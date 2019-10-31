@@ -90,16 +90,16 @@ class Instance
 
     /**
      * Runs the Factorio instance.
-     * @param string $combinationHash
+     * @param string $combinationId
      * @param array $modNames
      * @return Dump
      * @throws ExportException
      */
-    public function run(string $combinationHash, array $modNames): Dump
+    public function run(string $combinationId, array $modNames): Dump
     {
         try {
             $this->console->writeAction('Preparing Factorio instance');
-            $this->combinationInstanceDirectory = $this->instancesDirectory . '/' . $combinationHash;
+            $this->combinationInstanceDirectory = $this->instancesDirectory . '/' . $combinationId;
 
             $this->setUpInstance();
             $this->setUpMods($modNames);
@@ -147,8 +147,29 @@ class Instance
      * Sets up the dump mod to be used.
      * @param array|string[] $modNames
      * @throws ExportException
+     * @codeCoverageIgnore Unable to mock cp -r with virtual file system.
      */
     protected function setupDumpMod(array $modNames): void
+    {
+        exec(sprintf(
+            'cp -r "%s" "%s"',
+            __DIR__ . '/../../lua/dump',
+            $this->getInstancePath('mods/Dump_1.0.0')
+        ));
+
+        file_put_contents(
+            $this->getInstancePath('mods/Dump_1.0.0/info.json'),
+            $this->serializer->serialize($this->createDumpInfoJson($modNames), 'json')
+        );
+    }
+
+    /**
+     * Creates the info.json instance used for the dump mod.
+     * @param array|string[] $modNames
+     * @return InfoJson
+     * @throws ExportException
+     */
+    protected function createDumpInfoJson(array $modNames): InfoJson
     {
         $baseInfo = $this->modFileManager->getInfo(Constant::MOD_NAME_BASE);
 
@@ -159,16 +180,7 @@ class Instance
              ->setFactorioVersion($baseInfo->getVersion())
              ->setDependencies($modNames);
 
-        exec(sprintf(
-            'cp -r "%s" "%s"',
-            __DIR__ . '/../../lua/dump',
-            $this->getInstancePath('mods/Dump_1.0.0')
-        ));
-
-        file_put_contents(
-            $this->getInstancePath('mods/Dump_1.0.0/info.json'),
-            $this->serializer->serialize($info, 'json')
-        );
+        return $info;
     }
 
     /**
@@ -200,6 +212,7 @@ class Instance
 
     /**
      * Removes the specified directory if it exists.
+     * @codeCoverageIgnore Unable to rm -rf in virtual file system.
      */
     protected function removeInstanceDirectory(): void
     {

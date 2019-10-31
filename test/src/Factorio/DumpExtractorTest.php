@@ -7,6 +7,7 @@ use Exception;
 use FactorioItemBrowser\Export\Entity\Dump\ControlStage;
 use FactorioItemBrowser\Export\Entity\Dump\DataStage;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Exception\InvalidDumpException;
 use FactorioItemBrowser\Export\Factorio\DumpExtractor;
 use JMS\Serializer\SerializerInterface;
@@ -64,6 +65,7 @@ class DumpExtractorTest extends TestCase
         $output = 'abc';
         $dataStageData = 'def';
         $controlStageData = 'ghi';
+        $modNames = ['jkl', 'mno'];
 
         /* @var DataStage&MockObject $dataStage */
         $dataStage = $this->createMock(DataStage::class);
@@ -72,9 +74,13 @@ class DumpExtractorTest extends TestCase
         
         /* @var DumpExtractor&MockObject $dumpExtractor */
         $dumpExtractor = $this->getMockBuilder(DumpExtractor::class)
-                              ->onlyMethods(['extractRawDumpData', 'parseDump'])
+                              ->onlyMethods(['detectModOrder', 'extractRawDumpData', 'parseDump'])
                               ->setConstructorArgs([$this->serializer])
                               ->getMock();
+        $dumpExtractor->expects($this->once())
+                      ->method('detectModOrder')
+                      ->with($output)
+                      ->willReturn($modNames);
         $dumpExtractor->expects($this->exactly(2))
                       ->method('extractRawDumpData')
                       ->withConsecutive(
@@ -204,5 +210,60 @@ class DumpExtractorTest extends TestCase
         $dumpExtractor = new DumpExtractor($this->serializer);
 
         $this->invokeMethod($dumpExtractor, 'parseDump', $stage, $dumpData, $className);
+    }
+
+    /**
+     * Tests the detectModOrder method.
+     * @throws ReflectionException
+     * @covers ::detectModOrder
+     */
+    public function testDetectModOrder(): void
+    {
+        $output = <<<EOT
+   7.754 Checksum for core: 2087614386
+   7.754 Checksum of base: 1061071205
+   7.754 Checksum of foo: 1234567890
+   7.754 Checksum of Dump: 9876543210
+EOT;
+        $expectedResult = ['base', 'foo'];
+
+        $dumpExtractor = new DumpExtractor($this->serializer);
+        $result = $this->invokeMethod($dumpExtractor, 'detectModOrder', $output);
+
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Tests the detectModOrder method.
+     * @throws ReflectionException
+     * @covers ::detectModOrder
+     */
+    public function testDetectModOrderWithMissingDumpMod(): void
+    {
+        $output = <<<EOT
+   7.754 Checksum for core: 2087614386
+   7.754 Checksum of base: 1061071205
+   7.754 Checksum of foo: 1234567890
+EOT;
+
+        $this->expectException(InternalException::class);
+
+        $dumpExtractor = new DumpExtractor($this->serializer);
+        $this->invokeMethod($dumpExtractor, 'detectModOrder', $output);
+    }
+
+    /**
+     * Tests the detectModOrder method.
+     * @throws ReflectionException
+     * @covers ::detectModOrder
+     */
+    public function testDetectModOrderWithInvalidOutput(): void
+    {
+        $output = 'invalid';
+
+        $this->expectException(InternalException::class);
+
+        $dumpExtractor = new DumpExtractor($this->serializer);
+        $this->invokeMethod($dumpExtractor, 'detectModOrder', $output);
     }
 }
