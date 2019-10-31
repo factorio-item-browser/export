@@ -27,7 +27,6 @@ class IngredientTest extends TestCase
         $this->assertSame('', $entity->getType());
         $this->assertSame('', $entity->getName());
         $this->assertSame(1., $entity->getAmount());
-        
     }
 
     /**

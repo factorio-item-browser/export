@@ -1,4 +1,5 @@
 <?php
+
 /**
  * The PHPUnit test of the CommandProcess class.
  *
@@ -99,10 +100,10 @@ class CommandProcessTest extends TestCase
     public function testStart(): void
     {
         $commandLine = 'ls -l';
-        $callback = function($type, $data) {
+        $callback = function ($type, $data) {
             // Nothing to do.
         };
-        $newCallback = function($type, $data) {
+        $newCallback = function ($type, $data) {
             // Nothing to do.
         };
 

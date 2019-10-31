@@ -84,7 +84,8 @@ class RecipeParser implements ParserInterface
             $expensiveRecipe = $this->mapRecipe($dumpRecipe, RecipeMode::EXPENSIVE);
             $normalRecipe = $normalRecipes[$expensiveRecipe->getName()] ?? null;
 
-            if ($normalRecipe === null
+            if (
+                $normalRecipe === null
                 || $this->hashCalculator->hashRecipe($normalRecipe)
                     !== $this->hashCalculator->hashRecipe($expensiveRecipe)
             ) {

@@ -205,5 +205,4 @@ class DumpExtractorTest extends TestCase
 
         $this->invokeMethod($dumpExtractor, 'parseDump', $stage, $dumpData, $className);
     }
-
 }

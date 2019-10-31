@@ -49,6 +49,4 @@ class IconParserTest extends TestCase
 
         $this->assertSame($this->hashCalculator, $this->extractProperty($parser, 'hashCalculator'));
     }
-
-
 }

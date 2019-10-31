@@ -8,6 +8,7 @@ use Exception;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
+use FactorioItemBrowser\Export\Exception\InvalidInfoJsonFileException;
 use FactorioItemBrowser\Export\Exception\InvalidModFileException;
 use JMS\Serializer\SerializerInterface;
 use ZipArchive;
@@ -108,7 +109,7 @@ class ModFileManager
         try {
             return $this->serializer->deserialize($contents, InfoJson::class, 'json');
         } catch (Exception $e) {
-            throw new ExportException('Invalid info.json file.'); // @todo Custom exception.
+            throw new InvalidInfoJsonFileException($modName);
         }
     }
 
@@ -127,7 +128,7 @@ class ModFileManager
         if ($result === false) {
             $result = [];
         }
-        return array_map(function(string $value) use ($modDirectoryLength): string {
+        return array_map(function (string $value) use ($modDirectoryLength): string {
             return substr($value, $modDirectoryLength);
         }, $result);
     }

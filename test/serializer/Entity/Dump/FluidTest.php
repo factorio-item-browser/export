@@ -37,7 +37,7 @@ class FluidTest extends SerializerTestCase
     {
         return [
             'name' => 'abc',
-            'localised_name'=> 'def',
+            'localised_name' => 'def',
             'localised_description' => ['ghi'],
         ];
     }

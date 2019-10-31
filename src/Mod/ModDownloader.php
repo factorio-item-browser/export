@@ -72,7 +72,6 @@ class ModDownloader
         Facade $modPortalClientFacade,
         int $numberOfParallelDownloads,
         string $tempDirectory
-
     ) {
         $this->console = $console;
         $this->modFileManager = $modFileManager;
@@ -198,10 +197,10 @@ class ModDownloader
     protected function createProcessManager(): ProcessManager
     {
         $result = new ProcessManager($this->numberOfParallelDownloads);
-        $result->setProcessStartCallback(function(DownloadProcess $process): void {
+        $result->setProcessStartCallback(function (DownloadProcess $process): void {
             $this->handleProcessStart($process);
         });
-        $result->setProcessFinishCallback(function(DownloadProcess $process): void {
+        $result->setProcessFinishCallback(function (DownloadProcess $process): void {
             $this->handleProcessFinish($process);
         });
         return $result;

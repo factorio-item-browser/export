@@ -44,7 +44,7 @@ class MachineTest extends SerializerTestCase
     {
         return [
             'name' => 'abc',
-            'localised_name'=> 'def',
+            'localised_name' => 'def',
             'localised_description' => ['ghi'],
             'crafting_categories' => ['jkl', 'mno'],
             'crafting_speed' => 13.37,

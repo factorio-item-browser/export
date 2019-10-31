@@ -53,7 +53,7 @@ class RecipeTest extends SerializerTestCase
     {
         return [
             'name' => 'abc',
-            'localised_name'=> 'def',
+            'localised_name' => 'def',
             'localised_description' => ['ghi'],
             'crafting_category' => 'jkl',
             'crafting_time' => 13.37,

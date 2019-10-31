@@ -39,7 +39,7 @@ class ItemTest extends SerializerTestCase
     {
         return [
             'name' => 'abc',
-            'localised_name'=> 'def',
+            'localised_name' => 'def',
             'localised_description' => ['ghi'],
             'localised_entity_name' => 'jkl',
             'localised_entity_description' => ['mno'],

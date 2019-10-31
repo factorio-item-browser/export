@@ -32,41 +32,6 @@ class Console
     }
 
     /**
-     * Writes a message to the console.
-     * @param string $message
-     * @param int|null $color
-     * @return $this
-     */
-    public function write(string $message, ?int $color = null)
-    {
-        $this->consoleAdapter->write($message, $color);
-        return $this;
-    }
-
-    /**
-     * Writes a line to the console.
-     * @param string $message
-     * @param int|null $color
-     * @return $this
-     */
-    public function writeLine(string $message = '', ?int $color = null)
-    {
-        $this->consoleAdapter->writeLine($message, $color);
-        return $this;
-    }
-
-    /**
-     * Writes a command being executed to the console.
-     * @param string $command
-     * @return $this
-     */
-    public function writeCommand(string $command)
-    {
-        $this->writeLine('$ ' . $command, ColorInterface::GRAY);
-        return $this;
-    }
-
-    /**
      * Writes a headline with the specified message.
      * @param string $message
      * @param array|string[] $parameters
@@ -74,10 +39,10 @@ class Console
      */
     public function writeHeadline(string $message, ...$parameters): self
     {
-        $this->writeLine()
-             ->writeHorizontalLine('-', ColorInterface::LIGHT_YELLOW)
-             ->writeLine(' ' . sprintf($message, ...$parameters), ColorInterface::LIGHT_YELLOW)
-             ->writeHorizontalLine('-', ColorInterface::LIGHT_YELLOW);
+        $this->consoleAdapter->writeLine();
+        $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_YELLOW);
+        $this->consoleAdapter->writeLine(' ' . sprintf($message, ...$parameters), ColorInterface::LIGHT_YELLOW);
+        $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_YELLOW);
         return $this;
     }
 
@@ -85,12 +50,14 @@ class Console
      * Writes a step to the console.
      * @param string $step
      * @param mixed ...$parameters
+     * @return $this
      */
-    public function writeStep(string $step, ...$parameters)
+    public function writeStep(string $step, ...$parameters): self
     {
-        $this->writeLine();
-        $this->writeLine(sprintf($step, ...$parameters), ColorInterface::LIGHT_BLUE);
-        $this->writeHorizontalLine('-', ColorInterface::LIGHT_BLUE);
+        $this->consoleAdapter->writeLine();
+        $this->consoleAdapter->writeLine(sprintf($step, ...$parameters), ColorInterface::LIGHT_BLUE);
+        $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_BLUE);
+        return $this;
     }
 
     /**
@@ -99,9 +66,9 @@ class Console
      * @param array $parameters
      * @return $this
      */
-    public function writeAction(string $action, ...$parameters)
+    public function writeAction(string $action, ...$parameters): self
     {
-        $this->writeLine(sprintf('> ' . $action . '...', ...$parameters));
+        $this->consoleAdapter->writeLine('> ' . sprintf($action, ...$parameters) . '...');
         return $this;
     }
 
@@ -109,33 +76,39 @@ class Console
      * Writes a simple message, like a comment, to the console.
      * @param string $message
      * @param mixed ...$parameters
-     */
-    public function writeMessage(string $message, ...$parameters)
-    {
-        $this->writeLine('# ' . sprintf($message, ...$parameters));
-    }
-
-    /**
-     * Writes a horizontal line to the console.
-     * @param string $character
-     * @param int|null $color
      * @return $this
      */
-    protected function writeHorizontalLine(string $character, ?int $color = null)
+    public function writeMessage(string $message, ...$parameters): self
     {
-        $this->writeLine(str_pad('', $this->consoleAdapter->getWidth(), $character), $color);
+        $this->consoleAdapter->writeLine('# ' . sprintf($message, ...$parameters));
         return $this;
     }
 
-    public function writeException(Exception $e): void
+    /**
+     * Writes an exception to the console.
+     * @param Exception $e
+     * @return $this
+     */
+    public function writeException(Exception $e): self
     {
-        $this->writeLine()
-             ->writeHorizontalLine('-', ColorInterface::LIGHT_RED)
-             ->writeLine(
-                 sprintf(' %s: %s', substr(strrchr(get_class($e), '\\'), 1), $e->getMessage()),
-                 ColorInterface::LIGHT_RED
-             )
-             ->writeHorizontalLine('-', ColorInterface::LIGHT_RED)
-             ->writeLine($e->getTraceAsString(), ColorInterface::RED);
+        $this->consoleAdapter->writeLine();
+        $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_RED);
+        $this->consoleAdapter->writeLine(
+            sprintf(' %s: %s', substr(strrchr(get_class($e), '\\'), 1), $e->getMessage()),
+            ColorInterface::LIGHT_RED
+        );
+        $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_RED);
+        $this->consoleAdapter->writeLine($e->getTraceAsString(), ColorInterface::RED);
+        return $this;
+    }
+
+    /**
+     * Creates a horizontal line of the specified character.
+     * @param string $character
+     * @return string
+     */
+    protected function createHorizontalLine(string $character): string
+    {
+        return str_pad('', $this->consoleAdapter->getWidth(), $character);
     }
 }
