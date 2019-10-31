@@ -110,7 +110,7 @@ class IconRendererTest extends TestCase
 
         /* @var IconRenderer&MockObject $renderer */
         $renderer = $this->getMockBuilder(IconRenderer::class)
-                         ->setMethods(['createImage', 'renderLayer', 'resizeImage'])
+                         ->onlyMethods(['createImage', 'renderLayer', 'resizeImage'])
                          ->setConstructorArgs([$this->imagine, $this->modFileManager])
                          ->getMock();
         $renderer->expects($this->once())
@@ -206,7 +206,7 @@ class IconRendererTest extends TestCase
 
         /* @var IconRenderer&MockObject $renderer */
         $renderer = $this->getMockBuilder(IconRenderer::class)
-                         ->setMethods(['createScaledLayerFilter', 'createLayerImage', 'createTintedLayerFilter'])
+                         ->onlyMethods(['createScaledLayerFilter', 'createLayerImage', 'createTintedLayerFilter'])
                          ->setConstructorArgs([$this->imagine, $this->modFileManager])
                          ->getMock();
         $renderer->expects($this->once())
@@ -246,7 +246,7 @@ class IconRendererTest extends TestCase
 
         /* @var IconRenderer&MockObject $renderer */
         $renderer = $this->getMockBuilder(IconRenderer::class)
-                         ->setMethods(['loadLayerImage'])
+                         ->onlyMethods(['loadLayerImage'])
                          ->setConstructorArgs([$this->imagine, $this->modFileManager])
                          ->getMock();
         $renderer->expects($this->once())
@@ -347,7 +347,7 @@ class IconRendererTest extends TestCase
 
         /* @var IconRenderer&MockObject $renderer */
         $renderer = $this->getMockBuilder(IconRenderer::class)
-                         ->setMethods(['convertColor'])
+                         ->onlyMethods(['convertColor'])
                          ->setConstructorArgs([$this->imagine, $this->modFileManager])
                          ->getMock();
         $renderer->expects($this->once())

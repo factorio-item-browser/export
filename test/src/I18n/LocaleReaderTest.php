@@ -79,7 +79,7 @@ class LocaleReaderTest extends TestCase
 
         /* @var LocaleReader&MockObject $reader */
         $reader = $this->getMockBuilder(LocaleReader::class)
-                       ->setMethods(['getLocaleFileNames', 'readLocaleFile'])
+                       ->onlyMethods(['getLocaleFileNames', 'readLocaleFile'])
                        ->setConstructorArgs([$this->modFileManager])
                        ->getMock();
         $reader->expects($this->once())
@@ -161,7 +161,7 @@ class LocaleReaderTest extends TestCase
 
         /* @var LocaleReader&MockObject $reader */
         $reader = $this->getMockBuilder(LocaleReader::class)
-                       ->setMethods(['parseLocaleFile'])
+                       ->onlyMethods(['parseLocaleFile'])
                        ->setConstructorArgs([$this->modFileManager])
                        ->getMock();
         $reader->expects($this->once())

@@ -98,9 +98,6 @@ class HashCalculatorTest extends TestCase
     {
         $hash = 'foo';
 
-        /* @var Layer&MockObject $layer */
-        $layer = $this->createMock(Layer::class);
-
         $recipe = new Recipe();
         $recipe->setName('abc')
                ->setMode('def')

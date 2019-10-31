@@ -143,7 +143,7 @@ class TranslatorTest extends TestCase
 
         /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
-                           ->setMethods(['translateWithFallback'])
+                           ->onlyMethods(['translateWithFallback'])
                            ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($this->exactly(3))
@@ -211,7 +211,7 @@ class TranslatorTest extends TestCase
 
         /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
-                           ->setMethods(['translate'])
+                           ->onlyMethods(['translate'])
                            ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($this->exactly(count($resultsTranslate)))
@@ -281,7 +281,7 @@ class TranslatorTest extends TestCase
 
         /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
-                           ->setMethods(['translateLocalisedString', 'resolveReferences'])
+                           ->onlyMethods(['translateLocalisedString', 'resolveReferences'])
                            ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($this->exactly(count($resultsTranslate)))
@@ -364,7 +364,7 @@ class TranslatorTest extends TestCase
 
         /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
-                           ->setMethods(['translateParameters'])
+                           ->onlyMethods(['translateParameters'])
                            ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($resultTranslateParameters === null ? $this->never() : $this->once())
@@ -406,7 +406,7 @@ class TranslatorTest extends TestCase
 
         /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
-                           ->setMethods(['translate'])
+                           ->onlyMethods(['translate'])
                            ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($this->exactly(2))
@@ -448,7 +448,7 @@ class TranslatorTest extends TestCase
 
         /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
-                           ->setMethods(['translateReference'])
+                           ->onlyMethods(['translateReference'])
                            ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($this->exactly(2))
@@ -521,7 +521,7 @@ class TranslatorTest extends TestCase
     ): void {
         /* @var Translator&MockObject $translator */
         $translator = $this->getMockBuilder(Translator::class)
-                           ->setMethods(['translatePlaceholder'])
+                           ->onlyMethods(['translatePlaceholder'])
                            ->setConstructorArgs([$this->localeReader, $this->placeholderTranslator])
                            ->getMock();
         $translator->expects($expectPlaceholder ? $this->once() : $this->never())

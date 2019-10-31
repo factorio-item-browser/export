@@ -62,7 +62,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var ScaledLayerFilter|MockObject $filter */
         $filter = $this->getMockBuilder(ScaledLayerFilter::class)
-                       ->setMethods(['scaleLayer', 'offsetLayer', 'cropLayer'])
+                       ->onlyMethods(['scaleLayer', 'offsetLayer', 'cropLayer'])
                        ->disableOriginalConstructor()
                        ->getMock();
         $filter->expects($this->once())
@@ -108,7 +108,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var BoxInterface|MockObject $box */
         $box = $this->getMockBuilder(BoxInterface::class)
-                    ->setMethods(['scale'])
+                    ->onlyMethods(['scale'])
                     ->getMockForAbstractClass();
         $box->expects($expectResize ? $this->once() : $this->never())
             ->method('scale')
@@ -117,7 +117,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var ImageInterface|MockObject $layerImage */
         $layerImage = $this->getMockBuilder(ImageInterface::class)
-                           ->setMethods(['getSize', 'resize'])
+                           ->onlyMethods(['getSize', 'resize'])
                            ->getMockForAbstractClass();
         $layerImage->expects($expectResize ? $this->once() : $this->never())
                    ->method('getSize')
@@ -146,7 +146,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var ImageInterface|MockObject $temporaryImage */
         $temporaryImage = $this->getMockBuilder(ImageInterface::class)
-                               ->setMethods(['paste'])
+                               ->onlyMethods(['paste'])
                                ->getMockForAbstractClass();
         $temporaryImage->expects($this->once())
                        ->method('paste')
@@ -155,7 +155,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var ScaledLayerFilter|MockObject $filter */
         $filter = $this->getMockBuilder(ScaledLayerFilter::class)
-                       ->setMethods(['createTemporaryImage', 'calculateDrawPoint'])
+                       ->onlyMethods(['createTemporaryImage', 'calculateDrawPoint'])
                        ->disableOriginalConstructor()
                        ->getMock();
         $filter->expects($this->once())
@@ -188,7 +188,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var ImageInterface|MockObject $image */
         $image = $this->getMockBuilder(ImageInterface::class)
-                      ->setMethods(['getSize', 'crop'])
+                      ->onlyMethods(['getSize', 'crop'])
                       ->getMockForAbstractClass();
         $image->expects($this->once())
               ->method('getSize')
@@ -230,7 +230,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var BoxInterface|MockObject $newSize */
         $newSize = $this->getMockBuilder(BoxInterface::class)
-                        ->setMethods(['scale', 'increase'])
+                        ->onlyMethods(['scale', 'increase'])
                         ->getMockForAbstractClass();
         $newSize->expects($this->once())
                 ->method('scale')
@@ -243,7 +243,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var PaletteInterface|MockObject $palette */
         $palette = $this->getMockBuilder(PaletteInterface::class)
-                        ->setMethods(['color'])
+                        ->onlyMethods(['color'])
                         ->getMockForAbstractClass();
         $palette->expects($this->once())
                 ->method('color')
@@ -252,7 +252,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var ImageInterface|MockObject $layerImage */
         $layerImage = $this->getMockBuilder(ImageInterface::class)
-                           ->setMethods(['getSize', 'palette'])
+                           ->onlyMethods(['getSize', 'palette'])
                            ->getMockForAbstractClass();
         $layerImage->expects($this->once())
                    ->method('getSize')
@@ -263,7 +263,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var ImagineInterface|MockObject $imagine */
         $imagine = $this->getMockBuilder(ImagineInterface::class)
-                        ->setMethods(['create'])
+                        ->onlyMethods(['create'])
                         ->getMockForAbstractClass();
         $imagine->expects($this->once())
                 ->method('create')
@@ -272,7 +272,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var ScaledLayerFilter|MockObject $filter */
         $filter = $this->getMockBuilder(ScaledLayerFilter::class)
-                       ->setMethods(['getImagine'])
+                       ->onlyMethods(['getImagine'])
                        ->setConstructorArgs([new Layer(), $size])
                        ->getMock();
         $filter->expects($this->once())
@@ -296,14 +296,14 @@ class ScaledLayerFilterTest extends TestCase
         
         /* @var ImageInterface|MockObject $temporaryImage */
         $temporaryImage = $this->getMockBuilder(ImageInterface::class)
-                               ->setMethods(['getSize'])
+                               ->onlyMethods(['getSize'])
                                ->getMockForAbstractClass();
         $temporaryImage->expects($this->once())
                        ->method('getSize')
                        ->willReturn(new Box(12, 45));
         /* @var ImageInterface|MockObject $layerImage */
         $layerImage = $this->getMockBuilder(ImageInterface::class)
-                           ->setMethods(['getSize'])
+                           ->onlyMethods(['getSize'])
                            ->getMockForAbstractClass();
         $layerImage->expects($this->once())
                    ->method('getSize')
@@ -311,7 +311,7 @@ class ScaledLayerFilterTest extends TestCase
 
         /* @var ScaledLayerFilter|MockObject $filter */
         $filter = $this->getMockBuilder(ScaledLayerFilter::class)
-                       ->setMethods(['calculateDrawPosition'])
+                       ->onlyMethods(['calculateDrawPosition'])
                        ->setConstructorArgs([$layer, 1337])
                        ->getMock();
         $filter->expects($this->exactly(2))

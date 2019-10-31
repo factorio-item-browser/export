@@ -59,7 +59,7 @@ class TintedLayerFilterTest extends TestCase
 
         /* @var ImageInterface|MockObject $image */
         $image = $this->getMockBuilder(ImageInterface::class)
-                      ->setMethods(['fill'])
+                      ->onlyMethods(['fill'])
                       ->getMockForAbstractClass();
         $image->expects($this->once())
               ->method('fill')
@@ -88,7 +88,7 @@ class TintedLayerFilterTest extends TestCase
 
         /* @var PaletteInterface|MockObject $palette */
         $palette = $this->getMockBuilder(PaletteInterface::class)
-                        ->setMethods(['color'])
+                        ->onlyMethods(['color'])
                         ->getMockForAbstractClass();
         $palette->expects($this->once())
                 ->method('color')
@@ -97,7 +97,7 @@ class TintedLayerFilterTest extends TestCase
 
         /* @var ImageInterface|MockObject $image */
         $image = $this->getMockBuilder(ImageInterface::class)
-                      ->setMethods(['getColorAt', 'palette'])
+                      ->onlyMethods(['getColorAt', 'palette'])
                       ->getMockForAbstractClass();
         $image->expects($this->once())
               ->method('getColorAt')
@@ -109,7 +109,7 @@ class TintedLayerFilterTest extends TestCase
 
         /* @var ImageInterface|MockObject $layerImage */
         $layerImage = $this->getMockBuilder(ImageInterface::class)
-                           ->setMethods(['getColorAt'])
+                           ->onlyMethods(['getColorAt'])
                            ->getMockForAbstractClass();
         $layerImage->expects($this->once())
                    ->method('getColorAt')
@@ -118,7 +118,7 @@ class TintedLayerFilterTest extends TestCase
 
         /* @var TintedLayerFilter|MockObject $filter */
         $filter = $this->getMockBuilder(TintedLayerFilter::class)
-                       ->setMethods(['calculateComponent', 'calculateAlpha'])
+                       ->onlyMethods(['calculateComponent', 'calculateAlpha'])
                        ->setConstructorArgs([$layerImage, $this->createMock(ColorInterface::class)])
                        ->getMock();
         $filter->expects($this->exactly(3))
@@ -182,7 +182,7 @@ class TintedLayerFilterTest extends TestCase
 
         /* @var ColorInterface|MockObject $source */
         $source = $this->getMockBuilder(ColorInterface::class)
-                       ->setMethods(['getValue', 'getAlpha'])
+                       ->onlyMethods(['getValue', 'getAlpha'])
                        ->getMockForAbstractClass();
         $source->expects($this->once())
                ->method('getValue')
@@ -194,7 +194,7 @@ class TintedLayerFilterTest extends TestCase
 
         /* @var ColorInterface|MockObject $dest */
         $dest = $this->getMockBuilder(ColorInterface::class)
-                     ->setMethods(['getValue', 'getAlpha'])
+                     ->onlyMethods(['getValue', 'getAlpha'])
                      ->getMockForAbstractClass();
         $dest->expects($this->once())
              ->method('getValue')
@@ -206,7 +206,7 @@ class TintedLayerFilterTest extends TestCase
 
         /* @var ColorInterface|MockObject $tint */
         $tint = $this->getMockBuilder(ColorInterface::class)
-                     ->setMethods(['getValue', 'getAlpha'])
+                     ->onlyMethods(['getValue', 'getAlpha'])
                      ->getMockForAbstractClass();
         $tint->expects($this->once())
              ->method('getValue')
@@ -253,7 +253,7 @@ class TintedLayerFilterTest extends TestCase
     {
         /* @var ColorInterface|MockObject $source */
         $source = $this->getMockBuilder(ColorInterface::class)
-                       ->setMethods(['getAlpha'])
+                       ->onlyMethods(['getAlpha'])
                        ->getMockForAbstractClass();
         $source->expects($this->once())
                ->method('getAlpha')
@@ -261,7 +261,7 @@ class TintedLayerFilterTest extends TestCase
 
         /* @var ColorInterface|MockObject $dest */
         $dest = $this->getMockBuilder(ColorInterface::class)
-                     ->setMethods(['getAlpha'])
+                     ->onlyMethods(['getAlpha'])
                      ->getMockForAbstractClass();
         $dest->expects($this->once())
              ->method('getAlpha')
@@ -269,7 +269,7 @@ class TintedLayerFilterTest extends TestCase
 
         /* @var ColorInterface|MockObject $tint */
         $tint = $this->getMockBuilder(ColorInterface::class)
-                     ->setMethods(['getAlpha'])
+                     ->onlyMethods(['getAlpha'])
                      ->getMockForAbstractClass();
         $tint->expects($this->once())
              ->method('getAlpha')

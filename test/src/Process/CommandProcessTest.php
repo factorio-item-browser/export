@@ -42,7 +42,7 @@ class CommandProcessTest extends TestCase
 
         /* @var CommandProcess|MockObject $process */
         $process = $this->getMockBuilder(CommandProcess::class)
-                        ->setMethods(['buildCommand'])
+                        ->onlyMethods(['buildCommand'])
                         ->disableOriginalConstructor()
                         ->getMock();
         $process->expects($this->once())
@@ -112,7 +112,7 @@ class CommandProcessTest extends TestCase
 
         /* @var CommandProcess|MockObject $process */
         $process = $this->getMockBuilder(CommandProcess::class)
-                        ->setMethods(['wrapCallback'])
+                        ->onlyMethods(['wrapCallback'])
                         ->setConstructorArgs([$commandLine, [], $console])
                         ->getMock();
         $process->expects($this->once())
@@ -155,7 +155,7 @@ class CommandProcessTest extends TestCase
         if ($withConsole) {
             /* @var Console|MockObject $console */
             $console = $this->getMockBuilder(Console::class)
-                            ->setMethods(['writeCommand', 'write'])
+                            ->onlyMethods(['writeCommand', 'write'])
                             ->disableOriginalConstructor()
                             ->getMock();
             $console->expects($this->once())
@@ -187,7 +187,7 @@ class CommandProcessTest extends TestCase
 
         /* @var CommandProcess|MockObject $process */
         $process = $this->getMockBuilder(CommandProcess::class)
-                        ->setMethods(['getCommandLine'])
+                        ->onlyMethods(['getCommandLine'])
                         ->setConstructorArgs(['foo', [], $console])
                         ->getMock();
         $process->expects($this->any())
