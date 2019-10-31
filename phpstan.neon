@@ -7,7 +7,6 @@ parameters:
 
   ignoreErrors:
     - '#Dynamic call to static method PHPUnit\\Framework\\.*#'
-    - '#Call to an undefined method PHPUnit\\Framework\\MockObject\\MockBuilder<FactorioItemBrowser\\Export\\Command\\SubCommandTrait>::expects\(\)\.#'
 
 includes:
   - vendor/phpstan/phpstan-phpunit/extension.neon

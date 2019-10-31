@@ -79,7 +79,7 @@ class LocaleReader
     {
         $result = [];
         foreach ($this->modFileManager->findFiles($modName, self::GLOB_PATTERN) as $fileName) {
-            if (preg_match(self::REGEXP_LOCALE_FILE, $fileName, $match)) {
+            if (preg_match(self::REGEXP_LOCALE_FILE, $fileName, $match) > 0) {
                 $locale = $match[1];
                 if (!isset($result[$locale])) {
                     $result[$locale] = [];
@@ -99,7 +99,7 @@ class LocaleReader
      */
     protected function readLocaleFile(string $modName, string $fileName): array
     {
-        return $this->parseLocaleFile((string) $this->modFileManager->readFile($modName, $fileName));
+        return $this->parseLocaleFile($this->modFileManager->readFile($modName, $fileName));
     }
 
     /**

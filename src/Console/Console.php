@@ -34,7 +34,7 @@ class Console
     /**
      * Writes a headline with the specified message.
      * @param string $message
-     * @param array|string[] $parameters
+     * @param mixed ...$parameters
      * @return $this
      */
     public function writeHeadline(string $message, ...$parameters): self
@@ -63,7 +63,7 @@ class Console
     /**
      * Writes an action to the console.
      * @param string $action
-     * @param array $parameters
+     * @param mixed ...$parameters
      * @return $this
      */
     public function writeAction(string $action, ...$parameters): self
@@ -94,7 +94,7 @@ class Console
         $this->consoleAdapter->writeLine();
         $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_RED);
         $this->consoleAdapter->writeLine(
-            sprintf(' %s: %s', substr(strrchr(get_class($e), '\\'), 1), $e->getMessage()),
+            sprintf(' %s: %s', substr((string) strrchr(get_class($e), '\\'), 1), $e->getMessage()),
             ColorInterface::LIGHT_RED
         );
         $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_RED);

@@ -63,13 +63,13 @@ class ModFileManager
     {
         $zipArchive = new ZipArchive();
         $success = $zipArchive->open($modZipPath);
-        if (!$success || $zipArchive->numFiles === 0) {
+        if ($success !== true || $zipArchive->numFiles === 0) {
             throw new InvalidModFileException($modZipPath, 'Unable to open zip file.');
         }
 
         try {
             $firstStat = $zipArchive->statIndex(0);
-            if (!preg_match(self::REGEXP_MOD_DIRECTORY, $firstStat['name'], $match)) {
+            if (preg_match(self::REGEXP_MOD_DIRECTORY, $firstStat['name'], $match) !== 1) {
                 throw new InvalidModFileException($modZipPath, 'Unable to determine mod directory.');
             }
             $modDirectory = $match[0];

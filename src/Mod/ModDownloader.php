@@ -16,6 +16,7 @@ use FactorioItemBrowser\Export\Exception\DownloadFailedException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Exception\MissingModException;
+use FactorioItemBrowser\Export\Exception\NoValidReleaseException;
 use FactorioItemBrowser\Export\Process\DownloadProcess;
 use FactorioItemBrowser\Export\Utils\VersionUtils;
 use Symfony\Component\Process\Process;
@@ -105,7 +106,7 @@ class ModDownloader
 
     /**
      * Fetches the meta data to the specified mod names.
-     * @param array|string $modNames
+     * @param array|string[] $modNames
      * @return array|Mod[]
      * @throws ExportException
      */
@@ -153,6 +154,7 @@ class ModDownloader
      * Returns the release to actually download, or null if no download is required.
      * @param Mod $mod
      * @return Release|null
+     * @throws ExportException
      */
     protected function getReleaseForDownload(Mod $mod): ?Release
     {
@@ -162,6 +164,7 @@ class ModDownloader
         } catch (ExportException $e) {
             $currentVersion = '';
         }
+
         $release = $this->findLatestRelease($mod);
         if ($currentVersion === '' || VersionUtils::compare($release->getVersion(), $currentVersion) > 0) {
             $result = $release;
@@ -173,6 +176,7 @@ class ModDownloader
      * Returns the latest release of the mod.
      * @param Mod $mod
      * @return Release
+     * @throws ExportException
      */
     protected function findLatestRelease(Mod $mod): Release
     {
@@ -186,6 +190,9 @@ class ModDownloader
             if ($result === null || VersionUtils::compare($release->getVersion(), $result->getVersion()) > 0) {
                 $result = $release;
             }
+        }
+        if ($result === null) {
+            throw new NoValidReleaseException($mod->getName());
         }
         return $result;
     }
