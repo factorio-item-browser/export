@@ -71,12 +71,20 @@ class IconParser implements ParserInterface
         $this->usedIcons = [];
 
         foreach ($dump->getDataStage()->getIcons() as $dumpIcon) {
-            if (in_array($dumpIcon->getType(), self::BLACKLISTED_TYPES, true)) {
-                continue;
+            if ($this->isIconValid($dumpIcon)) {
+                $this->addParsedIcon($dumpIcon->getType(), strtolower($dumpIcon->getName()), $this->mapIcon($dumpIcon));
             }
-
-            $this->addParsedIcon($dumpIcon->getType(), strtolower($dumpIcon->getName()), $this->mapIcon($dumpIcon));
         }
+    }
+
+    /**
+     * Returns whether the icon is valid and can be processed further.
+     * @param DumpIcon $dumpIcon
+     * @return bool
+     */
+    protected function isIconValid(DumpIcon $dumpIcon): bool
+    {
+        return !in_array($dumpIcon->getType(), self::BLACKLISTED_TYPES, true);
     }
 
     /**
