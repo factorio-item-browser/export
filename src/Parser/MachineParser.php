@@ -83,7 +83,7 @@ class MachineParser implements ParserInterface
 
         $this->mapEnergyUsage($exportMachine, $dumpMachine->getEnergyUsage());
         $this->translationParser->translateNames($exportMachine->getLabels(), $dumpMachine->getLocalisedName());
-        $this->translationParser->translateNames(
+        $this->translationParser->translateDescriptions(
             $exportMachine->getDescriptions(),
             $dumpMachine->getLocalisedDescription()
         );
@@ -115,8 +115,5 @@ class MachineParser implements ParserInterface
      */
     public function validate(Combination $combination): void
     {
-        foreach ($combination->getMachines() as $machine) {
-            $machine->setIconId($this->iconParser->getIconId(EntityType::MACHINE, $machine->getName()));
-        }
     }
 }

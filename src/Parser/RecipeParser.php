@@ -73,25 +73,22 @@ class RecipeParser implements ParserInterface
      */
     public function parse(Dump $dump, Combination $combination): void
     {
-        $normalRecipes = [];
+        $recipes = [];
         foreach ($dump->getControlStage()->getNormalRecipes() as $dumpRecipe) {
-            $exportRecipe = $this->mapRecipe($dumpRecipe, RecipeMode::NORMAL);
-            $normalRecipes[$exportRecipe->getName()] = $exportRecipe;
-            $combination->addRecipe($exportRecipe);
+            $normalRecipe = $this->mapRecipe($dumpRecipe, RecipeMode::NORMAL);
+            $recipes[$this->hashCalculator->hashRecipe($normalRecipe)] = $normalRecipe;
         }
 
         foreach ($dump->getControlStage()->getExpensiveRecipes() as $dumpRecipe) {
             $expensiveRecipe = $this->mapRecipe($dumpRecipe, RecipeMode::EXPENSIVE);
-            $normalRecipe = $normalRecipes[$expensiveRecipe->getName()] ?? null;
+            $hash = $this->hashCalculator->hashRecipe($expensiveRecipe);
 
-            if (
-                $normalRecipe === null
-                || $this->hashCalculator->hashRecipe($normalRecipe)
-                    !== $this->hashCalculator->hashRecipe($expensiveRecipe)
-            ) {
-                $combination->addRecipe($expensiveRecipe);
+            if (!isset($recipes[$hash])) {
+                $recipes[$hash] = $expensiveRecipe;
             }
         }
+
+        $combination->setRecipes(array_values($recipes));
     }
 
     /**
@@ -110,16 +107,14 @@ class RecipeParser implements ParserInterface
 
         foreach ($dumpRecipe->getIngredients() as $dumpIngredient) {
             $exportIngredient = $this->mapIngredient($dumpIngredient);
-            if ($exportIngredient->getAmount() > 0) {
-                $exportRecipe->addIngredient($this->mapIngredient($dumpIngredient));
+            if ($this->isIngredientValid($exportIngredient)) {
+                $exportRecipe->addIngredient($exportIngredient);
             }
         }
         foreach ($dumpRecipe->getProducts() as $dumpProduct) {
             $exportProduct = $this->mapProduct($dumpProduct);
-            $productAmount = ($exportProduct->getAmountMin() + $exportProduct->getAmountMax())
-                / 2 * $exportProduct->getProbability();
-            if ($productAmount > 0) {
-                $exportRecipe->addProduct($this->mapProduct($dumpProduct));
+            if ($this->isProductValid($exportProduct)) {
+                $exportRecipe->addProduct($exportProduct);
             }
         }
 
@@ -129,7 +124,7 @@ class RecipeParser implements ParserInterface
             $dumpRecipe->getLocalisedDescription()
         );
 
-        $exportRecipe->setIconId($this->mapIconHash($exportRecipe));
+        $exportRecipe->setIconId($this->mapIconId($exportRecipe));
         return $exportRecipe;
     }
 
@@ -145,6 +140,16 @@ class RecipeParser implements ParserInterface
                          ->setName(strtolower($dumpIngredient->getName()))
                          ->setAmount($dumpIngredient->getAmount());
         return $exportIngredient;
+    }
+
+    /**
+     * Returns whether the specified ingredient is valid.
+     * @param ExportIngredient $ingredient
+     * @return bool
+     */
+    protected function isIngredientValid(ExportIngredient $ingredient): bool
+    {
+        return $ingredient->getAmount() > 0;
     }
 
     /**
@@ -164,21 +169,32 @@ class RecipeParser implements ParserInterface
     }
 
     /**
+     * Returns whether the specified product is valid.
+     * @param ExportProduct $product
+     * @return bool
+     */
+    protected function isProductValid(ExportProduct $product): bool
+    {
+        $amount = ($product->getAmountMin() + $product->getAmountMax()) / 2 * $product->getProbability();
+        return $amount > 0;
+    }
+
+    /**
      * Maps the icon hash to the recipe.
      * @param ExportRecipe $recipe
      * @return string
      */
-    protected function mapIconHash(ExportRecipe $recipe): string
+    protected function mapIconId(ExportRecipe $recipe): string
     {
-        $iconHash = $this->iconParser->getIconId(EntityType::RECIPE, $recipe->getName());
+        $iconId = $this->iconParser->getIconId(EntityType::RECIPE, $recipe->getName());
 
         // If the recipe does not have an own icon, it may fall back to its first product's icon.
-        if ($iconHash === '' && count($recipe->getProducts()) > 0) {
+        if ($iconId === '' && count($recipe->getProducts()) > 0) {
             $firstProduct = $recipe->getProducts()[0];
-            $iconHash = $this->iconParser->getIconId($firstProduct->getType(), $firstProduct->getName());
+            $iconId = $this->iconParser->getIconId($firstProduct->getType(), $firstProduct->getName());
         }
 
-        return $iconHash;
+        return $iconId;
     }
 
     /**
