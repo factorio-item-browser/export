@@ -29,6 +29,12 @@ return [
         ],
         'factories' => [
             Command\ProcessCommand::class => AutoWireFactory::class,
+            Command\RenderIconCommand::class => AutoWireFactory::class,
+            Command\ProcessStep\DownloadStep::class => AutoWireFactory::class,
+            Command\ProcessStep\FactorioStep::class => AutoWireFactory::class,
+            Command\ProcessStep\ParserStep::class => AutoWireFactory::class,
+            Command\ProcessStep\RenderIconsStep::class => AutoWireFactory::class,
+            Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
 
             Console\Console::class => AutoWireFactory::class,
 
@@ -59,8 +65,10 @@ return [
 
             // Auto-wire helpers
             'array $exportParsers' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARSERS),
+            'array $exportProcessSteps' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PROCESS_STEPS),
 
             'int $numberOfParallelDownloads' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_DOWNLOADS),
+            'int $numberOfParallelRenderProcesses' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_RENDERS),
 
             'string $factorioDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO),
             'string $instancesDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),

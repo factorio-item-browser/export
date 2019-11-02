@@ -5,15 +5,12 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command;
 
 use Exception;
+use FactorioItemBrowser\Export\Command\ProcessStep\ProcessStepInterface;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
-use FactorioItemBrowser\Export\Factorio\Instance;
-use FactorioItemBrowser\Export\Mod\ModDownloader;
-use FactorioItemBrowser\Export\Parser\ParserManager;
-use FactorioItemBrowser\Export\Renderer\IconRenderer;
-use FactorioItemBrowser\ExportData\ExportData;
 use FactorioItemBrowser\ExportData\ExportDataService;
 use FactorioItemBrowser\ExportQueue\Client\Client\Facade;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
@@ -45,28 +42,10 @@ class ProcessCommand implements CommandInterface
     protected $exportQueueFacade;
 
     /**
-     * The icon renderer.
-     * @var IconRenderer
+     * The process steps.
+     * @var array|ProcessStepInterface[]
      */
-    protected $iconRenderer;
-
-    /**
-     * The instance.
-     * @var Instance
-     */
-    protected $instance;
-
-    /**
-     * The mod downloader.
-     * @var ModDownloader
-     */
-    protected $modDownloader;
-
-    /**
-     * The parser manager.
-     * @var ParserManager
-     */
-    protected $parserManager;
+    protected $processSteps;
 
     /**
      * The console.
@@ -78,25 +57,16 @@ class ProcessCommand implements CommandInterface
      * ProcessCommand constructor.
      * @param ExportDataService $exportDataService
      * @param Facade $exportQueueFacade
-     * @param IconRenderer $iconRenderer
-     * @param Instance $instance
-     * @param ModDownloader $modDownloader
-     * @param ParserManager $parserManager
+     * @param array|ProcessStepInterface[] $exportProcessSteps
      */
     public function __construct(
         ExportDataService $exportDataService,
         Facade $exportQueueFacade,
-        IconRenderer $iconRenderer,
-        Instance $instance,
-        ModDownloader $modDownloader,
-        ParserManager $parserManager
+        array $exportProcessSteps
     ) {
         $this->exportDataService = $exportDataService;
         $this->exportQueueFacade = $exportQueueFacade;
-        $this->iconRenderer = $iconRenderer;
-        $this->instance = $instance;
-        $this->modDownloader = $modDownloader;
-        $this->parserManager = $parserManager;
+        $this->processSteps = $exportProcessSteps;
     }
 
     /**
@@ -120,6 +90,7 @@ class ProcessCommand implements CommandInterface
     /**
      * Executes the command.
      * @throws ExportException
+     * @throws Exception
      */
     protected function execute(): void
     {
@@ -130,18 +101,11 @@ class ProcessCommand implements CommandInterface
         }
 
         $this->console->writeHeadline('Processing combination %s', $exportJob->getCombinationId());
-        $export = $this->exportDataService->createExport($exportJob->getCombinationId());
+        $processStepData = $this->createProcessStepData($exportJob);
 
-        $exportJob = $this->updateExportJob($exportJob, JobStatus::DOWNLOADING);
-        $this->downloadMods($exportJob->getModNames());
-        $exportJob = $this->updateExportJob($exportJob, JobStatus::PROCESSING);
-        $dump = $this->runFactorio($export, $exportJob->getModNames());
-        $this->parseDump($export, $dump);
-        $this->renderIcons($export);
-
-        $exportJob = $this->updateExportJob($exportJob, JobStatus::UPLOADING);
-        $fileName = $export->persist();
-        echo 'Exported combination to: ' . $fileName . PHP_EOL;
+        foreach ($this->processSteps as $processStep) {
+            $this->processStep($processStep, $processStepData);
+        }
     }
 
     /**
@@ -165,64 +129,61 @@ class ProcessCommand implements CommandInterface
         }
     }
 
+    /**
+     * Creates the instance of the process step data.
+     * @param Job $exportJob
+     * @return ProcessStepData
+     */
+    protected function createProcessStepData(Job $exportJob): ProcessStepData
+    {
+        $exportData = $this->exportDataService->createExport($exportJob->getCombinationId());
+
+        $result = new ProcessStepData();
+        $result->setExportJob($exportJob)
+               ->setExportData($exportData)
+               ->setDump(new Dump());
+        return $result;
+    }
+
+    /**
+     * Processes one step.
+     * @param ProcessStepInterface $step
+     * @param ProcessStepData $data
+     * @throws Exception
+     */
+    protected function processStep(ProcessStepInterface $step, ProcessStepData $data): void
+    {
+        $this->console->writeStep($step->getLabel());
+        $data->setExportJob($this->updateExportJob($data->getExportJob(), $step->getExportJobStatus()));
+
+        try {
+            $step->run($data);
+        } catch (Exception $e) {
+            $this->updateExportJob($data->getExportJob(), JobStatus::ERROR, $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Updates the export job in the queue.
+     * @param Job $exportJob
+     * @param string $status
+     * @param string $errorMessage
+     * @return Job
+     * @throws ClientException
+     */
     protected function updateExportJob(Job $exportJob, string $status, string $errorMessage = ''): Job
     {
+        if ($exportJob->getStatus() === $status) {
+            // We do not have to change the status at all.
+            return $exportJob;
+        }
+
         $request = new UpdateRequest();
         $request->setJobId($exportJob->getId())
                 ->setStatus($status)
                 ->setErrorMessage($errorMessage);
 
         return $this->exportQueueFacade->updateJob($request);
-    }
-
-    /**
-     * Downloads all the mods if they are not already present in their latest version.
-     * @param array|string[] $modNames
-     * @throws ExportException
-     */
-    protected function downloadMods(array $modNames): void
-    {
-        $this->console->writeStep('Downloading %d mods', count($modNames));
-        $this->modDownloader->download($modNames);
-    }
-
-    /**
-     * Runs the Factorio game to dump all the data.
-     * @param ExportData $export
-     * @param array|string[] $modNames
-     * @return Dump
-     * @throws ExportException
-     */
-    protected function runFactorio(ExportData $export, array $modNames): Dump
-    {
-        $this->console->writeStep('Running Factorio');
-        return $this->instance->run($export->getCombination()->getId(), $modNames);
-    }
-
-    /**
-     * Parses the dumped data into the export.
-     * @param ExportData $export
-     * @param Dump $dump
-     * @throws ExportException
-     */
-    protected function parseDump(ExportData $export, Dump $dump): void
-    {
-        $this->console->writeStep('Parsing dumped data');
-        $this->parserManager->parse($dump, $export->getCombination());
-    }
-
-    /**
-     * Renders all the icons of the export.
-     * @param ExportData $export
-     * @throws ExportException
-     */
-    protected function renderIcons(ExportData $export): void
-    {
-        $this->console->writeStep('Rendering %d icons', count($export->getCombination()->getIcons()));
-
-        foreach ($export->getCombination()->getIcons() as $icon) {
-            $this->console->writeAction('Rendering icon %s', $icon->getId());
-            $export->addRenderedIcon($icon, $this->iconRenderer->render($icon));
-        }
     }
 }

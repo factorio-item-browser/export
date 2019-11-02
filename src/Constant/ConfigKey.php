@@ -58,7 +58,17 @@ interface ConfigKey
     public const PARALLEL_DOWNLOADS = 'parallel-downloads';
 
     /**
+     * The key holding the number of parallel render processes to use.
+     */
+    public const PARALLEL_RENDERS = 'parallel-renders';
+
+    /**
      * The key holding the parser classes.
      */
     public const PARSERS = 'parsers';
+
+    /**
+     * The key holding the step classes.
+     */
+    public const PROCESS_STEPS = 'process-steps';
 }

@@ -19,6 +19,7 @@ return [
                 ConfigKey::DIRECTORY_FACTORIO => '/factorio',
             ],
             ConfigKey::PARALLEL_DOWNLOADS => 4,
+            ConfigKey::PARALLEL_RENDERS => 8,
         ],
     ],
 ];

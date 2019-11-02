@@ -29,6 +29,13 @@ return [
                 Parser\RecipeParser::class,
                 Parser\TranslationParser::class,
             ],
+            ConfigKey::PROCESS_STEPS => [
+                Command\ProcessStep\DownloadStep::class,
+                Command\ProcessStep\FactorioStep::class,
+                Command\ProcessStep\ParserStep::class,
+                Command\ProcessStep\RenderIconsStep::class,
+                Command\ProcessStep\UploadStep::class,
+            ],
         ],
     ],
 ];

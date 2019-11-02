@@ -17,5 +17,10 @@ return [
             'handler' => Command\ProcessCommand::class,
             'short_description' => 'Processes the next job ready in the importer.',
         ],
+        [
+            'name' => 'render-icon <icon>',
+            'handler' => Command\RenderIconCommand::class,
+            'short_description' => 'Renders the specified icon.',
+        ]
     ]
 ];
