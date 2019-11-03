@@ -53,7 +53,6 @@ return [
             Parser\ItemParser::class => AutoWireFactory::class,
             Parser\MachineParser::class => AutoWireFactory::class,
             Parser\ModParser::class => AutoWireFactory::class,
-            Parser\ParserManager::class => AutoWireFactory::class,
             Parser\RecipeParser::class => AutoWireFactory::class,
             Parser\TranslationParser::class => AutoWireFactory::class,
 

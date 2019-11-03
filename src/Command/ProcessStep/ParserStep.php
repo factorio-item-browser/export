@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Parser\ParserManager;
+use FactorioItemBrowser\Export\Parser\ParserInterface;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 
 /**
@@ -18,18 +19,26 @@ use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 class ParserStep implements ProcessStepInterface
 {
     /**
-     * The parser manager.
-     * @var ParserManager
+     * The console.
+     * @var Console
      */
-    protected $parserManager;
+    protected $console;
+
+    /**
+     * The parsers to use.
+     * @var array|ParserInterface[]
+     */
+    protected $parsers;
 
     /**
      * Initializes the step.
-     * @param ParserManager $parserManager
+     * @param Console $console
+     * @param array|ParserInterface[] $exportParsers
      */
-    public function __construct(ParserManager $parserManager)
+    public function __construct(Console $console, array $exportParsers)
     {
-        $this->parserManager = $parserManager;
+        $this->console = $console;
+        $this->parsers = $exportParsers;
     }
 
     /**
@@ -57,6 +66,19 @@ class ParserStep implements ProcessStepInterface
      */
     public function run(ProcessStepData $processStepData): void
     {
-        $this->parserManager->parse($processStepData->getDump(), $processStepData->getExportData()->getCombination());
+        $this->console->writeAction('Preparing');
+        foreach ($this->parsers as $parser) {
+            $parser->prepare($processStepData->getDump());
+        }
+
+        $this->console->writeAction('Parsing');
+        foreach ($this->parsers as $parser) {
+            $parser->parse($processStepData->getDump(), $processStepData->getExportData()->getCombination());
+        }
+
+        $this->console->writeAction('Validating');
+        foreach ($this->parsers as $parser) {
+            $parser->validate($processStepData->getExportData()->getCombination());
+        }
     }
 }
