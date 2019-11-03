@@ -31,26 +31,15 @@ class RenderIconProcess extends Process
     {
         $this->icon = $icon;
 
-        parent::__construct($this->buildCommand($exportDataSerializer, $icon));
-
-        $this->setEnv(['SUBCMD' => 1]);
-        $this->setTimeout(null);
-    }
-
-    /**
-     * Builds the command to actually call.
-     * @param SerializerInterface $serializer
-     * @param Icon $icon
-     * @return array|string[]
-     */
-    protected function buildCommand(SerializerInterface $serializer, Icon $icon): array
-    {
-        return [
+        parent::__construct([
             'php',
             $_SERVER['SCRIPT_FILENAME'],
             'render-icon',
-            $serializer->serialize($icon, 'json'),
-        ];
+            $exportDataSerializer->serialize($icon, 'json'),
+        ]);
+
+        $this->setEnv(['SUBCMD' => 1]);
+        $this->setTimeout(null);
     }
 
     /**

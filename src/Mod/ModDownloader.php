@@ -10,6 +10,7 @@ use BluePsyduck\FactorioModPortalClient\Entity\Release;
 use BluePsyduck\FactorioModPortalClient\Exception\ClientException;
 use BluePsyduck\FactorioModPortalClient\Request\ModListRequest;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
+use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Exception\DownloadFailedException;
@@ -94,7 +95,7 @@ class ModDownloader
 
         $processManager = $this->createProcessManager();
         foreach ($mods as $mod) {
-            $release = $this->getReleaseForDownload($mod);
+            $release = $this->getReleaseToDownload($mod);
             if ($release === null) {
                 $this->console->writeMessage('Mod %s is already up-to-date.', $mod->getName());
                 continue;
@@ -156,7 +157,7 @@ class ModDownloader
      * @return Release|null
      * @throws ExportException
      */
-    protected function getReleaseForDownload(Mod $mod): ?Release
+    protected function getReleaseToDownload(Mod $mod): ?Release
     {
         $result = null;
         try {
@@ -199,9 +200,9 @@ class ModDownloader
 
     /**
      * Creates the process manager to use for the download processes.
-     * @return ProcessManager
+     * @return ProcessManagerInterface
      */
-    protected function createProcessManager(): ProcessManager
+    protected function createProcessManager(): ProcessManagerInterface
     {
         $result = new ProcessManager($this->numberOfParallelDownloads);
         $result->setProcessStartCallback(function (DownloadProcess $process): void {
@@ -254,6 +255,7 @@ class ModDownloader
         }
 
         if (sha1_file($process->getDestinationFile()) !== $process->getRelease()->getSha1()) {
+            unlink($process->getDestinationFile());
             throw new DownloadFailedException($process->getMod(), $process->getRelease(), 'Hash mismatch.');
         }
 

@@ -76,11 +76,10 @@ class ModFileManager
             $modDirectoryLength = strlen($modDirectory);
             $modName = $match[1];
 
-            $targetDirectory = $this->getLocalDirectory($modName);
-            if (is_dir($targetDirectory)) {
-                exec(sprintf('rm -rf "%s"', $targetDirectory));
-            }
+            $this->removeModDirectory($modName);
 
+            $targetDirectory = $this->getLocalDirectory($modName);
+            mkdir($targetDirectory, 0777, true);
             for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
                 $stat = $zipArchive->statIndex($i);
                 if ($stat['size'] > 0 && substr($stat['name'], 0, $modDirectoryLength) === $modDirectory) {
@@ -93,6 +92,19 @@ class ModFileManager
             }
         } finally {
             $zipArchive->close();
+        }
+    }
+
+    /**
+     * Removes the directory of the specified mod, if present.
+     * @param string $modName
+     * @codeCoverageIgnore Unable to rm -rf in virtual file system.
+     */
+    protected function removeModDirectory(string $modName): void
+    {
+        $modDirectory = $this->getLocalDirectory($modName);
+        if (is_dir($modDirectory)) {
+            exec(sprintf('rm -rf "%s"', $modDirectory));
         }
     }
 
@@ -142,7 +154,7 @@ class ModFileManager
      */
     public function readFile(string $modName, string $fileName): string
     {
-        $filePath = $this->getModFilePath($modName, $fileName);
+        $filePath = $this->getLocalDirectory($modName) . '/' . $fileName;
         if (!file_exists($filePath)) {
             throw new FileNotFoundInModException($modName, $fileName);
         }
@@ -157,16 +169,5 @@ class ModFileManager
     public function getLocalDirectory(string $modName): string
     {
         return $this->modsDirectory . '/' . $modName;
-    }
-
-    /**
-     * Returns the full path to a mod file.
-     * @param string $modName
-     * @param string $fileName
-     * @return string
-     */
-    protected function getModFilePath(string $modName, string $fileName): string
-    {
-        return $this->getLocalDirectory($modName) . '/' . $fileName;
     }
 }
