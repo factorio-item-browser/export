@@ -56,7 +56,6 @@ class RenderIconCommand implements CommandInterface
             $consoleAdapter->write($renderedIcon);
             return 0;
         } catch (ExportException $e) {
-            // @todo Better error handling.
             $consoleAdapter->write($e->getMessage());
             return 1;
         }

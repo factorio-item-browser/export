@@ -138,7 +138,7 @@ class ModDownloaderTest extends TestCase
                       ->with($this->identicalTo('Loading meta information from the Mod Portal'));
         $this->console->expects($this->once())
                       ->method('writeMessage')
-                      ->with($this->identicalTo('Mod %s is already up-to-date.'), $this->identicalTo('def'));
+                      ->with($this->identicalTo('Mod def is already up-to-date.'));
 
         /* @var ModDownloader&MockObject $downloader */
         $downloader = $this->getMockBuilder(ModDownloader::class)
@@ -536,11 +536,7 @@ class ModDownloaderTest extends TestCase
 
         $this->console->expects($this->once())
                       ->method('writeAction')
-                      ->with(
-                          $this->identicalTo('Downloading %s (%s)'),
-                          $this->identicalTo($modName),
-                          $this->identicalTo($releaseVersion)
-                      );
+                      ->with($this->identicalTo('Downloading abc (1.2.3)'));
 
         $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->invokeMethod($downloader, 'handleProcessStart', $process);
@@ -581,7 +577,7 @@ class ModDownloaderTest extends TestCase
 
         $this->console->expects($this->once())
                       ->method('writeAction')
-                      ->with($this->identicalTo('Extracting %s'), $this->identicalTo($modName));
+                      ->with($this->identicalTo('Extracting def'));
 
         $this->modFileManager->expects($this->once())
                              ->method('extractModZip')

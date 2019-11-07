@@ -63,7 +63,6 @@ class ParserStepTest extends TestCase
         $this->assertSame($parsers, $this->extractProperty($step, 'parsers'));
     }
 
-
     /**
      * Tests the getLabel method.
      * @covers ::getLabel

@@ -34,14 +34,13 @@ class Console
     /**
      * Writes a headline with the specified message.
      * @param string $message
-     * @param mixed ...$parameters
      * @return $this
      */
-    public function writeHeadline(string $message, ...$parameters): self
+    public function writeHeadline(string $message): self
     {
         $this->consoleAdapter->writeLine();
         $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_YELLOW);
-        $this->consoleAdapter->writeLine(' ' . sprintf($message, ...$parameters), ColorInterface::LIGHT_YELLOW);
+        $this->consoleAdapter->writeLine(' ' . $message, ColorInterface::LIGHT_YELLOW);
         $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_YELLOW);
         return $this;
     }
@@ -49,13 +48,12 @@ class Console
     /**
      * Writes a step to the console.
      * @param string $step
-     * @param mixed ...$parameters
      * @return $this
      */
-    public function writeStep(string $step, ...$parameters): self
+    public function writeStep(string $step): self
     {
         $this->consoleAdapter->writeLine();
-        $this->consoleAdapter->writeLine(sprintf($step, ...$parameters), ColorInterface::LIGHT_BLUE);
+        $this->consoleAdapter->writeLine(' ' . $step, ColorInterface::LIGHT_BLUE);
         $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_BLUE);
         return $this;
     }
@@ -63,24 +61,33 @@ class Console
     /**
      * Writes an action to the console.
      * @param string $action
-     * @param mixed ...$parameters
      * @return $this
      */
-    public function writeAction(string $action, ...$parameters): self
+    public function writeAction(string $action): self
     {
-        $this->consoleAdapter->writeLine('> ' . sprintf($action, ...$parameters) . '...');
+        $this->consoleAdapter->writeLine('> ' . $action . '...');
         return $this;
     }
 
     /**
      * Writes a simple message, like a comment, to the console.
      * @param string $message
-     * @param mixed ...$parameters
      * @return $this
      */
-    public function writeMessage(string $message, ...$parameters): self
+    public function writeMessage(string $message): self
     {
-        $this->consoleAdapter->writeLine('# ' . sprintf($message, ...$parameters));
+        $this->consoleAdapter->writeLine('# ' . $message);
+        return $this;
+    }
+
+    /**
+     * Writes an error to the console.
+     * @param string $error
+     * @return $this
+     */
+    public function writeError(string $error): self
+    {
+        $this->consoleAdapter->writeLine('! ' . $error, ColorInterface::LIGHT_RED);
         return $this;
     }
 

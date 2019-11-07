@@ -97,7 +97,7 @@ class ModDownloader
         foreach ($mods as $mod) {
             $release = $this->getReleaseToDownload($mod);
             if ($release === null) {
-                $this->console->writeMessage('Mod %s is already up-to-date.', $mod->getName());
+                $this->console->writeMessage(sprintf('Mod %s is already up-to-date.', $mod->getName()));
                 continue;
             }
             $processManager->addProcess($this->createDownloadProcess($mod, $release));
@@ -236,11 +236,11 @@ class ModDownloader
      */
     protected function handleProcessStart(DownloadProcess $process): void
     {
-        $this->console->writeAction(
+        $this->console->writeAction(sprintf(
             'Downloading %s (%s)',
             $process->getMod()->getName(),
             $process->getRelease()->getVersion()
-        );
+        ));
     }
 
     /**
@@ -259,7 +259,7 @@ class ModDownloader
             throw new DownloadFailedException($process->getMod(), $process->getRelease(), 'Hash mismatch.');
         }
 
-        $this->console->writeAction('Extracting %s', $process->getMod()->getName());
+        $this->console->writeAction(sprintf('Extracting %s', $process->getMod()->getName()));
         $this->modFileManager->extractModZip($process->getDestinationFile());
         unlink($process->getDestinationFile());
     }

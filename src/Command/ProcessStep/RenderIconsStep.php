@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
+use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Process\RenderIconProcess;
@@ -89,19 +90,43 @@ class RenderIconsStep implements ProcessStepInterface
     /**
      * Creates the process manager to use for the download processes.
      * @param ExportData $exportData
-     * @return ProcessManager
+     * @return ProcessManagerInterface
      */
-    protected function createProcessManager(ExportData $exportData): ProcessManager
+    protected function createProcessManager(ExportData $exportData): ProcessManagerInterface
     {
         $result = new ProcessManager($this->numberOfParallelRenderProcesses);
         $result->setProcessStartCallback(function (RenderIconProcess $process): void {
-            $this->console->writeAction('Rendering icon %s', $process->getIcon()->getId());
+            $this->handleProcessStart($process);
         });
         $result->setProcessFinishCallback(function (RenderIconProcess $process) use ($exportData): void {
-            // @todo Check status.
-            $exportData->addRenderedIcon($process->getIcon(), $process->getOutput());
+            $this->handleProcessFinish($exportData, $process);
         });
         return $result;
+    }
+
+    /**
+     * Handles the start of a process.
+     * @param RenderIconProcess $process
+     */
+    protected function handleProcessStart(RenderIconProcess $process): void
+    {
+        $this->console->writeAction(sprintf('Rendering icon %s', $process->getIcon()->getId()));
+    }
+
+    /**
+     * Handles the finishing of a process.
+     * @param ExportData $exportData
+     * @param RenderIconProcess $process
+     */
+    protected function handleProcessFinish(ExportData $exportData, RenderIconProcess $process): void
+    {
+        if ($process->isSuccessful()) {
+            $exportData->addRenderedIcon($process->getIcon(), $process->getOutput());
+        } else {
+            $this->console->writeError(
+                sprintf('Failed to render icon %s: %s', $process->getIcon()->getId(), $process->getOutput())
+            );
+        }
     }
 
     /**

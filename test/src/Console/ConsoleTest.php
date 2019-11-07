@@ -62,7 +62,7 @@ class ConsoleTest extends TestCase
                              ->withConsecutive(
                                  [],
                                  [$this->identicalTo('---'), $this->identicalTo(ColorInterface::LIGHT_YELLOW)],
-                                 [$this->identicalTo(' abc ghi def'), $this->identicalTo(ColorInterface::LIGHT_YELLOW)],
+                                 [$this->identicalTo(' abc'), $this->identicalTo(ColorInterface::LIGHT_YELLOW)],
                                  [$this->identicalTo('---'), $this->identicalTo(ColorInterface::LIGHT_YELLOW)]
                              );
 
@@ -76,7 +76,7 @@ class ConsoleTest extends TestCase
                 ->with('-')
                 ->willReturn('---');
 
-        $result = $console->writeHeadline('abc %s def', 'ghi');
+        $result = $console->writeHeadline('abc');
 
         $this->assertSame($console, $result);
     }
@@ -91,7 +91,7 @@ class ConsoleTest extends TestCase
                              ->method('writeLine')
                              ->withConsecutive(
                                  [],
-                                 [$this->identicalTo('abc ghi def'), $this->identicalTo(ColorInterface::LIGHT_BLUE)],
+                                 [$this->identicalTo(' abc'), $this->identicalTo(ColorInterface::LIGHT_BLUE)],
                                  [$this->identicalTo('---'), $this->identicalTo(ColorInterface::LIGHT_BLUE)]
                              );
 
@@ -105,7 +105,7 @@ class ConsoleTest extends TestCase
                 ->with('-')
                 ->willReturn('---');
 
-        $result = $console->writeStep('abc %s def', 'ghi');
+        $result = $console->writeStep('abc');
 
         $this->assertSame($console, $result);
     }
@@ -118,10 +118,10 @@ class ConsoleTest extends TestCase
     {
         $this->consoleAdapter->expects($this->once())
                              ->method('writeLine')
-                             ->with($this->identicalTo('> abc ghi def...'));
+                             ->with($this->identicalTo('> abc...'));
 
         $console = new Console($this->consoleAdapter);
-        $result = $console->writeAction('abc %s def', 'ghi');
+        $result = $console->writeAction('abc');
 
         $this->assertSame($console, $result);
     }
@@ -134,10 +134,10 @@ class ConsoleTest extends TestCase
     {
         $this->consoleAdapter->expects($this->once())
                              ->method('writeLine')
-                             ->with($this->identicalTo('# abc ghi def'));
+                             ->with($this->identicalTo('# abc'));
 
         $console = new Console($this->consoleAdapter);
-        $result = $console->writeMessage('abc %s def', 'ghi');
+        $result = $console->writeMessage('abc');
 
         $this->assertSame($console, $result);
     }

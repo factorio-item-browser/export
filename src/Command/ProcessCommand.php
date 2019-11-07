@@ -100,7 +100,7 @@ class ProcessCommand implements CommandInterface
             return;
         }
 
-        $this->console->writeHeadline('Processing combination %s', $exportJob->getCombinationId());
+        $this->console->writeHeadline(sprintf('Processing combination %s', $exportJob->getCombinationId()));
         $processStepData = $this->createProcessStepData($exportJob);
 
         foreach ($this->processSteps as $processStep) {
