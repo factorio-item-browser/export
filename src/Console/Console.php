@@ -23,12 +23,20 @@ class Console
     protected $consoleAdapter;
 
     /**
+     * Whether the debug mode is enabled.
+     * @var bool
+     */
+    protected $isDebug;
+
+    /**
      * Initializes the console wrapper.
      * @param AdapterInterface $consoleAdapter
+     * @param bool $isDebug
      */
-    public function __construct(AdapterInterface $consoleAdapter)
+    public function __construct(AdapterInterface $consoleAdapter, bool $isDebug)
     {
         $this->consoleAdapter = $consoleAdapter;
+        $this->isDebug = $isDebug;
     }
 
     /**
@@ -81,31 +89,34 @@ class Console
     }
 
     /**
-     * Writes an error to the console.
-     * @param string $error
-     * @return $this
-     */
-    public function writeError(string $error): self
-    {
-        $this->consoleAdapter->writeLine('! ' . $error, ColorInterface::LIGHT_RED);
-        return $this;
-    }
-
-    /**
      * Writes an exception to the console.
      * @param Exception $e
      * @return $this
      */
     public function writeException(Exception $e): self
     {
-        $this->consoleAdapter->writeLine();
-        $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_RED);
         $this->consoleAdapter->writeLine(
-            sprintf(' %s: %s', substr((string) strrchr(get_class($e), '\\'), 1), $e->getMessage()),
+            sprintf('! %s: %s', substr((string) strrchr(get_class($e), '\\'), 1), $e->getMessage()),
             ColorInterface::LIGHT_RED
         );
-        $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::LIGHT_RED);
-        $this->consoleAdapter->writeLine($e->getTraceAsString(), ColorInterface::RED);
+
+        if ($this->isDebug) {
+            $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::RED);
+            $this->consoleAdapter->writeLine($e->getTraceAsString(), ColorInterface::RED);
+            $this->consoleAdapter->writeLine($this->createHorizontalLine('-'), ColorInterface::RED);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Writes raw data to the console.
+     * @param string $data
+     * @return $this
+     */
+    public function writeData(string $data): self
+    {
+        $this->consoleAdapter->write($data);
         return $this;
     }
 

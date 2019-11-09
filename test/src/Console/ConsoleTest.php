@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Console;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -46,9 +47,10 @@ class ConsoleTest extends TestCase
      */
     public function testConstruct(): void
     {
-        $console = new Console($this->consoleAdapter);
+        $console = new Console($this->consoleAdapter, true);
 
         $this->assertSame($this->consoleAdapter, $this->extractProperty($console, 'consoleAdapter'));
+        $this->assertTrue($this->extractProperty($console, 'isDebug'));
     }
 
     /**
@@ -69,7 +71,7 @@ class ConsoleTest extends TestCase
         /* @var Console&MockObject $console */
         $console = $this->getMockBuilder(Console::class)
                         ->onlyMethods(['createHorizontalLine'])
-                        ->setConstructorArgs([$this->consoleAdapter])
+                        ->setConstructorArgs([$this->consoleAdapter, true])
                         ->getMock();
         $console->expects($this->exactly(2))
                 ->method('createHorizontalLine')
@@ -98,7 +100,7 @@ class ConsoleTest extends TestCase
         /* @var Console&MockObject $console */
         $console = $this->getMockBuilder(Console::class)
                         ->onlyMethods(['createHorizontalLine'])
-                        ->setConstructorArgs([$this->consoleAdapter])
+                        ->setConstructorArgs([$this->consoleAdapter, true])
                         ->getMock();
         $console->expects($this->once())
                 ->method('createHorizontalLine')
@@ -120,7 +122,7 @@ class ConsoleTest extends TestCase
                              ->method('writeLine')
                              ->with($this->identicalTo('> abc...'));
 
-        $console = new Console($this->consoleAdapter);
+        $console = new Console($this->consoleAdapter, true);
         $result = $console->writeAction('abc');
 
         $this->assertSame($console, $result);
@@ -136,8 +138,78 @@ class ConsoleTest extends TestCase
                              ->method('writeLine')
                              ->with($this->identicalTo('# abc'));
 
-        $console = new Console($this->consoleAdapter);
+        $console = new Console($this->consoleAdapter, true);
         $result = $console->writeMessage('abc');
+
+        $this->assertSame($console, $result);
+    }
+
+    /**
+     * Tests the writeException method.
+     * @covers ::writeException
+     */
+    public function testWriteException(): void
+    {
+        $exception = new ExportException('abc');
+        $expectedMessage = '! ExportException: abc';
+
+        $this->consoleAdapter->expects($this->once())
+                             ->method('writeLine')
+                             ->with($this->identicalTo($expectedMessage), $this->identicalTo(ColorInterface::LIGHT_RED));
+
+        $console = new Console($this->consoleAdapter, false);
+        $result = $console->writeException($exception);
+
+        $this->assertSame($console, $result);
+    }
+
+    /**
+     * Tests the writeException method.
+     * @covers ::writeException
+     */
+    public function testWriteExceptionWithDebug(): void
+    {
+        $exception = new ExportException('abc');
+        $expectedMessage = '! ExportException: abc';
+
+        $this->consoleAdapter->expects($this->exactly(4))
+                             ->method('writeLine')
+                             ->withConsecutive(
+                                 [$this->identicalTo($expectedMessage), $this->identicalTo(ColorInterface::LIGHT_RED)],
+                                 [$this->identicalTo('---'), $this->identicalTo(ColorInterface::RED)],
+                                 [$this->isType('string'), $this->identicalTo(ColorInterface::RED)],
+                                 [$this->identicalTo('---'), $this->identicalTo(ColorInterface::RED)]
+                             );
+
+        /* @var Console&MockObject $console */
+        $console = $this->getMockBuilder(Console::class)
+                        ->onlyMethods(['createHorizontalLine'])
+                        ->setConstructorArgs([$this->consoleAdapter, true])
+                        ->getMock();
+        $console->expects($this->any())
+                ->method('createHorizontalLine')
+                ->with('-')
+                ->willReturn('---');
+
+        $result = $console->writeException($exception);
+
+        $this->assertSame($console, $result);
+    }
+
+
+    /**
+     * Tests the writeData method.
+     * @covers ::writeData
+     */
+    public function testWriteData(): void
+    {
+        $this->consoleAdapter->expects($this->once())
+                             ->method('write')
+                             ->with($this->identicalTo('abc'));
+
+
+        $console = new Console($this->consoleAdapter, true);
+        $result = $console->writeData('abc');
 
         $this->assertSame($console, $result);
     }
@@ -157,7 +229,7 @@ class ConsoleTest extends TestCase
                              ->method('getWidth')
                              ->willReturn($width);
 
-        $console = new Console($this->consoleAdapter);
+        $console = new Console($this->consoleAdapter, true);
         $result = $this->invokeMethod($console, 'createHorizontalLine', $character);
 
         $this->assertSame($expectedResult, $result);

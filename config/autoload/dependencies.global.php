@@ -66,6 +66,8 @@ return [
             'array $exportParsers' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARSERS),
             'array $exportProcessSteps' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PROCESS_STEPS),
 
+            'bool $isDebug' => readConfig('debug'),
+
             'int $numberOfParallelDownloads' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_DOWNLOADS),
             'int $numberOfParallelRenderProcesses' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_RENDERS),
 

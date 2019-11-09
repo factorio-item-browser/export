@@ -123,9 +123,7 @@ class RenderIconsStep implements ProcessStepInterface
         if ($process->isSuccessful()) {
             $exportData->addRenderedIcon($process->getIcon(), $process->getOutput());
         } else {
-            $this->console->writeError(
-                sprintf('Failed to render icon %s: %s', $process->getIcon()->getId(), $process->getOutput())
-            );
+            $this->console->writeData($process->getOutput());
         }
     }
 

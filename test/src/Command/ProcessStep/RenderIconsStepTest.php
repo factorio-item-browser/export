@@ -221,6 +221,71 @@ class RenderIconsStepTest extends TestCase
     }
 
     /**
+     * Tests the handleProcessFinish method.
+     * @throws ReflectionException
+     * @covers ::handleProcessFinish
+     */
+    public function testHandleProcessFinish(): void
+    {
+        $output = 'abc';
+
+        /* @var Icon&MockObject $icon */
+        $icon = $this->createMock(Icon::class);
+
+        /* @var RenderIconProcess&MockObject $process */
+        $process = $this->createMock(RenderIconProcess::class);
+        $process->expects($this->once())
+                ->method('isSuccessful')
+                ->willReturn(true);
+        $process->expects($this->once())
+                ->method('getIcon')
+                ->willReturn($icon);
+        $process->expects($this->once())
+                ->method('getOutput')
+                ->willReturn($output);
+
+        /* @var ExportData&MockObject $exportData */
+        $exportData = $this->createMock(ExportData::class);
+        $exportData->expects($this->once())
+                   ->method('addRenderedIcon')
+                   ->with($this->identicalTo($icon), $this->identicalTo($output));
+
+        $step = new RenderIconsStep($this->console, $this->serializer, 42);
+        $this->invokeMethod($step, 'handleProcessFinish', $exportData, $process);
+    }
+
+    /**
+     * Tests the handleProcessFinish method.
+     * @throws ReflectionException
+     * @covers ::handleProcessFinish
+     */
+    public function testHandleProcessFinishWithError(): void
+    {
+        $output = 'abc';
+
+        /* @var RenderIconProcess&MockObject $process */
+        $process = $this->createMock(RenderIconProcess::class);
+        $process->expects($this->once())
+                ->method('isSuccessful')
+                ->willReturn(false);
+        $process->expects($this->once())
+                ->method('getOutput')
+                ->willReturn($output);
+
+        /* @var ExportData&MockObject $exportData */
+        $exportData = $this->createMock(ExportData::class);
+        $exportData->expects($this->never())
+                   ->method('addRenderedIcon');
+
+        $this->console->expects($this->once())
+                      ->method('writeData')
+                      ->with($this->identicalTo($output));
+
+        $step = new RenderIconsStep($this->console, $this->serializer, 42);
+        $this->invokeMethod($step, 'handleProcessFinish', $exportData, $process);
+    }
+
+    /**
      * Tests the createProcessForIcon method.
      * @throws ReflectionException
      * @covers ::createProcessForIcon
