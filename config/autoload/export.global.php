@@ -35,6 +35,7 @@ return [
                 Command\ProcessStep\ParserStep::class,
                 Command\ProcessStep\RenderIconsStep::class,
                 Command\ProcessStep\UploadStep::class,
+                Command\ProcessStep\DoneStep::class,
             ],
         ],
     ],

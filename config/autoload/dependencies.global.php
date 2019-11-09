@@ -29,12 +29,13 @@ return [
         ],
         'factories' => [
             Command\ProcessCommand::class => AutoWireFactory::class,
-            Command\RenderIconCommand::class => AutoWireFactory::class,
+            Command\ProcessStep\DoneStep::class => AutoWireFactory::class,
             Command\ProcessStep\DownloadStep::class => AutoWireFactory::class,
             Command\ProcessStep\FactorioStep::class => AutoWireFactory::class,
             Command\ProcessStep\ParserStep::class => AutoWireFactory::class,
             Command\ProcessStep\RenderIconsStep::class => AutoWireFactory::class,
             Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
+            Command\RenderIconCommand::class => AutoWireFactory::class,
 
             Console\Console::class => AutoWireFactory::class,
 
