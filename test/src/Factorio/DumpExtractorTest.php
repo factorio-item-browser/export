@@ -179,7 +179,11 @@ class DumpExtractorTest extends TestCase
 
         $this->serializer->expects($this->once())
                          ->method('deserialize')
-                         ->with($this->identicalTo($dumpData), $this->identicalTo($className), $this->identicalTo('json'))
+                         ->with(
+                             $this->identicalTo($dumpData),
+                             $this->identicalTo($className),
+                             $this->identicalTo('json')
+                         )
                          ->willReturn($object);
 
         $dumpExtractor = new DumpExtractor($this->serializer);
@@ -202,7 +206,11 @@ class DumpExtractorTest extends TestCase
 
         $this->serializer->expects($this->once())
                          ->method('deserialize')
-                         ->with($this->identicalTo($dumpData), $this->identicalTo($className), $this->identicalTo('json'))
+                         ->with(
+                             $this->identicalTo($dumpData),
+                             $this->identicalTo($className),
+                             $this->identicalTo('json')
+                         )
                          ->willThrowException($this->createMock(Exception::class));
 
         $this->expectException(InvalidDumpException::class);

@@ -136,13 +136,22 @@ class ModFileManager
         $modDirectory = $this->getLocalDirectory($modName) . '/';
         $modDirectoryLength = strlen($modDirectory);
 
-        $result = glob($modDirectory . $globPattern);
-        if ($result === false) {
-            $result = [];
-        }
+        $files = $this->executeGlob($modDirectory . $globPattern);
         return array_map(function (string $value) use ($modDirectoryLength): string {
             return substr($value, $modDirectoryLength);
-        }, $result);
+        }, $files);
+    }
+
+    /**
+     * Executes the glob on the specified pattern.
+     * @param string $pattern
+     * @return array|string[]
+     * @codeCoverageIgnore Cannot emulate glob with vfsStream.
+     */
+    protected function executeGlob(string $pattern): array
+    {
+        $result = glob($pattern);
+        return ($result === false) ? [] : $result;
     }
 
     /**

@@ -327,8 +327,11 @@ class ModDownloaderTest extends TestCase
      * @covers ::getReleaseToDownload
      * @dataProvider provideGetReleaseToDownload
      */
-    public function testGetReleaseToDownload(?string $currentVersion, Release $latestRelease, ?Release $expectedResult): void
-    {
+    public function testGetReleaseToDownload(
+        ?string $currentVersion,
+        Release $latestRelease,
+        ?Release $expectedResult
+    ): void {
         $modName = 'abc';
 
         $mod = new Mod();

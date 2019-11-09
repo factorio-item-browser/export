@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Command\ProcessStep;
 
 use FactorioItemBrowser\Export\Command\ProcessStep\UploadStep;
+use FactorioItemBrowser\Export\Entity\ProcessStepData;
+use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\ExportData\ExportData;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -41,5 +45,24 @@ class UploadStepTest extends TestCase
 
         $result = $step->getExportJobStatus();
         $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Tests the run method.
+     * @throws ExportException
+     * @covers ::run
+     */
+    public function testRun(): void
+    {
+        /* @var ExportData&MockObject $exportData */
+        $exportData = $this->createMock(ExportData::class);
+        $exportData->expects($this->once())
+                   ->method('persist');
+
+        $data = new ProcessStepData();
+        $data->setExportData($exportData);
+
+        $step = new UploadStep();
+        $step->run($data);
     }
 }

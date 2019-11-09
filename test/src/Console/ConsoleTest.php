@@ -155,7 +155,10 @@ class ConsoleTest extends TestCase
 
         $this->consoleAdapter->expects($this->once())
                              ->method('writeLine')
-                             ->with($this->identicalTo($expectedMessage), $this->identicalTo(ColorInterface::LIGHT_RED));
+                             ->with(
+                                 $this->identicalTo($expectedMessage),
+                                 $this->identicalTo(ColorInterface::LIGHT_RED)
+                             );
 
         $console = new Console($this->consoleAdapter, false);
         $result = $console->writeException($exception);

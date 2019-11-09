@@ -23,7 +23,8 @@ class MissingModException extends ExportException
     /**
      * The fallback message in case the base mod is missing.
      */
-    protected const MESSAGE_BASE = 'The base mod is missing in the list. The base mod is always present. Why is the base mod missing?';
+    protected const MESSAGE_BASE
+        = 'The base mod is missing in the list. The base mod is always present. Why is the base mod missing?';
 
     /**
      * Initializes the exception.

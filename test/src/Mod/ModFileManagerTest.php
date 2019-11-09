@@ -10,6 +10,7 @@ use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
 use FactorioItemBrowser\Export\Exception\InvalidInfoJsonFileException;
+use FactorioItemBrowser\Export\Exception\InvalidModFileException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use JMS\Serializer\SerializerInterface;
 use org\bovigo\vfs\vfsStream;
@@ -56,6 +57,65 @@ class ModFileManagerTest extends TestCase
 
         $this->assertSame($this->serializer, $this->extractProperty($manager, 'serializer'));
         $this->assertSame($modsDirectory, $this->extractProperty($manager, 'modsDirectory'));
+    }
+
+    /**
+     * Tests the extractModZip method.
+     * @throws ExportException
+     * @covers ::extractModZip
+     */
+    public function testExtractModZip(): void
+    {
+        $expectedModName = 'foo';
+
+        vfsStream::setup('root');
+        $targetDirectory = vfsStream::url('root/foo');
+
+        /* @var ModFileManager&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileManager::class)
+                        ->onlyMethods(['removeModDirectory', 'getLocalDirectory'])
+                        ->setConstructorArgs([$this->serializer, 'baz'])
+                        ->getMock();
+        $manager->expects($this->once())
+                ->method('removeModDirectory')
+                ->with($this->identicalTo($expectedModName));
+        $manager->expects($this->once())
+                ->method('getLocalDirectory')
+                ->with($this->identicalTo($expectedModName))
+                ->willReturn($targetDirectory);
+
+        $manager->extractModZip(__DIR__ . '/../../asset/mod/valid.zip');
+
+        $this->assertSame('abc', file_get_contents(vfsStream::url('root/foo/abc')));
+        $this->assertSame('def', file_get_contents(vfsStream::url('root/foo/def')));
+        $this->assertSame('abc', file_get_contents(vfsStream::url('root/foo/bar/abc')));
+        $this->assertSame('ghi', file_get_contents(vfsStream::url('root/foo/bar/ghi')));
+    }
+
+    /**
+     * Tests the extractModZip method.
+     * @throws ExportException
+     * @covers ::extractModZip
+     */
+    public function testExtractModZipWithInvalidZip(): void
+    {
+        $this->expectException(InvalidModFileException::class);
+
+        $manager = new ModFileManager($this->serializer, 'foo');
+        $manager->extractModZip(__DIR__ . '/../../asset/mod/invalid.zip');
+    }
+
+    /**
+     * Tests the extractModZip method.
+     * @throws ExportException
+     * @covers ::extractModZip
+     */
+    public function testExtractModZipWithInvalidModDirectory(): void
+    {
+        $this->expectException(InvalidModFileException::class);
+
+        $manager = new ModFileManager($this->serializer, 'foo');
+        $manager->extractModZip(__DIR__ . '/../../asset/mod/invalidDirectory.zip');
     }
 
     /**
@@ -127,6 +187,38 @@ class ModFileManagerTest extends TestCase
                 ->willReturn($contents);
 
         $manager->getInfo($modName);
+    }
+
+    /**
+     * Tests the findFiles method.
+     * @covers ::findFiles
+     */
+    public function testFindFiles(): void
+    {
+        $modName = 'abc';
+        $globPattern = 'def';
+        $modDirectory = 'ghi';
+        $expectedPattern = 'ghi/def';
+        $files = ['ghi/jkl.foo', 'ghi/mno/pqr.foo'];
+        $expectedResult = ['jkl.foo', 'mno/pqr.foo'];
+
+        /* @var ModFileManager&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileManager::class)
+                        ->onlyMethods(['getLocalDirectory', 'executeGlob'])
+                        ->setConstructorArgs([$this->serializer, 'foo'])
+                        ->getMock();
+        $manager->expects($this->once())
+                ->method('getLocalDirectory')
+                ->with($this->identicalTo($modName))
+                ->willReturn($modDirectory);
+        $manager->expects($this->once())
+                ->method('executeGlob')
+                ->with($this->identicalTo($expectedPattern))
+                ->willReturn($files);
+
+        $result = $manager->findFiles($modName, $globPattern);
+
+        $this->assertSame($expectedResult, $result);
     }
 
     /**

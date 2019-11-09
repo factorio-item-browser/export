@@ -44,7 +44,8 @@ class MissingModExceptionTest extends TestCase
     public function testConstructWithBaseMod(): void
     {
         $modName = Constant::MOD_NAME_BASE;
-        $expectedMessage = 'The base mod is missing in the list. The base mod is always present. Why is the base mod missing?';
+        $expectedMessage
+            = 'The base mod is missing in the list. The base mod is always present. Why is the base mod missing?';
 
         /* @var Exception&MockObject $previous */
         $previous = $this->createMock(Exception::class);
