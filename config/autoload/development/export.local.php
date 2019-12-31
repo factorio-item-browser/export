@@ -20,6 +20,11 @@ return [
             ],
             ConfigKey::PARALLEL_DOWNLOADS => 4,
             ConfigKey::PARALLEL_RENDERS => 8,
+            ConfigKey::UPLOAD_FTP => [
+                ConfigKey::UPLOAD_FTP_HOST => 'fib-ex-ftp',
+                ConfigKey::UPLOAD_FTP_USERNAME => 'development',
+                ConfigKey::UPLOAD_FTP_PASSWORD => 'factorio-item-browser',
+            ],
         ],
     ],
 ];

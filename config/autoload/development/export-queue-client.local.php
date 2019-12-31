@@ -15,10 +15,10 @@ use FactorioItemBrowser\ExportQueue\Client\Constant\ConfigKey;
 return [
     ConfigKey::PROJECT => [
         ConfigKey::EXPORT_QUEUE_CLIENT => [
-            ConfigKey::CACHE_DIR => __DIR__ . '/../../data/cache/export-queue-client',
+//            ConfigKey::CACHE_DIR => __DIR__ . '/../../data/cache/export-queue-client',
             ConfigKey::OPTIONS => [
                 ConfigKey::OPTION_API_URL => 'http://fib-eq-php',
-                ConfigKey::OPTION_API_KEY => 'debug',
+                ConfigKey::OPTION_API_KEY => 'factorio-item-browser',
             ],
         ],
     ],

@@ -76,6 +76,9 @@ return [
             'string $instancesDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
             'string $modsDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
             'string $tempDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),
+            'string $uploadFtpHost' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_HOST),
+            'string $uploadFtpUsername' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_USERNAME),
+            'string $uploadFtpPassword' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_PASSWORD),
         ],
         'services' => [
             AdapterInterface::class => ZendConsole::getInstance(),

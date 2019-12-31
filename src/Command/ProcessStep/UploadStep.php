@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\UploadFailedException;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
+use FtpClient\FtpClient;
+use FtpClient\FtpException;
 
 /**
  * The step for uploading the export file to the importer.
@@ -16,6 +20,49 @@ use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
  */
 class UploadStep implements ProcessStepInterface
 {
+    /**
+     * The console.
+     * @var Console
+     */
+    protected $console;
+
+    /**
+     * The host of the FTP server to upload to.
+     * @var string
+     */
+    protected $ftpHost;
+
+    /**
+     * The username to use for logging into the FTP server.
+     * @var string
+     */
+    protected $ftpUsername;
+
+    /**
+     * The password to use for logging into the FTP server.
+     * @var string
+     */
+    protected $ftpPassword;
+
+    /**
+     * Initializes the step.
+     * @param Console $console
+     * @param string $uploadFtpHost
+     * @param string $uploadFtpUsername
+     * @param string $uploadFtpPassword
+     */
+    public function __construct(
+        Console $console,
+        string $uploadFtpHost,
+        string $uploadFtpUsername,
+        string $uploadFtpPassword
+    ) {
+        $this->console = $console;
+        $this->ftpHost = $uploadFtpHost;
+        $this->ftpUsername = $uploadFtpUsername;
+        $this->ftpPassword = $uploadFtpPassword;
+    }
+
     /**
      * Returns the label to identify the step.
      * @return string
@@ -42,7 +89,27 @@ class UploadStep implements ProcessStepInterface
     public function run(ProcessStepData $processStepData): void
     {
         $fileName = $processStepData->getExportData()->persist();
+        $this->console->writeAction(sprintf('Uploading file %s', basename($fileName)));
 
-        echo 'Saved to: ' . $fileName . PHP_EOL;
+        try {
+            $ftp = $this->createFtpClient();
+            $ftp->connect($this->ftpHost);
+            $ftp->login($this->ftpUsername, $this->ftpPassword);
+            $ftp->pasv(true);
+
+            $ftp->putFromPath($fileName);
+        } catch (FtpException $e) {
+            throw new UploadFailedException($e->getMessage(), $e);
+        }
+    }
+
+    /**
+     * Creates the FTP client instance.
+     * @return FtpClient
+     * @throws FtpException
+     */
+    protected function createFtpClient(): FtpClient
+    {
+        return new FtpClient();
     }
 }
