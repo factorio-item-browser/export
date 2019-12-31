@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6447570d8a0c1c42f85bf4e345b6048d",
+    "content-hash": "7f57f38e0cfdb13652109385de908922",
     "packages": [
         {
             "name": "bluepsyduck/factorio-mod-portal-client",
@@ -5614,6 +5614,7 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^7.2",
+        "ext-ftp": "*",
         "ext-gd": "*",
         "ext-json": "*",
         "ext-pdo": "*",
