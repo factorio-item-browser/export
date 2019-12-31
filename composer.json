@@ -56,6 +56,11 @@
     }
   },
   "scripts": {
+    "build-cache": [
+      "rm -rf data/cache/*",
+      "bin/build-cache.php",
+      "chown -R www-data:www-data data/cache/*"
+    ],
     "coverage-check": "coverage-check test/coverage/clover.xml 100",
     "install-factorio": "bin/install-factorio.sh",
     "phpcbf": "phpcbf -p --colors",
