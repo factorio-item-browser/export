@@ -6,8 +6,8 @@ namespace FactorioItemBrowser\Export\I18n;
 
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
-use Zend\I18n\Translator\Translator as ZendTranslator;
-use Zend\Stdlib\ArrayUtils;
+use Laminas\I18n\Translator\Translator as LaminasTranslator;
+use Laminas\Stdlib\ArrayUtils;
 
 /**
  * The translator of the mods. Not a Zend-Translator.
@@ -35,7 +35,7 @@ class Translator
 
     /**
      * The translator used for the placeholders.
-     * @var ZendTranslator
+     * @var LaminasTranslator
      */
     protected $placeholderTranslator;
 
@@ -48,9 +48,9 @@ class Translator
     /**
      * Initializes the translator.
      * @param LocaleReader $localeReader
-     * @param ZendTranslator $placeholderTranslator
+     * @param LaminasTranslator $placeholderTranslator
      */
-    public function __construct(LocaleReader $localeReader, ZendTranslator $placeholderTranslator)
+    public function __construct(LocaleReader $localeReader, LaminasTranslator $placeholderTranslator)
     {
         $this->localeReader = $localeReader;
         $this->placeholderTranslator = $placeholderTranslator;

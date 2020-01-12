@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a82ab88ee536ee54262d3b9efaa12eca",
+    "content-hash": "06b95df0b9de1554aad7d7ebc6d8e7e9",
     "packages": [
         {
             "name": "bluepsyduck/factorio-mod-portal-client",
@@ -173,65 +173,6 @@
                 "symfony"
             ],
             "time": "2019-01-07T16:37:07+00:00"
-        },
-        {
-            "name": "bluepsyduck/zend-autowire-factory",
-            "version": "1.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/BluePsyduck/zend-autowire-factory.git",
-                "reference": "263fce239658b1f3ea901ee504fc856fb477e8ad"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/BluePsyduck/zend-autowire-factory/zipball/263fce239658b1f3ea901ee504fc856fb477e8ad",
-                "reference": "263fce239658b1f3ea901ee504fc856fb477e8ad",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1",
-                "zendframework/zend-servicemanager": "^3.0"
-            },
-            "require-dev": {
-                "bluepsyduck/test-helper": "^1.0",
-                "mikey179/vfsstream": "^1.6",
-                "phpstan/phpstan": "^0.11",
-                "phpstan/phpstan-phpunit": "^0.11",
-                "phpstan/phpstan-strict-rules": "^0.11",
-                "phpunit/phpunit": "^7.0 || ^8.0",
-                "rregeer/phpunit-coverage-check": "^0.1",
-                "squizlabs/php_codesniffer": "^3.4",
-                "zendframework/zend-config-aggregator": "^1.1"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "BluePsyduck\\ZendAutoWireFactory\\": "src/"
-                },
-                "files": [
-                    "src/helpers.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-3.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "BluePsyduck",
-                    "email": "bluepsyduck@gmx.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "A Zend factory implementation allowing for auto-wiring like in Symfony.",
-            "homepage": "https://github.com/BluePsyduck/zend-autowire-factory",
-            "keywords": [
-                "BluePsyduck",
-                "auto-wire",
-                "factory",
-                "zend"
-            ],
-            "time": "2019-07-08T16:42:19+00:00"
         },
         {
             "name": "container-interop/container-interop",
@@ -647,42 +588,37 @@
         },
         {
             "name": "factorio-item-browser/export-queue-client",
-            "version": "1.0.0",
+            "version": "dev-project-phoenix",
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-queue-client.git",
-                "reference": "01742536fcc14455b7cbe69e43b174d469b58c1d"
+                "reference": "2a9d782197b6de63f9664028bcd628cce621819e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-queue-client/zipball/01742536fcc14455b7cbe69e43b174d469b58c1d",
-                "reference": "01742536fcc14455b7cbe69e43b174d469b58c1d",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-queue-client/zipball/2a9d782197b6de63f9664028bcd628cce621819e",
+                "reference": "2a9d782197b6de63f9664028bcd628cce621819e",
                 "shasum": ""
             },
             "require": {
-                "bluepsyduck/zend-autowire-factory": "^1.1",
+                "bluepsyduck/laminas-autowire-factory": "^1.0",
                 "ext-json": "*",
                 "guzzlehttp/guzzle": "^6.3",
                 "jms/serializer": "^3.2",
-                "php": "^7.2",
-                "symfony/yaml": "^4.2",
-                "zendframework/zend-servicemanager": "^3.0"
+                "laminas/laminas-servicemanager": "^3.0",
+                "php": "^7.3",
+                "symfony/yaml": "^4.2 | ^5.0"
             },
             "require-dev": {
                 "bluepsyduck/test-helper": "^1.0",
-                "phpstan/phpstan": "^0.11",
-                "phpstan/phpstan-phpunit": "^0.11",
-                "phpstan/phpstan-strict-rules": "^0.11",
+                "phpstan/phpstan": "^0.12",
+                "phpstan/phpstan-phpunit": "^0.12",
+                "phpstan/phpstan-strict-rules": "^0.12",
                 "phpunit/phpunit": "^8.0",
-                "rregeer/phpunit-coverage-check": "^0.2",
+                "rregeer/phpunit-coverage-check": "^0.3",
                 "squizlabs/php_codesniffer": "^3.3"
             },
             "type": "library",
-            "extra": {
-                "zf": {
-                    "config-provider": "FactorioItemBrowser\\ExportQueue\\Client\\ConfigProvider"
-                }
-            },
             "autoload": {
                 "psr-4": {
                     "FactorioItemBrowser\\ExportQueue\\Client\\": "src"
@@ -707,7 +643,7 @@
                 "export",
                 "queue"
             ],
-            "time": "2019-10-13T11:47:28+00:00"
+            "time": "2020-01-10T16:59:01+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -1882,6 +1818,136 @@
             "time": "2019-12-14T20:49:23+00:00"
         },
         {
+            "name": "laminas/laminas-config-aggregator",
+            "version": "1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laminas/laminas-config-aggregator.git",
+                "reference": "8d86bbb5338f5c66ed0bb77b5cbfe5a82d762fd7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laminas/laminas-config-aggregator/zipball/8d86bbb5338f5c66ed0bb77b5cbfe5a82d762fd7",
+                "reference": "8d86bbb5338f5c66ed0bb77b5cbfe5a82d762fd7",
+                "shasum": ""
+            },
+            "require": {
+                "laminas/laminas-stdlib": "^2.7.7 || ^3.1.0",
+                "laminas/laminas-zendframework-bridge": "^1.0",
+                "php": "^5.6 || ^7.0"
+            },
+            "replace": {
+                "zendframework/zend-config-aggregator": "self.version"
+            },
+            "require-dev": {
+                "laminas/laminas-coding-standard": "~1.0.0",
+                "laminas/laminas-config": "^2.6 || ^3.0",
+                "laminas/laminas-servicemanager": "^2.7.7 || ^3.1.1",
+                "malukenho/docheader": "^0.1.5",
+                "phpunit/phpunit": "^5.7.21 || ^6.3"
+            },
+            "suggest": {
+                "laminas/laminas-config": "Allows loading configuration from XML, INI, YAML, and JSON files",
+                "laminas/laminas-config-aggregator-modulemanager": "Allows loading configuration from laminas-mvc Module classes",
+                "laminas/laminas-config-aggregator-parameters": "Allows usage of templated parameters within your configuration"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.2.x-dev",
+                    "dev-develop": "1.3.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Laminas\\ConfigAggregator\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "Lightweight library for collecting and merging configuration from different sources",
+            "homepage": "https://laminas.dev",
+            "keywords": [
+                "config-aggregator",
+                "laminas"
+            ],
+            "time": "2019-12-31T16:30:18+00:00"
+        },
+        {
+            "name": "laminas/laminas-i18n",
+            "version": "2.9.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laminas/laminas-i18n.git",
+                "reference": "48883436c6fa1f9ef001af295e3a40003c5cfbf2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laminas/laminas-i18n/zipball/48883436c6fa1f9ef001af295e3a40003c5cfbf2",
+                "reference": "48883436c6fa1f9ef001af295e3a40003c5cfbf2",
+                "shasum": ""
+            },
+            "require": {
+                "laminas/laminas-stdlib": "^2.7 || ^3.0",
+                "laminas/laminas-zendframework-bridge": "^1.0",
+                "php": "^5.6 || ^7.0"
+            },
+            "replace": {
+                "zendframework/zend-i18n": "self.version"
+            },
+            "require-dev": {
+                "laminas/laminas-cache": "^2.6.1",
+                "laminas/laminas-coding-standard": "~1.0.0",
+                "laminas/laminas-config": "^2.6",
+                "laminas/laminas-eventmanager": "^2.6.2 || ^3.0",
+                "laminas/laminas-filter": "^2.6.1",
+                "laminas/laminas-servicemanager": "^2.7.5 || ^3.0.3",
+                "laminas/laminas-validator": "^2.6",
+                "laminas/laminas-view": "^2.6.3",
+                "phpunit/phpunit": "^5.7.27 || ^6.5.14 || ^7.5.16"
+            },
+            "suggest": {
+                "ext-intl": "Required for most features of Laminas\\I18n; included in default builds of PHP",
+                "laminas/laminas-cache": "Laminas\\Cache component",
+                "laminas/laminas-config": "Laminas\\Config component",
+                "laminas/laminas-eventmanager": "You should install this package to use the events in the translator",
+                "laminas/laminas-filter": "You should install this package to use the provided filters",
+                "laminas/laminas-i18n-resources": "Translation resources",
+                "laminas/laminas-servicemanager": "Laminas\\ServiceManager component",
+                "laminas/laminas-validator": "You should install this package to use the provided validators",
+                "laminas/laminas-view": "You should install this package to use the provided view helpers"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.9.x-dev",
+                    "dev-develop": "2.10.x-dev"
+                },
+                "laminas": {
+                    "component": "Laminas\\I18n",
+                    "config-provider": "Laminas\\I18n\\ConfigProvider"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Laminas\\I18n\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "Provide translations for your application, and filter and validate internationalized values",
+            "homepage": "https://laminas.dev",
+            "keywords": [
+                "i18n",
+                "laminas"
+            ],
+            "time": "2019-12-31T17:09:58+00:00"
+        },
+        {
             "name": "laminas/laminas-servicemanager",
             "version": "3.4.0",
             "source": {
@@ -2542,61 +2608,6 @@
             "time": "2019-12-10T10:33:21+00:00"
         },
         {
-            "name": "zendframework/zend-config-aggregator",
-            "version": "1.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/zendframework/zend-config-aggregator.git",
-                "reference": "8f8568e8a618684c3bd778df75f5bc757b76decd"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/zendframework/zend-config-aggregator/zipball/8f8568e8a618684c3bd778df75f5bc757b76decd",
-                "reference": "8f8568e8a618684c3bd778df75f5bc757b76decd",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^5.6 || ^7.0",
-                "zendframework/zend-stdlib": "^2.7.7 || ^3.1.0"
-            },
-            "require-dev": {
-                "malukenho/docheader": "^0.1.5",
-                "phpunit/phpunit": "^5.7.21 || ^6.3",
-                "zendframework/zend-coding-standard": "~1.0.0",
-                "zendframework/zend-config": "^2.6 || ^3.0",
-                "zendframework/zend-servicemanager": "^2.7.7 || ^3.1.1"
-            },
-            "suggest": {
-                "zendframework/zend-config": "Allows loading configuration from XML, INI, YAML, and JSON files",
-                "zendframework/zend-config-aggregator-modulemanager": "Allows loading configuration from zend-mvc Module classes",
-                "zendframework/zend-config-aggregator-parameters": "Allows usage of templated parameters within your configuration"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.2.x-dev",
-                    "dev-develop": "1.3.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Zend\\ConfigAggregator\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "BSD-3-Clause"
-            ],
-            "description": "Lightweight library for collecting and merging configuration from different sources",
-            "keywords": [
-                "ZendFramework",
-                "config-aggregator",
-                "zf"
-            ],
-            "abandoned": "laminas/laminas-config-aggregator",
-            "time": "2019-12-27T22:57:49+00:00"
-        },
-        {
             "name": "zendframework/zend-console",
             "version": "2.8.0",
             "source": {
@@ -2649,75 +2660,6 @@
             ],
             "abandoned": "laminas/laminas-console",
             "time": "2019-02-04T19:48:22+00:00"
-        },
-        {
-            "name": "zendframework/zend-i18n",
-            "version": "2.9.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/zendframework/zend-i18n.git",
-                "reference": "e17a54b3aee333ab156958f570cde630acee8b07"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/zendframework/zend-i18n/zipball/e17a54b3aee333ab156958f570cde630acee8b07",
-                "reference": "e17a54b3aee333ab156958f570cde630acee8b07",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^5.6 || ^7.0",
-                "zendframework/zend-stdlib": "^2.7 || ^3.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^5.7.27 || ^6.5.14 || ^7.5.16",
-                "zendframework/zend-cache": "^2.6.1",
-                "zendframework/zend-coding-standard": "~1.0.0",
-                "zendframework/zend-config": "^2.6",
-                "zendframework/zend-eventmanager": "^2.6.2 || ^3.0",
-                "zendframework/zend-filter": "^2.6.1",
-                "zendframework/zend-servicemanager": "^2.7.5 || ^3.0.3",
-                "zendframework/zend-validator": "^2.6",
-                "zendframework/zend-view": "^2.6.3"
-            },
-            "suggest": {
-                "ext-intl": "Required for most features of Zend\\I18n; included in default builds of PHP",
-                "zendframework/zend-cache": "Zend\\Cache component",
-                "zendframework/zend-config": "Zend\\Config component",
-                "zendframework/zend-eventmanager": "You should install this package to use the events in the translator",
-                "zendframework/zend-filter": "You should install this package to use the provided filters",
-                "zendframework/zend-i18n-resources": "Translation resources",
-                "zendframework/zend-servicemanager": "Zend\\ServiceManager component",
-                "zendframework/zend-validator": "You should install this package to use the provided validators",
-                "zendframework/zend-view": "You should install this package to use the provided view helpers"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.9.x-dev",
-                    "dev-develop": "2.10.x-dev"
-                },
-                "zf": {
-                    "component": "Zend\\I18n",
-                    "config-provider": "Zend\\I18n\\ConfigProvider"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Zend\\I18n\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "BSD-3-Clause"
-            ],
-            "description": "Provide translations for your application, and filter and validate internationalized values",
-            "keywords": [
-                "ZendFramework",
-                "i18n",
-                "zf"
-            ],
-            "abandoned": "laminas/laminas-i18n",
-            "time": "2019-09-30T12:04:37+00:00"
         },
         {
             "name": "zfcampus/zf-console",
@@ -4513,7 +4455,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "factorio-item-browser/export-data": 20
+        "factorio-item-browser/export-data": 20,
+        "factorio-item-browser/export-queue-client": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

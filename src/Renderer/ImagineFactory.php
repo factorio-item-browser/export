@@ -7,7 +7,7 @@ namespace FactorioItemBrowser\Export\Renderer;
 use Imagine\Gd\Imagine;
 use Imagine\Image\ImagineInterface;
 use Interop\Container\ContainerInterface;
-use Zend\ServiceManager\Factory\FactoryInterface;
+use Laminas\ServiceManager\Factory\FactoryInterface;
 
 /**
  * The factory for the imagine class.

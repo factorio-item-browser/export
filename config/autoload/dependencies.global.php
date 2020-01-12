@@ -11,16 +11,17 @@ namespace FactorioItemBrowser\Export;
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
 
-use BluePsyduck\ZendAutoWireFactory\AutoWireFactory;
+use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use Imagine\Image\ImagineInterface;
 use JMS\Serializer\SerializerInterface;
 use Zend\Console\Adapter\AdapterInterface;
 use Zend\Console\Console as ZendConsole;
-use Zend\I18n\Translator\Translator;
-use Zend\I18n\Translator\TranslatorInterface;
-use function BluePsyduck\ZendAutoWireFactory\injectAliasArray;
-use function BluePsyduck\ZendAutoWireFactory\readConfig;
+use Laminas\I18n\Translator\Translator;
+use Laminas\I18n\Translator\TranslatorInterface;
+
+use function BluePsyduck\LaminasAutoWireFactory\injectAliasArray;
+use function BluePsyduck\LaminasAutoWireFactory\readConfig;
 
 return [
     'dependencies' => [

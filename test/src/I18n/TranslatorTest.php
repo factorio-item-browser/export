@@ -12,7 +12,7 @@ use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
-use Zend\I18n\Translator\Translator as ZendTranslator;
+use Laminas\I18n\Translator\Translator as LaminasTranslator;
 
 /**
  * The PHPUnit test of the Translator class.
@@ -33,7 +33,7 @@ class TranslatorTest extends TestCase
 
     /**
      * The mocked placeholder translator.
-     * @var ZendTranslator&MockObject
+     * @var LaminasTranslator&MockObject
      */
     protected $placeholderTranslator;
 
@@ -45,7 +45,7 @@ class TranslatorTest extends TestCase
         parent::setUp();
 
         $this->localeReader = $this->createMock(LocaleReader::class);
-        $this->placeholderTranslator = $this->createMock(ZendTranslator::class);
+        $this->placeholderTranslator = $this->createMock(LaminasTranslator::class);
     }
 
     /**

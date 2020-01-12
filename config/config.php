@@ -9,9 +9,11 @@ declare(strict_types=1);
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
 
-use Zend\ConfigAggregator\ArrayProvider;
-use Zend\ConfigAggregator\ConfigAggregator;
-use Zend\ConfigAggregator\PhpFileProvider;
+namespace FactorioItemBrowser\Export;
+
+use Laminas\ConfigAggregator\ArrayProvider;
+use Laminas\ConfigAggregator\ConfigAggregator;
+use Laminas\ConfigAggregator\PhpFileProvider;
 
 $cacheConfig = [
     'config_cache_path' => 'data/cache/config-cache.php',
@@ -21,10 +23,10 @@ $aggregator = new ConfigAggregator([
     // Include cache configuration
     new ArrayProvider($cacheConfig),
 
-    BluePsyduck\FactorioModPortalClient\ConfigProvider::class,
-    FactorioItemBrowser\ExportData\ConfigProvider::class,
-    FactorioItemBrowser\ExportQueue\Client\ConfigProvider::class,
-    Zend\I18n\ConfigProvider::class,
+    \BluePsyduck\FactorioModPortalClient\ConfigProvider::class,
+    \FactorioItemBrowser\ExportData\ConfigProvider::class,
+    \FactorioItemBrowser\ExportQueue\Client\ConfigProvider::class,
+    \Laminas\I18n\ConfigProvider::class,
 
     // Load application config in a pre-defined order in such a way that local settings
     // overwrite global settings. (Loaded as first to last):

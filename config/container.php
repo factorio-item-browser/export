@@ -9,10 +9,10 @@ declare(strict_types=1);
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
 
-use BluePsyduck\ZendAutoWireFactory\AutoWireFactory;
-use Zend\ConfigAggregator\ConfigAggregator;
-use Zend\ServiceManager\Config;
-use Zend\ServiceManager\ServiceManager;
+use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
+use Laminas\ConfigAggregator\ConfigAggregator;
+use Laminas\ServiceManager\Config;
+use Laminas\ServiceManager\ServiceManager;
 
 $config = require(__DIR__ . '/config.php');
 
