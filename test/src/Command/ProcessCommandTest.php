@@ -9,6 +9,7 @@ use Exception;
 use FactorioItemBrowser\Export\Command\ProcessCommand;
 use FactorioItemBrowser\Export\Command\ProcessStep\ProcessStepInterface;
 use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
@@ -26,8 +27,8 @@ use FactorioItemBrowser\ExportQueue\Client\Response\Job\ListResponse;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
-use Zend\Console\Adapter\AdapterInterface;
-use ZF\Console\Route;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * The PHPUnit test of the ProcessCommand class.
@@ -96,17 +97,45 @@ class ProcessCommandTest extends TestCase
     }
 
     /**
-     * Tests the invoking.
-     * @covers ::__invoke
+     * Tests the configure method.
+     * @throws ReflectionException
+     * @covers ::configure
      */
-    public function testInvoke(): void
+    public function testConfigure(): void
+    {
+        /* @var ProcessCommand&MockObject $command */
+        $command = $this->getMockBuilder(ProcessCommand::class)
+                        ->onlyMethods(['setName', 'setDescription'])
+                        ->setConstructorArgs([
+                            $this->console,
+                            $this->exportDataService,
+                            $this->exportQueueFacade,
+                            []
+                        ])
+                        ->getMock();
+        $command->expects($this->once())
+                ->method('setName')
+                ->with($this->identicalTo(CommandName::PROCESS));
+        $command->expects($this->once())
+                ->method('setDescription')
+                ->with($this->isType('string'));
+
+        $this->invokeMethod($command, 'configure');
+    }
+
+    /**
+     * Tests the execute method.
+     * @throws ReflectionException
+     * @covers ::execute
+     */
+    public function testExecute(): void
     {
         /* @var Job&MockObject $exportJob */
         $exportJob = $this->createMock(Job::class);
-        /* @var Route&MockObject $route */
-        $route = $this->createMock(Route::class);
-        /* @var AdapterInterface&MockObject $consoleAdapter */
-        $consoleAdapter = $this->createMock(AdapterInterface::class);
+        /* @var InputInterface&MockObject $input */
+        $input = $this->createMock(InputInterface::class);
+        /* @var OutputInterface&MockObject $output */
+        $output = $this->createMock(OutputInterface::class);
 
         /* @var ProcessCommand&MockObject $command */
         $command = $this->getMockBuilder(ProcessCommand::class)
@@ -120,20 +149,22 @@ class ProcessCommandTest extends TestCase
                 ->method('ruNExportJob')
                 ->with($this->identicalTo($exportJob));
 
-        $result = $command($route, $consoleAdapter);
+        $result = $this->invokeMethod($command, 'execute', $input, $output);
+
         $this->assertSame(0, $result);
     }
     
     /**
-     * Tests the invoking.
-     * @covers ::__invoke
+     * Tests the execute method.
+     * @throws ReflectionException
+     * @covers ::execute
      */
-    public function testInvokeWithoutJob(): void
+    public function testExecuteWithoutJob(): void
     {
-        /* @var Route&MockObject $route */
-        $route = $this->createMock(Route::class);
-        /* @var AdapterInterface&MockObject $consoleAdapter */
-        $consoleAdapter = $this->createMock(AdapterInterface::class);
+        /* @var InputInterface&MockObject $input */
+        $input = $this->createMock(InputInterface::class);
+        /* @var OutputInterface&MockObject $output */
+        $output = $this->createMock(OutputInterface::class);
 
         /* @var ProcessCommand&MockObject $command */
         $command = $this->getMockBuilder(ProcessCommand::class)
@@ -150,22 +181,24 @@ class ProcessCommandTest extends TestCase
                       ->method('writeMessage')
                       ->with($this->identicalTo('No export job to process. Done.'));
 
-        $result = $command($route, $consoleAdapter);
+        $result = $this->invokeMethod($command, 'execute', $input, $output);
+
         $this->assertSame(0, $result);
     }
 
     /**
-     * Tests the invoking.
-     * @covers ::__invoke
+     * Tests the execute method.
+     * @throws ReflectionException
+     * @covers ::execute
      */
-    public function testInvokeWithException(): void
+    public function testExecuteWithException(): void
     {
         /* @var Job&MockObject $exportJob */
         $exportJob = $this->createMock(Job::class);
-        /* @var Route&MockObject $route */
-        $route = $this->createMock(Route::class);
-        /* @var AdapterInterface&MockObject $consoleAdapter */
-        $consoleAdapter = $this->createMock(AdapterInterface::class);
+        /* @var InputInterface&MockObject $input */
+        $input = $this->createMock(InputInterface::class);
+        /* @var OutputInterface&MockObject $output */
+        $output = $this->createMock(OutputInterface::class);
         /* @var Exception&MockObject $exception */
         $exception = $this->createMock(Exception::class);
 
@@ -186,7 +219,8 @@ class ProcessCommandTest extends TestCase
                       ->method('writeException')
                       ->with($this->identicalTo($exception));
 
-        $result = $command($route, $consoleAdapter);
+        $result = $this->invokeMethod($command, 'execute', $input, $output);
+
         $this->assertSame(1, $result);
     }
 

@@ -15,8 +15,6 @@ use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use Imagine\Image\ImagineInterface;
 use JMS\Serializer\SerializerInterface;
-use Zend\Console\Adapter\AdapterInterface;
-use Zend\Console\Console as ZendConsole;
 use Laminas\I18n\Translator\Translator;
 use Laminas\I18n\Translator\TranslatorInterface;
 
@@ -81,8 +79,5 @@ return [
             'string $uploadFtpUsername' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_USERNAME),
             'string $uploadFtpPassword' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_PASSWORD),
         ],
-        'services' => [
-            AdapterInterface::class => ZendConsole::getInstance(),
-        ],
-    ]
+    ],
 ];

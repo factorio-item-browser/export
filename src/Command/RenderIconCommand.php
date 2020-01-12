@@ -6,14 +6,17 @@ namespace FactorioItemBrowser\Export\Command;
 
 use Exception;
 use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\IconRenderException;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use JMS\Serializer\SerializerInterface;
-use Zend\Console\Adapter\AdapterInterface;
-use ZF\Console\Route;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * The command for rendering one icon.
@@ -21,7 +24,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class RenderIconCommand implements CommandInterface
+class RenderIconCommand extends Command
 {
     /**
      * The console.
@@ -49,21 +52,36 @@ class RenderIconCommand implements CommandInterface
      */
     public function __construct(Console $console, IconRenderer $iconRenderer, SerializerInterface $exportDataSerializer)
     {
+        parent::__construct();
+
         $this->console = $console;
         $this->iconRenderer = $iconRenderer;
         $this->serializer = $exportDataSerializer;
     }
 
     /**
-     * Invokes the command.
-     * @param Route $route
-     * @param AdapterInterface $consoleAdapter
+     * Configures the command.
+     */
+    protected function configure(): void
+    {
+        parent::configure();
+
+        $this->setName(CommandName::RENDER_ICON);
+        $this->setDescription('Renders the specified icon.');
+
+        $this->addArgument('icon', InputArgument::REQUIRED, 'The serialized icon to render.');
+    }
+
+    /**
+     * Executes the command.
+     * @param InputInterface $input
+     * @param OutputInterface $output
      * @return int
      */
-    public function __invoke(Route $route, AdapterInterface $consoleAdapter): int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
-            $icon = $this->getIconFromRoute($route);
+            $icon = $this->getIconFromInput($input);
             $renderedIcon = $this->renderIcon($icon);
             $this->console->writeData($renderedIcon);
             return 0;
@@ -74,15 +92,15 @@ class RenderIconCommand implements CommandInterface
     }
 
     /**
-     * Extracts the icon from the route.
-     * @param Route $route
+     * Extracts the icon from the input.
+     * @param InputInterface $input
      * @return Icon
      * @throws ExportException
      */
-    protected function getIconFromRoute(Route $route): Icon
+    protected function getIconFromInput(InputInterface $input): Icon
     {
         try {
-            $serializedIcon = $route->getMatchedParam('icon');
+            $serializedIcon = strval($input->getArgument('icon'));
             return $this->serializer->deserialize($serializedIcon, Icon::class, 'json');
         } catch (Exception $e) {
             throw new InternalException(sprintf('Invalid serialized icon: %s', $e->getMessage()), $e);

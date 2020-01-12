@@ -8,6 +8,7 @@ use BluePsyduck\TestHelper\ReflectionTrait;
 use Exception;
 use FactorioItemBrowser\Export\Command\RenderIconCommand;
 use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Exception\IconRenderException;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Renderer\IconRenderer;
@@ -16,8 +17,9 @@ use JMS\Serializer\SerializerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
-use Zend\Console\Adapter\AdapterInterface;
-use ZF\Console\Route;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * The PHPUnit test of the RenderIconCommand class.
@@ -75,19 +77,49 @@ class RenderIconCommandTest extends TestCase
     }
 
     /**
-     * Tests the invoking.
-     * @covers ::__invoke
+     * Tests the configure method.
+     * @throws ReflectionException
+     * @covers ::configure
      */
-    public function testInvoke(): void
+    public function testConfigure(): void
+    {
+        /* @var RenderIconCommand&MockObject $command */
+        $command = $this->getMockBuilder(RenderIconCommand::class)
+                        ->onlyMethods(['setName', 'setDescription', 'addArgument'])
+                        ->setConstructorArgs([$this->console, $this->iconRenderer, $this->serializer])
+                        ->getMock();
+        $command->expects($this->once())
+                ->method('setName')
+                ->with($this->identicalTo(CommandName::RENDER_ICON));
+        $command->expects($this->once())
+                ->method('setDescription')
+                ->with($this->isType('string'));
+        $command->expects($this->once())
+                ->method('addArgument')
+                ->with(
+                    $this->identicalTo('icon'),
+                    $this->identicalTo(InputArgument::REQUIRED),
+                    $this->isType('string')
+                );
+
+        $this->invokeMethod($command, 'configure');
+    }
+
+    /**
+     * Tests the execute method.
+     * @throws ReflectionException
+     * @covers ::execute
+     */
+    public function testExecute(): void
     {
         $renderedIcon = 'abc';
 
         /* @var Icon&MockObject $icon */
         $icon = $this->createMock(Icon::class);
-        /* @var Route&MockObject $route */
-        $route = $this->createMock(Route::class);
-        /* @var AdapterInterface&MockObject $consoleAdapter */
-        $consoleAdapter = $this->createMock(AdapterInterface::class);
+        /* @var InputInterface&MockObject $input */
+        $input = $this->createMock(InputInterface::class);
+        /* @var OutputInterface&MockObject $output */
+        $output = $this->createMock(OutputInterface::class);
 
         $this->console->expects($this->once())
                       ->method('writeData')
@@ -98,33 +130,34 @@ class RenderIconCommandTest extends TestCase
 
         /* @var RenderIconCommand&MockObject $command */
         $command = $this->getMockBuilder(RenderIconCommand::class)
-                        ->onlyMethods(['getIconFromRoute', 'renderIcon'])
+                        ->onlyMethods(['getIconFromInput', 'renderIcon'])
                         ->setConstructorArgs([$this->console, $this->iconRenderer, $this->serializer])
                         ->getMock();
         $command->expects($this->once())
-                ->method('getIconFromRoute')
-                ->with($this->identicalTo($route))
+                ->method('getIconFromInput')
+                ->with($this->identicalTo($input))
                 ->willReturn($icon);
         $command->expects($this->once())
                 ->method('renderIcon')
                 ->with($this->identicalTo($icon))
                 ->willReturn($renderedIcon);
 
-        $result = $command($route, $consoleAdapter);
+        $result = $this->invokeMethod($command, 'execute', $input, $output);
 
         $this->assertSame(0, $result);
     }
 
     /**
-     * Tests the invoking.
-     * @covers ::__invoke
+     * Tests the execute method.
+     * @throws ReflectionException
+     * @covers ::execute
      */
-    public function testInvokeWithException(): void
+    public function testExecuteWithException(): void
     {
-        /* @var Route&MockObject $route */
-        $route = $this->createMock(Route::class);
-        /* @var AdapterInterface&MockObject $consoleAdapter */
-        $consoleAdapter = $this->createMock(AdapterInterface::class);
+        /* @var InputInterface&MockObject $input */
+        $input = $this->createMock(InputInterface::class);
+        /* @var OutputInterface&MockObject $output */
+        $output = $this->createMock(OutputInterface::class);
         /* @var Icon&MockObject $icon */
         $icon = $this->createMock(Icon::class);
         /* @var Exception&MockObject $exception */
@@ -139,39 +172,39 @@ class RenderIconCommandTest extends TestCase
 
         /* @var RenderIconCommand&MockObject $command */
         $command = $this->getMockBuilder(RenderIconCommand::class)
-                        ->onlyMethods(['getIconFromRoute', 'renderIcon'])
+                        ->onlyMethods(['getIconFromInput', 'renderIcon'])
                         ->setConstructorArgs([$this->console, $this->iconRenderer, $this->serializer])
                         ->getMock();
         $command->expects($this->once())
-                ->method('getIconFromRoute')
-                ->with($this->identicalTo($route))
+                ->method('getIconFromInput')
+                ->with($this->identicalTo($input))
                 ->willReturn($icon);
         $command->expects($this->once())
                 ->method('renderIcon')
                 ->with($this->identicalTo($icon))
                 ->willThrowException($exception);
 
-        $result = $command($route, $consoleAdapter);
+        $result = $this->invokeMethod($command, 'execute', $input, $output);
 
         $this->assertSame(1, $result);
     }
 
     /**
-     * Tests the getIconFromRoute method.
+     * Tests the getIconFromInput method.
      * @throws ReflectionException
-     * @covers ::getIconFromRoute
+     * @covers ::getIconFromInput
      */
-    public function testGetIconFromRoute(): void
+    public function testGetIconFromInput(): void
     {
         $serializedIcon = 'abc';
 
         /* @var Icon&MockObject $icon */
         $icon = $this->createMock(Icon::class);
 
-        /* @var Route&MockObject $route */
-        $route = $this->createMock(Route::class);
-        $route->expects($this->once())
-              ->method('getMatchedParam')
+        /* @var InputInterface&MockObject $input */
+        $input = $this->createMock(InputInterface::class);
+        $input->expects($this->once())
+              ->method('getArgument')
               ->with($this->identicalTo('icon'))
               ->willReturn($serializedIcon);
 
@@ -185,24 +218,24 @@ class RenderIconCommandTest extends TestCase
                          ->willReturn($icon);
 
         $command = new RenderIconCommand($this->console, $this->iconRenderer, $this->serializer);
-        $result = $this->invokeMethod($command, 'getIconFromRoute', $route);
+        $result = $this->invokeMethod($command, 'getIconFromInput', $input);
 
         $this->assertSame($icon, $result);
     }
 
     /**
-     * Tests the getIconFromRoute method.
+     * Tests the getIconFromInput method.
      * @throws ReflectionException
-     * @covers ::getIconFromRoute
+     * @covers ::getIconFromInput
      */
-    public function testGetIconFromRouteWithException(): void
+    public function testGetIconFromInputWithException(): void
     {
         $serializedIcon = 'abc';
 
-        /* @var Route&MockObject $route */
-        $route = $this->createMock(Route::class);
-        $route->expects($this->once())
-              ->method('getMatchedParam')
+        /* @var InputInterface&MockObject $input */
+        $input = $this->createMock(InputInterface::class);
+        $input->expects($this->once())
+              ->method('getArgument')
               ->with($this->identicalTo('icon'))
               ->willReturn($serializedIcon);
 
@@ -218,7 +251,7 @@ class RenderIconCommandTest extends TestCase
         $this->expectException(InternalException::class);
 
         $command = new RenderIconCommand($this->console, $this->iconRenderer, $this->serializer);
-        $this->invokeMethod($command, 'getIconFromRoute', $route);
+        $this->invokeMethod($command, 'getIconFromInput', $input);
     }
 
     /**

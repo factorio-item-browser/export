@@ -7,6 +7,7 @@ namespace FactorioItemBrowser\Export\Command;
 use Exception;
 use FactorioItemBrowser\Export\Command\ProcessStep\ProcessStepInterface;
 use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\InternalException;
@@ -17,8 +18,9 @@ use FactorioItemBrowser\ExportQueue\Client\Entity\Job;
 use FactorioItemBrowser\ExportQueue\Client\Exception\ClientException;
 use FactorioItemBrowser\ExportQueue\Client\Request\Job\ListRequest;
 use FactorioItemBrowser\ExportQueue\Client\Request\Job\UpdateRequest;
-use Zend\Console\Adapter\AdapterInterface;
-use ZF\Console\Route;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * The command for processing the next job in the import queue.
@@ -26,7 +28,7 @@ use ZF\Console\Route;
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ProcessCommand implements CommandInterface
+class ProcessCommand extends Command
 {
     /**
      * The console.
@@ -65,6 +67,8 @@ class ProcessCommand implements CommandInterface
         Facade $exportQueueFacade,
         array $exportProcessSteps
     ) {
+        parent::__construct();
+
         $this->console = $console;
         $this->exportDataService = $exportDataService;
         $this->exportQueueFacade = $exportQueueFacade;
@@ -72,12 +76,23 @@ class ProcessCommand implements CommandInterface
     }
 
     /**
-     * Invokes the command.
-     * @param Route $route
-     * @param AdapterInterface $consoleAdapter
+     * Configures the command.
+     */
+    protected function configure(): void
+    {
+        parent::configure();
+
+        $this->setName(CommandName::PROCESS);
+        $this->setDescription('Processes the next jop scheduled to be exported.');
+    }
+
+    /**
+     * Executes the command.
+     * @param InputInterface $input
+     * @param OutputInterface $output
      * @return int
      */
-    public function __invoke(Route $route, AdapterInterface $consoleAdapter): int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
             $exportJob = $this->fetchExportJob();

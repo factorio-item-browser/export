@@ -33,8 +33,8 @@
     "laminas/laminas-stdlib": "^3.2",
     "nicolab/php-ftp-client": "^1.5",
     "ramsey/uuid": "^3.8",
-    "symfony/process": "^4.1",
-    "zfcampus/zf-console": "^1.3"
+    "symfony/console": "^5.0",
+    "symfony/process": "^5.0"
   },
   "require-dev": {
     "bluepsyduck/test-helper": "^1.0",

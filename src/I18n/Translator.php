@@ -10,7 +10,7 @@ use Laminas\I18n\Translator\Translator as LaminasTranslator;
 use Laminas\Stdlib\ArrayUtils;
 
 /**
- * The translator of the mods. Not a Zend-Translator.
+ * The translator of the mods. Not a Laminas-Translator.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
