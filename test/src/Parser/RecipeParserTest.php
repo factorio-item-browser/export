@@ -324,7 +324,7 @@ class RecipeParserTest extends TestCase
 
     /**
      * Provides the data for the isIngredientValid test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideIsIngredientValid(): array
     {
@@ -385,7 +385,7 @@ class RecipeParserTest extends TestCase
     
     /**
      * Provides the data for the isProductValid test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideIsProductValid(): array
     {

@@ -104,7 +104,7 @@ class IconParserTest extends TestCase
 
     /**
      * Provides the data for the isIconValid test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideIsIconValid(): array
     {
@@ -250,7 +250,7 @@ class IconParserTest extends TestCase
 
     /**
      * Provides the data for the convertColorValue test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideConvertColorValue(): array
     {
@@ -281,7 +281,7 @@ class IconParserTest extends TestCase
 
     /**
      * Provides the data for the addParsedIcon test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideAddParsedIcon(): array
     {

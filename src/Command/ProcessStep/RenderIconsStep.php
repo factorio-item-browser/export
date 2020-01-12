@@ -106,7 +106,7 @@ class RenderIconsStep implements ProcessStepInterface
 
     /**
      * Handles the start of a process.
-     * @param RenderIconProcess $process
+     * @param RenderIconProcess<string> $process
      */
     protected function handleProcessStart(RenderIconProcess $process): void
     {
@@ -116,7 +116,7 @@ class RenderIconsStep implements ProcessStepInterface
     /**
      * Handles the finishing of a process.
      * @param ExportData $exportData
-     * @param RenderIconProcess $process
+     * @param RenderIconProcess<string> $process
      */
     protected function handleProcessFinish(ExportData $exportData, RenderIconProcess $process): void
     {
@@ -130,7 +130,7 @@ class RenderIconsStep implements ProcessStepInterface
     /**
      * Creates the render process for the icon.
      * @param Icon $icon
-     * @return RenderIconProcess
+     * @return RenderIconProcess<string>
      */
     protected function createProcessForIcon(Icon $icon): RenderIconProcess
     {

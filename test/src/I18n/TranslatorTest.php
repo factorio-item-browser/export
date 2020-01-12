@@ -180,7 +180,7 @@ class TranslatorTest extends TestCase
 
     /**
      * Provides the data for the translateWithFallback test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideTranslateWithFallback(): array
     {
@@ -193,8 +193,8 @@ class TranslatorTest extends TestCase
 
     /**
      * Tests the translateWithFallback method.
-     * @param string|array $fallbackLocalisedString
-     * @param array $resultsTranslate
+     * @param string|array<mixed> $fallbackLocalisedString
+     * @param array|string[] $resultsTranslate
      * @param string $expectedResult
      * @throws ReflectionException
      * @covers ::translateWithFallback
@@ -247,7 +247,7 @@ class TranslatorTest extends TestCase
 
     /**
      * Provides the data for the translate test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideTranslate(): array
     {
@@ -263,7 +263,7 @@ class TranslatorTest extends TestCase
      * Tests the translate method.
      * @param string $locale
      * @param int $level
-     * @param array $resultsTranslate
+     * @param array|string[] $resultsTranslate
      * @param string $paramResolveReferences
      * @throws ReflectionException
      * @covers ::translate
@@ -318,7 +318,7 @@ class TranslatorTest extends TestCase
 
     /**
      * Provides the data for the translateLocalisedString test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideTranslateLocalisedString(): array
     {
@@ -339,12 +339,12 @@ class TranslatorTest extends TestCase
 
     /**
      * Tests the translateLocalisedString method.
-     * @param array $translations
+     * @param array|string[][] $translations
      * @param string $locale
-     * @param string|array $localisedString
+     * @param string|array<mixed> $localisedString
      * @param string|null $resultTranslateParameters
      * @param string|null $expectedString
-     * @param array|null $expectedParameters
+     * @param array<string>|null $expectedParameters
      * @param string $expectedResult
      * @throws ReflectionException
      * @covers ::translateLocalisedString
@@ -478,7 +478,7 @@ class TranslatorTest extends TestCase
 
     /**
      * Provides the data for the translateReference test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideTranslateReference(): array
     {
@@ -497,7 +497,7 @@ class TranslatorTest extends TestCase
 
     /**
      * Tests the translateReference method.
-     * @param array $translations
+     * @param array|string[][] $translations
      * @param string $locale
      * @param string $section
      * @param string $type
@@ -536,7 +536,7 @@ class TranslatorTest extends TestCase
 
     /**
      * Provides the data for the translatePlaceholder test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideTranslatePlaceholder(): array
     {

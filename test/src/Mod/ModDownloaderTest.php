@@ -265,7 +265,7 @@ class ModDownloaderTest extends TestCase
 
     /**
      * Provides the data for the verifyMods test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideVerifyMods(): array
     {
@@ -304,7 +304,7 @@ class ModDownloaderTest extends TestCase
 
     /**
      * Provides the data for the getReleaseToDownload test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideGetReleaseToDownload(): array
     {

@@ -69,7 +69,7 @@ class ModFileManager
 
         try {
             $firstStat = $zipArchive->statIndex(0);
-            if (preg_match(self::REGEXP_MOD_DIRECTORY, $firstStat['name'], $match) !== 1) {
+            if ($firstStat === false || preg_match(self::REGEXP_MOD_DIRECTORY, $firstStat['name'], $match) !== 1) {
                 throw new InvalidModFileException($modZipPath, 'Unable to determine mod directory.');
             }
             $modDirectory = $match[0];
@@ -82,7 +82,11 @@ class ModFileManager
             mkdir($targetDirectory, 0777, true);
             for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
                 $stat = $zipArchive->statIndex($i);
-                if ($stat['size'] > 0 && substr($stat['name'], 0, $modDirectoryLength) === $modDirectory) {
+                if (
+                    $stat !== false
+                    && $stat['size'] > 0
+                    && substr($stat['name'], 0, $modDirectoryLength) === $modDirectory
+                ) {
                     $fileName = $targetDirectory . '/' . substr($stat['name'], $modDirectoryLength);
                     if (!is_dir(dirname($fileName))) {
                         mkdir(dirname($fileName), 0777, true);

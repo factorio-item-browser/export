@@ -91,7 +91,7 @@ class Instance
     /**
      * Runs the Factorio instance.
      * @param string $combinationId
-     * @param array $modNames
+     * @param array|string[] $modNames
      * @return Dump
      * @throws ExportException
      */
@@ -133,7 +133,7 @@ class Instance
 
     /**
      * Sets up the mods to use for the combination.
-     * @param array $modNames
+     * @param array|string[] $modNames
      * @throws ExportException
      */
     protected function setUpMods(array $modNames): void
@@ -196,7 +196,7 @@ class Instance
 
     /**
      * Creates the process which will actually run Factorio.
-     * @return Process
+     * @return Process<string>
      */
     protected function createProcess(): Process
     {

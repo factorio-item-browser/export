@@ -145,7 +145,7 @@ class TintedLayerFilterTest extends TestCase
 
     /**
      * Provides the data for the calculateComponent test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideCalculateComponent(): array
     {
@@ -227,7 +227,7 @@ class TintedLayerFilterTest extends TestCase
 
     /**
      * Provides the data for the calculateAlpha test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideCalculateAlpha(): array
     {

@@ -135,7 +135,7 @@ class DumpExtractorTest extends TestCase
 
     /**
      * Provides the data for the extractRawDumpData test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideExtractRawDumpDataWithException(): array
     {

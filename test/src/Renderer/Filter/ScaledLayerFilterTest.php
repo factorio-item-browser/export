@@ -84,7 +84,7 @@ class ScaledLayerFilterTest extends TestCase
 
     /**
      * Provides the data for the scaleLayer test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideScaleLayer(): array
     {
@@ -333,7 +333,7 @@ class ScaledLayerFilterTest extends TestCase
 
     /**
      * Provides the data for the calculateDrawPosition test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideCalculateDrawPosition(): array
     {

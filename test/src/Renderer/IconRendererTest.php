@@ -261,7 +261,7 @@ class IconRendererTest extends TestCase
 
     /**
      * Provides the data for the loadLayerImage test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideLoadLayerImage(): array
     {
@@ -386,7 +386,7 @@ class IconRendererTest extends TestCase
 
     /**
      * Provides the data for the resizeImage test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideResizeImage(): array
     {

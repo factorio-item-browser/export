@@ -18,7 +18,7 @@ class RawHandler implements SubscribingHandlerInterface
 {
     /**
      * Returns the methods to subscribe to.
-     * @return array
+     * @return array<mixed>
      */
     public static function getSubscribingMethods()
     {
@@ -36,7 +36,7 @@ class RawHandler implements SubscribingHandlerInterface
      * Deserializes the localised string.
      * @param DeserializationVisitorInterface $visitor
      * @param mixed $value
-     * @param array $type
+     * @param array|string[] $type
      * @return mixed
      */
     public function deserializeRaw(DeserializationVisitorInterface $visitor, $value, array $type)

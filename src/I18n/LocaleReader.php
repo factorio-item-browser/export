@@ -53,7 +53,7 @@ class LocaleReader
     /**
      * Reads the locales of the specified mod.
      * @param string $modName
-     * @return array
+     * @return array|string[][]
      * @throws ExportException
      */
     public function read(string $modName): array
@@ -94,7 +94,7 @@ class LocaleReader
      * Reads a locale file from the specified mod.
      * @param string $modName
      * @param string $fileName
-     * @return array
+     * @return array|string[]
      * @throws ExportException
      */
     protected function readLocaleFile(string $modName, string $fileName): array

@@ -1,5 +1,4 @@
 /.idea
-/config/autoload/production
 /data/*
 /test/coverage
 /vendor

@@ -116,9 +116,9 @@ class Translator
 
     /**
      * Translates the specified string.
+     * @param string $locale
      * @param string $type
      * @param mixed $localisedString
-     * @param string $locale
      * @param int $level
      * @return string
      */
@@ -163,7 +163,7 @@ class Translator
      * @param string $locale
      * @param string $type
      * @param string $string
-     * @param array $parameters
+     * @param array<mixed> $parameters
      * @param int $level
      * @return string
      */

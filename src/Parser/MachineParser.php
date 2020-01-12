@@ -98,15 +98,17 @@ class MachineParser implements ParserInterface
      */
     protected function mapEnergyUsage(ExportMachine $exportMachine, float $energyUsage): void
     {
-        $units = EnergyUsageUnit::ORDERED_UNITS;
-        $currentUnit = array_shift($units);
-        while ($energyUsage >= 1000 && count($units) > 0) {
+        $unit = EnergyUsageUnit::WATT;
+        foreach (EnergyUsageUnit::ORDERED_UNITS as $currentUnit) {
+            if ($energyUsage < 1000) {
+                $unit = $currentUnit;
+                break;
+            }
             $energyUsage /= 1000;
-            $currentUnit = array_shift($units);
         }
 
         $exportMachine->setEnergyUsage(round($energyUsage, 3))
-                      ->setEnergyUsageUnit($currentUnit);
+                      ->setEnergyUsageUnit($unit);
     }
 
     /**

@@ -195,13 +195,14 @@ class MachineParserTest extends TestCase
 
     /**
      * Provides the data for the mapEnergyUsage test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideMapEnergyUsage(): array
     {
         return [
             [0., 0., 'W'],
             [42., 42., 'W'],
+            [1000., 1., 'kW'],
             [1337., 1.337, 'kW'],
             [1337000., 1.337, 'MW'],
             [1337000000., 1.337, 'GW'],

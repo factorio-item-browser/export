@@ -95,11 +95,11 @@ class DumpExtractor
      * Parses the dump data into an object.
      * @param string $stage
      * @param string $dumpData
-     * @param string $className
+     * @param class-string $className
      * @return mixed
      * @throws InvalidDumpException
      */
-    protected function parseDump(string $stage, string $dumpData, string $className)
+    protected function parseDump(string $stage, string $dumpData, $className)
     {
         try {
             $result = $this->serializer->deserialize($dumpData, $className, 'json');

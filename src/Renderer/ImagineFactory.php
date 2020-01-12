@@ -21,7 +21,7 @@ class ImagineFactory implements FactoryInterface
      * Creates the icon renderer.
      * @param  ContainerInterface $container
      * @param  string $requestedName
-     * @param  null|array $options
+     * @param  array<mixed>|null $options
      * @return ImagineInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null): ImagineInterface

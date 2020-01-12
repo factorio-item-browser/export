@@ -218,7 +218,7 @@ class ModDownloader
      * Creates a download process for the specified mod and release.
      * @param Mod $mod
      * @param Release $release
-     * @return Process
+     * @return Process<string>
      */
     protected function createDownloadProcess(Mod $mod, Release $release): Process
     {
@@ -232,7 +232,7 @@ class ModDownloader
 
     /**
      * Handles the start of a download process.
-     * @param DownloadProcess $process
+     * @param DownloadProcess<string> $process
      */
     protected function handleProcessStart(DownloadProcess $process): void
     {
@@ -245,7 +245,7 @@ class ModDownloader
 
     /**
      * Handles a download process which just finished.
-     * @param DownloadProcess $process
+     * @param DownloadProcess<string> $process
      * @throws ExportException
      */
     protected function handleProcessFinish(DownloadProcess $process): void
