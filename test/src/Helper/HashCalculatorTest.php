@@ -68,7 +68,6 @@ class HashCalculatorTest extends TestCase
         $icon = new Icon();
         $icon->setId('abc')
              ->setSize(42)
-             ->setRenderedSize(21)
              ->addLayer($layer);
 
         $expectedIcon = new Icon();

@@ -25,9 +25,10 @@ class LayerTest extends TestCase
         $entity = new Layer();
 
         $this->assertSame('', $entity->getFile());
+        $this->assertSame(0, $entity->getSize());
+        $this->assertSame(1., $entity->getScale());
         $this->assertSame(0, $entity->getShiftX());
         $this->assertSame(0, $entity->getShiftY());
-        $this->assertSame(1., $entity->getScale());
         $this->assertSame(1., $entity->getTintRed());
         $this->assertSame(1., $entity->getTintGreen());
         $this->assertSame(1., $entity->getTintBlue());
@@ -47,35 +48,21 @@ class LayerTest extends TestCase
         $this->assertSame($entity, $entity->setFile($file));
         $this->assertSame($file, $entity->getFile());
     }
-    
+
     /**
-     * Tests the setting and getting the shift x.
-     * @covers ::getShiftX
-     * @covers ::setShiftX
+     * Tests the setting and getting the size.
+     * @covers ::getSize
+     * @covers ::setSize
      */
-    public function testSetAndGetShiftX(): void
+    public function testSetAndGetSize(): void
     {
-        $shiftX = 42;
+        $size = 42;
         $entity = new Layer();
-    
-        $this->assertSame($entity, $entity->setShiftX($shiftX));
-        $this->assertSame($shiftX, $entity->getShiftX());
+
+        $this->assertSame($entity, $entity->setSize($size));
+        $this->assertSame($size, $entity->getSize());
     }
-    
-    /**
-     * Tests the setting and getting the shift y.
-     * @covers ::getShiftY
-     * @covers ::setShiftY
-     */
-    public function testSetAndGetShiftY(): void
-    {
-        $shiftY = 42;
-        $entity = new Layer();
-    
-        $this->assertSame($entity, $entity->setShiftY($shiftY));
-        $this->assertSame($shiftY, $entity->getShiftY());
-    }
-    
+
     /**
      * Tests the setting and getting the scale.
      * @covers ::getScale
@@ -85,11 +72,39 @@ class LayerTest extends TestCase
     {
         $scale = 13.37;
         $entity = new Layer();
-    
+
         $this->assertSame($entity, $entity->setScale($scale));
         $this->assertSame($scale, $entity->getScale());
     }
-    
+
+    /**
+     * Tests the setting and getting the shift x.
+     * @covers ::getShiftX
+     * @covers ::setShiftX
+     */
+    public function testSetAndGetShiftX(): void
+    {
+        $shiftX = 42;
+        $entity = new Layer();
+
+        $this->assertSame($entity, $entity->setShiftX($shiftX));
+        $this->assertSame($shiftX, $entity->getShiftX());
+    }
+
+    /**
+     * Tests the setting and getting the shift y.
+     * @covers ::getShiftY
+     * @covers ::setShiftY
+     */
+    public function testSetAndGetShiftY(): void
+    {
+        $shiftY = 42;
+        $entity = new Layer();
+
+        $this->assertSame($entity, $entity->setShiftY($shiftY));
+        $this->assertSame($shiftY, $entity->getShiftY());
+    }
+
     /**
      * Tests the setting and getting the tint red.
      * @covers ::getTintRed

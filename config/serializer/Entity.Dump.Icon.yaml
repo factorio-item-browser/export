@@ -8,6 +8,3 @@ FactorioItemBrowser\Export\Entity\Dump\Icon:
       type: string
     layers:
       type: array<FactorioItemBrowser\Export\Entity\Dump\Layer>
-    size:
-      type: integer
-

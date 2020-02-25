@@ -15,12 +15,6 @@ use FactorioItemBrowser\Export\Constant\ConfigKey;
 return [
     ConfigKey::PROJECT => [
         ConfigKey::EXPORT => [
-            ConfigKey::DIRECTORIES => [
-                ConfigKey::DIRECTORY_CACHE => __DIR__ . '/../../data/cache',
-                ConfigKey::DIRECTORY_INSTANCES => __DIR__ . '/../../data/instances',
-                ConfigKey::DIRECTORY_MODS => __DIR__ . '/../../data/mods',
-                ConfigKey::DIRECTORY_TEMP => __DIR__ . '/../../data/temp',
-            ],
             ConfigKey::PARSERS => [
                 Parser\IconParser::class,
                 Parser\ItemParser::class,

@@ -22,11 +22,6 @@ use FactorioItemBrowser\ExportData\Entity\Icon\Layer as ExportLayer;
 class IconParser implements ParserInterface
 {
     /**
-     * The rendered size to use for the icons.
-     */
-    protected const RENDERED_SIZE = 32;
-
-    /**
      * The types which are blacklisted from the parser.
      */
     protected const BLACKLISTED_TYPES = [
@@ -95,11 +90,17 @@ class IconParser implements ParserInterface
     protected function mapIcon(DumpIcon $dumpIcon): ExportIcon
     {
         $exportIcon = new ExportIcon();
-        $exportIcon->setSize($dumpIcon->getSize())
-                   ->setRenderedSize(self::RENDERED_SIZE);
 
+        $isFirstLayer = true;
         foreach ($dumpIcon->getLayers() as $dumpLayer) {
-            $exportIcon->addLayer($this->mapLayer($dumpLayer));
+            $layer = $this->mapLayer($dumpLayer);
+            $exportIcon->addLayer($layer);
+
+            if ($isFirstLayer) {
+                $scaledSize = (int) ($layer->getSize() * $layer->getScale());
+                $exportIcon->setSize($scaledSize);
+                $isFirstLayer = false;
+            }
         }
 
         $exportIcon->setId($this->hashCalculator->hashIcon($exportIcon));
@@ -115,9 +116,10 @@ class IconParser implements ParserInterface
     {
         $exportLayer = new ExportLayer();
         $exportLayer->setFileName($dumpLayer->getFile())
-                    ->setOffsetX($dumpLayer->getShiftX())
-                    ->setOffsetY($dumpLayer->getShiftY())
-                    ->setScale($dumpLayer->getScale());
+                    ->setScale($dumpLayer->getScale())
+                    ->setSize($dumpLayer->getSize());
+        $exportLayer->getOffset()->setX($dumpLayer->getShiftX())
+                                 ->setY($dumpLayer->getShiftY());
         $exportLayer->getTint()->setRed($this->convertColorValue($dumpLayer->getTintRed()))
                                ->setGreen($this->convertColorValue($dumpLayer->getTintGreen()))
                                ->setBlue($this->convertColorValue($dumpLayer->getTintBlue()))

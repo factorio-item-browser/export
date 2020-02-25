@@ -31,8 +31,7 @@ class IconTest extends SerializerTestCase
         $result = new Icon();
         $result->setType('ghi')
                ->setName('jkl')
-               ->setLayers([$layer1, $layer2])
-               ->setSize(42);
+               ->setLayers([$layer1, $layer2]);
         return $result;
     }
 
@@ -53,7 +52,6 @@ class IconTest extends SerializerTestCase
                     'file' => 'def',
                 ],
             ],
-            'size' => 42,
         ];
     }
 }

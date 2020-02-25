@@ -130,11 +130,11 @@ class ModParser implements ParserInterface
         }
 
         $layer = new Layer();
-        $layer->setFileName(sprintf('__%s__/%s', $mod->getName(), self::THUMBNAIL_FILENAME));
+        $layer->setFileName(sprintf('__%s__/%s', $mod->getName(), self::THUMBNAIL_FILENAME))
+              ->setSize(self::RENDERED_THUMBNAIL_SIZE);
 
         $thumbnail = new Icon();
         $thumbnail->setSize(self::RENDERED_THUMBNAIL_SIZE)
-                  ->setRenderedSize(self::RENDERED_THUMBNAIL_SIZE)
                   ->addLayer($layer);
 
         $thumbnail->setId($this->hashCalculator->hashIcon($thumbnail));

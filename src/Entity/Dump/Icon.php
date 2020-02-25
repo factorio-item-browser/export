@@ -31,12 +31,6 @@ class Icon
     protected $layers = [];
 
     /**
-     * The size of the icon.
-     * @var int
-     */
-    protected $size = 0;
-
-    /**
      * Sets the type of the icon.
      * @param string $type
      * @return $this
@@ -94,25 +88,5 @@ class Icon
     public function getLayers(): array
     {
         return $this->layers;
-    }
-
-    /**
-     * Sets the size of the icon.
-     * @param int $size
-     * @return $this
-     */
-    public function setSize(int $size): self
-    {
-        $this->size = $size;
-        return $this;
-    }
-
-    /**
-     * Returns the size of the icon.
-     * @return int
-     */
-    public function getSize(): int
-    {
-        return $this->size;
     }
 }

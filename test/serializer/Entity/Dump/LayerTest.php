@@ -24,6 +24,7 @@ class LayerTest extends SerializerTestCase
     {
         $result = new Layer();
         $result->setFile('abc')
+               ->setSize(1337)
                ->setShiftX(42)
                ->setShiftY(21)
                ->setScale(12.34)
@@ -42,6 +43,7 @@ class LayerTest extends SerializerTestCase
     {
         return [
             'file' => 'abc',
+            'size' => 1337,
             'shift_x' => 42,
             'shift_y' => 21,
             'scale' => 12.34,

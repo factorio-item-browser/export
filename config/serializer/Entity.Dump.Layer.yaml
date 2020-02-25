@@ -4,12 +4,14 @@ FactorioItemBrowser\Export\Entity\Dump\Layer:
   properties:
     file:
       type: string
+    size:
+      type: integer
+    scale:
+      type: float
     shiftX:
       type: integer
     shiftY:
       type: integer
-    scale:
-      type: float
     tintRed:
       type: float
     tintGreen:

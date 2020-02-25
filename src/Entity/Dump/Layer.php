@@ -19,6 +19,18 @@ class Layer
     protected $file = '';
 
     /**
+     * The size of the layer in pixel.
+     * @var int
+     */
+    protected $size = 0;
+
+    /**
+     * The scale of the layer.
+     * @var float
+     */
+    protected $scale = 1.;
+
+    /**
      * The horizontal shift of the layer.
      * @var int
      */
@@ -29,12 +41,6 @@ class Layer
      * @var int
      */
     protected $shiftY = 0;
-
-    /**
-     * The scale of the layer.
-     * @var float
-     */
-    protected $scale = 1.;
 
     /**
      * The red tint of the layer.
@@ -81,6 +87,46 @@ class Layer
     }
 
     /**
+     * Sets the size of the layer in pixel.
+     * @param int $size
+     * @return $this
+     */
+    public function setSize(int $size): self
+    {
+        $this->size = $size;
+        return $this;
+    }
+
+    /**
+     * Returns the size of the layer in pixel.
+     * @return int
+     */
+    public function getSize(): int
+    {
+        return $this->size;
+    }
+
+    /**
+     * Sets the scale of the layer.
+     * @param float $scale
+     * @return $this
+     */
+    public function setScale(float $scale): self
+    {
+        $this->scale = $scale;
+        return $this;
+    }
+
+    /**
+     * Returns the scale of the layer.
+     * @return float
+     */
+    public function getScale(): float
+    {
+        return $this->scale;
+    }
+
+    /**
      * Sets the horizontal shift of the layer.
      * @param int $shiftX
      * @return $this
@@ -118,26 +164,6 @@ class Layer
     public function getShiftY(): int
     {
         return $this->shiftY;
-    }
-
-    /**
-     * Sets the scale of the layer.
-     * @param float $scale
-     * @return $this
-     */
-    public function setScale(float $scale): self
-    {
-        $this->scale = $scale;
-        return $this;
-    }
-
-    /**
-     * Returns the scale of the layer.
-     * @return float
-     */
-    public function getScale(): float
-    {
-        return $this->scale;
     }
 
     /**

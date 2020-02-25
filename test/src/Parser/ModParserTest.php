@@ -226,16 +226,15 @@ class ModParserTest extends TestCase
         $mod->setName($modName);
 
         $expectedLayer = new Layer();
-        $expectedLayer->setFileName('__abc__/thumbnail.png');
+        $expectedLayer->setFileName('__abc__/thumbnail.png')
+                      ->setSize(144);
 
         $expectedThumbnail = new Icon();
         $expectedThumbnail->setSize(144)
-                          ->setRenderedSize(144)
                           ->setLayers([$expectedLayer]);
 
         $expectedResult = new Icon();
         $expectedResult->setSize(144)
-                       ->setRenderedSize(144)
                        ->setLayers([$expectedLayer])
                        ->setId($thumbnailId);
 

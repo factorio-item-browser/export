@@ -9,6 +9,7 @@ use FactorioItemBrowser\Export\Renderer\Filter\TintedLayerFilter;
 use Imagine\Image\ImageInterface;
 use Imagine\Image\Palette\Color\ColorInterface;
 use Imagine\Image\Palette\PaletteInterface;
+use Imagine\Image\Point;
 use Imagine\Image\PointInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -26,21 +27,39 @@ class TintedLayerFilterTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked layer image.
+     * @var ImageInterface&MockObject
+     */
+    protected $layerImage;
+
+    /**
+     * The mocked tint color.
+     * @var ColorInterface&MockObject
+     */
+    protected $tintColor;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->layerImage = $this->createMock(ImageInterface::class);
+        $this->tintColor = $this->createMock(ColorInterface::class);
+    }
+
+    /**
      * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var ImageInterface $layerImage */
-        $layerImage = $this->createMock(ImageInterface::class);
-        /* @var ColorInterface $tintColor */
-        $tintColor = $this->createMock(ColorInterface::class);
+        $filter = new TintedLayerFilter($this->layerImage, $this->tintColor);
 
-        $filter = new TintedLayerFilter($layerImage, $tintColor);
-
-        $this->assertSame($layerImage, $this->extractProperty($filter, 'layerImage'));
-        $this->assertSame($tintColor, $this->extractProperty($filter, 'tintColor'));
+        $this->assertSame($this->layerImage, $this->extractProperty($filter, 'layerImage'));
+        $this->assertSame($this->tintColor, $this->extractProperty($filter, 'tintColor'));
     }
 
     /**
@@ -50,24 +69,102 @@ class TintedLayerFilterTest extends TestCase
      */
     public function testApply(): void
     {
-        /* @var ImageInterface $layerImage */
-        $layerImage = $this->createMock(ImageInterface::class);
-        /* @var ColorInterface $tintColor */
-        $tintColor = $this->createMock(ColorInterface::class);
+        /* @var TintedLayerFilter&MockObject $filter */
+        $filter = $this->getMockBuilder(TintedLayerFilter::class)
+                       ->onlyMethods(['hasTint'])
+                       ->setConstructorArgs([$this->layerImage, $this->tintColor])
+                       ->getMock();
+        $filter->expects($this->once())
+               ->method('hasTint')
+               ->willReturn(true);
 
-        $filter = new TintedLayerFilter($layerImage, $tintColor);
-
-        /* @var ImageInterface|MockObject $image */
-        $image = $this->getMockBuilder(ImageInterface::class)
-                      ->onlyMethods(['fill'])
-                      ->getMockForAbstractClass();
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
         $image->expects($this->once())
               ->method('fill')
               ->with($filter);
 
         $result = $filter->apply($image);
+
         $this->assertSame($image, $result);
         $this->assertSame($image, $this->extractProperty($filter, 'image'));
+    }
+
+    /**
+     * Tests the apply method.
+     * @covers ::apply
+     */
+    public function testApplyWithoutTint(): void
+    {
+        $expectedPoint = new Point(0, 0);
+
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
+        $image->expects($this->once())
+              ->method('paste')
+              ->with($this->identicalTo($this->layerImage), $this->equalTo($expectedPoint))
+              ->willReturnSelf();
+        $image->expects($this->never())
+              ->method('fill');
+
+        /* @var TintedLayerFilter&MockObject $filter */
+        $filter = $this->getMockBuilder(TintedLayerFilter::class)
+                       ->onlyMethods(['hasTint'])
+                       ->setConstructorArgs([$this->layerImage, $this->tintColor])
+                       ->getMock();
+        $filter->expects($this->once())
+               ->method('hasTint')
+               ->willReturn(false);
+
+        $result = $filter->apply($image);
+
+        $this->assertSame($image, $result);
+    }
+
+    /**
+     * Provides the data for the hasTint test.
+     * @return array<mixed>
+     */
+    public function provideHasTint(): array
+    {
+        return [
+            [255, 255, 255, 100, false],
+            [0, 255, 255, 100, true],
+            [255, 0, 255, 100, true],
+            [255, 255, 0, 100, true],
+            [255, 255, 255, 0, true],
+        ];
+    }
+
+    /**
+     * Tests the hasTint method.
+     * @param int $red
+     * @param int $green
+     * @param int $blue
+     * @param int $alpha
+     * @param bool $expectedResult
+     * @throws ReflectionException
+     * @covers ::hasTint
+     * @dataProvider provideHasTint
+     */
+    public function testHasTint(int $red, int $green, int $blue, int $alpha, bool $expectedResult): void
+    {
+        $this->tintColor->expects($this->any())
+                        ->method('getValue')
+                        ->willReturnMap([
+                            [ColorInterface::COLOR_RED, $red],
+                            [ColorInterface::COLOR_GREEN, $green],
+                            [ColorInterface::COLOR_BLUE, $blue],
+                        ]);
+
+        $this->tintColor->expects($this->any())
+                        ->method('getAlpha')
+                        ->willReturn($alpha);
+
+        $filter = new TintedLayerFilter($this->layerImage, $this->tintColor);
+        $result = $this->invokeMethod($filter, 'hasTint');
+
+        $this->assertSame($expectedResult, $result);
     }
 
     /**
@@ -77,28 +174,24 @@ class TintedLayerFilterTest extends TestCase
      */
     public function testGetColor(): void
     {
-        /* @var PointInterface $point */
+        /* @var PointInterface&MockObject $point */
         $point = $this->createMock(PointInterface::class);
-        /* @var ColorInterface $imageColor */
+        /* @var ColorInterface&MockObject $imageColor */
         $imageColor = $this->createMock(ColorInterface::class);
-        /* @var ColorInterface $layerColor */
+        /* @var ColorInterface&MockObject $layerColor */
         $layerColor = $this->createMock(ColorInterface::class);
-        /* @var ColorInterface $color */
+        /* @var ColorInterface&MockObject $color */
         $color = $this->createMock(ColorInterface::class);
 
-        /* @var PaletteInterface|MockObject $palette */
-        $palette = $this->getMockBuilder(PaletteInterface::class)
-                        ->onlyMethods(['color'])
-                        ->getMockForAbstractClass();
+        /* @var PaletteInterface&MockObject $palette */
+        $palette = $this->createMock(PaletteInterface::class);
         $palette->expects($this->once())
                 ->method('color')
                 ->with([12, 23, 34], 45)
                 ->willReturn($color);
 
-        /* @var ImageInterface|MockObject $image */
-        $image = $this->getMockBuilder(ImageInterface::class)
-                      ->onlyMethods(['getColorAt', 'palette'])
-                      ->getMockForAbstractClass();
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
         $image->expects($this->once())
               ->method('getColorAt')
               ->with($point)
@@ -107,19 +200,15 @@ class TintedLayerFilterTest extends TestCase
               ->method('palette')
               ->willReturn($palette);
 
-        /* @var ImageInterface|MockObject $layerImage */
-        $layerImage = $this->getMockBuilder(ImageInterface::class)
-                           ->onlyMethods(['getColorAt'])
-                           ->getMockForAbstractClass();
-        $layerImage->expects($this->once())
-                   ->method('getColorAt')
-                   ->with($point)
-                   ->willReturn($layerColor);
+        $this->layerImage->expects($this->once())
+                         ->method('getColorAt')
+                         ->with($point)
+                         ->willReturn($layerColor);
 
-        /* @var TintedLayerFilter|MockObject $filter */
+        /* @var TintedLayerFilter&MockObject $filter */
         $filter = $this->getMockBuilder(TintedLayerFilter::class)
                        ->onlyMethods(['calculateComponent', 'calculateAlpha'])
-                       ->setConstructorArgs([$layerImage, $this->createMock(ColorInterface::class)])
+                       ->setConstructorArgs([$this->layerImage, $this->tintColor])
                        ->getMock();
         $filter->expects($this->exactly(3))
                ->method('calculateComponent')
@@ -180,10 +269,8 @@ class TintedLayerFilterTest extends TestCase
     ): void {
         $component = 'foo';
 
-        /* @var ColorInterface|MockObject $source */
-        $source = $this->getMockBuilder(ColorInterface::class)
-                       ->onlyMethods(['getValue', 'getAlpha'])
-                       ->getMockForAbstractClass();
+        /* @var ColorInterface&MockObject $source */
+        $source = $this->createMock(ColorInterface::class);
         $source->expects($this->once())
                ->method('getValue')
                ->with($component)
@@ -192,10 +279,8 @@ class TintedLayerFilterTest extends TestCase
                ->method('getAlpha')
                ->willReturn($alphaSource);
 
-        /* @var ColorInterface|MockObject $dest */
-        $dest = $this->getMockBuilder(ColorInterface::class)
-                     ->onlyMethods(['getValue', 'getAlpha'])
-                     ->getMockForAbstractClass();
+        /* @var ColorInterface&MockObject $dest */
+        $dest = $this->createMock(ColorInterface::class);
         $dest->expects($this->once())
              ->method('getValue')
              ->with($component)
@@ -204,22 +289,15 @@ class TintedLayerFilterTest extends TestCase
              ->method('getAlpha')
              ->willReturn($alphaDest);
 
-        /* @var ColorInterface|MockObject $tint */
-        $tint = $this->getMockBuilder(ColorInterface::class)
-                     ->onlyMethods(['getValue', 'getAlpha'])
-                     ->getMockForAbstractClass();
-        $tint->expects($this->once())
-             ->method('getValue')
-             ->with($component)
-             ->willReturn($colorTint);
-        $tint->expects($this->once())
-             ->method('getAlpha')
-             ->willReturn($alphaTint);
+        $this->tintColor->expects($this->once())
+                        ->method('getValue')
+                        ->with($component)
+                        ->willReturn($colorTint);
+        $this->tintColor->expects($this->once())
+                        ->method('getAlpha')
+                        ->willReturn($alphaTint);
 
-        /* @var ImageInterface $layerImage */
-        $layerImage = $this->createMock(ImageInterface::class);
-
-        $filter = new TintedLayerFilter($layerImage, $tint);
+        $filter = new TintedLayerFilter($this->layerImage, $this->tintColor);
         $result = $this->invokeMethod($filter, 'calculateComponent', $component, $source, $dest);
 
         $this->assertSame($expectedResult, $result);
@@ -251,34 +329,23 @@ class TintedLayerFilterTest extends TestCase
      */
     public function testCalculateAlpha(int $alphaSource, int $alphaDest, int $alphaTint, int $expectedResult): void
     {
-        /* @var ColorInterface|MockObject $source */
-        $source = $this->getMockBuilder(ColorInterface::class)
-                       ->onlyMethods(['getAlpha'])
-                       ->getMockForAbstractClass();
+        /* @var ColorInterface&MockObject $source */
+        $source = $this->createMock(ColorInterface::class);
         $source->expects($this->once())
                ->method('getAlpha')
                ->willReturn($alphaSource);
 
-        /* @var ColorInterface|MockObject $dest */
-        $dest = $this->getMockBuilder(ColorInterface::class)
-                     ->onlyMethods(['getAlpha'])
-                     ->getMockForAbstractClass();
+        /* @var ColorInterface&MockObject $dest */
+        $dest = $this->createMock(ColorInterface::class);
         $dest->expects($this->once())
              ->method('getAlpha')
              ->willReturn($alphaDest);
 
-        /* @var ColorInterface|MockObject $tint */
-        $tint = $this->getMockBuilder(ColorInterface::class)
-                     ->onlyMethods(['getAlpha'])
-                     ->getMockForAbstractClass();
-        $tint->expects($this->once())
-             ->method('getAlpha')
-             ->willReturn($alphaTint);
+        $this->tintColor->expects($this->once())
+                        ->method('getAlpha')
+                        ->willReturn($alphaTint);
 
-        /* @var ImageInterface $layerImage */
-        $layerImage = $this->createMock(ImageInterface::class);
-
-        $filter = new TintedLayerFilter($layerImage, $tint);
+        $filter = new TintedLayerFilter($this->layerImage, $this->tintColor);
         $result = $this->invokeMethod($filter, 'calculateAlpha', $source, $dest);
 
         $this->assertSame($expectedResult, $result);

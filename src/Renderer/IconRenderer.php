@@ -17,6 +17,7 @@ use Imagine\Image\ImageInterface;
 use Imagine\Image\ImagineInterface;
 use Imagine\Image\Palette\Color\ColorInterface;
 use Imagine\Image\Palette\RGB;
+use Imagine\Image\Point;
 
 /**
  * The class rendering the layered icons to PNG images.
@@ -66,8 +67,6 @@ class IconRenderer
         foreach ($icon->getLayers() as $layer) {
             $image = $this->renderLayer($image, $layer, $icon->getSize());
         }
-
-        $this->resizeImage($image, $icon->getRenderedSize());
         return $image->get('png');
     }
 
@@ -106,7 +105,9 @@ class IconRenderer
     protected function createLayerImage(Layer $layer): ImageInterface
     {
         $content = $this->loadLayerImage($layer->getFileName());
-        return $this->imagine->load($content);
+        $image = $this->imagine->load($content);
+        $image->crop(new Point(0, 0), new Box($layer->getSize(), $layer->getSize()));
+        return $image;
     }
 
     /**
@@ -160,17 +161,5 @@ class IconRenderer
             (int) round($color->getGreen(255)),
             (int) round($color->getBlue(255)),
         ], (int) round($color->getAlpha(100)));
-    }
-
-    /**
-     * Resizes the image if it does not already have the desired size.
-     * @param ImageInterface $image
-     * @param int $size
-     */
-    protected function resizeImage(ImageInterface $image, int $size): void
-    {
-        if ($image->getSize()->getWidth() !== $size || $image->getSize()->getHeight() !== $size) {
-            $image->resize(new Box($size, $size));
-        }
     }
 }

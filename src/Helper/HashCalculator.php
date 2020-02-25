@@ -40,8 +40,7 @@ class HashCalculator
     public function hashIcon(Icon $icon): string
     {
         $icon = clone($icon);
-        $icon->setId('')
-             ->setRenderedSize(0);
+        $icon->setId('');
 
         return $this->hashEntity($icon);
     }

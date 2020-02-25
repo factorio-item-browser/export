@@ -151,22 +151,29 @@ class IconParserTest extends TestCase
         $dumpLayer2 = $this->createMock(DumpLayer::class);
 
         $dumpIcon = new DumpIcon();
-        $dumpIcon->setSize(42)
-                 ->setLayers([$dumpLayer1, $dumpLayer2]);
+        $dumpIcon->setLayers([$dumpLayer1, $dumpLayer2]);
 
         /* @var ExportLayer&MockObject $exportLayer1 */
         $exportLayer1 = $this->createMock(ExportLayer::class);
+        $exportLayer1->expects($this->once())
+                     ->method('getSize')
+                     ->willReturn(42);
+        $exportLayer1->expects($this->once())
+                     ->method('getScale')
+                     ->willReturn(0.5);
+
         /* @var ExportLayer&MockObject $exportLayer2 */
         $exportLayer2 = $this->createMock(ExportLayer::class);
+        $exportLayer2->expects($this->never())
+                     ->method('getSize');
+
 
         $expectedIcon = new ExportIcon();
-        $expectedIcon->setSize(42)
-                     ->setRenderedSize(32)
+        $expectedIcon->setSize(21)
                      ->setLayers([$exportLayer1, $exportLayer2]);
 
         $expectedResult = new ExportIcon();
-        $expectedResult->setSize(42)
-                       ->setRenderedSize(32)
+        $expectedResult->setSize(21)
                        ->setLayers([$exportLayer1, $exportLayer2])
                        ->setId($iconId);
 
@@ -205,6 +212,7 @@ class IconParserTest extends TestCase
     {
         $dumpLayer = new DumpLayer();
         $dumpLayer->setFile('abc')
+                  ->setSize(1337)
                   ->setShiftX(42)
                   ->setShiftY(21)
                   ->setScale(12.34)
@@ -215,9 +223,10 @@ class IconParserTest extends TestCase
 
         $expectedResult = new ExportLayer();
         $expectedResult->setFileName('abc')
-                       ->setOffsetX(42)
-                       ->setOffsetY(21)
-                       ->setScale(12.34);
+                       ->setScale(12.34)
+                       ->setSize(1337);
+        $expectedResult->getOffset()->setX(42)
+                                    ->setY(21);
         $expectedResult->getTint()->setRed(54.32)
                                   ->setGreen(65.43)
                                   ->setBlue(76.54)

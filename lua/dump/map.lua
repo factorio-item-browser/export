@@ -140,51 +140,50 @@ function map.icon(prototype)
         type = prototype.type,
         name = prototype.name,
         layers = {},
-        size = prototype.icon_size,
     }
 
+    local layered_icons
     if prototype.icons then
-        -- "icons" are the layers overlaying each other to form the final icon.
-
-        -- If the first icon has an icon_size set, it actually overwrites the top-level one.
-        if prototype.icons[1].icon_size then
-            icon.size = prototype.icons[1].icon_size
-        end
-
-        for _, layer in pairs(prototype.icons) do
-            table.insert(icon.layers, map.layer(layer, icon.size))
-        end
+        layered_icons = prototype.icons
     elseif prototype.icon then
-        -- When "icon" is specified, then it represents the only, not-manipulated layer of the final icon.
-        table.insert(icon.layers, map.layer({
-            icon = prototype.icon,
-        }))
+        -- Fallback to simple icon definition.
+        layered_icons = {
+            {
+                icon = prototype.icon,
+                icon_size = prototype.icon_size,
+            },
+        }
     else
-        -- We do not actually have any icon defined, so throw away all the data.
         return nil
     end
 
+    local first_layer_size = prototype.icon_size or 32
+    if layered_icons[1] and layered_icons[1].icon_size then
+        first_layer_size = layered_icons[1].icon_size
+    end
+
+    for _, layer in pairs(layered_icons) do
+        table.insert(icon.layers, map.layer(layer, first_layer_size, prototype.icon_size or 32))
+    end
     return icon
 end
 
 --- Maps an icon layer from the prototype.
 -- @param prototype table: The prototype to map.
--- @param size int: The size of the icon for relative scaling.
+-- @param first_layer_size int: The size of the first layer.
+-- @param default_size int: The default size of the prototype.
 -- @return table: The mapped data.
--- @todo There is some strange correlation going on between the first layer and all other ones which needs to get addressed while dumping.
-function map.layer(prototype, size)
-    local scale
-    if prototype.icon_size then
-        scale = size / prototype.icon_size * (prototype.scale or 1.)
-    else
-        scale = prototype.icon_size
-    end
+function map.layer(prototype, first_layer_size, default_size)
+    local size = prototype.icon_size or default_size
+    local scale = prototype.scale or (32 / size)
+    local ratio = first_layer_size / 32
 
     local layer = {
         file = prototype.icon,
+        size = size,
+        scale = scale * ratio,
         shift_x = nil,
         shift_y = nil,
-        scale = scale,
         tint_red = nil,
         tint_green = nil,
         tint_blue = nil,
@@ -192,8 +191,8 @@ function map.layer(prototype, size)
     }
 
     if prototype.shift then
-        layer.shift_x = prototype.shift[1]
-        layer.shift_y = prototype.shift[2]
+        layer.shift_x = prototype.shift[1] * ratio
+        layer.shift_y = prototype.shift[2] * ratio
     end
 
     if prototype.tint then

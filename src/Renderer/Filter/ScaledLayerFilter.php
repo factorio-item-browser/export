@@ -10,7 +10,6 @@ use Imagine\Filter\ImagineAware;
 use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
 use Imagine\Image\Point;
-use Imagine\Image\PointInterface;
 
 /**
  * The filter for scaling and offsetting a layer.
@@ -45,110 +44,104 @@ class ScaledLayerFilter extends ImagineAware implements FilterInterface
 
     /**
      * Applies scheduled transformation to an ImageInterface instance.
-     * @param ImageInterface $layerImage
-     * @return ImageInterface
-     */
-    public function apply(ImageInterface $layerImage)
-    {
-        $layerImage = $this->scaleLayer($layerImage);
-//        $layerImage->save('./foo1.png');
-        $layerImage = $this->offsetLayer($layerImage);
-//        $layerImage->save('./foo2.png');
-        $layerImage = $this->cropLayer($layerImage);
-//        $layerImage->save('./foo3.png');
-        return $layerImage;
-    }
-
-    /**
-     * Scales the layer to the correct size.
-     * @param ImageInterface $layerImage
-     * @return ImageInterface
-     */
-    protected function scaleLayer(ImageInterface $layerImage): ImageInterface
-    {
-        $layerScale = $this->layer->getScale();
-        if ($layerScale !== 1.) {
-            $layerImage->resize($layerImage->getSize()->scale($layerScale));
-        }
-        return $layerImage;
-    }
-
-    /**
-     * Offsets the layer on a temporary image.
-     * @param ImageInterface $layerImage
-     * @return ImageInterface
-     */
-    protected function offsetLayer(ImageInterface $layerImage): ImageInterface
-    {
-        $temporaryImage = $this->createTemporaryImage($layerImage);
-        $drawPoint = $this->calculateDrawPoint($temporaryImage, $layerImage);
-        $temporaryImage->paste($layerImage, $drawPoint);
-        return $temporaryImage;
-    }
-
-    /**
-     * Crops the image to the desired size.
      * @param ImageInterface $image
      * @return ImageInterface
      */
-    protected function cropLayer(ImageInterface $image): ImageInterface
+    public function apply(ImageInterface $image): ImageInterface
     {
-        $imageSize = $image->getSize();
-
-        $size = new Box($this->size, $this->size);
-        $point = new Point(
-            (int) round(($imageSize->getWidth() - $this->size) / 2),
-            (int) round(($imageSize->getHeight() - $this->size) / 2)
-        );
-        return $image->crop($point, $size);
+        $image = $this->scaleLayer($image);
+        $image = $this->offsetLayer($image);
+        $image = $this->adjustLayer($image);
+        return $image;
     }
 
     /**
      * Creates the temporary image to draw the offset layer on.
-     * @param ImageInterface $layerImage
+     * @param ImageInterface $image
+     * @param int $size
      * @return ImageInterface
      */
-    protected function createTemporaryImage(ImageInterface $layerImage): ImageInterface
+    protected function createTemporaryImage(ImageInterface $image, int $size): ImageInterface
     {
-        $newSize = $layerImage->getSize()->scale(2)->increase($this->size);
-        return $this->getImagine()->create($newSize, $layerImage->palette()->color(0xFFFFFF, 0));
+        return $this->getImagine()->create(new Box($size, $size), $image->palette()->color(0xFFFFFF, 0));
     }
 
     /**
-     * Calculates the point where to draw the layer onto the temporary image.
-     * @param ImageInterface $temporaryImage
-     * @param ImageInterface $layerImage
-     * @return PointInterface
+     * Scales the layer.
+     * @param ImageInterface $image
+     * @return ImageInterface
      */
-    protected function calculateDrawPoint(ImageInterface $temporaryImage, ImageInterface $layerImage): PointInterface
+    protected function scaleLayer(ImageInterface $image): ImageInterface
     {
-        $temporarySize = $temporaryImage->getSize();
-        $layerSize = $layerImage->getSize();
-
-        return new Point(
-            $this->calculateDrawPosition(
-                $temporarySize->getWidth(),
-                $layerSize->getWidth(),
-                $this->layer->getOffsetX()
-            ),
-            $this->calculateDrawPosition(
-                $temporarySize->getHeight(),
-                $layerSize->getHeight(),
-                $this->layer->getOffsetY()
-            )
-        );
+        $scale = $this->layer->getScale();
+        if ($scale !== 1.) {
+            $scaledSize = (int) floor($image->getSize()->getWidth() * $scale);
+            $image->resize(new Box($scaledSize, $scaledSize));
+        }
+        return $image;
     }
 
     /**
-     * Calculates the position of the layer in the temporary image of one coordinate.
-     * @param int $temporarySize
-     * @param int $layerSize
-     * @param int $offset
-     * @return int
+     * Offsets the layer on a temporary image. The returned layer is three times the original size.
+     * @param ImageInterface $image
+     * @return ImageInterface
      */
-    protected function calculateDrawPosition(int $temporarySize, int $layerSize, int $offset): int
+    protected function offsetLayer(ImageInterface $image): ImageInterface
     {
-        $position = (int) round(($temporarySize - $layerSize) / 2 + $offset);
-        return min(max($position, 0), $temporarySize - $layerSize);
+        $offset = $this->layer->getOffset();
+        if ($offset->getX() === 0 && $offset->getY() === 0) {
+            return $image;
+        }
+
+        $size = $image->getSize()->getWidth();
+        $left = min(max($size + $offset->getX(), 0), 2 * $size);
+        $top = min(max($size + $offset->getY(), 0), 2 * $size);
+
+        $offsetImage = $this->createTemporaryImage($image, 3 * $size);
+        $offsetImage->paste($image, new Point($left, $top));
+        return $offsetImage;
+    }
+
+    /**
+     * Adjusts the layer to the desired size by cropping or extending it.
+     * @param ImageInterface $image
+     * @return ImageInterface
+     */
+    protected function adjustLayer(ImageInterface $image): ImageInterface
+    {
+        $imageSize = $image->getSize()->getWidth();
+        if ($imageSize > $this->size) {
+            $image = $this->cropLayer($image, $this->size);
+        } elseif ($imageSize < $this->size) {
+            $image = $this->extendLayer($image, $this->size);
+        }
+        return $image;
+    }
+
+    /**
+     * Crops the layer to the specified size. The size MUST be smaller as the layer's one.
+     * @param ImageInterface $image
+     * @param int $size
+     * @return ImageInterface
+     */
+    protected function cropLayer(ImageInterface $image, int $size): ImageInterface
+    {
+        $position = (int) floor(($image->getSize()->getWidth() - $size) / 2);
+        $image->crop(new Point($position, $position), new Box($size, $size));
+        return $image;
+    }
+
+    /**
+     * Extends the layer to the specified size. The size MUST be larger than the layer's one.
+     * @param ImageInterface $image
+     * @param int $size
+     * @return ImageInterface
+     */
+    protected function extendLayer(ImageInterface $image, int $size): ImageInterface
+    {
+        $position = (int) floor(($size - $image->getSize()->getWidth()) / 2);
+        $result = $this->createTemporaryImage($image, $size);
+        $result->paste($image, new Point($position, $position));
+        return $result;
     }
 }
