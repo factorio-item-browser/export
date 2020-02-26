@@ -90,6 +90,7 @@ class ModFileManagerTest extends TestCase
         $this->assertSame('def', file_get_contents(vfsStream::url('root/foo/def')));
         $this->assertSame('abc', file_get_contents(vfsStream::url('root/foo/bar/abc')));
         $this->assertSame('ghi', file_get_contents(vfsStream::url('root/foo/bar/ghi')));
+        $this->assertSame('', file_get_contents(vfsStream::url('root/foo/empty')));
     }
 
     /**

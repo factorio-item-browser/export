@@ -84,7 +84,7 @@ class ModFileManager
                 $stat = $zipArchive->statIndex($i);
                 if (
                     $stat !== false
-                    && $stat['size'] > 0
+                    && substr($stat['name'], -1) !== '/' // Ignore directories
                     && substr($stat['name'], 0, $modDirectoryLength) === $modDirectory
                 ) {
                     $fileName = $targetDirectory . '/' . substr($stat['name'], $modDirectoryLength);
