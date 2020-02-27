@@ -123,10 +123,9 @@ function map.product(prototype)
     }
 
     if prototype.amount then
-        -- amount is a simpler way of defining all three of the amount values.
+        -- amount is a simpler way of defining the minimum and maximum value.
         product.amount_min = prototype.amount
         product.amount_max = prototype.amount
-        product.probability = 1.
     end
 
     return product
