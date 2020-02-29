@@ -52,10 +52,12 @@ class ModFileManagerTest extends TestCase
      */
     public function testConstruct(): void
     {
-        $modsDirectory = 'abc';
-        $manager = new ModFileManager($this->serializer, $modsDirectory);
+        $factorioDirectory = 'abc';
+        $modsDirectory = 'def';
+        $manager = new ModFileManager($this->serializer, $factorioDirectory, $modsDirectory);
 
         $this->assertSame($this->serializer, $this->extractProperty($manager, 'serializer'));
+        $this->assertSame($factorioDirectory, $this->extractProperty($manager, 'factorioDirectory'));
         $this->assertSame($modsDirectory, $this->extractProperty($manager, 'modsDirectory'));
     }
 
@@ -74,7 +76,7 @@ class ModFileManagerTest extends TestCase
         /* @var ModFileManager&MockObject $manager */
         $manager = $this->getMockBuilder(ModFileManager::class)
                         ->onlyMethods(['removeModDirectory', 'getLocalDirectory'])
-                        ->setConstructorArgs([$this->serializer, 'baz'])
+                        ->setConstructorArgs([$this->serializer, 'baz', 'oof'])
                         ->getMock();
         $manager->expects($this->once())
                 ->method('removeModDirectory')
@@ -102,7 +104,7 @@ class ModFileManagerTest extends TestCase
     {
         $this->expectException(InvalidModFileException::class);
 
-        $manager = new ModFileManager($this->serializer, 'foo');
+        $manager = new ModFileManager($this->serializer, 'foo', 'bar');
         $manager->extractModZip(__DIR__ . '/../../asset/mod/invalid.zip');
     }
 
@@ -115,7 +117,7 @@ class ModFileManagerTest extends TestCase
     {
         $this->expectException(InvalidModFileException::class);
 
-        $manager = new ModFileManager($this->serializer, 'foo');
+        $manager = new ModFileManager($this->serializer, 'foo', 'bar');
         $manager->extractModZip(__DIR__ . '/../../asset/mod/invalidDirectory.zip');
     }
 
@@ -144,7 +146,7 @@ class ModFileManagerTest extends TestCase
         /* @var ModFileManager&MockObject $manager */
         $manager = $this->getMockBuilder(ModFileManager::class)
                         ->onlyMethods(['readFile'])
-                        ->setConstructorArgs([$this->serializer, 'foo'])
+                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
                         ->getMock();
         $manager->expects($this->once())
                 ->method('readFile')
@@ -180,7 +182,7 @@ class ModFileManagerTest extends TestCase
         /* @var ModFileManager&MockObject $manager */
         $manager = $this->getMockBuilder(ModFileManager::class)
                         ->onlyMethods(['readFile'])
-                        ->setConstructorArgs([$this->serializer, 'foo'])
+                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
                         ->getMock();
         $manager->expects($this->once())
                 ->method('readFile')
@@ -206,7 +208,7 @@ class ModFileManagerTest extends TestCase
         /* @var ModFileManager&MockObject $manager */
         $manager = $this->getMockBuilder(ModFileManager::class)
                         ->onlyMethods(['getLocalDirectory', 'executeGlob'])
-                        ->setConstructorArgs([$this->serializer, 'foo'])
+                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
                         ->getMock();
         $manager->expects($this->once())
                 ->method('getLocalDirectory')
@@ -239,7 +241,7 @@ class ModFileManagerTest extends TestCase
         /* @var ModFileManager&MockObject $manager */
         $manager = $this->getMockBuilder(ModFileManager::class)
                         ->onlyMethods(['getLocalDirectory'])
-                        ->setConstructorArgs([$this->serializer, 'foo'])
+                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
                         ->getMock();
         $manager->expects($this->once())
                 ->method('getLocalDirectory')
@@ -268,7 +270,7 @@ class ModFileManagerTest extends TestCase
         /* @var ModFileManager&MockObject $manager */
         $manager = $this->getMockBuilder(ModFileManager::class)
                         ->onlyMethods(['getLocalDirectory'])
-                        ->setConstructorArgs([$this->serializer, 'foo'])
+                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
                         ->getMock();
         $manager->expects($this->once())
                 ->method('getLocalDirectory')
@@ -288,7 +290,23 @@ class ModFileManagerTest extends TestCase
         $modName = 'def';
         $expectedResult = 'abc/def';
 
-        $manager = new ModFileManager($this->serializer, $modsDirectory);
+        $manager = new ModFileManager($this->serializer, 'foo', $modsDirectory);
+        $result = $manager->getLocalDirectory($modName);
+
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Tests the getLocalDirectory method.
+     * @covers ::getLocalDirectory
+     */
+    public function testGetLocalDirectoryWithBaseMod(): void
+    {
+        $factorioDirectory = 'abc';
+        $modName = 'base';
+        $expectedResult = 'abc/data/base';
+
+        $manager = new ModFileManager($this->serializer, $factorioDirectory, 'foo');
         $result = $manager->getLocalDirectory($modName);
 
         $this->assertSame($expectedResult, $result);

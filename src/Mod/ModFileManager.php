@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Mod;
 
 use Exception;
+use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
@@ -38,6 +39,12 @@ class ModFileManager
     protected $serializer;
 
     /**
+     * The directory of the Factorio game itself.
+     * @var string
+     */
+    protected $factorioDirectory;
+
+    /**
      * The directory to store the mod files in.
      * @var string
      */
@@ -46,11 +53,13 @@ class ModFileManager
     /**
      * Initializes the manager.
      * @param SerializerInterface $exportSerializer
+     * @param string $factorioDirectory
      * @param string $modsDirectory
      */
-    public function __construct(SerializerInterface $exportSerializer, string $modsDirectory)
+    public function __construct(SerializerInterface $exportSerializer, string $factorioDirectory, string $modsDirectory)
     {
         $this->serializer = $exportSerializer;
+        $this->factorioDirectory = $factorioDirectory;
         $this->modsDirectory = $modsDirectory;
     }
 
@@ -181,6 +190,9 @@ class ModFileManager
      */
     public function getLocalDirectory(string $modName): string
     {
+        if ($modName === Constant::MOD_NAME_BASE) {
+            return $this->factorioDirectory . '/data/' . $modName;
+        }
         return $this->modsDirectory . '/' . $modName;
     }
 }
