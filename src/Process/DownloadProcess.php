@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Process;
 
-use BluePsyduck\FactorioModPortalClient\Entity\Mod;
-use BluePsyduck\FactorioModPortalClient\Entity\Release;
 use Symfony\Component\Process\Process;
 
 /**
@@ -16,18 +14,6 @@ use Symfony\Component\Process\Process;
  */
 class DownloadProcess extends Process
 {
-    /**
-     * The mod to be downloaded.
-     * @var Mod
-     */
-    protected $mod;
-
-    /**
-     * The release to be downloaded.
-     * @var Release
-     */
-    protected $release;
-
     /**
      * The full download URL.
      * @var string
@@ -42,12 +28,10 @@ class DownloadProcess extends Process
 
     /**
      * Initializes the process.
-     * @param Mod $mod
-     * @param Release $release
      * @param string $downloadUrl
      * @param string $destinationFile
      */
-    public function __construct(Mod $mod, Release $release, string $downloadUrl, string $destinationFile)
+    public function __construct(string $downloadUrl, string $destinationFile)
     {
         parent::__construct([
             'wget',
@@ -58,30 +42,10 @@ class DownloadProcess extends Process
             $downloadUrl,
         ]);
 
-        $this->mod = $mod;
-        $this->release = $release;
         $this->downloadUrl = $downloadUrl;
         $this->destinationFile = $destinationFile;
 
         $this->setTimeout(null);
-    }
-
-    /**
-     * Returns the mod to be downloaded.
-     * @return Mod
-     */
-    public function getMod(): Mod
-    {
-        return $this->mod;
-    }
-
-    /**
-     * Returns the release to be downloaded.
-     * @return Release
-     */
-    public function getRelease(): Release
-    {
-        return $this->release;
     }
 
     /**

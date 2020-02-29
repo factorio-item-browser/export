@@ -22,7 +22,7 @@ use FactorioItemBrowser\Export\Exception\MissingModException;
 use FactorioItemBrowser\Export\Exception\NoValidReleaseException;
 use FactorioItemBrowser\Export\Mod\ModDownloader;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
-use FactorioItemBrowser\Export\Process\DownloadProcess;
+use FactorioItemBrowser\Export\Process\ModDownloadProcess;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -117,10 +117,10 @@ class ModDownloaderTest extends TestCase
         /* @var Release&MockObject $release2 */
         $release2 = $this->createMock(Release::class);
 
-        /* @var DownloadProcess&MockObject $process1 */
-        $process1 = $this->createMock(DownloadProcess::class);
-        /* @var DownloadProcess&MockObject $process2 */
-        $process2 = $this->createMock(DownloadProcess::class);
+        /* @var ModDownloadProcess&MockObject $process1 */
+        $process1 = $this->createMock(ModDownloadProcess::class);
+        /* @var ModDownloadProcess&MockObject $process2 */
+        $process2 = $this->createMock(ModDownloadProcess::class);
 
         /* @var ProcessManagerInterface&MockObject $processManager */
         $processManager = $this->createMock(ProcessManagerInterface::class);
@@ -439,8 +439,8 @@ class ModDownloaderTest extends TestCase
     {
         $numberOfParallelDownloads = 42;
 
-        /* @var DownloadProcess&MockObject $process */
-        $process = $this->createMock(DownloadProcess::class);
+        /* @var ModDownloadProcess&MockObject $process */
+        $process = $this->createMock(ModDownloadProcess::class);
 
         /* @var ModDownloader&MockObject $downloader */
         $downloader = $this->getMockBuilder(ModDownloader::class)
@@ -493,7 +493,7 @@ class ModDownloaderTest extends TestCase
         /* @var Mod&MockObject $mod */
         $mod = $this->createMock(Mod::class);
 
-        $expectedResult = new DownloadProcess($mod, $release, $fullDownloadUrl, $expectedFileName);
+        $expectedResult = new ModDownloadProcess($mod, $release, $fullDownloadUrl, $expectedFileName);
 
         $this->modPortalClientFacade->expects($this->once())
                                     ->method('getDownloadUrl')
@@ -528,8 +528,8 @@ class ModDownloaderTest extends TestCase
         $release = new Release();
         $release->setVersion($releaseVersion);
 
-        /* @var DownloadProcess&MockObject $process */
-        $process = $this->createMock(DownloadProcess::class);
+        /* @var ModDownloadProcess&MockObject $process */
+        $process = $this->createMock(ModDownloadProcess::class);
         $process->expects($this->once())
                 ->method('getMod')
                 ->willReturn($mod);
@@ -563,8 +563,8 @@ class ModDownloaderTest extends TestCase
         $release = new Release();
         $release->setSha1(sha1('abc'));
 
-        /* @var DownloadProcess&MockObject $process */
-        $process = $this->createMock(DownloadProcess::class);
+        /* @var ModDownloadProcess&MockObject $process */
+        $process = $this->createMock(ModDownloadProcess::class);
         $process->expects($this->any())
                 ->method('isSuccessful')
                 ->willReturn(true);
@@ -601,8 +601,8 @@ class ModDownloaderTest extends TestCase
      */
     public function testHandleProcessFinishWithFailedProcess(): void
     {
-        /* @var DownloadProcess&MockObject $process */
-        $process = $this->createMock(DownloadProcess::class);
+        /* @var ModDownloadProcess&MockObject $process */
+        $process = $this->createMock(ModDownloadProcess::class);
         $process->expects($this->any())
                 ->method('isSuccessful')
                 ->willReturn(false);
@@ -637,8 +637,8 @@ class ModDownloaderTest extends TestCase
         $release = new Release();
         $release->setSha1(sha1('fail'));
 
-        /* @var DownloadProcess&MockObject $process */
-        $process = $this->createMock(DownloadProcess::class);
+        /* @var ModDownloadProcess&MockObject $process */
+        $process = $this->createMock(ModDownloadProcess::class);
         $process->expects($this->any())
                 ->method('isSuccessful')
                 ->willReturn(true);

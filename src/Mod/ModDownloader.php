@@ -18,9 +18,8 @@ use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Exception\MissingModException;
 use FactorioItemBrowser\Export\Exception\NoValidReleaseException;
-use FactorioItemBrowser\Export\Process\DownloadProcess;
+use FactorioItemBrowser\Export\Process\ModDownloadProcess;
 use FactorioItemBrowser\Export\Utils\VersionUtils;
-use Symfony\Component\Process\Process;
 
 /**
  * The class responsible for downloading requested mods to the local storage.
@@ -205,10 +204,10 @@ class ModDownloader
     protected function createProcessManager(): ProcessManagerInterface
     {
         $result = new ProcessManager($this->numberOfParallelDownloads);
-        $result->setProcessStartCallback(function (DownloadProcess $process): void {
+        $result->setProcessStartCallback(function (ModDownloadProcess $process): void {
             $this->handleProcessStart($process);
         });
-        $result->setProcessFinishCallback(function (DownloadProcess $process): void {
+        $result->setProcessFinishCallback(function (ModDownloadProcess $process): void {
             $this->handleProcessFinish($process);
         });
         return $result;
@@ -218,11 +217,11 @@ class ModDownloader
      * Creates a download process for the specified mod and release.
      * @param Mod $mod
      * @param Release $release
-     * @return Process<string>
+     * @return ModDownloadProcess<string>
      */
-    protected function createDownloadProcess(Mod $mod, Release $release): Process
+    protected function createDownloadProcess(Mod $mod, Release $release): ModDownloadProcess
     {
-        return new DownloadProcess(
+        return new ModDownloadProcess(
             $mod,
             $release,
             $this->modPortalClientFacade->getDownloadUrl($release->getDownloadUrl()),
@@ -232,9 +231,9 @@ class ModDownloader
 
     /**
      * Handles the start of a download process.
-     * @param DownloadProcess<string> $process
+     * @param ModDownloadProcess<string> $process
      */
-    protected function handleProcessStart(DownloadProcess $process): void
+    protected function handleProcessStart(ModDownloadProcess $process): void
     {
         $this->console->writeAction(sprintf(
             'Downloading %s (%s)',
@@ -245,10 +244,10 @@ class ModDownloader
 
     /**
      * Handles a download process which just finished.
-     * @param DownloadProcess<string> $process
+     * @param ModDownloadProcess<string> $process
      * @throws ExportException
      */
-    protected function handleProcessFinish(DownloadProcess $process): void
+    protected function handleProcessFinish(ModDownloadProcess $process): void
     {
         if (!$process->isSuccessful()) {
             throw new DownloadFailedException($process->getMod(), $process->getRelease(), 'Command failed.');

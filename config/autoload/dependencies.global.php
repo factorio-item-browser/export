@@ -11,6 +11,7 @@ namespace FactorioItemBrowser\Export;
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
 
+use BluePsyduck\FactorioModPortalClient\Constant\ConfigKey as ModConfigKey;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use Imagine\Image\ImagineInterface;
@@ -18,6 +19,7 @@ use JMS\Serializer\SerializerInterface;
 use Laminas\I18n\Translator\Translator;
 use Laminas\I18n\Translator\TranslatorInterface;
 
+use Symfony\Component\Filesystem\Filesystem;
 use function BluePsyduck\LaminasAutoWireFactory\injectAliasArray;
 use function BluePsyduck\LaminasAutoWireFactory\readConfig;
 
@@ -27,6 +29,7 @@ return [
             Translator::class . ' $placeholderTranslator' => TranslatorInterface::class
         ],
         'factories' => [
+            Command\DownloadFactorioCommand::class => AutoWireFactory::class,
             Command\ProcessCommand::class => AutoWireFactory::class,
             Command\ProcessStep\DoneStep::class => AutoWireFactory::class,
             Command\ProcessStep\DownloadStep::class => AutoWireFactory::class,
@@ -39,6 +42,7 @@ return [
             Console\Console::class => AutoWireFactory::class,
 
             Factorio\DumpExtractor::class => AutoWireFactory::class,
+            Factorio\FactorioDownloader::class => AutoWireFactory::class,
             Factorio\Instance::class => AutoWireFactory::class,
 
             Helper\HashCalculator::class => AutoWireFactory::class,
@@ -59,6 +63,7 @@ return [
             Renderer\IconRenderer::class => AutoWireFactory::class,
 
             // 3rd-party services
+            Filesystem::class => AutoWireFactory::class,
             ImagineInterface::class => Renderer\ImagineFactory::class,
             SerializerInterface::class . ' $exportSerializer' => Serializer\SerializerFactory::class,
 
@@ -72,6 +77,8 @@ return [
             'int $numberOfParallelRenderProcesses' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_RENDERS),
 
             'string $factorioDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO),
+            'string $factorioDownloadToken' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_TOKEN),
+            'string $factorioDownloadUsername' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_USERNAME),
             'string $instancesDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
             'string $modsDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
             'string $tempDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),

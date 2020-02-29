@@ -13,6 +13,11 @@ namespace FactorioItemBrowser\Export\Constant;
 interface CommandName
 {
     /**
+     * The name of the command downloading Factorio itself.
+     */
+    public const DOWNLOAD_FACTORIO = 'download-factorio';
+
+    /**
      * The name of the processing command.
      */
     public const PROCESS = 'process';

@@ -139,7 +139,9 @@ class Instance
     protected function setUpMods(array $modNames): void
     {
         foreach ($modNames as $modName) {
-            $this->createModSymlink($modName);
+            if ($modName !== Constant::MOD_NAME_BASE) {
+                $this->createModSymlink($modName);
+            }
         }
     }
 

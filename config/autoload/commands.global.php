@@ -15,6 +15,7 @@ use FactorioItemBrowser\Export\Constant\CommandName;
 
 return [
     'commands' => [
+        CommandName::DOWNLOAD_FACTORIO => Command\DownloadFactorioCommand::class,
         CommandName::PROCESS => Command\ProcessCommand::class,
         CommandName::RENDER_ICON => Command\RenderIconCommand::class,
     ],
