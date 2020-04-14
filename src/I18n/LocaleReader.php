@@ -28,12 +28,17 @@ class LocaleReader
     /**
      * The regular expression used to detect actual translations.
      */
-    protected const REGEXP_LOCALE = '#^(.*)=(.*)$#';
+    protected const REGEXP_LOCALE = '#^([^=]*)=(.*)$#';
 
     /**
      * The regular expression used to detect a section.
      */
     protected const REGEXP_SECTION = '#^\[(.*)\]$#';
+
+    /**
+     * The regular expression to detect rich text codes to get rid of them.
+     */
+    protected const REGEXP_CODE_FILTER = '#\[[^ ]+\]#';
 
     /**
      * The mod file manager.
@@ -117,6 +122,7 @@ class LocaleReader
             if (preg_match(self::REGEXP_LOCALE, $line, $match) > 0) {
                 $key = ltrim($currentSection . '.' . trim($match[1]), '.');
                 $value = str_replace('\n', PHP_EOL, trim($match[2]));
+                $value = (string) preg_replace(self::REGEXP_CODE_FILTER, '', $value);
                 $result[$key] = $value;
             } elseif (preg_match(self::REGEXP_SECTION, $line, $match) > 0) {
                 $currentSection = trim($match[1]);

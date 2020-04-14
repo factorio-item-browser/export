@@ -186,14 +186,14 @@ ghi = jkl
 mno=pqr\nstu
 [foo]
 abc=def
-vwx=yza
+vwx=yza [foo=bar] bcd
 EOT;
         $expectedResult = [
             'abc' => 'def',
             'ghi' => 'jkl',
             'mno' => 'pqr' . PHP_EOL . 'stu',
             'foo.abc' => 'def',
-            'foo.vwx' => 'yza',
+            'foo.vwx' => 'yza  bcd',
         ];
 
         $reader = new LocaleReader($this->modFileManager);
