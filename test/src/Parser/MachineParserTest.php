@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Parser;
 
-use BluePsyduck\Common\Data\DataContainer;
-use BluePsyduck\Common\Test\ReflectionTrait;
-use FactorioItemBrowser\Export\I18n\Translator;
+use BluePsyduck\TestHelper\ReflectionTrait;
+use FactorioItemBrowser\Common\Constant\EntityType;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Entity\Dump\Machine as DumpMachine;
 use FactorioItemBrowser\Export\Parser\IconParser;
-use FactorioItemBrowser\Export\Parser\ItemParser;
 use FactorioItemBrowser\Export\Parser\MachineParser;
-use FactorioItemBrowser\ExportData\Entity\Item;
+use FactorioItemBrowser\Export\Parser\TranslationParser;
+use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
-use FactorioItemBrowser\ExportData\Entity\Machine;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
+use FactorioItemBrowser\ExportData\Entity\Machine as ExportMachine;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -31,50 +30,54 @@ class MachineParserTest extends TestCase
     use ReflectionTrait;
 
     /**
-     * Tests the constructing.
-     * @covers ::__construct
-     * @throws ReflectionException
+     * The mocked icon parser.
+     * @var IconParser&MockObject
      */
-    public function testConstruct(): void
-    {
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $machineRegistry */
-        $machineRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
+    protected $iconParser;
 
-        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
-        $this->assertSame($iconParser, $this->extractProperty($parser, 'iconParser'));
-        $this->assertSame($itemParser, $this->extractProperty($parser, 'itemParser'));
-        $this->assertSame($machineRegistry, $this->extractProperty($parser, 'machineRegistry'));
-        $this->assertSame($translator, $this->extractProperty($parser, 'translator'));
+    /**
+     * The mocked translation parser.
+     * @var TranslationParser&MockObject
+     */
+    protected $translationParser;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->iconParser = $this->createMock(IconParser::class);
+        $this->translationParser = $this->createMock(TranslationParser::class);
     }
 
     /**
-     * Tests the reset method.
+     * Tests the constructing.
      * @throws ReflectionException
-     * @covers ::reset
+     * @covers ::__construct
      */
-    public function testReset(): void
+    public function testConstruct(): void
     {
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $machineRegistry */
-        $machineRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
+        $parser = new MachineParser($this->iconParser, $this->translationParser);
 
-        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
-        $this->injectProperty($parser, 'parsedMachines', ['fail' => new Machine()]);
+        $this->assertSame($this->iconParser, $this->extractProperty($parser, 'iconParser'));
+        $this->assertSame($this->translationParser, $this->extractProperty($parser, 'translationParser'));
+    }
 
-        $parser->reset();
+    /**
+     * Tests the prepare method.
+     * @covers ::prepare
+     */
+    public function testPrepare(): void
+    {
+        /* @var Dump&MockObject $dump */
+        $dump = $this->createMock(Dump::class);
 
-        $this->assertSame([], $this->extractProperty($parser, 'parsedMachines'));
+        $parser = new MachineParser($this->iconParser, $this->translationParser);
+        $parser->prepare($dump);
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -83,116 +86,123 @@ class MachineParserTest extends TestCase
      */
     public function testParse(): void
     {
-        $dumpData = new DataContainer(['abc' => 'def']);
+        /* @var DumpMachine&MockObject $dumpMachine1 */
+        $dumpMachine1 = $this->createMock(DumpMachine::class);
+        /* @var DumpMachine&MockObject $dumpMachine2 */
+        $dumpMachine2 = $this->createMock(DumpMachine::class);
+        /* @var ExportMachine&MockObject $exportMachine1 */
+        $exportMachine1 = $this->createMock(ExportMachine::class);
+        /* @var ExportMachine&MockObject $exportMachine2 */
+        $exportMachine2 = $this->createMock(ExportMachine::class);
 
-        /* @var MachineParser|MockObject $parser */
+        $dump = new Dump();
+        $dump->getControlStage()->setMachines([$dumpMachine1, $dumpMachine2]);
+
+        /* @var Combination&MockObject $combination */
+        $combination = $this->createMock(Combination::class);
+        $combination->expects($this->exactly(2))
+                    ->method('addMachine')
+                    ->withConsecutive(
+                        [$this->identicalTo($exportMachine1)],
+                        [$this->identicalTo($exportMachine2)]
+                    );
+
+        /* @var MachineParser&MockObject $parser */
         $parser = $this->getMockBuilder(MachineParser::class)
-                       ->setMethods(['parseMachines', 'parseFluidBoxes'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
-        $parser->expects($this->once())
-               ->method('parseMachines')
-               ->with($dumpData);
-        $parser->expects($this->once())
-               ->method('parseFluidBoxes')
-               ->with($dumpData);
-
-        $parser->parse($dumpData);
-    }
-
-    /**
-     * Tests the parseMachines method.
-     * @covers ::parseMachines
-     * @throws ReflectionException
-     */
-    public function testParseMachines(): void
-    {
-        $dumpData = new DataContainer([
-            'machines' => [
-                ['abc' => 'def'],
-                ['ghi' => 'jkl'],
-            ]
-        ]);
-        $machineData1 = new DataContainer(['abc' => 'def']);
-        $machineData2 = new DataContainer(['ghi' => 'jkl']);
-        $machine1 = (new Machine())->setName('mno');
-        $machine2 = (new Machine())->setName('pqr');
-        $expectedMachines = [
-            'mno' => $machine1,
-            'pqr' => $machine2
-        ];
-
-        /* @var MachineParser|MockObject $parser */
-        $parser = $this->getMockBuilder(MachineParser::class)
-                       ->setMethods(['parseMachine'])
-                       ->disableOriginalConstructor()
+                       ->onlyMethods(['mapMachine'])
+                       ->setConstructorArgs([$this->iconParser, $this->translationParser])
                        ->getMock();
         $parser->expects($this->exactly(2))
-               ->method('parseMachine')
+               ->method('mapMachine')
                ->withConsecutive(
-                   [$this->equalTo($machineData1)],
-                   [$this->equalTo($machineData2)]
+                   [$this->identicalTo($dumpMachine1)],
+                   [$this->identicalTo($dumpMachine2)]
                )
                ->willReturnOnConsecutiveCalls(
-                   $machine1,
-                   $machine2
+                   $exportMachine1,
+                   $exportMachine2
                );
 
-        $this->invokeMethod($parser, 'parseMachines', $dumpData);
-        $this->assertEquals($expectedMachines, $this->extractProperty($parser, 'parsedMachines'));
+        $parser->parse($dump, $combination);
     }
 
     /**
-     * Tests the parseMachine method.
-     * @covers ::parseMachine
+     * Tests the mapMachine method.
      * @throws ReflectionException
+     * @covers ::mapMachine
      */
-    public function testParseMachine(): void
+    public function testMapMachine(): void
     {
-        $machineData = new DataContainer([
-            'name' => 'Abc',
-            'craftingSpeed' => 4.2,
-            'numberOfItemSlots' => 42,
-            'numberOfModuleSlots' => 21,
-            'craftingCategories' => [
-                'def' => true,
-                'ghi' => false,
-                'mno' => true,
-                '' => true,
-            ],
-        ]);
-        $expectedResult = new Machine();
-        $expectedResult->setName('abc')
-                       ->setCraftingSpeed(4.2)
-                       ->setNumberOfItemSlots(42)
-                       ->setNumberOfModuleSlots(21)
-                       ->setCraftingCategories(['def', 'mno']);
+        $iconId = 'abc';
 
-        /* @var MachineParser|MockObject $parser */
+        $dumpMachine = new DumpMachine();
+        $dumpMachine->setName('Def')
+                    ->setCraftingCategories(['ghi', 'jkl'])
+                    ->setCraftingSpeed(13.37)
+                    ->setItemSlots(12)
+                    ->setFluidInputSlots(34)
+                    ->setFluidOutputSlots(56)
+                    ->setModuleSlots(78)
+                    ->setEnergyUsage(73.31);
+
+        $expectedResult = new ExportMachine();
+        $expectedResult->setName('def')
+                       ->setCraftingCategories(['ghi', 'jkl'])
+                       ->setCraftingSpeed(13.37)
+                       ->setNumberOfItemSlots(12)
+                       ->setNumberOfFluidInputSlots(34)
+                       ->setNumberOfFluidOutputSlots(56)
+                       ->setNumberOfModuleSlots(78)
+                       ->setIconId($iconId);
+
+        $this->iconParser->expects($this->once())
+                         ->method('getIconId')
+                         ->with(
+                             $this->identicalTo(EntityType::MACHINE),
+                             $this->identicalTo('def')
+                         )
+                         ->willReturn($iconId);
+
+        $this->translationParser->expects($this->once())
+                                ->method('translateNames')
+                                ->with(
+                                    $this->isInstanceOf(LocalisedString::class),
+                                    $this->identicalTo($dumpMachine->getLocalisedName()),
+                                    $this->isNull()
+                                );
+        $this->translationParser->expects($this->once())
+                                ->method('translateDescriptions')
+                                ->with(
+                                    $this->isInstanceOf(LocalisedString::class),
+                                    $this->identicalTo($dumpMachine->getLocalisedDescription()),
+                                    $this->isNull()
+                                );
+
+        /* @var MachineParser&MockObject $parser */
         $parser = $this->getMockBuilder(MachineParser::class)
-                       ->setMethods(['parseEnergyUsage', 'addTranslations'])
-                       ->disableOriginalConstructor()
+                       ->onlyMethods(['mapEnergyUsage'])
+                       ->setConstructorArgs([$this->iconParser, $this->translationParser])
                        ->getMock();
         $parser->expects($this->once())
-               ->method('parseEnergyUsage')
-               ->with($this->equalTo($expectedResult), $machineData);
-        $parser->expects($this->once())
-               ->method('addTranslations')
-               ->with($this->equalTo($expectedResult), $machineData);
+               ->method('mapEnergyUsage')
+               ->with($this->equalTo($expectedResult));
 
-        $result = $this->invokeMethod($parser, 'parseMachine', $machineData);
+        $result = $this->invokeMethod($parser, 'mapMachine', $dumpMachine);
+
         $this->assertEquals($expectedResult, $result);
     }
 
+
     /**
-     * Provides the data for the parseEnergyUsage test.
-     * @return array
+     * Provides the data for the mapEnergyUsage test.
+     * @return array<mixed>
      */
-    public function provideParseEnergyUsage(): array
+    public function provideMapEnergyUsage(): array
     {
         return [
-            [0., null, null],
+            [0., 0., 'W'],
             [42., 42., 'W'],
+            [1000., 1., 'kW'],
             [1337., 1.337, 'kW'],
             [1337000., 1.337, 'MW'],
             [1337000000., 1.337, 'GW'],
@@ -205,371 +215,43 @@ class MachineParserTest extends TestCase
     }
 
     /**
-     * Tests the parseEnergyUsage method.
+     * Tests the mapEnergyUsage method.
      * @param float $energyUsage
-     * @param float|null $expectedEnergyUsage
-     * @param null|string $expectedEnergyUsageUnit
+     * @param float $expectedEnergyUsage
+     * @param string $expectedUnit
      * @throws ReflectionException
-     * @covers ::parseEnergyUsage
-     * @dataProvider provideParseEnergyUsage
+     * @covers ::mapEnergyUsage
+     * @dataProvider provideMapEnergyUsage
      */
-    public function testParseEnergyUsage(
-        float $energyUsage,
-        ?float $expectedEnergyUsage,
-        ?string $expectedEnergyUsageUnit
-    ): void {
-        $machineData = new DataContainer([
-            'energyUsage' => $energyUsage,
-        ]);
+    public function testMapEnergyUsage(float $energyUsage, float $expectedEnergyUsage, string $expectedUnit): void
+    {
+        /* @var ExportMachine&MockObject $exportMachine */
+        $exportMachine = $this->createMock(ExportMachine::class);
+        $exportMachine->expects($this->once())
+                      ->method('setEnergyUsage')
+                      ->with($this->identicalTo($expectedEnergyUsage))
+                      ->willReturnSelf();
+        $exportMachine->expects($this->once())
+                      ->method('setEnergyUsageUnit')
+                      ->with($this->identicalTo($expectedUnit))
+                      ->willReturnSelf();
 
-        /* @var Machine|MockObject $machine */
-        $machine = $this->getMockBuilder(Machine::class)
-                        ->setMethods(['setEnergyUsage', 'setEnergyUsageUnit'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
-        $machine->expects($expectedEnergyUsage === null ? $this->never() : $this->once())
-                ->method('setEnergyUsage')
-                ->with($expectedEnergyUsage)
-                ->willReturnSelf();
-        $machine->expects($expectedEnergyUsageUnit === null ? $this->never() : $this->once())
-                ->method('setEnergyUsageUnit')
-                ->with($expectedEnergyUsageUnit)
-                ->willReturnSelf();
-
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $machineRegistry */
-        $machineRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
-        $this->invokeMethod($parser, 'parseEnergyUsage', $machine, $machineData);
+        $parser = new MachineParser($this->iconParser, $this->translationParser);
+        $this->invokeMethod($parser, 'mapEnergyUsage', $exportMachine, $energyUsage);
     }
 
     /**
-     * Tests the parseFluidBoxes method.
-     * @covers ::parseFluidBoxes
-     * @throws ReflectionException
+     * Tests the validate method.
+     * @covers ::validate
      */
-    public function testParseFluidBoxes(): void
+    public function testValidate(): void
     {
-        $dumpData = new DataContainer([
-            'fluidBoxes' => [
-                'abc' => ['name' => 'Abc'],
-                'def' => ['name' => 'def'],
-            ],
-        ]);
+        /* @var Combination&MockObject $combination */
+        $combination = $this->createMock(Combination::class);
 
-        $machine1 = (new Machine())->setName('abc');
-        $machine2 = (new Machine())->setName('ghi');
-        $machines = [
-            'abc' => $machine1,
-            'ghi' => $machine2
-        ];
+        $parser = new MachineParser($this->iconParser, $this->translationParser);
+        $parser->validate($combination);
 
-        /* @var MachineParser|MockObject $parser */
-        $parser = $this->getMockBuilder(MachineParser::class)
-                       ->setMethods(['parseFluidBox'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
-        $parser->expects($this->once())
-               ->method('parseFluidBox')
-               ->with($machine1, $this->equalTo(new DataContainer(['name' => 'Abc'])));
-        $this->injectProperty($parser, 'parsedMachines', $machines);
-
-        $this->invokeMethod($parser, 'parseFluidBoxes', $dumpData);
-    }
-
-    /**
-     * Tests the parseFluidBox method.
-     * @covers ::parseFluidBox
-     * @throws ReflectionException
-     */
-    public function testParseFluidBox(): void
-    {
-        $fluidBoxData = new DataContainer([
-            'input' => 42,
-            'output' => 21,
-        ]);
-
-        /* @var Machine|MockObject $machine */
-        $machine = $this->getMockBuilder(Machine::class)
-                        ->setMethods(['setNumberOfFluidInputSlots', 'setNumberOfFluidOutputSlots'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
-        $machine->expects($this->once())
-                ->method('setNumberOfFluidInputSlots')
-                ->with(42)
-                ->willReturnSelf();
-        $machine->expects($this->once())
-                ->method('setNumberOfFluidOutputSlots')
-                ->with(21)
-                ->willReturnSelf();
-
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $machineRegistry */
-        $machineRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
-        $this->invokeMethod($parser, 'parseFluidBox', $machine, $fluidBoxData);
-    }
-    
-    /**
-     * Tests the addTranslations method.
-     * @throws ReflectionException
-     * @covers ::addTranslations
-     */
-    public function testAddTranslations(): void
-    {
-        $labels = (new LocalisedString())->setTranslation('en', 'abc');
-        $descriptions = (new LocalisedString())->setTranslation('en', 'def');
-
-        $machineData = new DataContainer([
-            'localised' => [
-                'name' => ['ghi'],
-                'description' => ['jkl'],
-            ]
-        ]);
-
-        /* @var Machine|MockObject $machine */
-        $machine = $this->getMockBuilder(Machine::class)
-                        ->setMethods(['getLabels', 'getDescriptions'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
-        $machine->expects($this->once())
-                ->method('getLabels')
-                ->willReturn($labels);
-        $machine->expects($this->once())
-                ->method('getDescriptions')
-                ->willReturn($descriptions);
-
-        /* @var Translator|MockObject $translator */
-        $translator = $this->getMockBuilder(Translator::class)
-                           ->setMethods(['addTranslationsToEntity'])
-                           ->disableOriginalConstructor()
-                           ->getMock();
-        $translator->expects($this->exactly(2))
-                   ->method('addTranslationsToEntity')
-                   ->withConsecutive(
-                       [$labels, 'name', ['ghi'], null],
-                       [$descriptions, 'description', ['jkl'], null]
-                   );
-
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $machineRegistry */
-        $machineRegistry = $this->createMock(EntityRegistry::class);
-
-        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
-        $this->invokeMethod($parser, 'addTranslations', $machine, $machineData);
-    }
-
-    /**
-     * Tests the check method.
-     * @throws ReflectionException
-     * @covers ::check
-     */
-    public function testCheck(): void
-    {
-        $machine1 = (new Machine())->setName('abc');
-        $machine2 = (new Machine())->setName('def');
-        $parsedMachines = [$machine1, $machine2];
-
-        /* @var MachineParser|MockObject $parser */
-        $parser = $this->getMockBuilder(MachineParser::class)
-                       ->setMethods(['checkIcon', 'checkTranslation'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
-        $parser->expects($this->exactly(2))
-               ->method('checkIcon')
-               ->withConsecutive(
-                   [$machine1],
-                   [$machine2]
-               );
-        $parser->expects($this->exactly(2))
-               ->method('checkTranslation')
-               ->withConsecutive(
-                   [$machine1],
-                   [$machine2]
-               );
-
-        $this->injectProperty($parser, 'parsedMachines', $parsedMachines);
-        $parser->check();
-    }
-
-    /**
-     * Provides the data for the checkIcon test.
-     * @return array
-     */
-    public function provideCheckIcon(): array
-    {
-        return [
-            ['foo', true],
-            [null, false],
-        ];
-    }
-
-    /**
-     * Tests the checkIcon method.
-     * @param null|string $resultHash
-     * @param bool $expectSet
-     * @throws ReflectionException
-     * @covers ::checkIcon
-     * @dataProvider provideCheckIcon
-     */
-    public function testCheckIcon(?string $resultHash, bool $expectSet): void
-    {
-        $name = 'abc';
-
-        /* @var IconParser|MockObject $iconParser */
-        $iconParser = $this->getMockBuilder(IconParser::class)
-                           ->setMethods(['getIconHashForEntity'])
-                           ->disableOriginalConstructor()
-                           ->getMock();
-        $iconParser->expects($this->once())
-                   ->method('getIconHashForEntity')
-                   ->with('machine', $name)
-                   ->willReturn($resultHash);
-
-        /* @var Machine|MockObject $machine */
-        $machine = $this->getMockBuilder(Machine::class)
-                     ->setMethods(['getName', 'setIconHash'])
-                     ->disableOriginalConstructor()
-                     ->getMock();
-        $machine->expects($this->once())
-             ->method('getName')
-             ->willReturn($name);
-        $machine->expects($expectSet ? $this->once() : $this->never())
-             ->method('setIconHash')
-             ->with((string) $resultHash);
-
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $machineRegistry */
-        $machineRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
-        $this->invokeMethod($parser, 'checkIcon', $machine);
-    }
-
-    /**
-     * Tests the checkTranslation method.
-     * @throws ReflectionException
-     * @covers ::checkTranslation
-     */
-    public function testCheckTranslation(): void
-    {
-        $machineName = 'foo';
-
-        /* @var Item|MockObject $item1 */
-        $item1 = $this->getMockBuilder(Item::class)
-                      ->setMethods(['setProvidesMachineLocalisation'])
-                      ->getMock();
-        $item1->expects($this->never())
-              ->method('setProvidesMachineLocalisation');
-        $item1->getLabels()->setTranslation('en', 'ghi');
-
-        /* @var Item|MockObject $item2 */
-        $item2 = $this->getMockBuilder(Item::class)
-                      ->setMethods(['setProvidesMachineLocalisation'])
-                      ->getMock();
-        $item2->expects($this->once())
-              ->method('setProvidesMachineLocalisation')
-              ->with(true);  
-        $item2->getLabels()->setTranslation('en', 'abc');
-        $item2->getDescriptions()->setTranslation('en', 'def');
-
-        $machine = new Machine();
-        $machine->setName($machineName);
-        $machine->getLabels()->setTranslation('en', 'abc');
-        $machine->getDescriptions()->setTranslation('en', 'def');
-
-        $expectedMachine = new Machine();
-        $expectedMachine->setName($machineName);
-
-        /* @var ItemParser|MockObject $itemParser */
-        $itemParser = $this->getMockBuilder(ItemParser::class)
-                           ->setMethods(['getItemsWithName'])
-                           ->disableOriginalConstructor()
-                           ->getMock();
-        $itemParser->expects($this->once())
-                   ->method('getItemsWithName')
-                   ->with($machineName)
-                   ->willReturn([$item1, $item2]);
-
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var EntityRegistry $machineRegistry */
-        $machineRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
-
-        $this->invokeMethod($parser, 'checkTranslation', $machine);
-    }
-    
-    /**
-     * Tests the persist method.
-     * @throws ReflectionException
-     * @covers ::persist
-     */
-    public function testPersist(): void
-    {
-        $machine1 = (new Machine())->setName('abc');
-        $machine2 = (new Machine())->setName('def');
-        $parsedMachines = [$machine1, $machine2];
-        $machineHash1 = 'ghi';
-        $machineHash2 = 'jkl';
-        $expectedMachineHashes = [$machineHash1, $machineHash2];
-
-        /* @var EntityRegistry|MockObject $machineRegistry */
-        $machineRegistry = $this->getMockBuilder(EntityRegistry::class)
-                             ->setMethods(['set'])
-                             ->disableOriginalConstructor()
-                             ->getMock();
-        $machineRegistry->expects($this->exactly(2))
-                        ->method('set')
-                        ->withConsecutive(
-                            [$machine1],
-                            [$machine2]
-                        )
-                        ->willReturnOnConsecutiveCalls(
-                            $machineHash1,
-                            $machineHash2
-                        );
-
-        /* @var Combination|MockObject $combination */
-        $combination = $this->getMockBuilder(Combination::class)
-                            ->setMethods(['setMachineHashes'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $combination->expects($this->once())
-                    ->method('setMachineHashes')
-                    ->with($expectedMachineHashes);
-
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new MachineParser($iconParser, $itemParser, $machineRegistry, $translator);
-        $this->injectProperty($parser, 'parsedMachines', $parsedMachines);
-
-        $parser->persist($combination);
+        $this->addToAssertionCount(1);
     }
 }

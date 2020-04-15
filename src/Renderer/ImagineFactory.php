@@ -7,7 +7,7 @@ namespace FactorioItemBrowser\Export\Renderer;
 use Imagine\Gd\Imagine;
 use Imagine\Image\ImagineInterface;
 use Interop\Container\ContainerInterface;
-use Zend\ServiceManager\Factory\FactoryInterface;
+use Laminas\ServiceManager\Factory\FactoryInterface;
 
 /**
  * The factory for the imagine class.
@@ -21,7 +21,7 @@ class ImagineFactory implements FactoryInterface
      * Creates the icon renderer.
      * @param  ContainerInterface $container
      * @param  string $requestedName
-     * @param  null|array $options
+     * @param  array<mixed>|null $options
      * @return ImagineInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null): ImagineInterface

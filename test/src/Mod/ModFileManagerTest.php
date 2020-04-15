@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Mod;
 
-use BluePsyduck\Common\Data\DataContainer;
-use BluePsyduck\Common\Test\ReflectionTrait;
-use FactorioItemBrowser\Export\Cache\ModFileCache;
+use BluePsyduck\TestHelper\ReflectionTrait;
+use Exception;
+use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
+use FactorioItemBrowser\Export\Exception\InvalidInfoJsonFileException;
+use FactorioItemBrowser\Export\Exception\InvalidModFileException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
-use FactorioItemBrowser\ExportData\Entity\Mod;
+use JMS\Serializer\SerializerInterface;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -27,300 +30,285 @@ class ModFileManagerTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked serializer interface.
+     * @var SerializerInterface&MockObject
+     */
+    protected $serializer;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->serializer = $this->createMock(SerializerInterface::class);
+    }
+
+    /**
      * Tests the constructing.
-     * @covers ::__construct
      * @throws ReflectionException
+     * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var ModFileCache $cache */
-        $cache = $this->createMock(ModFileCache::class);
-        $directory = 'abc';
+        $factorioDirectory = 'abc';
+        $modsDirectory = 'def';
+        $manager = new ModFileManager($this->serializer, $factorioDirectory, $modsDirectory);
 
-        $manager = new ModFileManager($cache, $directory);
-        $this->assertSame($cache, $this->extractProperty($manager, 'cache'));
-        $this->assertSame($directory, $this->extractProperty($manager, 'directory'));
+        $this->assertSame($this->serializer, $this->extractProperty($manager, 'serializer'));
+        $this->assertSame($factorioDirectory, $this->extractProperty($manager, 'factorioDirectory'));
+        $this->assertSame($modsDirectory, $this->extractProperty($manager, 'modsDirectory'));
     }
 
     /**
-     * Provides the data for the getFile test.
-     * @return array
-     */
-    public function provideGetFile(): array
-    {
-        return [
-            [true, 'abc', false, null, false, false, 'abc'],
-            [true, null, true, 'abc', true, false, 'abc'],
-            [true, null, true, null, false, true, ''],
-            [false, null, true, 'abc', true, false, 'abc'],
-            [false, null, true, null, false, true, ''],
-        ];
-    }
-
-    /**
-     * Tests the getFile method.
-     * @param bool $withCache
-     * @param null|string $resultRead
-     * @param bool $expectReadFile
-     * @param null|string $resultReadFile
-     * @param bool $expectCacheWrite
-     * @param bool $expectException
-     * @param string $expectedResult
+     * Tests the extractModZip method.
      * @throws ExportException
-     * @covers ::getFile
-     * @dataProvider provideGetFile
+     * @covers ::extractModZip
      */
-    public function testGetFile(
-        bool $withCache,
-        ?string $resultRead,
-        bool $expectReadFile,
-        ?string $resultReadFile,
-        bool $expectCacheWrite,
-        bool $expectException,
-        string $expectedResult
-    ): void {
-        $directory = 'abc';
-        $modName = 'def';
-        $fileName = 'ghi';
+    public function testExtractModZip(): void
+    {
+        $expectedModName = 'foo';
 
-        $mod = new Mod();
-        $mod->setName($modName);
+        vfsStream::setup('root');
+        $targetDirectory = vfsStream::url('root/foo');
 
-        if ($expectException) {
-            $this->expectException(ExportException::class);
-        }
-
-        /* @var ModFileCache|MockObject $cache */
-        $cache = $this->getMockBuilder(ModFileCache::class)
-                      ->setMethods(['read', 'write'])
-                      ->disableOriginalConstructor()
-                      ->getMock();
-        $cache->expects($withCache ? $this->once() : $this->never())
-              ->method('read')
-              ->with($modName, $fileName)
-              ->willReturn($resultRead);
-        $cache->expects($expectCacheWrite ? $this->once() : $this->never())
-              ->method('write')
-              ->with($modName, $fileName, $resultReadFile);
-
-        /* @var ModFileManager|MockObject $manager */
+        /* @var ModFileManager&MockObject $manager */
         $manager = $this->getMockBuilder(ModFileManager::class)
-                        ->setMethods(['readFile'])
-                        ->setConstructorArgs([$cache, $directory])
+                        ->onlyMethods(['removeModDirectory', 'getLocalDirectory'])
+                        ->setConstructorArgs([$this->serializer, 'baz', 'oof'])
                         ->getMock();
-        $manager->expects($expectReadFile ? $this->once() : $this->never())
-                ->method('readFile')
-                ->with($mod, $fileName)
-                ->willReturn($resultReadFile);
+        $manager->expects($this->once())
+                ->method('removeModDirectory')
+                ->with($this->identicalTo($expectedModName));
+        $manager->expects($this->once())
+                ->method('getLocalDirectory')
+                ->with($this->identicalTo($expectedModName))
+                ->willReturn($targetDirectory);
 
-        $result = $manager->getFile($mod, $fileName, !$withCache);
-        $this->assertSame($expectedResult, $result);
+        $manager->extractModZip(__DIR__ . '/../../asset/mod/valid.zip');
+
+        $this->assertSame('abc', file_get_contents(vfsStream::url('root/foo/abc')));
+        $this->assertSame('def', file_get_contents(vfsStream::url('root/foo/def')));
+        $this->assertSame('abc', file_get_contents(vfsStream::url('root/foo/bar/abc')));
+        $this->assertSame('ghi', file_get_contents(vfsStream::url('root/foo/bar/ghi')));
+        $this->assertSame('', file_get_contents(vfsStream::url('root/foo/empty')));
     }
 
     /**
-     * Provides the data for the readFile test.
-     * @return array
+     * Tests the extractModZip method.
+     * @throws ExportException
+     * @covers ::extractModZip
      */
-    public function provideReadFile(): array
+    public function testExtractModZipWithInvalidZip(): void
     {
-        return [
-            ['abc', 'abc'],
-            [null, null],
-        ];
+        $this->expectException(InvalidModFileException::class);
+
+        $manager = new ModFileManager($this->serializer, 'foo', 'bar');
+        $manager->extractModZip(__DIR__ . '/../../asset/mod/invalid.zip');
+    }
+
+    /**
+     * Tests the extractModZip method.
+     * @throws ExportException
+     * @covers ::extractModZip
+     */
+    public function testExtractModZipWithInvalidModDirectory(): void
+    {
+        $this->expectException(InvalidModFileException::class);
+
+        $manager = new ModFileManager($this->serializer, 'foo', 'bar');
+        $manager->extractModZip(__DIR__ . '/../../asset/mod/invalidDirectory.zip');
+    }
+
+    /**
+     * Tests the getInfo method.
+     * @throws ExportException
+     * @covers ::getInfo
+     */
+    public function testGetInfo(): void
+    {
+        $modName = 'abc';
+        $contents = 'def';
+
+        /* @var InfoJson&MockObject $infoJson */
+        $infoJson = $this->createMock(InfoJson::class);
+
+        $this->serializer->expects($this->once())
+                         ->method('deserialize')
+                         ->with(
+                             $this->identicalTo($contents),
+                             $this->identicalTo(InfoJson::class),
+                             $this->identicalTo('json')
+                         )
+                         ->willReturn($infoJson);
+
+        /* @var ModFileManager&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileManager::class)
+                        ->onlyMethods(['readFile'])
+                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
+                        ->getMock();
+        $manager->expects($this->once())
+                ->method('readFile')
+                ->with($this->identicalTo($modName), $this->identicalTo('info.json'))
+                ->willReturn($contents);
+
+        $result = $manager->getInfo($modName);
+
+        $this->assertSame($infoJson, $result);
+    }
+
+    /**
+     * Tests the getInfo method.
+     * @throws ExportException
+     * @covers ::getInfo
+     */
+    public function testGetInfoWithException(): void
+    {
+        $modName = 'abc';
+        $contents = 'def';
+
+        $this->serializer->expects($this->once())
+                         ->method('deserialize')
+                         ->with(
+                             $this->identicalTo($contents),
+                             $this->identicalTo(InfoJson::class),
+                             $this->identicalTo('json')
+                         )
+                         ->willThrowException($this->createMock(Exception::class));
+
+        $this->expectException(InvalidInfoJsonFileException::class);
+
+        /* @var ModFileManager&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileManager::class)
+                        ->onlyMethods(['readFile'])
+                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
+                        ->getMock();
+        $manager->expects($this->once())
+                ->method('readFile')
+                ->with($this->identicalTo($modName), $this->identicalTo('info.json'))
+                ->willReturn($contents);
+
+        $manager->getInfo($modName);
+    }
+
+    /**
+     * Tests the findFiles method.
+     * @covers ::findFiles
+     */
+    public function testFindFiles(): void
+    {
+        $modName = 'abc';
+        $globPattern = 'def';
+        $modDirectory = 'ghi';
+        $expectedPattern = 'ghi/def';
+        $files = ['ghi/jkl.foo', 'ghi/mno/pqr.foo'];
+        $expectedResult = ['jkl.foo', 'mno/pqr.foo'];
+
+        /* @var ModFileManager&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileManager::class)
+                        ->onlyMethods(['getLocalDirectory', 'executeGlob'])
+                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
+                        ->getMock();
+        $manager->expects($this->once())
+                ->method('getLocalDirectory')
+                ->with($this->identicalTo($modName))
+                ->willReturn($modDirectory);
+        $manager->expects($this->once())
+                ->method('executeGlob')
+                ->with($this->identicalTo($expectedPattern))
+                ->willReturn($files);
+
+        $result = $manager->findFiles($modName, $globPattern);
+
+        $this->assertSame($expectedResult, $result);
     }
 
     /**
      * Tests the readFile method.
-     * @param null|string $fileContent
-     * @param null|string $expectedResult
+     * @throws ExportException
      * @covers ::readFile
-     * @dataProvider provideReadFile
      */
-    public function testReadFile(?string $fileContent, ?string $expectedResult): void
+    public function testReadFile(): void
     {
-        $mod = new Mod();
-        $fileName = 'abc';
-        $filePath = vfsStream::url('root/def');
+        $modName = 'abc';
+        $fileName = 'def';
+        $contents = 'ghi';
 
-        $directory = vfsStream::setup('root');
-        if ($fileContent !== null) {
-            $directory->addChild(vfsStream::newFile('def'));
-            file_put_contents($filePath, $fileContent);
-        }
+        vfsStream::setup('root');
+        file_put_contents(vfsStream::url('root/def'), $contents);
 
-        /* @var ModFileManager|MockObject $manager */
+        /* @var ModFileManager&MockObject $manager */
         $manager = $this->getMockBuilder(ModFileManager::class)
-                        ->setMethods(['getFullFilePath'])
-                        ->disableOriginalConstructor()
+                        ->onlyMethods(['getLocalDirectory'])
+                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
                         ->getMock();
         $manager->expects($this->once())
-                ->method('getFullFilePath')
-                ->with($mod, $fileName)
-                ->willReturn($filePath);
+                ->method('getLocalDirectory')
+                ->with($this->identicalTo($modName))
+                ->willReturn(vfsStream::url('root'));
 
-        $result = $manager->readFile($mod, $fileName);
+        $result = $manager->readFile($modName, $fileName);
+
+        $this->assertSame($contents, $result);
+    }
+
+    /**
+     * Tests the readFile method.
+     * @throws ExportException
+     * @covers ::readFile
+     */
+    public function testReadFileWithException(): void
+    {
+        $modName = 'abc';
+        $fileName = 'def';
+
+        vfsStream::setup('root');
+
+        $this->expectException(FileNotFoundInModException::class);
+
+        /* @var ModFileManager&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileManager::class)
+                        ->onlyMethods(['getLocalDirectory'])
+                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
+                        ->getMock();
+        $manager->expects($this->once())
+                ->method('getLocalDirectory')
+                ->with($this->identicalTo($modName))
+                ->willReturn(vfsStream::url('root'));
+
+        $manager->readFile($modName, $fileName);
+    }
+
+    /**
+     * Tests the getLocalDirectory method.
+     * @covers ::getLocalDirectory
+     */
+    public function testGetLocalDirectory(): void
+    {
+        $modsDirectory = 'abc';
+        $modName = 'def';
+        $expectedResult = 'abc/def';
+
+        $manager = new ModFileManager($this->serializer, 'foo', $modsDirectory);
+        $result = $manager->getLocalDirectory($modName);
+
         $this->assertSame($expectedResult, $result);
     }
 
     /**
-     * Tests the getFullFilePath method.
-     * @covers ::getFullFilePath
-     * @throws ReflectionException
+     * Tests the getLocalDirectory method.
+     * @covers ::getLocalDirectory
      */
-    public function testGetFullFilePath(): void
+    public function testGetLocalDirectoryWithBaseMod(): void
     {
-        $directory = 'abc';
-        $mod = new Mod();
-        $mod->setFileName('def')
-            ->setDirectoryName('ghi');
-        $fileName = 'jkl';
-        $expectedResult = 'zip://abc/def#ghi/jkl';
+        $factorioDirectory = 'abc';
+        $modName = 'base';
+        $expectedResult = 'abc/data/base';
 
-        /* @var ModFileCache $cache */
-        $cache = $this->createMock(ModFileCache::class);
+        $manager = new ModFileManager($this->serializer, $factorioDirectory, 'foo');
+        $result = $manager->getLocalDirectory($modName);
 
-        $manager = new ModFileManager($cache, $directory);
-
-        $result = $this->invokeMethod($manager, 'getFullFilePath', $mod, $fileName);
-        $this->assertSame($expectedResult, $result);
-    }
-    
-    
-    /**
-     * Provides the data for the getInfoJson test.
-     * @return array
-     */
-    public function provideGetInfoJson(): array
-    {
-        return [
-            ['{"abc":"def"}', false, new DataContainer(['abc' => 'def'])],
-            ['"fail"', true, null],
-        ];
-    }
-
-    /**
-     * Tests the getInfoJson method.
-     * @param mixed $content
-     * @param bool $expectException
-     * @param DataContainer|null $expectedResult
-     * @throws ExportException
-     * @covers ::getInfoJson
-     * @dataProvider provideGetInfoJson
-     */
-    public function testGetInfoJson($content, bool $expectException, ?DataContainer $expectedResult): void
-    {
-        $ignoreCache = true;
-        $mod = new Mod();
-        if ($expectException) {
-            $this->expectException(ExportException::class);
-        }
-
-        /* @var ModFileManager|MockObject $manager */
-        $manager = $this->getMockBuilder(ModFileManager::class)
-                        ->setMethods(['getFile'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
-        $manager->expects($this->once())
-                ->method('getFile')
-                ->with($mod, 'info.json', $ignoreCache)
-                ->willReturn($content);
-
-        $result = $manager->getInfoJson($mod, $ignoreCache);
-        $this->assertEquals($expectedResult, $result);
-    }
-
-    /**
-     * Provides the data for the getAllFileNamesOfMod test.
-     * @return array
-     */
-    public function provideGetAllFileNamesOfMod(): array
-    {
-        $mod1 = new Mod();
-        $mod1->setFileName('foo.zip')
-             ->setDirectoryName('foo');
-
-        $mod2 = new Mod();
-        $mod2->setFileName('invalid.zip');
-
-        return [
-            [$mod1, false, ['abc', 'def', 'bar/abc', 'bar/ghi']],
-            [$mod2, true, []],
-        ];
-    }
-
-    /**
-     * Tests the getAllFileNamesOfMod method.
-     * @param Mod $mod
-     * @param bool $expectException
-     * @param array $expectedResult
-     * @throws ExportException
-     * @covers ::getAllFileNamesOfMod
-     * @dataProvider provideGetAllFileNamesOfMod
-     */
-    public function testGetAllFileNamesOfMod(Mod $mod, bool $expectException, array $expectedResult): void
-    {
-        $directory = __DIR__ . '/../../asset/mod';
-
-        /* @var ModFileCache $cache */
-        $cache = $this->createMock(ModFileCache::class);
-
-        if ($expectException) {
-            $this->expectException(ExportException::class);
-        }
-
-        $manager = new ModFileManager($cache, $directory);
-        $result = $manager->getAllFileNamesOfMod($mod);
-
-        sort($expectedResult);
-        sort($result);
-        $this->assertEquals($expectedResult, $result);
-    }
-
-    /**
-     * Provides the data for the getModFileNames test.
-     * @return array
-     */
-    public function provideGetModFileNames(): array
-    {
-        return [
-            [true, false],
-            [false, true],
-        ];
-    }
-
-    /**
-     * Tests the getModFileNames method.
-     * @param bool $withDirectory
-     * @param bool $expectException
-     * @throws ExportException
-     * @covers ::getModFileNames
-     * @dataProvider provideGetModFileNames
-     */
-    public function testGetModFileNames(bool $withDirectory, bool $expectException): void
-    {
-        if ($withDirectory) {
-            vfsStream::setup('root', null, [
-                'abc' => [
-                    'foo_1.2.3.zip' => 'def',
-                    'bar' => 'ghi'
-                ]
-            ]);
-            $expectedResult = [vfsStream::url('root/abc/foo_1.2.3.zip')];
-        } else {
-            vfsStream::setup('root');
-            $expectedResult = null;
-        }
-
-        if ($expectException) {
-            $this->expectException(ExportException::class);
-        }
-
-        $directory = vfsStream::url('root/abc');
-        /* @var ModFileCache $modFileCache */
-        $modFileCache = $this->createMock(ModFileCache::class);
-
-        $manager = new ModFileManager($modFileCache, $directory);
-        $result = $manager->getModFileNames();
         $this->assertSame($expectedResult, $result);
     }
 }

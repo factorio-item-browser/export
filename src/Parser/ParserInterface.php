@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
-use BluePsyduck\Common\Data\DataContainer;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\ExportData\Entity\Combination;
 
 /**
  * The interface of the parsers.
@@ -16,24 +17,24 @@ use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
 interface ParserInterface
 {
     /**
-     * Resets any previously aggregated data.
+     * Prepares the parser to be able to later parse the dump.
+     * @param Dump $dump
+     * @throws ExportException
      */
-    public function reset(): void;
+    public function prepare(Dump $dump): void;
 
     /**
-     * Parses the data from the dump into actual entities.
-     * @param DataContainer $dumpData
-     */
-    public function parse(DataContainer $dumpData): void;
-
-    /**
-     * Checks the parsed data.
-     */
-    public function check(): void;
-
-    /**
-     * Persists the parsed data into the combination.
+     * Parses the data from the dump into the combination.
+     * @param Dump $dump
      * @param Combination $combination
+     * @throws ExportException
      */
-    public function persist(Combination $combination): void;
+    public function parse(Dump $dump, Combination $combination): void;
+
+    /**
+     * Validates the data in the combination as a second parsing step.
+     * @param Combination $combination
+     * @throws ExportException
+     */
+    public function validate(Combination $combination): void;
 }

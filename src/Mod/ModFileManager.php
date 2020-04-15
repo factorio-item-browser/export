@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Mod;
 
-use BluePsyduck\Common\Data\DataContainer;
-use FactorioItemBrowser\Export\Cache\ModFileCache;
+use Exception;
+use FactorioItemBrowser\Common\Constant\Constant;
+use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\ExportData\Entity\Mod;
+use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
+use FactorioItemBrowser\Export\Exception\InvalidInfoJsonFileException;
+use FactorioItemBrowser\Export\Exception\InvalidModFileException;
+use JMS\Serializer\SerializerInterface;
 use ZipArchive;
 
 /**
- * The manager class of the mod files.
+ * The manager of all the mod files.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
@@ -19,145 +23,176 @@ use ZipArchive;
 class ModFileManager
 {
     /**
-     * The regular expression used to detect the mods.
+     * The filename of the info file.
      */
-    protected const REGEXP_MOD_FILE = '#^(.+)_([0-9.]+)\.zip$#';
+    protected const FILENAME_INFO = 'info.json';
 
     /**
-     * The cache to use.
-     * @var ModFileCache
+     * The regular expression used to match the mod directory.
      */
-    protected $cache;
+    protected const REGEXP_MOD_DIRECTORY = '#^(.*)_\d+\.\d+\.\d+/#';
 
     /**
-     * The directory containing the mods.
+     * The serializer.
+     * @var SerializerInterface
+     */
+    protected $serializer;
+
+    /**
+     * The directory of the Factorio game itself.
      * @var string
      */
-    protected $directory;
+    protected $factorioDirectory;
+
+    /**
+     * The directory to store the mod files in.
+     * @var string
+     */
+    protected $modsDirectory;
 
     /**
      * Initializes the manager.
-     * @param ModFileCache $cache
-     * @param string $directory
+     * @param SerializerInterface $exportSerializer
+     * @param string $factorioDirectory
+     * @param string $modsDirectory
      */
-    public function __construct(ModFileCache $cache, string $directory)
+    public function __construct(SerializerInterface $exportSerializer, string $factorioDirectory, string $modsDirectory)
     {
-        $this->cache = $cache;
-        $this->directory = $directory;
+        $this->serializer = $exportSerializer;
+        $this->factorioDirectory = $factorioDirectory;
+        $this->modsDirectory = $modsDirectory;
     }
 
     /**
-     * Returns the specified file from the mod. Throws an exception if the file is not found.
-     * @param Mod $mod
-     * @param string $fileName
-     * @param bool $ignoreCache
-     * @return string
+     * Extracts the zip file into the working directory of the mods.
+     * @param string $modZipPath
      * @throws ExportException
      */
-    public function getFile(Mod $mod, string $fileName, bool $ignoreCache = false): string
+    public function extractModZip(string $modZipPath): void
     {
-        $result = $ignoreCache ? null : $this->cache->read($mod->getName(), $fileName);
-        if ($result === null) {
-            $result = $this->readFile($mod, $fileName);
-            if ($result === null) {
-                throw new ExportException('Unable to read file ' . $fileName . ' of mod ' . $mod->getName());
-            }
-            $this->cache->write($mod->getName(), $fileName, $result);
-        }
-        return $result;
-    }
-
-    /**
-     * Reads a file from the specified mod.
-     * @param Mod $mod
-     * @param string $fileName
-     * @return string|null
-     */
-    public function readFile(Mod $mod, string $fileName): ?string
-    {
-        $filePath = $this->getFullFilePath($mod, $fileName);
-        $content = @file_get_contents($filePath);
-        return is_string($content) ? $content : null;
-    }
-
-    /**
-     * Returns the full path of the file in the mod's zip.
-     * @param Mod $mod
-     * @param string $fileName
-     * @return string
-     */
-    protected function getFullFilePath(Mod $mod, string $fileName): string
-    {
-        return 'zip://' . $this->directory . '/' . $mod->getFileName()
-            . '#' . $mod->getDirectoryName() . '/' . $fileName;
-    }
-
-    /**
-     * Returns the info.json file from the specified mod.
-     * @param Mod $mod
-     * @param bool $ignoreCache
-     * @return DataContainer
-     * @throws ExportException
-     */
-    public function getInfoJson(Mod $mod, bool $ignoreCache = false): DataContainer
-    {
-        $result = null;
-        $content = $this->getFile($mod, 'info.json', $ignoreCache);
-        $json = json_decode($content, true);
-        if (is_array($json)) {
-            $result = new DataContainer($json);
-        }
-
-        if ($result === null) {
-            throw new ExportException('Unable to parse info.json of mod ' . $mod->getFileName());
-        }
-        return $result;
-    }
-
-    /**
-     * Returns all file names of all directories of the specified mod.
-     * @param Mod $mod
-     * @return array|string[]
-     * @throws ExportException
-     */
-    public function getAllFileNamesOfMod(Mod $mod): array
-    {
-        $result = [];
-
         $zipArchive = new ZipArchive();
-        $success = $zipArchive->open($this->directory . '/' . $mod->getFileName());
-        if ($success !== true) {
-            throw new ExportException('Unable to open zip archive ' . $mod->getFileName());
+        $success = $zipArchive->open($modZipPath);
+        if ($success !== true || $zipArchive->numFiles === 0) {
+            throw new InvalidModFileException($modZipPath, 'Unable to open zip file.');
         }
 
-        for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
-            $stats = $zipArchive->statIndex($i);
-            if ($stats['size'] > 0) {
-                $result[] = ltrim(str_replace($mod->getDirectoryName(), '', $stats['name']), '/');
+        try {
+            $firstStat = $zipArchive->statIndex(0);
+            if ($firstStat === false || preg_match(self::REGEXP_MOD_DIRECTORY, $firstStat['name'], $match) !== 1) {
+                throw new InvalidModFileException($modZipPath, 'Unable to determine mod directory.');
             }
-        }
+            $modDirectory = $match[0];
+            $modDirectoryLength = strlen($modDirectory);
+            $modName = $match[1];
 
-        return $result;
+            $this->removeModDirectory($modName);
+
+            $targetDirectory = $this->getLocalDirectory($modName);
+            mkdir($targetDirectory, 0777, true);
+            for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
+                $stat = $zipArchive->statIndex($i);
+                if (
+                    $stat !== false
+                    && substr($stat['name'], -1) !== '/' // Ignore directories
+                    && substr($stat['name'], 0, $modDirectoryLength) === $modDirectory
+                ) {
+                    $fileName = $targetDirectory . '/' . substr($stat['name'], $modDirectoryLength);
+                    if (!is_dir(dirname($fileName))) {
+                        mkdir(dirname($fileName), 0777, true);
+                    }
+                    file_put_contents($fileName, $zipArchive->getStream($stat['name']));
+                }
+            }
+        } finally {
+            $zipArchive->close();
+        }
     }
 
     /**
-     * Returns the file names of all the mods in the directory.
-     * @return array|string[]
+     * Removes the directory of the specified mod, if present.
+     * @param string $modName
+     * @codeCoverageIgnore Unable to rm -rf in virtual file system.
+     */
+    protected function removeModDirectory(string $modName): void
+    {
+        $modDirectory = $this->getLocalDirectory($modName);
+        if (is_dir($modDirectory)) {
+            exec(sprintf('rm -rf "%s"', $modDirectory));
+        }
+    }
+
+    /**
+     * Returns the info from the mod.
+     * @param string $modName
+     * @return InfoJson
      * @throws ExportException
      */
-    public function getModFileNames(): array
+    public function getInfo(string $modName): InfoJson
     {
-        $files = @scandir($this->directory);
-        if ($files === false) {
-            throw new ExportException('Unable to scan the mods directory: ' . $this->directory);
-        }
+        $contents = $this->readFile($modName, self::FILENAME_INFO);
 
-        $result = [];
-        foreach ($files as $file) {
-            if (preg_match(self::REGEXP_MOD_FILE, $file) > 0) {
-                $result[] = $this->directory . DIRECTORY_SEPARATOR . $file;
-            }
+        try {
+            return $this->serializer->deserialize($contents, InfoJson::class, 'json');
+        } catch (Exception $e) {
+            throw new InvalidInfoJsonFileException($modName);
         }
-        return $result;
+    }
+
+    /**
+     * Finds files of a certain mod matching a glob pattern.
+     * @param string $modName
+     * @param string $globPattern
+     * @return array|string[]
+     */
+    public function findFiles(string $modName, string $globPattern): array
+    {
+        $modDirectory = $this->getLocalDirectory($modName) . '/';
+        $modDirectoryLength = strlen($modDirectory);
+
+        $files = $this->executeGlob($modDirectory . $globPattern);
+        return array_map(function (string $value) use ($modDirectoryLength): string {
+            return substr($value, $modDirectoryLength);
+        }, $files);
+    }
+
+    /**
+     * Executes the glob on the specified pattern.
+     * @param string $pattern
+     * @return array|string[]
+     * @codeCoverageIgnore Cannot emulate glob with vfsStream.
+     */
+    protected function executeGlob(string $pattern): array
+    {
+        $result = glob($pattern);
+        return ($result === false) ? [] : $result;
+    }
+
+    /**
+     * Reads a file from a mod, throwing an exception if it is not present.
+     * @param string $modName
+     * @param string $fileName
+     * @return string
+     * @throws ExportException
+     */
+    public function readFile(string $modName, string $fileName): string
+    {
+        $filePath = $this->getLocalDirectory($modName) . '/' . $fileName;
+        if (!file_exists($filePath)) {
+            throw new FileNotFoundInModException($modName, $fileName);
+        }
+        return (string) file_get_contents($filePath);
+    }
+
+    /**
+     * Returns the directory which is used or will be used by the specified mod.
+     * @param string $modName
+     * @return string
+     */
+    public function getLocalDirectory(string $modName): string
+    {
+        if ($modName === Constant::MOD_NAME_BASE) {
+            return $this->factorioDirectory . '/data/' . $modName;
+        }
+        return $this->modsDirectory . '/' . $modName;
     }
 }

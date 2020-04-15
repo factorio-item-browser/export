@@ -1,0 +1,10 @@
+FactorioItemBrowser\Export\Entity\Dump\Ingredient:
+  access_type: public_method
+  exclusion_policy: all
+  properties:
+    type:
+      type: string
+    name:
+      type: string
+    amount:
+      type: float

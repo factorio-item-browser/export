@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Renderer;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Renderer\Filter\ScaledLayerFilter;
@@ -12,14 +12,13 @@ use FactorioItemBrowser\Export\Renderer\IconRenderer;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Color;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
-use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Imagine\Filter\FilterInterface;
 use Imagine\Image\Box;
 use Imagine\Image\BoxInterface;
 use Imagine\Image\ImageInterface;
 use Imagine\Image\ImagineInterface;
 use Imagine\Image\Palette\Color\ColorInterface;
+use Imagine\Image\Point;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -48,14 +47,7 @@ class IconRendererTest extends TestCase
     protected $modFileManager;
 
     /**
-     * The mocked mod registry.
-     * @var ModRegistry&MockObject
-     */
-    protected $modRegistry;
-
-    /**
      * Sets up the test case.
-     * @throws ReflectionException
      */
     protected function setUp(): void
     {
@@ -63,7 +55,6 @@ class IconRendererTest extends TestCase
 
         $this->imagine = $this->createMock(ImagineInterface::class);
         $this->modFileManager = $this->createMock(ModFileManager::class);
-        $this->modRegistry = $this->createMock(ModRegistry::class);
     }
 
     /**
@@ -73,23 +64,20 @@ class IconRendererTest extends TestCase
      */
     public function testConstruct(): void
     {
-        $renderer = new IconRenderer($this->imagine, $this->modFileManager, $this->modRegistry);
+        $renderer = new IconRenderer($this->imagine, $this->modFileManager);
 
         $this->assertSame($this->imagine, $this->extractProperty($renderer, 'imagine'));
         $this->assertSame($this->modFileManager, $this->extractProperty($renderer, 'modFileManager'));
-        $this->assertSame($this->modRegistry, $this->extractProperty($renderer, 'modRegistry'));
     }
 
     /**
      * Tests the render method.
      * @throws ExportException
-     * @throws ReflectionException
      * @covers ::render
      */
     public function testRender(): void
     {
         $iconSize = 42;
-        $renderedSize = 1337;
         $imageContent = 'abc';
 
         /* @var Layer&MockObject $layer1 */
@@ -116,14 +104,11 @@ class IconRendererTest extends TestCase
         $icon->expects($this->once())
              ->method('getLayers')
              ->willReturn([$layer1, $layer2]);
-        $icon->expects($this->once())
-             ->method('getRenderedSize')
-             ->willReturn($renderedSize);
 
-        /* @var IconRenderer|MockObject $renderer */
+        /* @var IconRenderer&MockObject $renderer */
         $renderer = $this->getMockBuilder(IconRenderer::class)
-                         ->setMethods(['createImage', 'renderLayer', 'resizeImage'])
-                         ->setConstructorArgs([$this->imagine, $this->modFileManager, $this->modRegistry])
+                         ->onlyMethods(['createImage', 'renderLayer'])
+                         ->setConstructorArgs([$this->imagine, $this->modFileManager])
                          ->getMock();
         $renderer->expects($this->once())
                  ->method('createImage')
@@ -139,9 +124,6 @@ class IconRendererTest extends TestCase
                      $image2,
                      $image3
                  );
-        $renderer->expects($this->once())
-                 ->method('resizeImage')
-                 ->with($this->identicalTo($image3), $this->identicalTo($renderedSize));
 
         $result = $renderer->render($icon);
         $this->assertSame($imageContent, $result);
@@ -177,7 +159,7 @@ class IconRendererTest extends TestCase
                       )
                       ->willReturn($image);
 
-        $renderer = new IconRenderer($this->imagine, $this->modFileManager, $this->modRegistry);
+        $renderer = new IconRenderer($this->imagine, $this->modFileManager);
         $result = $this->invokeMethod($renderer, 'createImage', $size);
 
         $this->assertSame($image, $result);
@@ -202,40 +184,36 @@ class IconRendererTest extends TestCase
         /* @var ImageInterface $tintedImage */
         $tintedImage = $this->createMock(ImageInterface::class);
 
-        /* @var FilterInterface|MockObject $scaledLayerFilter */
-        $scaledLayerFilter = $this->getMockBuilder(FilterInterface::class)
-                                  ->setMethods(['apply'])
-                                  ->getMockForAbstractClass();
+        /* @var FilterInterface&MockObject $scaledLayerFilter */
+        $scaledLayerFilter = $this->createMock(FilterInterface::class);
         $scaledLayerFilter->expects($this->once())
                           ->method('apply')
-                          ->with($layerImage)
+                          ->with($this->identicalTo($layerImage))
                           ->willReturn($scaledImage);
 
-        /* @var FilterInterface|MockObject $tintedLayerFilter */
-        $tintedLayerFilter = $this->getMockBuilder(FilterInterface::class)
-                                  ->setMethods(['apply'])
-                                  ->getMockForAbstractClass();
+        /* @var FilterInterface&MockObject $tintedLayerFilter */
+        $tintedLayerFilter = $this->createMock(FilterInterface::class);
         $tintedLayerFilter->expects($this->once())
                           ->method('apply')
-                          ->with($image)
+                          ->with($this->identicalTo($image))
                           ->willReturn($tintedImage);
 
-        /* @var IconRenderer|MockObject $renderer */
+        /* @var IconRenderer&MockObject $renderer */
         $renderer = $this->getMockBuilder(IconRenderer::class)
-                         ->setMethods(['createScaledLayerFilter', 'createLayerImage', 'createTintedLayerFilter'])
-                         ->disableOriginalConstructor()
+                         ->onlyMethods(['createScaledLayerFilter', 'createLayerImage', 'createTintedLayerFilter'])
+                         ->setConstructorArgs([$this->imagine, $this->modFileManager])
                          ->getMock();
         $renderer->expects($this->once())
                  ->method('createScaledLayerFilter')
-                 ->with($layer, $size)
+                 ->with($this->identicalTo($layer), $this->identicalTo($size))
                  ->willReturn($scaledLayerFilter);
         $renderer->expects($this->once())
                  ->method('createLayerImage')
-                 ->with($layer)
+                 ->with($this->identicalTo($layer))
                  ->willReturn($layerImage);
         $renderer->expects($this->once())
                  ->method('createTintedLayerFilter')
-                 ->with($layer, $scaledImage)
+                 ->with($this->identicalTo($layer), $this->identicalTo($scaledImage))
                  ->willReturn($tintedLayerFilter);
 
         $result = $this->invokeMethod($renderer, 'renderLayer', $image, $layer, $size);
@@ -250,33 +228,36 @@ class IconRendererTest extends TestCase
     public function testCreateLayerImage(): void
     {
         $layerFileName = 'abc';
-        $layer = (new Layer())->setFileName($layerFileName);
+        $layerSize = 42;
         $content = 'def';
-        /* @var ImageInterface $image */
+
+        $layer = new Layer();
+        $layer->setFileName($layerFileName)
+              ->setSize($layerSize);
+
+        $expectedPoint = new Point(0, 0);
+        $expectedBox = new Box($layerSize, $layerSize);
+
+        /* @var ImageInterface&MockObject $image */
         $image = $this->createMock(ImageInterface::class);
+        $image->expects($this->once())
+              ->method('crop')
+              ->with($this->equalTo($expectedPoint), $this->equalTo($expectedBox))
+              ->willReturnSelf();
 
-        /* @var ImagineInterface|MockObject $imagine */
-        $imagine = $this->getMockBuilder(ImagineInterface::class)
-                        ->setMethods(['load'])
-                        ->getMockForAbstractClass();
-        $imagine->expects($this->once())
-                ->method('load')
-                ->with($content)
-                ->willReturn($image);
+        $this->imagine->expects($this->once())
+                      ->method('load')
+                      ->with($this->identicalTo($content))
+                      ->willReturn($image);
 
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-
-        /* @var IconRenderer|MockObject $renderer */
+        /* @var IconRenderer&MockObject $renderer */
         $renderer = $this->getMockBuilder(IconRenderer::class)
-                         ->setMethods(['loadLayerImage'])
-                         ->setConstructorArgs([$imagine, $modFileManager, $modRegistry])
+                         ->onlyMethods(['loadLayerImage'])
+                         ->setConstructorArgs([$this->imagine, $this->modFileManager])
                          ->getMock();
         $renderer->expects($this->once())
                  ->method('loadLayerImage')
-                 ->with($layerFileName)
+                 ->with($this->identicalTo($layerFileName))
                  ->willReturn($content);
 
         $result = $this->invokeMethod($renderer, 'createLayerImage', $layer);
@@ -286,14 +267,13 @@ class IconRendererTest extends TestCase
 
     /**
      * Provides the data for the loadLayerImage test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideLoadLayerImage(): array
     {
         return [
-            ['__abc__/def/ghi.png', null, 'abc', (new Mod())->setName('abc'), 'def/ghi.png'],
-            ['__abc__/def/ghi.png', 'Mod not known: abc', 'abc', null, null],
-            ['fail', 'Unable to understand image file name: fail', null, null, null],
+            ['__abc__/def/ghi.png', null, 'abc', 'def/ghi.png'],
+            ['fail', 'Unable to understand image file name: fail', null, null],
         ];
     }
 
@@ -302,7 +282,6 @@ class IconRendererTest extends TestCase
      * @param string $layerFileName
      * @param string|null $expectedExceptionMessage
      * @param string|null $expectedModName
-     * @param Mod|null $resultGetMod
      * @param string|null $expectedFileName
      * @throws ReflectionException
      * @covers ::loadLayerImage
@@ -312,40 +291,21 @@ class IconRendererTest extends TestCase
         string $layerFileName,
         ?string $expectedExceptionMessage,
         ?string $expectedModName,
-        ?Mod $resultGetMod,
         ?string $expectedFileName
     ): void {
         $layerImageContent = 'foo';
 
-        /* @var ModRegistry|MockObject $modRegistry */
-        $modRegistry = $this->getMockBuilder(ModRegistry::class)
-                            ->setMethods(['get'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $modRegistry->expects($expectedModName === null ? $this->never() : $this->once())
-                    ->method('get')
-                    ->with($expectedModName)
-                    ->willReturn($resultGetMod);
-
-        /* @var ModFileManager|MockObject $modFileManager */
-        $modFileManager = $this->getMockBuilder(ModFileManager::class)
-                               ->setMethods(['getFile'])
-                               ->disableOriginalConstructor()
-                               ->getMock();
-        $modFileManager->expects($expectedFileName === null ? $this->never() : $this->once())
-                       ->method('getFile')
-                       ->with($resultGetMod, $expectedFileName)
-                       ->willReturn($layerImageContent);
+        $this->modFileManager->expects($expectedFileName === null ? $this->never() : $this->once())
+                             ->method('readFile')
+                             ->with($this->identicalTo($expectedModName), $this->identicalTo($expectedFileName))
+                             ->willReturn($layerImageContent);
 
         if ($expectedExceptionMessage !== null) {
             $this->expectException(ExportException::class);
             $this->expectExceptionMessage($expectedExceptionMessage);
         }
 
-        /* @var ImagineInterface $imagine */
-        $imagine = $this->createMock(ImagineInterface::class);
-
-        $renderer = new IconRenderer($imagine, $modFileManager, $modRegistry);
+        $renderer = new IconRenderer($this->imagine, $this->modFileManager);
 
         $result = $this->invokeMethod($renderer, 'loadLayerImage', $layerFileName);
         $this->assertSame($layerImageContent, $result);
@@ -362,20 +322,13 @@ class IconRendererTest extends TestCase
         $layer = $this->createMock(Layer::class);
         $size = 42;
 
-        /* @var ImagineInterface $imagine */
-        $imagine = $this->createMock(ImagineInterface::class);
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        $renderer = new IconRenderer($imagine, $modFileManager, $modRegistry);
+        $renderer = new IconRenderer($this->imagine, $this->modFileManager);
         /* @var ScaledLayerFilter $result*/
         $result = $this->invokeMethod($renderer, 'createScaledLayerFilter', $layer, $size);
 
         $this->assertSame($layer, $this->extractProperty($result, 'layer'));
         $this->assertSame($size, $this->extractProperty($result, 'size'));
-        $this->assertSame($imagine, $result->getImagine());
+        $this->assertSame($this->imagine, $result->getImagine());
     }
 
     /**
@@ -392,23 +345,20 @@ class IconRendererTest extends TestCase
         /* @var ImageInterface $layerImage */
         $layerImage = $this->createMock(ImageInterface::class);
 
-        /* @var Layer|MockObject $layer */
-        $layer = $this->getMockBuilder(Layer::class)
-                      ->setMethods(['getTintColor'])
-                      ->disableOriginalConstructor()
-                      ->getMock();
+        /* @var Layer&MockObject $layer */
+        $layer = $this->createMock(Layer::class);
         $layer->expects($this->once())
-              ->method('getTintColor')
+              ->method('getTint')
               ->willReturn($color);
 
-        /* @var IconRenderer|MockObject $renderer */
+        /* @var IconRenderer&MockObject $renderer */
         $renderer = $this->getMockBuilder(IconRenderer::class)
-                         ->setMethods(['convertColor'])
-                         ->disableOriginalConstructor()
+                         ->onlyMethods(['convertColor'])
+                         ->setConstructorArgs([$this->imagine, $this->modFileManager])
                          ->getMock();
         $renderer->expects($this->once())
                  ->method('convertColor')
-                 ->with($color)
+                 ->with($this->identicalTo($color))
                  ->willReturn($convertedColor);
 
         $result = $this->invokeMethod($renderer, 'createTintedLayerFilter', $layer, $layerImage);
@@ -430,14 +380,7 @@ class IconRendererTest extends TestCase
               ->setBlue(0.75)
               ->setAlpha(0.42);
 
-        /* @var ImagineInterface $imagine */
-        $imagine = $this->createMock(ImagineInterface::class);
-        /* @var ModFileManager $modFileManager */
-        $modFileManager = $this->createMock(ModFileManager::class);
-        /* @var ModRegistry $modRegistry */
-        $modRegistry = $this->createMock(ModRegistry::class);
-
-        $renderer = new IconRenderer($imagine, $modFileManager, $modRegistry);
+        $renderer = new IconRenderer($this->imagine, $this->modFileManager);
         /* @var ColorInterface $result*/
         $result = $this->invokeMethod($renderer, 'convertColor', $color);
 
@@ -449,7 +392,7 @@ class IconRendererTest extends TestCase
 
     /**
      * Provides the data for the resizeImage test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideResizeImage(): array
     {
@@ -457,72 +400,5 @@ class IconRendererTest extends TestCase
             [64, 64, 32],
             [64, 32, 64],
         ];
-    }
-
-    /**
-     * Tests the resizeImage method.
-     * @param int $imageSize
-     * @param int $width
-     * @param int $height
-     * @throws ReflectionException
-     * @covers ::resizeImage
-     * @dataProvider provideResizeImage
-     */
-    public function testResizeImage(int $imageSize, int $width, int $height): void
-    {
-        $expectedBox = new Box($imageSize, $imageSize);
-
-        /* @var BoxInterface&MockObject $size */
-        $size = $this->createMock(BoxInterface::class);
-        $size->expects($this->any())
-             ->method('getWidth')
-             ->willReturn($width);
-        $size->expects($this->any())
-             ->method('getHeight')
-             ->willReturn($height);
-
-        /* @var ImageInterface&MockObject $image */
-        $image = $this->createMock(ImageInterface::class);
-        $image->expects($this->any())
-              ->method('getSize')
-              ->willReturn($size);
-        $image->expects($this->once())
-              ->method('resize')
-              ->with($this->equalTo($expectedBox));
-
-        $renderer = new IconRenderer($this->imagine, $this->modFileManager, $this->modRegistry);
-        $this->invokeMethod($renderer, 'resizeImage', $image, $imageSize);
-    }
-
-    /**
-     * Tests the resizeImage method without actually resizing it.
-     * @throws ReflectionException
-     * @covers ::resizeImage
-     */
-    public function testResizeImageWithoutResizing(): void
-    {
-        $imageSize = 42;
-        $width = 42;
-        $height = 42;
-
-        /* @var BoxInterface&MockObject $size */
-        $size = $this->createMock(BoxInterface::class);
-        $size->expects($this->any())
-             ->method('getWidth')
-             ->willReturn($width);
-        $size->expects($this->any())
-             ->method('getHeight')
-             ->willReturn($height);
-
-        /* @var ImageInterface&MockObject $image */
-        $image = $this->createMock(ImageInterface::class);
-        $image->expects($this->any())
-              ->method('getSize')
-              ->willReturn($size);
-        $image->expects($this->never())
-              ->method('resize');
-
-        $renderer = new IconRenderer($this->imagine, $this->modFileManager, $this->modRegistry);
-        $this->invokeMethod($renderer, 'resizeImage', $image, $imageSize);
     }
 }

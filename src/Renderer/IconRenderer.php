@@ -11,14 +11,13 @@ use FactorioItemBrowser\Export\Renderer\Filter\TintedLayerFilter;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Color;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
-use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Registry\ModRegistry;
 use Imagine\Filter\FilterInterface;
 use Imagine\Image\Box;
 use Imagine\Image\ImageInterface;
 use Imagine\Image\ImagineInterface;
 use Imagine\Image\Palette\Color\ColorInterface;
 use Imagine\Image\Palette\RGB;
+use Imagine\Image\Point;
 
 /**
  * The class rendering the layered icons to PNG images.
@@ -46,22 +45,14 @@ class IconRenderer
     protected $modFileManager;
 
     /**
-     * The mod registry.
-     * @var ModRegistry
-     */
-    protected $modRegistry;
-
-    /**
      * Initializes the icon renderer.
      * @param ImagineInterface $imagine
      * @param ModFileManager $modFileManager
-     * @param ModRegistry $modRegistry
      */
-    public function __construct(ImagineInterface $imagine, ModFileManager $modFileManager, ModRegistry $modRegistry)
+    public function __construct(ImagineInterface $imagine, ModFileManager $modFileManager)
     {
         $this->imagine = $imagine;
         $this->modFileManager = $modFileManager;
-        $this->modRegistry = $modRegistry;
     }
 
     /**
@@ -76,8 +67,6 @@ class IconRenderer
         foreach ($icon->getLayers() as $layer) {
             $image = $this->renderLayer($image, $layer, $icon->getSize());
         }
-
-        $this->resizeImage($image, $icon->getRenderedSize());
         return $image->get('png');
     }
 
@@ -116,7 +105,9 @@ class IconRenderer
     protected function createLayerImage(Layer $layer): ImageInterface
     {
         $content = $this->loadLayerImage($layer->getFileName());
-        return $this->imagine->load($content);
+        $image = $this->imagine->load($content);
+        $image->crop(new Point(0, 0), new Box($layer->getSize(), $layer->getSize()));
+        return $image;
     }
 
     /**
@@ -131,12 +122,7 @@ class IconRenderer
         if ($count === 0) {
             throw new ExportException('Unable to understand image file name: ' . $layerFileName);
         }
-
-        $mod = $this->modRegistry->get($match[1]);
-        if (!$mod instanceof Mod) {
-            throw new ExportException('Mod not known: ' . $match[1]);
-        }
-        return $this->modFileManager->getFile($mod, $match[2]);
+        return $this->modFileManager->readFile($match[1], $match[2]);
     }
 
     /**
@@ -160,7 +146,7 @@ class IconRenderer
      */
     protected function createTintedLayerFilter(Layer $layer, ImageInterface $layerImage): FilterInterface
     {
-        return new TintedLayerFilter($layerImage, $this->convertColor($layer->getTintColor()));
+        return new TintedLayerFilter($layerImage, $this->convertColor($layer->getTint()));
     }
 
     /**
@@ -175,17 +161,5 @@ class IconRenderer
             (int) round($color->getGreen(255)),
             (int) round($color->getBlue(255)),
         ], (int) round($color->getAlpha(100)));
-    }
-
-    /**
-     * Resizes the image if it does not already have the desired size.
-     * @param ImageInterface $image
-     * @param int $size
-     */
-    protected function resizeImage(ImageInterface $image, int $size): void
-    {
-        if ($image->getSize()->getWidth() !== $size || $image->getSize()->getHeight() !== $size) {
-            $image->resize(new Box($size, $size));
-        }
     }
 }

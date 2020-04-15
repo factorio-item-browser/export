@@ -7,8 +7,26 @@ services:
     image: fib-ex-php
     networks:
     - network-fib
+    environment:
+      FIB_ENV: development
     volumes:
-      - ".:/project"
+    - ".:/project"
+    depends_on:
+    - ftp
+
+  ftp:
+    container_name: fib-ex-ftp
+    image: stilliard/pure-ftpd:hardened
+    ports:
+    - "21:21"
+    - "30000-30009:30000-30009"
+    networks:
+    - network-fib
+    environment:
+      PUBLICHOST: "fib-ex-ftp"
+      FTP_USER_NAME: development
+      FTP_USER_PASS: factorio-item-browser
+      FTP_USER_HOME: /upload
 
 networks:
   network-fib:

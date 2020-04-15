@@ -1,35 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace FactorioItemBrowser\Export\Constant;
 
 /**
- * The interface holding the command names.
+ * The interface holding the names of the commands.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
 interface CommandName
 {
-    public const CLEAN_CACHE = 'clean cache';
+    /**
+     * The name of the command downloading Factorio itself.
+     */
+    public const DOWNLOAD_FACTORIO = 'download-factorio';
 
-    public const EXPORT_COMBINATION = 'export combination <combinationHash>';
-    public const EXPORT_MOD = 'export mod <modName>';
-    public const EXPORT_MOD_DEPENDENCIES = 'export mod <modName> with-dependencies';
-    public const EXPORT_MOD_META = 'export mod <modName> meta';
-    public const EXPORT_MOD_STEP = 'export mod <modName> step <step>';
-    public const EXPORT_MOD_THUMBNAIL = 'export mod <modName> thumbnail';
-    public const EXPORT_PREPARE = 'export prepare';
+    /**
+     * The name of the processing command.
+     */
+    public const PROCESS = 'process';
 
-    public const LIST = 'list';
-    public const LIST_MISSING = 'list missing';
-
-    public const REDUCE_COMBINATION = 'reduce combination <combinationHash>';
-    public const REDUCE_MOD = 'reduce mod <modName>';
-
-    public const RENDER_ICON = 'render icon <iconHash>';
-    public const RENDER_MOD_ICONS = 'render mod-icons <modName>';
-
-    public const UPDATE_DEPENDENCIES = 'update dependencies';
-    public const UPDATE_LIST = 'update list';
-    public const UPDATE_ORDER = 'update order';
+    /**
+     * The name of the command rendering an icon.
+     */
+    public const RENDER_ICON = 'render-icon';
 }

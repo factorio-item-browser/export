@@ -1,0 +1,10 @@
+FactorioItemBrowser\Export\Entity\Dump\Icon:
+  access_type: public_method
+  exclusion_policy: all
+  properties:
+    type:
+      type: string
+    name:
+      type: string
+    layers:
+      type: array<FactorioItemBrowser\Export\Entity\Dump\Layer>

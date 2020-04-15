@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Console;
 
-use FactorioItemBrowser\Export\Utils\VersionUtils;
-use Zend\Console\Adapter\AdapterInterface;
-use Zend\Console\ColorInterface;
-use Zend\ProgressBar\Adapter\AbstractAdapter;
-use Zend\ProgressBar\Adapter\Console as ProgressBarConsole;
-use Zend\ProgressBar\ProgressBar;
+use Exception;
+use Symfony\Component\Console\Formatter\OutputFormatter;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * The wrapper class for the actual console.
@@ -20,52 +18,56 @@ use Zend\ProgressBar\ProgressBar;
 class Console
 {
     /**
-     * The actual console instance.
-     * @var AdapterInterface
+     * The output instance.
+     * @var OutputInterface
      */
-    protected $consoleAdapter;
+    protected $output;
+
+    /**
+     * Whether the debug mode is enabled.
+     * @var bool
+     */
+    protected $isDebug;
 
     /**
      * Initializes the console wrapper.
-     * @param AdapterInterface $consoleAdapter
+     * @param OutputInterface $output
+     * @param bool $isDebug
      */
-    public function __construct(AdapterInterface $consoleAdapter)
+    public function __construct(OutputInterface $output, bool $isDebug)
     {
-        $this->consoleAdapter = $consoleAdapter;
+        $this->output = $output;
+        $this->isDebug = $isDebug;
     }
 
     /**
-     * Writes a message to the console.
+     * Writes a headline with the specified message.
      * @param string $message
-     * @param int|null $color
      * @return $this
      */
-    public function write(string $message, ?int $color = null)
+    public function writeHeadline(string $message): self
     {
-        $this->consoleAdapter->write($message, $color);
+        $this->writeWithDecoration([
+            '',
+            $this->createHorizontalLine('-'),
+            ' ' . $message,
+            $this->createHorizontalLine('-'),
+        ], 'yellow', 'bold');
         return $this;
     }
 
     /**
-     * Writes a line to the console.
-     * @param string $message
-     * @param int|null $color
+     * Writes a step to the console.
+     * @param string $step
      * @return $this
      */
-    public function writeLine(string $message = '', ?int $color = null)
+    public function writeStep(string $step): self
     {
-        $this->consoleAdapter->writeLine($message, $color);
-        return $this;
-    }
-
-    /**
-     * Writes a command being executed to the console.
-     * @param string $command
-     * @return $this
-     */
-    public function writeCommand(string $command)
-    {
-        $this->writeLine('$ ' . $command, ColorInterface::GRAY);
+        $this->writeWithDecoration([
+            '',
+            ' ' . $step,
+            $this->createHorizontalLine('-')
+        ], 'blue', 'bold');
         return $this;
     }
 
@@ -74,77 +76,88 @@ class Console
      * @param string $action
      * @return $this
      */
-    public function writeAction(string $action)
+    public function writeAction(string $action): self
     {
-        $this->writeLine('> ' . $action . '...');
+        $this->output->writeln('> ' . $action . '...');
         return $this;
     }
 
     /**
-     * Writes a banner with the specified message.
+     * Writes a simple message, like a comment, to the console.
      * @param string $message
-     * @param int|null $color
      * @return $this
      */
-    public function writeBanner(string $message, ?int $color = null)
+    public function writeMessage(string $message): self
     {
-        $this->writeHorizontalLine('-', $color)
-             ->writeLine(' ' . $message, $color)
-             ->writeHorizontalLine('-', $color);
+        $this->output->writeln('# ' . $message);
         return $this;
     }
 
     /**
-     * Writes a horizontal line to the console.
+     * Writes an exception to the console.
+     * @param Exception $e
+     * @return $this
+     */
+    public function writeException(Exception $e): self
+    {
+        $this->writeWithDecoration([
+            sprintf('! %s: %s', substr((string) strrchr(get_class($e), '\\'), 1), $e->getMessage()),
+        ], 'red', 'bold');
+
+        if ($this->isDebug) {
+            $this->writeWithDecoration([
+                $this->createHorizontalLine('-'),
+                $e->getTraceAsString(),
+                $this->createHorizontalLine('-'),
+            ], 'red');
+        }
+        return $this;
+    }
+
+    /**
+     * Writes raw data to the console.
+     * @param string $data
+     * @return $this
+     */
+    public function writeData(string $data): self
+    {
+        $this->output->write($data, false, ConsoleOutput::OUTPUT_RAW);
+        return $this;
+    }
+
+    /**
+     * Writes messages with decorations.
+     * @param array|string[] $messages
+     * @param string $color
+     * @param string $options
+     */
+    protected function writeWithDecoration(array $messages, string $color = '', string $options = ''): void
+    {
+        $messages = array_values(array_map([OutputFormatter::class, 'escape'], $messages));
+
+        $formats = [];
+        if ($color !== '') {
+            $formats[] = "fg={$color}";
+        }
+        if ($options !== '') {
+            $formats[] = "options={$options}";
+        }
+        $formatString = implode(';', $formats);
+        if ($formatString !== '') {
+            $messages[0] = "<{$formatString}>{$messages[0]}";
+            $messages[count($messages) - 1] .= '</>';
+        }
+
+        $this->output->writeln($messages);
+    }
+
+    /**
+     * Creates a horizontal line of the specified character.
      * @param string $character
-     * @param int|null $color
-     * @return $this
-     */
-    public function writeHorizontalLine(string $character, ?int $color = null)
-    {
-        $this->writeLine(str_pad('', $this->consoleAdapter->getWidth(), $character), $color);
-        return $this;
-    }
-
-    /**
-     * Formats the mod name for the console.
-     * @param string $modName
-     * @param string $suffix
      * @return string
      */
-    public function formatModName(string $modName, string $suffix = ''): string
+    protected function createHorizontalLine(string $character): string
     {
-        return str_pad($modName, 64, ' ', STR_PAD_LEFT) . $suffix;
-    }
-
-    /**
-     * Formats the version for the console.
-     * @param string $version
-     * @param bool $padLeft
-     * @return string
-     */
-    public function formatVersion(string $version, bool $padLeft = false): string
-    {
-        $version = $version === '' ? '' : VersionUtils::normalize($version);
-        return str_pad($version, 10, ' ', $padLeft ? STR_PAD_LEFT : STR_PAD_RIGHT);
-    }
-
-    /**
-     * Creates and returns a progress bar instance with the specified number of steps.
-     * @param int $numberOfSteps
-     * @return ProgressBar
-     */
-    public function createProgressBar(int $numberOfSteps): ProgressBar
-    {
-        return new ProgressBar($this->createProgressBarAdapter(), 0, $numberOfSteps);
-    }
-
-    /**
-     * Creates and returns the adapter to use for the progress bar.
-     * @return AbstractAdapter
-     */
-    protected function createProgressBarAdapter(): AbstractAdapter
-    {
-        return new ProgressBarConsole(['width' => $this->consoleAdapter->getWidth()]);
+        return str_pad('', 80, $character);
     }
 }

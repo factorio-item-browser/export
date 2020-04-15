@@ -8,6 +8,7 @@ use Imagine\Filter\FilterInterface;
 use Imagine\Image\Fill\FillInterface;
 use Imagine\Image\ImageInterface;
 use Imagine\Image\Palette\Color\ColorInterface;
+use Imagine\Image\Point;
 use Imagine\Image\PointInterface;
 
 /**
@@ -54,9 +55,27 @@ class TintedLayerFilter implements FilterInterface, FillInterface
      */
     public function apply(ImageInterface $image): ImageInterface
     {
+        if (!$this->hasTint()) {
+            $image->paste($this->layerImage, new Point(0, 0));
+            return $image;
+        }
+
         $this->image = $image;
-        $this->image->fill($this);
+        $image->fill($this);
         return $image;
+    }
+
+    /**
+     * Returns whether the filter has an actual tint.
+     * @return bool
+     */
+    protected function hasTint(): bool
+    {
+        $tint = $this->tintColor;
+        return $tint->getValue(ColorInterface::COLOR_RED) !== 255
+            || $tint->getValue(ColorInterface::COLOR_GREEN) !== 255
+            || $tint->getValue(ColorInterface::COLOR_BLUE) !== 255
+            || $tint->getAlpha() !== 100;
     }
 
     /**

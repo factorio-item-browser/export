@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Parser;
 
-use BluePsyduck\Common\Data\DataContainer;
-use BluePsyduck\Common\Test\ReflectionTrait;
-use FactorioItemBrowser\Common\Constant\RecipeMode;
-use FactorioItemBrowser\Export\I18n\Translator;
+use BluePsyduck\TestHelper\ReflectionTrait;
+use FactorioItemBrowser\Common\Constant\EntityType;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Entity\Dump\Ingredient as DumpIngredient;
+use FactorioItemBrowser\Export\Entity\Dump\Product as DumpProduct;
+use FactorioItemBrowser\Export\Entity\Dump\Recipe as DumpRecipe;
+use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\Export\Parser\IconParser;
-use FactorioItemBrowser\Export\Parser\ItemParser;
 use FactorioItemBrowser\Export\Parser\RecipeParser;
-use FactorioItemBrowser\ExportData\Entity\Item;
+use FactorioItemBrowser\Export\Parser\TranslationParser;
+use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Entity\Recipe;
-use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient;
-use FactorioItemBrowser\ExportData\Entity\Recipe\Product;
-use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
+use FactorioItemBrowser\ExportData\Entity\Recipe as ExportRecipe;
+use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient as ExportIngredient;
+use FactorioItemBrowser\ExportData\Entity\Recipe\Product as ExportProduct;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -34,822 +35,470 @@ class RecipeParserTest extends TestCase
     use ReflectionTrait;
 
     /**
-     * Tests the constructing.
-     * @covers ::__construct
-     * @throws ReflectionException
+     * The mocked hash calculator.
+     * @var HashCalculator&MockObject
      */
-    public function testConstruct(): void
-    {
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $recipeRegistry */
-        $recipeRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
+    protected $hashCalculator;
 
-        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
-        $this->assertSame($iconParser, $this->extractProperty($parser, 'iconParser'));
-        $this->assertSame($itemParser, $this->extractProperty($parser, 'itemParser'));
-        $this->assertSame($recipeRegistry, $this->extractProperty($parser, 'recipeRegistry'));
-        $this->assertSame($translator, $this->extractProperty($parser, 'translator'));
+    /**
+     * The mocked icon parser.
+     * @var IconParser&MockObject
+     */
+    protected $iconParser;
+
+    /**
+     * The mocked translation parser.
+     * @var TranslationParser&MockObject
+     */
+    protected $translationParser;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->hashCalculator = $this->createMock(HashCalculator::class);
+        $this->iconParser = $this->createMock(IconParser::class);
+        $this->translationParser = $this->createMock(TranslationParser::class);
     }
 
     /**
-     * Tests the reset method.
+     * Tests the constructing.
      * @throws ReflectionException
-     * @covers ::reset
+     * @covers ::__construct
      */
-    public function testReset(): void
+    public function testConstruct(): void
     {
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $recipeRegistry */
-        $recipeRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
+        $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
 
-        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
-        $this->injectProperty($parser, 'parsedRecipes', ['fail' => new Recipe()]);
+        $this->assertSame($this->hashCalculator, $this->extractProperty($parser, 'hashCalculator'));
+        $this->assertSame($this->iconParser, $this->extractProperty($parser, 'iconParser'));
+        $this->assertSame($this->translationParser, $this->extractProperty($parser, 'translationParser'));
+    }
 
-        $parser->reset();
+    /**
+     * Tests the prepare method.
+     * @covers ::prepare
+     */
+    public function testPrepare(): void
+    {
+        /* @var Dump&MockObject $dump */
+        $dump = $this->createMock(Dump::class);
 
-        $this->assertSame([], $this->extractProperty($parser, 'parsedRecipes'));
+        $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
+        $parser->prepare($dump);
+
+        $this->addToAssertionCount(1);
     }
 
     /**
      * Tests the parse method.
-     * @throws ReflectionException
      * @covers ::parse
      */
     public function testParse(): void
     {
-        $dumpData = new DataContainer([
-            'recipes' => [
-                'normal' => [
-                    ['abc' => 'def'],
-                    ['ghi' => 'jkl'],
-                ],
-                'expensive' => [
-                    ['mno' => 'pqr'],
-                    ['stu' => 'vwx'],
-                ],
-            ],
-        ]);
-        
-        $recipe1 = new Recipe();
-        $recipe1->setName('abc')
-                ->setMode('def');
-        $recipe2 = new Recipe();
-        $recipe2->setName('ghi')
-                ->setMode('jkl');
-        $recipe3 = new Recipe();
-        $recipe3->setName('mno')
-                ->setMode('pqr');
-        $recipe4 = new Recipe();
-        $recipe4->setName('stu')
-                ->setMode('vwx');
-        
-        $expectedParsedRecipes = [
-            'abc|def' => $recipe1,
-            'ghi|jkl' => $recipe2,
-            'mno|pqr' => $recipe3,
-            'stu|vwx' => $recipe4,
-        ];
+        /* @var DumpRecipe&MockObject $dumpRecipe1 */
+        $dumpRecipe1 = $this->createMock(DumpRecipe::class);
+        /* @var DumpRecipe&MockObject $dumpRecipe2 */
+        $dumpRecipe2 = $this->createMock(DumpRecipe::class);
+        /* @var DumpRecipe&MockObject $dumpRecipe3 */
+        $dumpRecipe3 = $this->createMock(DumpRecipe::class);
+        /* @var DumpRecipe&MockObject $dumpRecipe4 */
+        $dumpRecipe4 = $this->createMock(DumpRecipe::class);
 
-        /* @var RecipeParser|MockObject $parser */
+        /* @var ExportRecipe&MockObject $normalRecipe1 */
+        $normalRecipe1 = $this->createMock(ExportRecipe::class);
+        /* @var ExportRecipe&MockObject $normalRecipe2 */
+        $normalRecipe2 = $this->createMock(ExportRecipe::class);
+        /* @var ExportRecipe&MockObject $expensiveRecipe1 */
+        $expensiveRecipe1 = $this->createMock(ExportRecipe::class);
+        /* @var ExportRecipe&MockObject $expensiveRecipe2 */
+        $expensiveRecipe2 = $this->createMock(ExportRecipe::class);
+
+        $normalRecipeHash1 = 'abc';
+        $normalRecipeHash2 = 'def';
+        $expensiveRecipeHash1 = 'ghi';
+        $expensiveRecipeHash2 = 'abc';
+
+        $expectedRecipes = [$normalRecipe1, $normalRecipe2, $expensiveRecipe1];
+
+        $dump = new Dump();
+        $dump->getControlStage()->setNormalRecipes([$dumpRecipe1, $dumpRecipe2])
+                                ->setExpensiveRecipes([$dumpRecipe3, $dumpRecipe4]);
+
+        /* @var Combination&MockObject $combination */
+        $combination = $this->createMock(Combination::class);
+        $combination->expects($this->once())
+                    ->method('setRecipes')
+                    ->with($this->identicalTo($expectedRecipes));
+
+        $this->hashCalculator->expects($this->exactly(4))
+                             ->method('hashRecipe')
+                             ->withConsecutive(
+                                 [$this->identicalTo($normalRecipe1)],
+                                 [$this->identicalTo($normalRecipe2)],
+                                 [$this->identicalTo($expensiveRecipe1)],
+                                 [$this->identicalTo($expensiveRecipe2)]
+                             )
+                             ->willReturnOnConsecutiveCalls(
+                                 $normalRecipeHash1,
+                                 $normalRecipeHash2,
+                                 $expensiveRecipeHash1,
+                                 $expensiveRecipeHash2
+                             );
+
+        /* @var RecipeParser&MockObject $parser */
         $parser = $this->getMockBuilder(RecipeParser::class)
-                       ->setMethods(['parseRecipe'])
-                       ->disableOriginalConstructor()
+                       ->onlyMethods(['mapRecipe'])
+                       ->setConstructorArgs([$this->hashCalculator, $this->iconParser, $this->translationParser])
                        ->getMock();
         $parser->expects($this->exactly(4))
-               ->method('parseRecipe')
+               ->method('mapRecipe')
                ->withConsecutive(
-                   [$this->equalTo(new DataContainer(['abc' => 'def'])), 'normal'],
-                   [$this->equalTo(new DataContainer(['ghi' => 'jkl'])), 'normal'],
-                   [$this->equalTo(new DataContainer(['mno' => 'pqr'])), 'expensive'],
-                   [$this->equalTo(new DataContainer(['stu' => 'vwx'])), 'expensive']
+                   [$this->identicalTo($dumpRecipe1)],
+                   [$this->identicalTo($dumpRecipe2)],
+                   [$this->identicalTo($dumpRecipe3)],
+                   [$this->identicalTo($dumpRecipe4)]
                )
                ->willReturnOnConsecutiveCalls(
-                   $recipe1,
-                   $recipe2,
-                   $recipe3,
-                   $recipe4
+                   $normalRecipe1,
+                   $normalRecipe2,
+                   $expensiveRecipe1,
+                   $expensiveRecipe2
                );
 
-        $parser->parse($dumpData);
-        $this->assertEquals($expectedParsedRecipes, $this->extractProperty($parser, 'parsedRecipes'));
+        $parser->parse($dump, $combination);
     }
 
     /**
-     * Tests the parseRecipe method.
+     * Tests the mapRecipe method.
      * @throws ReflectionException
-     * @covers ::parseRecipe
+     * @covers ::mapRecipe
      */
-    public function testParseRecipe(): void
+    public function testMapRecipe(): void
     {
-        $mode = 'abc';
-        $recipeData = new DataContainer([
-            'name' => 'Def',
-            'craftingTime' => 13.37,
-            'craftingCategory' => 'ghi',
-            'ingredients' => ['jkl' => 'mno'],
-            'products' => ['pqr' => 'stu'],
-        ]); 
-        $ingredients = [new Ingredient(), new Ingredient()];
-        $products = [new Product(), new Product()];
-        $expectedResult = new Recipe();
-        $expectedResult->setMode('abc')
-                       ->setName('def')
+        $iconId = 'abc';
+        $mode = 'def';
+
+        /* @var DumpIngredient&MockObject $dumpIngredient1 */
+        $dumpIngredient1 = $this->createMock(DumpIngredient::class);
+        /* @var DumpIngredient&MockObject $dumpIngredient2 */
+        $dumpIngredient2 = $this->createMock(DumpIngredient::class);
+        /* @var DumpProduct&MockObject $dumpProduct1 */
+        $dumpProduct1 = $this->createMock(DumpProduct::class);
+        /* @var DumpProduct&MockObject $dumpProduct2 */
+        $dumpProduct2 = $this->createMock(DumpProduct::class);
+        /* @var ExportIngredient&MockObject $exportIngredient1 */
+        $exportIngredient1 = $this->createMock(ExportIngredient::class);
+        /* @var ExportIngredient&MockObject $exportIngredient2 */
+        $exportIngredient2 = $this->createMock(ExportIngredient::class);
+        /* @var ExportProduct&MockObject $exportProduct1 */
+        $exportProduct1 = $this->createMock(ExportProduct::class);
+        /* @var ExportProduct&MockObject $exportProduct2 */
+        $exportProduct2 = $this->createMock(ExportProduct::class);
+
+        $dumpRecipe = new DumpRecipe();
+        $dumpRecipe->setName('Ghi')
+                   ->setCraftingTime(13.37)
+                   ->setCraftingCategory('jkl')
+                   ->setIngredients([$dumpIngredient1, $dumpIngredient2])
+                   ->setProducts([$dumpProduct1, $dumpProduct2]);
+
+        $expectedRecipe = new ExportRecipe();
+        $expectedRecipe->setName('ghi')
+                       ->setMode('def')
                        ->setCraftingTime(13.37)
-                       ->setCraftingCategory('ghi')
-                       ->setIngredients($ingredients)
-                       ->setProducts($products);
-        
-        /* @var RecipeParser|MockObject $parser */
+                       ->setCraftingCategory('jkl')
+                       ->setIngredients([$exportIngredient1])
+                       ->setProducts([$exportProduct1]);
+
+        $expectedResult = new ExportRecipe();
+        $expectedResult->setName('ghi')
+                       ->setMode('def')
+                       ->setCraftingTime(13.37)
+                       ->setCraftingCategory('jkl')
+                       ->setIngredients([$exportIngredient1])
+                       ->setProducts([$exportProduct1])
+                       ->setIconId($iconId);
+
+        $this->translationParser->expects($this->once())
+                                ->method('translateNames')
+                                ->with(
+                                    $this->isInstanceOf(LocalisedString::class),
+                                    $this->identicalTo($dumpRecipe->getLocalisedName()),
+                                    $this->isNull()
+                                );
+        $this->translationParser->expects($this->once())
+                                ->method('translateDescriptions')
+                                ->with(
+                                    $this->isInstanceOf(LocalisedString::class),
+                                    $this->identicalTo($dumpRecipe->getLocalisedDescription()),
+                                    $this->isNull()
+                                );
+
+        /* @var RecipeParser&MockObject $parser */
         $parser = $this->getMockBuilder(RecipeParser::class)
-                       ->setMethods(['parseIngredients', 'parseProducts', 'addTranslations'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
-        $parser->expects($this->once())
-               ->method('parseIngredients')
-               ->with($recipeData)
-               ->willReturn($ingredients); 
-        $parser->expects($this->once())
-               ->method('parseProducts')
-               ->with($recipeData)
-               ->willReturn($products); 
-        $parser->expects($this->once())
-               ->method('addTranslations')
-               ->with($this->equalTo($expectedResult), $recipeData);
-
-        $result = $this->invokeMethod($parser, 'parseRecipe', $recipeData, $mode);
-        $this->assertEquals($expectedResult, $result);
-    }
-    
-    /**
-     * Tests the parseIngredients method.
-     * @throws ReflectionException
-     * @covers ::parseIngredients
-     */
-    public function testParseIngredients(): void
-    {
-        $recipeData = new DataContainer([
-            'ingredients' => [
-                ['abc' => 'def'],
-                ['ghi' => 'jkl'],
-                ['mno' => 'pqr'],
-            ]
-        ]);
-        
-        /* @var Ingredient|MockObject $ingredient1 */
-        $ingredient1 = $this->getMockBuilder(Ingredient::class)
-                            ->setMethods(['setOrder'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $ingredient1->expects($this->once())
-                    ->method('setOrder')
-                    ->with(1);
-        
-        /* @var Ingredient|MockObject $ingredient2 */
-        $ingredient2 = $this->getMockBuilder(Ingredient::class)
-                            ->setMethods(['setOrder'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $ingredient2->expects($this->once())
-                    ->method('setOrder')
-                    ->with(2);
-
-        $expectedResult = [$ingredient1, $ingredient2];
-
-        /* @var RecipeParser|MockObject $parser */
-        $parser = $this->getMockBuilder(RecipeParser::class)
-                       ->setMethods(['parseIngredient'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
-        $parser->expects($this->exactly(3))
-               ->method('parseIngredient')
-               ->withConsecutive(
-                   [$this->equalTo(new DataContainer(['abc' => 'def']))],
-                   [$this->equalTo(new DataContainer(['ghi' => 'jkl']))],
-                   [$this->equalTo(new DataContainer(['mno' => 'pqr']))]
-               )
-               ->willReturnOnConsecutiveCalls(
-                   $ingredient1,
-                   null,
-                   $ingredient2
-               );
-
-        $result = $this->invokeMethod($parser, 'parseIngredients', $recipeData);
-        $this->assertEquals($expectedResult, $result);
-    }
-    
-    /**
-     * Provides the data for the parseIngredient test.
-     * @return array
-     */
-    public function provideParseIngredient(): array
-    {
-        $data1 = new DataContainer([
-            'type' => 'abc',
-            'name' => 'Def',
-            'amount' => 13.37,
-        ]);
-        $ingredient1 = new Ingredient();
-        $ingredient1->setType('abc')
-                    ->setName('def')
-                    ->setAmount(13.37);
-
-        $data2 = new DataContainer([
-            'type' => 'abc',
-            'name' => 'Def',
-            'amount' => 0.,
-        ]);
-
-        return [
-            [$data1, $ingredient1],
-            [$data2, null]
-        ];
-    }
-
-    /**
-     * Tests the parseIngredient method.
-     * @param DataContainer $ingredientData
-     * @param Ingredient|null $expectedResult
-     * @throws ReflectionException
-     * @covers ::parseIngredient
-     * @dataProvider provideParseIngredient
-     */
-    public function testParseIngredient(DataContainer $ingredientData, ?Ingredient $expectedResult): void
-    {
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $recipeRegistry */
-        $recipeRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
-        $result = $this->invokeMethod($parser, 'parseIngredient', $ingredientData);
-        $this->assertEquals($expectedResult, $result);
-    }
-
-    /**
-     * Tests the parseProducts method.
-     * @throws ReflectionException
-     * @covers ::parseProducts
-     */
-    public function testParseProducts(): void
-    {
-        $recipeData = new DataContainer([
-            'products' => [
-                ['abc' => 'def'],
-                ['ghi' => 'jkl'],
-                ['mno' => 'pqr'],
-            ]
-        ]);
-        
-        /* @var Product|MockObject $product1 */
-        $product1 = $this->getMockBuilder(Product::class)
-                         ->setMethods(['setOrder'])
-                         ->disableOriginalConstructor()
-                         ->getMock();
-        $product1->expects($this->once())
-                 ->method('setOrder')
-                 ->with(1);
-        
-        /* @var Product|MockObject $product2 */
-        $product2 = $this->getMockBuilder(Product::class)
-                         ->setMethods(['setOrder'])
-                         ->disableOriginalConstructor()
-                         ->getMock();
-        $product2->expects($this->once())
-                 ->method('setOrder')
-                 ->with(2);
-
-        $expectedResult = [$product1, $product2];
-
-        /* @var RecipeParser|MockObject $parser */
-        $parser = $this->getMockBuilder(RecipeParser::class)
-                       ->setMethods(['parseProduct'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
-        $parser->expects($this->exactly(3))
-               ->method('parseProduct')
-               ->withConsecutive(
-                   [$this->equalTo(new DataContainer(['abc' => 'def']))],
-                   [$this->equalTo(new DataContainer(['ghi' => 'jkl']))],
-                   [$this->equalTo(new DataContainer(['mno' => 'pqr']))]
-               )
-               ->willReturnOnConsecutiveCalls(
-                   $product1,
-                   null,
-                   $product2
-               );
-
-        $result = $this->invokeMethod($parser, 'parseProducts', $recipeData);
-        $this->assertEquals($expectedResult, $result);
-    }
-    
-    
-    /**
-     * Provides the data for the parseProduct test.
-     * @return array
-     */
-    public function provideParseProduct(): array
-    {
-        $data1 = new DataContainer([
-            'type' => 'abc',
-            'name' => 'Def',
-            'amountMin' => 2.1,
-            'amountMax' => 2.7,
-            'probability' => 0.42,
-        ]);
-        $product1 = new Product();
-        $product1->setType('abc')
-                 ->setName('def')
-                 ->setAmountMin(2.1)
-                 ->setAmountMax(2.7)
-                 ->setProbability(0.42);
-
-        $data2 = new DataContainer([
-            'type' => 'abc',
-            'name' => 'Def',
-            'amountMin' => 2.1,
-            'amountMax' => 2.7,
-            'probability' => 0.,
-        ]);
-
-        return [
-            [$data1, $product1],
-            [$data2, null]
-        ];
-    }
-
-    /**
-     * Tests the parseProduct method.
-     * @param DataContainer $productData
-     * @param Product|null $expectedResult
-     * @throws ReflectionException
-     * @covers ::parseProduct
-     * @dataProvider provideParseProduct
-     */
-    public function testParseProduct(DataContainer $productData, ?Product $expectedResult): void
-    {
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $recipeRegistry */
-        $recipeRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
-        $result = $this->invokeMethod($parser, 'parseProduct', $productData);
-        $this->assertEquals($expectedResult, $result);
-    }
-
-    /**
-     * Tests the addTranslations method.
-     * @throws ReflectionException
-     * @covers ::addTranslations
-     */
-    public function testAddTranslations(): void
-    {
-        $labels = (new LocalisedString())->setTranslation('en', 'abc');
-        $descriptions = (new LocalisedString())->setTranslation('en', 'def');
-
-        $recipeData = new DataContainer([
-            'localised' => [
-                'name' => ['ghi'],
-                'description' => ['jkl'],
-            ]
-        ]);
-
-        /* @var Recipe|MockObject $recipe */
-        $recipe = $this->getMockBuilder(Recipe::class)
-                       ->setMethods(['getLabels', 'getDescriptions'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
-        $recipe->expects($this->once())
-               ->method('getLabels')
-               ->willReturn($labels);
-        $recipe->expects($this->once())
-               ->method('getDescriptions')
-               ->willReturn($descriptions);
-
-        /* @var Translator|MockObject $translator */
-        $translator = $this->getMockBuilder(Translator::class)
-                           ->setMethods(['addTranslationsToEntity'])
-                           ->disableOriginalConstructor()
-                           ->getMock();
-        $translator->expects($this->exactly(2))
-                   ->method('addTranslationsToEntity')
-                   ->withConsecutive(
-                       [$labels, 'name', ['ghi'], null],
-                       [$descriptions, 'description', ['jkl'], null]
-                   );
-
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $recipeRegistry */
-        $recipeRegistry = $this->createMock(EntityRegistry::class);
-
-        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
-        $this->invokeMethod($parser, 'addTranslations', $recipe, $recipeData);
-    }
-
-    /**
-     * Tests the check method.
-     * @throws ReflectionException
-     * @covers ::check
-     */
-    public function testCheck(): void
-    {
-        $recipe1 = (new Recipe())->setName('abc');
-        $recipe2 = (new Recipe())->setName('def');
-        $parsedRecipes = [$recipe1, $recipe2];
-
-        /* @var RecipeParser|MockObject $parser */
-        $parser = $this->getMockBuilder(RecipeParser::class)
-                       ->setMethods(['checkIcon', 'checkTranslation'])
-                       ->disableOriginalConstructor()
+                       ->onlyMethods([
+                           'mapIngredient',
+                           'isIngredientValid',
+                           'mapProduct',
+                           'isProductValid',
+                           'mapIconId',
+                       ])
+                       ->setConstructorArgs([$this->hashCalculator, $this->iconParser, $this->translationParser])
                        ->getMock();
         $parser->expects($this->exactly(2))
-               ->method('checkIcon')
+               ->method('mapIngredient')
                ->withConsecutive(
-                   [$recipe1],
-                   [$recipe2]
+                   [$this->identicalTo($dumpIngredient1)],
+                   [$this->identicalTo($dumpIngredient2)]
+               )
+               ->willReturnOnConsecutiveCalls(
+                   $exportIngredient1,
+                   $exportIngredient2
                );
         $parser->expects($this->exactly(2))
-               ->method('checkTranslation')
+               ->method('isIngredientValid')
                ->withConsecutive(
-                   [$recipe1],
-                   [$recipe2]
+                   [$this->identicalTo($exportIngredient1)],
+                   [$this->identicalTo($exportIngredient2)]
+               )
+               ->willReturnOnConsecutiveCalls(
+                   true,
+                   false
                );
+        $parser->expects($this->exactly(2))
+               ->method('mapProduct')
+               ->withConsecutive(
+                   [$this->identicalTo($dumpProduct1)],
+                   [$this->identicalTo($dumpProduct2)]
+               )
+               ->willReturnOnConsecutiveCalls(
+                   $exportProduct1,
+                   $exportProduct2
+               );
+        $parser->expects($this->exactly(2))
+               ->method('isProductValid')
+               ->withConsecutive(
+                   [$this->identicalTo($exportProduct1)],
+                   [$this->identicalTo($exportProduct2)]
+               )
+               ->willReturnOnConsecutiveCalls(
+                   true,
+                   false
+               );
+        $parser->expects($this->once())
+               ->method('mapIconId')
+               ->with($this->equalTo($expectedRecipe))
+               ->willReturn($iconId);
 
-        $this->injectProperty($parser, 'parsedRecipes', $parsedRecipes);
-        $parser->check();
+        $result = $this->invokeMethod($parser, 'mapRecipe', $dumpRecipe, $mode);
+
+        $this->assertEquals($expectedResult, $result);
     }
 
     /**
-     * Provides the data for the isUniqueRecipe test.
-     * @return array
+     * Tests the mapIngredient method.
+     * @throws ReflectionException
+     * @covers ::mapIngredient
      */
-    public function provideIsUniqueRecipe(): array
+    public function testMapIngredient(): void
     {
-        $recipe1 = new Recipe();
-        $recipe1->setName('abc')
-                ->setMode(RecipeMode::NORMAL);
+        $dumpIngredient = new DumpIngredient();
+        $dumpIngredient->setType('Abc')
+                       ->setName('Def')
+                       ->setAmount(13.37);
 
-        $recipe2 = new Recipe();
-        $recipe2->setName('abc')
-                ->setMode(RecipeMode::EXPENSIVE);
+        $expectedResult = new ExportIngredient();
+        $expectedResult->setType('abc')
+                       ->setName('def')
+                       ->setAmount(13.37);
+
+        $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
+        $result = $this->invokeMethod($parser, 'mapIngredient', $dumpIngredient);
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * Provides the data for the isIngredientValid test.
+     * @return array<mixed>
+     */
+    public function provideIsIngredientValid(): array
+    {
+        $ingredient1 = new ExportIngredient();
+        $ingredient1->setAmount(42);
+
+        $ingredient2 = new ExportIngredient();
+        $ingredient2->setAmount(0);
 
         return [
-            [$recipe1, false, null, [], true],
-            [$recipe2, true, null, [], true],
-            [$recipe2, true, $recipe1, ['def', 'ghi'], true],
-            [$recipe2, true, $recipe1, ['def', 'def'], false],
+            [$ingredient1, true],
+            [$ingredient2, false],
         ];
     }
 
     /**
-     * Tests the isUniqueRecipe method.
-     * @param Recipe $recipe
-     * @param bool $expectFindRecipe
-     * @param Recipe|null $resultFindRecipe
-     * @param array $hashes
+     * Tests the isIngredientValid method.
+     * @param ExportIngredient $ingredient
      * @param bool $expectedResult
      * @throws ReflectionException
-     * @covers ::isUniqueRecipe
-     * @dataProvider provideIsUniqueRecipe
+     * @covers ::isIngredientValid
+     * @dataProvider provideIsIngredientValid
      */
-    public function testIsUniqueRecipe(
-        Recipe $recipe,
-        bool $expectFindRecipe,
-        ?Recipe $resultFindRecipe,
-        array $hashes,
-        bool $expectedResult
-    ): void {
-        /* @var RecipeParser|MockObject $parser */
-        $parser = $this->getMockBuilder(RecipeParser::class)
-                       ->setMethods(['findRecipeWithMode', 'calculateRecipeDataHash'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
-        $parser->expects($expectFindRecipe ? $this->once() : $this->never())
-               ->method('findRecipeWithMode')
-               ->with($recipe, RecipeMode::NORMAL)
-               ->willReturn($resultFindRecipe);
-        $parser->expects($this->exactly(count($hashes)))
-               ->method('calculateRecipeDataHash')
-               ->withConsecutive(
-                   [$recipe],
-                   [$resultFindRecipe]
-               )
-               ->willReturnOnConsecutiveCalls(...$hashes);
-
-
-        $result = $this->invokeMethod($parser, 'isUniqueRecipe', $recipe);
-        $this->assertSame($expectedResult, $result);
-    }
-
-    /**
-     * Provides the data for the findRecipeWithMode test.
-     * @return array
-     */
-    public function provideFindRecipeWithMode(): array
+    public function testIsIngredientValid(ExportIngredient $ingredient, bool $expectedResult): void
     {
-        $recipe1 = new Recipe();
-        $recipe1->setName('abc')
-                ->setMode('def');
+        $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
+        $result = $this->invokeMethod($parser, 'isIngredientValid', $ingredient);
 
-        $recipe2 = new Recipe();
-        $recipe2->setName('abc')
-                ->setMode('jkl');
-
-        $recipe3 = new Recipe();
-        $recipe3->setName('mno')
-                ->setMode('def');
-
-        $parsedRecipes = [
-            $recipe1->getIdentifier() => $recipe1,
-            $recipe2->getIdentifier() => $recipe2,
-            $recipe3->getIdentifier() => $recipe3,
-        ];
-
-        return [
-            [$parsedRecipes, $recipe1, 'jkl', $recipe2],
-            [$parsedRecipes, $recipe3, 'jkl', null],
-        ];
-    }
-
-    /**
-     * Tests the findRecipeWithMode method.
-     * @param array $parsedRecipes
-     * @param Recipe $recipe
-     * @param string $mode
-     * @param Recipe|null $expectedResult
-     * @throws ReflectionException
-     * @covers ::findRecipeWithMode
-     * @dataProvider provideFindRecipeWithMode
-     */
-    public function testFindRecipeWithMode(
-        array $parsedRecipes,
-        Recipe $recipe,
-        string $mode,
-        ?Recipe $expectedResult
-    ): void {
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $recipeRegistry */
-        $recipeRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
-        $this->injectProperty($parser, 'parsedRecipes', $parsedRecipes);
-
-        $result = $this->invokeMethod($parser, 'findRecipeWithMode', $recipe, $mode);
         $this->assertSame($expectedResult, $result);
     }
 
     /**
-     * Tests the calculateRecipeDataHash method.
+     * Tests the mapProduct method.
      * @throws ReflectionException
-     * @covers ::calculateRecipeDataHash
+     * @covers ::mapProduct
      */
-    public function testCalculateRecipeDataHash(): void
+    public function testMapProduct(): void
     {
-        $recipe = new Recipe();
-        $recipe->setName('abc')
-               ->setMode('def')
-               ->addIngredient(new Ingredient())
-               ->setCraftingTime(13.37);
-
-        $clonedRecipe = clone($recipe);
-        $expectedResult = 'f8732bee53e0642f';
-
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $recipeRegistry */
-        $recipeRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
-
-        $result = $this->invokeMethod($parser, 'calculateRecipeDataHash', $recipe);
-        $this->assertSame($expectedResult, $result);
-        $this->assertEquals($clonedRecipe, $recipe);
+        $dumpProduct = new DumpProduct();
+        $dumpProduct->setType('Abc')
+                    ->setName('Def')
+                    ->setAmountMin(12.34)
+                    ->setAmountMax(23.45)
+                    ->setProbability(34.56);
+        
+        $expectedResult = new ExportProduct();
+        $expectedResult->setType('abc')
+                      ->setName('def')
+                      ->setAmountMin(12.34)
+                      ->setAmountMax(23.45)
+                      ->setProbability(34.56);
+        
+        $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
+        $result = $this->invokeMethod($parser, 'mapProduct', $dumpProduct);
+        
+        $this->assertEquals($expectedResult, $result);
     }
     
     /**
-     * Provides the data for the checkIcon test.
-     * @return array
+     * Provides the data for the isProductValid test.
+     * @return array<mixed>
      */
-    public function provideCheckIcon(): array
+    public function provideIsProductValid(): array
     {
+        $product1 = new ExportProduct();
+        $product1->setAmountMin(21)
+                 ->setAmountMax(42)
+                 ->setProbability(1.);
+
+        $product2 = new ExportProduct();
+        $product2->setAmountMin(0)
+                 ->setAmountMax(0)
+                 ->setProbability(1.);
+
+        $product3 = new ExportProduct();
+        $product3->setAmountMin(21)
+                 ->setAmountMax(42)
+                 ->setProbability(0.);
+
+
         return [
-            [true, false, 'abc', null, 'abc'],
-            [true, true, null, 'abc', 'abc'],
-            [false, false, null, null, null],
+            [$product1, true],
+            [$product2, false],
+            [$product3, false],
         ];
     }
 
     /**
-     * Tests the checkIcon method.
-     * @param bool $withProducts
-     * @param bool $expectSecondHash
-     * @param null|string $resultHash1
-     * @param null|string $resultHash2
-     * @param null|string $expectedHash
+     * Tests the isProductValid method.
+     * @param ExportProduct $product
+     * @param bool $expectedResult
      * @throws ReflectionException
-     * @covers ::checkIcon
-     * @dataProvider provideCheckIcon
+     * @covers ::isProductValid
+     * @dataProvider provideIsProductValid
      */
-    public function testCheckIcon(
-        bool $withProducts,
-        bool $expectSecondHash,
-        ?string $resultHash1,
-        ?string $resultHash2,
-        ?string $expectedHash
-    ): void {
-        $name = 'abc';
-        $productType = 'def';
-        $productName = 'ghi';
-
-        $products = [];
-        if ($withProducts) {
-            $product = new Product();
-            $product->setType($productType)
-                    ->setName($productName);
-            $products = [
-                $product,
-                new Product(),
-            ];
-        }
-
-        /* @var Recipe|MockObject $recipe */
-        $recipe = $this->getMockBuilder(Recipe::class)
-                       ->setMethods(['getName', 'getProducts', 'setIconHash'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
-        $recipe->expects($this->once())
-               ->method('getName')
-               ->willReturn($name);
-        $recipe->expects($this->once())
-               ->method('getProducts')
-               ->willReturn($products);
-        $recipe->expects($expectedHash === null ? $this->never() : $this->once())
-               ->method('setIconHash')
-               ->with($expectedHash);
-
-        /* @var IconParser|MockObject $iconParser */
-        $iconParser = $this->getMockBuilder(IconParser::class)
-                           ->setMethods(['getIconHashForEntity'])
-                           ->disableOriginalConstructor()
-                           ->getMock();
-        $iconParser->expects($this->exactly($expectSecondHash ? 2 : 1))
-                   ->method('getIconHashForEntity')
-                   ->withConsecutive(
-                       ['recipe', $name],
-                       [$productType, $productName]
-                   )
-                   ->willReturnOnConsecutiveCalls(
-                       $resultHash1,
-                       $resultHash2
-                   );
-
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var EntityRegistry $recipeRegistry */
-        $recipeRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
-        $this->invokeMethod($parser, 'checkIcon', $recipe);
-    }
-
-    /**
-     * Tests the checkTranslation method.
-     * @throws ReflectionException
-     * @covers ::checkTranslation
-     */
-    public function testCheckTranslation(): void
+    public function testIsProductValid(ExportProduct $product, bool $expectedResult): void
     {
-        $recipeName = 'foo';
+        $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
+        $result = $this->invokeMethod($parser, 'isProductValid', $product);
 
-        /* @var Item|MockObject $item1 */
-        $item1 = $this->getMockBuilder(Item::class)
-                      ->setMethods(['setProvidesRecipeLocalisation'])
-                      ->getMock();
-        $item1->expects($this->never())
-              ->method('setProvidesRecipeLocalisation');
-        $item1->getLabels()->setTranslation('en', 'ghi');
+        $this->assertSame($expectedResult, $result);
+    }
+    
+    /**
+     * Tests the mapIconId method.
+     * @throws ReflectionException
+     * @covers ::mapIconId
+     */
+    public function testMapIconId(): void
+    {
+        $iconId = 'abc';
+        $recipeName = 'def';
 
-        /* @var Item|MockObject $item2 */
-        $item2 = $this->getMockBuilder(Item::class)
-                      ->setMethods(['setProvidesRecipeLocalisation'])
-                      ->getMock();
-        $item2->expects($this->once())
-              ->method('setProvidesRecipeLocalisation')
-              ->with(true);  
-        $item2->getLabels()->setTranslation('en', 'abc');
-        $item2->getDescriptions()->setTranslation('en', 'def');
-
-        $recipe = new Recipe();
+        $recipe = new ExportRecipe();
         $recipe->setName($recipeName);
-        $recipe->getLabels()->setTranslation('en', 'abc');
-        $recipe->getDescriptions()->setTranslation('en', 'def');
 
-        $expectedRecipe = new Recipe();
-        $expectedRecipe->setName($recipeName);
+        $this->iconParser->expects($this->once())
+                         ->method('getIconId')
+                         ->with($this->identicalTo(EntityType::RECIPE), $this->identicalTo($recipeName))
+                         ->willReturn($iconId);
 
-        /* @var ItemParser|MockObject $itemParser */
-        $itemParser = $this->getMockBuilder(ItemParser::class)
-                           ->setMethods(['getItemsWithName'])
-                           ->disableOriginalConstructor()
-                           ->getMock();
-        $itemParser->expects($this->once())
-                   ->method('getItemsWithName')
-                   ->with($recipeName)
-                   ->willReturn([$item1, $item2]);
+        $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
+        $result = $this->invokeMethod($parser, 'mapIconId', $recipe);
 
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var EntityRegistry $recipeRegistry */
-        $recipeRegistry = $this->createMock(EntityRegistry::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
-
-        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
-
-        $this->invokeMethod($parser, 'checkTranslation', $recipe);
+        $this->assertSame($iconId, $result);
     }
-    
+
     /**
-     * Tests the persist method.
+     * Tests the mapIconId method.
      * @throws ReflectionException
-     * @covers ::persist
+     * @covers ::mapIconId
      */
-    public function testPersist(): void
+    public function testMapIconIdWithFirstProductId(): void
     {
-        $recipe1 = (new Recipe())->setName('abc');
-        $recipe2 = (new Recipe())->setName('def');
-        $parsedRecipes = [$recipe1, $recipe2];
-        $recipeHash1 = 'ghi';
-        $recipeHash2 = 'jkl';
-        $expectedRecipeHashes = [$recipeHash1, $recipeHash2];
+        $iconId = 'abc';
+        $recipeName = 'def';
 
-        /* @var EntityRegistry|MockObject $recipeRegistry */
-        $recipeRegistry = $this->getMockBuilder(EntityRegistry::class)
-                             ->setMethods(['set'])
-                             ->disableOriginalConstructor()
-                             ->getMock();
-        $recipeRegistry->expects($this->exactly(2))
-                     ->method('set')
-                     ->withConsecutive(
-                         [$recipe1],
-                         [$recipe2]
-                     )
-                     ->willReturnOnConsecutiveCalls(
-                         $recipeHash1,
-                         $recipeHash2
-                     );
+        $product = new ExportProduct();
+        $product->setType('ghi')
+                ->setName('jkl');
 
-        /* @var Combination|MockObject $combination */
-        $combination = $this->getMockBuilder(Combination::class)
-                            ->setMethods(['setRecipeHashes'])
-                            ->disableOriginalConstructor()
-                            ->getMock();
-        $combination->expects($this->once())
-                    ->method('setRecipeHashes')
-                    ->with($expectedRecipeHashes);
+        $recipe = new ExportRecipe();
+        $recipe->setName($recipeName)
+               ->setProducts([$product]);
 
-        /* @var IconParser $iconParser */
-        $iconParser = $this->createMock(IconParser::class);
-        /* @var ItemParser $itemParser */
-        $itemParser = $this->createMock(ItemParser::class);
-        /* @var Translator $translator */
-        $translator = $this->createMock(Translator::class);
+        $this->iconParser->expects($this->exactly(2))
+                         ->method('getIconId')
+                         ->withConsecutive(
+                             [$this->identicalTo(EntityType::RECIPE), $this->identicalTo($recipeName)],
+                             [$this->identicalTo('ghi'), $this->identicalTo('jkl')]
+                         )
+                         ->willReturnOnConsecutiveCalls(
+                             '',
+                             $iconId
+                         );
 
-        $parser = new RecipeParser($iconParser, $itemParser, $recipeRegistry, $translator);
-        $this->injectProperty($parser, 'parsedRecipes', $parsedRecipes);
+        $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
+        $result = $this->invokeMethod($parser, 'mapIconId', $recipe);
 
-        $parser->persist($combination);
+        $this->assertSame($iconId, $result);
+    }
+
+    /**
+     * Tests the validate method.
+     * @covers ::validate
+     */
+    public function testValidate(): void
+    {
+        /* @var Combination&MockObject $combination */
+        $combination = $this->createMock(Combination::class);
+
+        $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
+        $parser->validate($combination);
+
+        $this->addToAssertionCount(1);
     }
 }

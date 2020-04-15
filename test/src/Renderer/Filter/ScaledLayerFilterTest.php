@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Renderer\Filter;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Renderer\Filter\ScaledLayerFilter;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
+use FactorioItemBrowser\ExportData\Entity\Icon\Offset;
 use Imagine\Image\Box;
-use Imagine\Image\BoxInterface;
 use Imagine\Image\ImageInterface;
 use Imagine\Image\ImagineInterface;
 use Imagine\Image\Palette\Color\ColorInterface;
 use Imagine\Image\Palette\PaletteInterface;
-use Imagine\Image\PointInterface;
+use Imagine\Image\Point;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -30,18 +30,33 @@ class ScaledLayerFilterTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked layer.
+     * @var Layer&MockObject
+     */
+    protected $layer;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->layer = $this->createMock(Layer::class);
+    }
+
+    /**
      * @throws ReflectionException
      * Tests the constructing.
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        $layer = (new Layer())->setScale(13.37);
         $size = 42;
 
-        $filter = new ScaledLayerFilter($layer, $size);
+        $filter = new ScaledLayerFilter($this->layer, $size);
 
-        $this->assertSame($layer, $this->extractProperty($filter, 'layer'));
+        $this->assertSame($this->layer, $this->extractProperty($filter, 'layer'));
         $this->assertSame($size, $this->extractProperty($filter, 'size'));
     }
 
@@ -51,18 +66,18 @@ class ScaledLayerFilterTest extends TestCase
      */
     public function testApply(): void
     {
-        /* @var ImageInterface $image1 */
+        /* @var ImageInterface&MockObject $image1 */
         $image1 = $this->createMock(ImageInterface::class);
-        /* @var ImageInterface $image2 */
+        /* @var ImageInterface&MockObject $image2 */
         $image2 = $this->createMock(ImageInterface::class);
-        /* @var ImageInterface $image3 */
+        /* @var ImageInterface&MockObject $image3 */
         $image3 = $this->createMock(ImageInterface::class);
-        /* @var ImageInterface $image4 */
+        /* @var ImageInterface&MockObject $image4 */
         $image4 = $this->createMock(ImageInterface::class);
 
-        /* @var ScaledLayerFilter|MockObject $filter */
+        /* @var ScaledLayerFilter&MockObject $filter */
         $filter = $this->getMockBuilder(ScaledLayerFilter::class)
-                       ->setMethods(['scaleLayer', 'offsetLayer', 'cropLayer'])
+                       ->onlyMethods(['scaleLayer', 'offsetLayer', 'adjustLayer'])
                        ->disableOriginalConstructor()
                        ->getMock();
         $filter->expects($this->once())
@@ -74,145 +89,12 @@ class ScaledLayerFilterTest extends TestCase
                ->with($image2)
                ->willReturn($image3);
         $filter->expects($this->once())
-               ->method('cropLayer')
+               ->method('adjustLayer')
                ->with($image3)
                ->willReturn($image4);
 
         $result = $filter->apply($image1);
         $this->assertSame($image4, $result);
-    }
-
-    /**
-     * Provides the data for the scaleLayer test.
-     * @return array
-     */
-    public function provideScaleLayer(): array
-    {
-        return [
-            [13.37, true],
-            [1., false],
-        ];
-    }
-
-    /**
-     * Tests the scaleLayer method.
-     * @param float $layerScale
-     * @param bool $expectResize
-     * @throws ReflectionException
-     * @covers ::scaleLayer
-     * @dataProvider provideScaleLayer
-     */
-    public function testScaleLayer(float $layerScale, bool $expectResize): void
-    {
-        $layer = (new Layer())->setScale($layerScale);
-
-        /* @var BoxInterface|MockObject $box */
-        $box = $this->getMockBuilder(BoxInterface::class)
-                    ->setMethods(['scale'])
-                    ->getMockForAbstractClass();
-        $box->expects($expectResize ? $this->once() : $this->never())
-            ->method('scale')
-            ->with($layerScale)
-            ->willReturnSelf();
-
-        /* @var ImageInterface|MockObject $layerImage */
-        $layerImage = $this->getMockBuilder(ImageInterface::class)
-                           ->setMethods(['getSize', 'resize'])
-                           ->getMockForAbstractClass();
-        $layerImage->expects($expectResize ? $this->once() : $this->never())
-                   ->method('getSize')
-                   ->willReturn($box);
-        $layerImage->expects($expectResize ? $this->once() : $this->never())
-                   ->method('resize')
-                   ->with($box)
-                   ->willReturnSelf();
-
-        $filter = new ScaledLayerFilter($layer, 42);
-        $result = $this->invokeMethod($filter, 'scaleLayer', $layerImage);
-        $this->assertSame($layerImage, $result);
-    }
-
-    /**
-     * Tests the offsetLayer method.
-     * @throws ReflectionException
-     * @covers ::offsetLayer
-     */
-    public function testOffsetLayer(): void
-    {
-        /* @var ImageInterface $layerImage */
-        $layerImage = $this->createMock(ImageInterface::class);
-        /* @var PointInterface $drawPoint */
-        $drawPoint = $this->createMock(PointInterface::class);
-
-        /* @var ImageInterface|MockObject $temporaryImage */
-        $temporaryImage = $this->getMockBuilder(ImageInterface::class)
-                               ->setMethods(['paste'])
-                               ->getMockForAbstractClass();
-        $temporaryImage->expects($this->once())
-                       ->method('paste')
-                       ->with($layerImage, $drawPoint)
-                       ->willReturnSelf();
-
-        /* @var ScaledLayerFilter|MockObject $filter */
-        $filter = $this->getMockBuilder(ScaledLayerFilter::class)
-                       ->setMethods(['createTemporaryImage', 'calculateDrawPoint'])
-                       ->disableOriginalConstructor()
-                       ->getMock();
-        $filter->expects($this->once())
-               ->method('createTemporaryImage')
-               ->with($layerImage)
-               ->willReturn($temporaryImage);
-        $filter->expects($this->once())
-               ->method('calculateDrawPoint')
-               ->with($temporaryImage, $layerImage)
-               ->willReturn($drawPoint);
-
-        $result = $this->invokeMethod($filter, 'offsetLayer', $layerImage);
-        $this->assertSame($temporaryImage, $result);
-    }
-
-    /**
-     * Tests the cropLayer method.
-     * @covers ::cropLayer
-     * @throws ReflectionException
-     */
-    public function testCropLayer(): void
-    {
-        $size = 12;
-        $width = 42;
-        $height = 24;
-        $imageSize = new Box($width, $height);
-
-        /* @var ImageInterface $croppedImage */
-        $croppedImage = $this->createMock(ImageInterface::class);
-
-        /* @var ImageInterface|MockObject $image */
-        $image = $this->getMockBuilder(ImageInterface::class)
-                      ->setMethods(['getSize', 'crop'])
-                      ->getMockForAbstractClass();
-        $image->expects($this->once())
-              ->method('getSize')
-              ->willReturn($imageSize);
-        $image->expects($this->once())
-              ->method('crop')
-              ->with(
-                  $this->callback(function (PointInterface $point): bool {
-                      $this->assertSame(15, $point->getX());
-                      $this->assertSame(6, $point->getY());
-                      return true;
-                  }),
-                  $this->callback(function (BoxInterface $box) use ($size): bool {
-                      $this->assertSame($size, $box->getWidth());
-                      $this->assertSame($size, $box->getHeight());
-                      return true;
-                  })
-              )
-              ->willReturn($croppedImage);
-
-        $filter = new ScaledLayerFilter(new Layer(), $size);
-
-        $result = $this->invokeMethod($filter, 'cropLayer', $image);
-        $this->assertSame($croppedImage, $result);
     }
 
     /**
@@ -223,146 +105,286 @@ class ScaledLayerFilterTest extends TestCase
     public function testCreateTemporaryImage(): void
     {
         $size = 42;
-        /* @var ColorInterface $color */
+        $expectedBox = new Box(42, 42);
+
+        /* @var ColorInterface&MockObject $color */
         $color = $this->createMock(ColorInterface::class);
-        /* @var ImageInterface $image */
-        $image = $this->createMock(ImageInterface::class);
+        /* @var ImageInterface&MockObject $newImage */
+        $newImage = $this->createMock(ImageInterface::class);
 
-        /* @var BoxInterface|MockObject $newSize */
-        $newSize = $this->getMockBuilder(BoxInterface::class)
-                        ->setMethods(['scale', 'increase'])
-                        ->getMockForAbstractClass();
-        $newSize->expects($this->once())
-                ->method('scale')
-                ->with(2)
-                ->willReturnSelf();
-        $newSize->expects($this->once())
-                ->method('increase')
-                ->with($size)
-                ->willReturnSelf();
-
-        /* @var PaletteInterface|MockObject $palette */
-        $palette = $this->getMockBuilder(PaletteInterface::class)
-                        ->setMethods(['color'])
-                        ->getMockForAbstractClass();
+        /* @var PaletteInterface&MockObject $palette */
+        $palette = $this->createMock(PaletteInterface::class);
         $palette->expects($this->once())
                 ->method('color')
-                ->with(0xFFFFFF, 0)
+                ->with($this->identicalTo(0xFFFFFF), 0)
                 ->willReturn($color);
 
-        /* @var ImageInterface|MockObject $layerImage */
-        $layerImage = $this->getMockBuilder(ImageInterface::class)
-                           ->setMethods(['getSize', 'palette'])
-                           ->getMockForAbstractClass();
-        $layerImage->expects($this->once())
-                   ->method('getSize')
-                   ->willReturn($newSize);
-        $layerImage->expects($this->once())
-                   ->method('palette')
-                   ->willReturn($palette);
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
+        $image->expects($this->once())
+              ->method('palette')
+              ->willReturn($palette);
 
-        /* @var ImagineInterface|MockObject $imagine */
-        $imagine = $this->getMockBuilder(ImagineInterface::class)
-                        ->setMethods(['create'])
-                        ->getMockForAbstractClass();
+        /* @var ImagineInterface&MockObject $imagine */
+        $imagine = $this->createMock(ImagineInterface::class);
         $imagine->expects($this->once())
                 ->method('create')
-                ->with($newSize, $color)
-                ->willReturn($image);
+                ->with($this->equalTo($expectedBox), $this->identicalTo($color))
+                ->willReturn($newImage);
 
-        /* @var ScaledLayerFilter|MockObject $filter */
+        /* @var ScaledLayerFilter&MockObject $filter */
         $filter = $this->getMockBuilder(ScaledLayerFilter::class)
-                       ->setMethods(['getImagine'])
-                       ->setConstructorArgs([new Layer(), $size])
+                       ->onlyMethods(['getImagine'])
+                       ->setConstructorArgs([$this->layer, 1337])
                        ->getMock();
         $filter->expects($this->once())
                ->method('getImagine')
                ->willReturn($imagine);
 
-        $result = $this->invokeMethod($filter, 'createTemporaryImage', $layerImage);
+        $result = $this->invokeMethod($filter, 'createTemporaryImage', $image, $size);
+
+        $this->assertSame($newImage, $result);
+    }
+
+    /**
+     * Tests the scaleLayer method.
+     * @throws ReflectionException
+     * @covers ::scaleLayer
+     */
+    public function testScaleLayer(): void
+    {
+        $scale = 4.2;
+        $size = new Box(21, 21);
+        $expectedBox = new Box(88, 88);
+
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
+        $image->expects($this->once())
+              ->method('getSize')
+              ->willReturn($size);
+        $image->expects($this->once())
+              ->method('resize')
+              ->with($this->equalTo($expectedBox))
+              ->willReturnSelf();
+
+        $this->layer->expects($this->once())
+                    ->method('getScale')
+                    ->willReturn($scale);
+
+        $filter = new ScaledLayerFilter($this->layer, 1337);
+        $result = $this->invokeMethod($filter, 'scaleLayer', $image);
+
         $this->assertSame($image, $result);
     }
 
     /**
-     * Tests the calculateDrawPoint method.
+     * Tests the offsetLayer method.
      * @throws ReflectionException
-     * @covers ::calculateDrawPoint
+     * @covers ::offsetLayer
      */
-    public function testCalculateDrawPoint(): void
+    public function testOffsetLayer(): void
     {
-        $layer = new Layer();
-        $layer->setOffsetX(34)
-              ->setOffsetY(67);
-        
-        /* @var ImageInterface|MockObject $temporaryImage */
-        $temporaryImage = $this->getMockBuilder(ImageInterface::class)
-                               ->setMethods(['getSize'])
-                               ->getMockForAbstractClass();
-        $temporaryImage->expects($this->once())
-                       ->method('getSize')
-                       ->willReturn(new Box(12, 45));
-        /* @var ImageInterface|MockObject $layerImage */
-        $layerImage = $this->getMockBuilder(ImageInterface::class)
-                           ->setMethods(['getSize'])
-                           ->getMockForAbstractClass();
-        $layerImage->expects($this->once())
-                   ->method('getSize')
-                   ->willReturn(new Box(23, 56));
+        $offsetX = -21;
+        $offsetY = 21;
 
-        /* @var ScaledLayerFilter|MockObject $filter */
+        $imageSize = new Box(42, 42);
+        $expectedPoint = new Point(21, 63);
+        $expectedSize = 126;
+
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
+        $image->expects($this->once())
+              ->method('getSize')
+              ->willReturn($imageSize);
+
+        /* @var ImageInterface&MockObject $offsetImage */
+        $offsetImage = $this->createMock(ImageInterface::class);
+        $offsetImage->expects($this->once())
+                    ->method('paste')
+                    ->with($this->identicalTo($image), $this->equalTo($expectedPoint))
+                    ->willReturnSelf();
+
+        /* @var Offset&MockObject $offset */
+        $offset = $this->createMock(Offset::class);
+        $offset->expects($this->any())
+               ->method('getX')
+               ->willReturn($offsetX);
+        $offset->expects($this->any())
+               ->method('getY')
+               ->willReturn($offsetY);
+
+        $this->layer->expects($this->once())
+                    ->method('getOffset')
+                    ->willReturn($offset);
+
+        /* @var ScaledLayerFilter&MockObject $filter */
         $filter = $this->getMockBuilder(ScaledLayerFilter::class)
-                       ->setMethods(['calculateDrawPosition'])
-                       ->setConstructorArgs([$layer, 1337])
+                       ->onlyMethods(['createTemporaryImage'])
+                       ->setConstructorArgs([$this->layer, 1337])
                        ->getMock();
-        $filter->expects($this->exactly(2))
-               ->method('calculateDrawPosition')
-               ->withConsecutive(
-                   [12, 23, 34],
-                   [45, 56, 67]
-               )
-               ->willReturnOnConsecutiveCalls(
-                   78,
-                   89
-               );
-        
-        /* @var PointInterface $result */
-        $result = $this->invokeMethod($filter, 'calculateDrawPoint', $temporaryImage, $layerImage);
-        $this->assertSame(78, $result->getX());
-        $this->assertSame(89, $result->getY());
+        $filter->expects($this->once())
+               ->method('createTemporaryImage')
+               ->with($this->identicalTo($image), $this->identicalTo($expectedSize))
+               ->willReturn($offsetImage);
+
+        $result = $this->invokeMethod($filter, 'offsetLayer', $image);
+
+        $this->assertSame($offsetImage, $result);
     }
 
     /**
-     * Provides the data for the calculateDrawPosition test.
-     * @return array
+     * Tests the offsetLayer method.
+     * @throws ReflectionException
+     * @covers ::offsetLayer
      */
-    public function provideCalculateDrawPosition(): array
+    public function testOffsetLayerWithoutOffset(): void
+    {
+        $offsetX = 0;
+        $offsetY = 0;
+
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
+
+        /* @var Offset&MockObject $offset */
+        $offset = $this->createMock(Offset::class);
+        $offset->expects($this->any())
+               ->method('getX')
+               ->willReturn($offsetX);
+        $offset->expects($this->any())
+               ->method('getY')
+               ->willReturn($offsetY);
+
+        $this->layer->expects($this->once())
+                    ->method('getOffset')
+                    ->willReturn($offset);
+
+        /* @var ScaledLayerFilter&MockObject $filter */
+        $filter = $this->getMockBuilder(ScaledLayerFilter::class)
+                       ->onlyMethods(['createTemporaryImage'])
+                       ->setConstructorArgs([$this->layer, 1337])
+                       ->getMock();
+        $filter->expects($this->never())
+               ->method('createTemporaryImage');
+
+        $result = $this->invokeMethod($filter, 'offsetLayer', $image);
+
+        $this->assertSame($image, $result);
+    }
+
+    /**
+     * Provides the data for the adjustLayer test.
+     * @return array<mixed>
+     */
+    public function provideAdjustLayer(): array
     {
         return [
-            [64, 20, 7, 29],
-            [64, 20, -100, 0],
-            [64, 20, 100, 44],
+            [42, 21, true, false],
+            [21, 42, false, true],
+            [42, 42, false, false],
         ];
     }
 
     /**
-     * Tests the calculateDrawPosition method.
-     * @param int $temporarySize
-     * @param int $layerSize
-     * @param int $offset
-     * @param int $expectedResult
+     * Tests the adjustLayer method.
+     * @param int $imageSize
+     * @param int $size
+     * @param bool $expectCrop
+     * @param bool $expectExtend
      * @throws ReflectionException
-     * @covers ::calculateDrawPosition
-     * @dataProvider provideCalculateDrawPosition
+     * @covers ::adjustLayer
+     * @dataProvider provideAdjustLayer
      */
-    public function testCalculateDrawPosition(
-        int $temporarySize,
-        int $layerSize,
-        int $offset,
-        int $expectedResult
-    ): void {
-        $filter = new ScaledLayerFilter(new Layer(), 1337);
+    public function testAdjustLayer(int $imageSize, int $size, bool $expectCrop, bool $expectExtend): void
+    {
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
+        $image->expects($this->once())
+              ->method('getSize')
+              ->willReturn(new Box($imageSize, $imageSize));
 
-        $result = $this->invokeMethod($filter, 'calculateDrawPosition', $temporarySize, $layerSize, $offset);
-        $this->assertSame($expectedResult, $result);
+        /* @var ScaledLayerFilter&MockObject $filter */
+        $filter = $this->getMockBuilder(ScaledLayerFilter::class)
+                       ->onlyMethods(['cropLayer', 'extendLayer'])
+                       ->setConstructorArgs([$this->layer, $size])
+                       ->getMock();
+        $filter->expects($expectCrop ? $this->once() : $this->never())
+               ->method('cropLayer')
+               ->with($this->identicalTo($image), $this->identicalTo($size))
+               ->willReturn($image);
+        $filter->expects($expectExtend ? $this->once() : $this->never())
+               ->method('extendLayer')
+               ->with($this->identicalTo($image), $this->identicalTo($size))
+               ->willReturn($image);
+
+        $result = $this->invokeMethod($filter, 'adjustLayer', $image);
+
+        $this->assertSame($image, $result);
+    }
+
+    /**
+     * Tests the cropLayer method.
+     * @throws ReflectionException
+     * @covers ::cropLayer
+     */
+    public function testCropLayer(): void
+    {
+        $size = 21;
+        $imageSize = new Box(42, 42);
+        $expectedPoint = new Point(10, 10);
+        $expectedBox = new Box(21, 21);
+
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
+        $image->expects($this->once())
+              ->method('getSize')
+              ->willReturn($imageSize);
+        $image->expects($this->once())
+              ->method('crop')
+              ->with($this->equalTo($expectedPoint), $this->equalTo($expectedBox))
+              ->willReturnSelf();
+
+        $filter = new ScaledLayerFilter($this->layer, 1337);
+        $result = $this->invokeMethod($filter, 'cropLayer', $image, $size);
+
+        $this->assertSame($image, $result);
+    }
+
+    /**
+     * Tests the extendLayer method.
+     * @throws ReflectionException
+     * @covers ::extendLayer
+     */
+    public function testExtendLayer(): void
+    {
+        $size = 42;
+        $imageSize = new Box(21, 21);
+        $expectedPoint = new Point(10, 10);
+
+        /* @var ImageInterface&MockObject $image */
+        $image = $this->createMock(ImageInterface::class);
+        $image->expects($this->once())
+              ->method('getSize')
+              ->willReturn($imageSize);
+        
+        /* @var ImageInterface&MockObject $newImage */
+        $newImage = $this->createMock(ImageInterface::class);
+        $newImage->expects($this->once())
+                 ->method('paste')
+                 ->with($this->identicalTo($image), $this->equalTo($expectedPoint))
+                 ->willReturnSelf();
+        
+        /* @var ScaledLayerFilter&MockObject $filter */
+        $filter = $this->getMockBuilder(ScaledLayerFilter::class)
+                       ->onlyMethods(['createTemporaryImage'])
+                       ->setConstructorArgs([$this->layer, 1337])
+                       ->getMock();
+        $filter->expects($this->once())
+               ->method('createTemporaryImage')
+               ->with($this->identicalTo($image), $this->identicalTo($size))
+               ->willReturn($newImage);
+
+        $result = $this->invokeMethod($filter, 'extendLayer', $image, $size);
+
+        $this->assertSame($newImage, $result);
     }
 }

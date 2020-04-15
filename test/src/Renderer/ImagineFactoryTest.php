@@ -10,7 +10,6 @@ use Imagine\Image\ImagineInterface;
 use Interop\Container\ContainerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use ReflectionException;
 
 /**
  * The PHPUnit test of the ImagineFactory class.
@@ -23,7 +22,6 @@ class ImagineFactoryTest extends TestCase
 {
     /**
      * Tests the invoking.
-     * @throws ReflectionException
      * @covers ::__invoke
      */
     public function testInvoke(): void

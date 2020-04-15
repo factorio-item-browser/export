@@ -5,15 +5,12 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\I18n;
 
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Mod\LocaleReader;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
-use FactorioItemBrowser\ExportData\Entity\Mod;
-use FactorioItemBrowser\ExportData\Registry\ModRegistry;
-use Zend\I18n\Translator\Translator as ZendTranslator;
-use Zend\Stdlib\ArrayUtils;
+use Laminas\I18n\Translator\Translator as LaminasTranslator;
+use Laminas\Stdlib\ArrayUtils;
 
 /**
- * The translator of the mods. Not a Zend-Translator.
+ * The translator of the mods. Not a Laminas-Translator.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
@@ -37,14 +34,8 @@ class Translator
     protected $localeReader;
 
     /**
-     * The mod registry.
-     * @var ModRegistry
-     */
-    protected $modRegistry;
-
-    /**
      * The translator used for the placeholders.
-     * @var ZendTranslator
+     * @var LaminasTranslator
      */
     protected $placeholderTranslator;
 
@@ -57,16 +48,11 @@ class Translator
     /**
      * Initializes the translator.
      * @param LocaleReader $localeReader
-     * @param ModRegistry $modRegistry
-     * @param ZendTranslator $placeholderTranslator
+     * @param LaminasTranslator $placeholderTranslator
      */
-    public function __construct(
-        LocaleReader $localeReader,
-        ModRegistry $modRegistry,
-        ZendTranslator $placeholderTranslator
-    ) {
+    public function __construct(LocaleReader $localeReader, LaminasTranslator $placeholderTranslator)
+    {
         $this->localeReader = $localeReader;
-        $this->modRegistry = $modRegistry;
         $this->placeholderTranslator = $placeholderTranslator;
     }
 
@@ -79,13 +65,10 @@ class Translator
     {
         $this->translations = [];
         foreach ($modNames as $modName) {
-            $mod = $this->modRegistry->get($modName);
-            if ($mod instanceof Mod) {
-                $this->translations = ArrayUtils::merge(
-                    $this->translations,
-                    $this->localeReader->read($mod)
-                );
-            }
+            $this->translations = ArrayUtils::merge(
+                $this->translations,
+                $this->localeReader->read($modName)
+            );
         }
     }
 
@@ -105,7 +88,7 @@ class Translator
         foreach (array_keys($this->translations) as $locale) {
             $value = $this->translateWithFallback($locale, $type, $localisedString, $fallbackLocalisedString);
             if ($value !== '') {
-                $entity->setTranslation($locale, $value);
+                $entity->addTranslation($locale, $value);
             }
         }
     }
@@ -133,9 +116,9 @@ class Translator
 
     /**
      * Translates the specified string.
+     * @param string $locale
      * @param string $type
      * @param mixed $localisedString
-     * @param string $locale
      * @param int $level
      * @return string
      */
@@ -180,7 +163,7 @@ class Translator
      * @param string $locale
      * @param string $type
      * @param string $string
-     * @param array $parameters
+     * @param array<mixed> $parameters
      * @param int $level
      * @return string
      */

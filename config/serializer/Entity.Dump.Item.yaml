@@ -1,0 +1,14 @@
+FactorioItemBrowser\Export\Entity\Dump\Item:
+  access_type: public_method
+  exclusion_policy: all
+  properties:
+    name:
+      type: string
+    localisedName:
+      type: raw
+    localisedDescription:
+      type: raw
+    localisedEntityName:
+      type: raw
+    localisedEntityDescription:
+      type: raw

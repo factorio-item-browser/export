@@ -18,7 +18,7 @@ class VersionUtilsTest extends TestCase
 {
     /**
      * Provides the data for the normalize test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideNormalize(): array
     {
@@ -45,7 +45,7 @@ class VersionUtilsTest extends TestCase
 
     /**
      * Provides the data for the compare test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideCompare(): array
     {
@@ -76,7 +76,7 @@ class VersionUtilsTest extends TestCase
 
     /**
      * Provides the data for the getGreater test.
-     * @return array
+     * @return array<mixed>
      */
     public function provideGetGreater(): array
     {

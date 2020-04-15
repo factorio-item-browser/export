@@ -2,13 +2,19 @@
 
 namespace FactorioItemBrowserTest\Export\Factorio;
 
-use BluePsyduck\Common\Data\DataContainer;
-use BluePsyduck\Common\Test\ReflectionTrait;
-use FactorioItemBrowser\Export\Exception\DumpException;
+use BluePsyduck\TestHelper\ReflectionTrait;
+use Exception;
+use FactorioItemBrowser\Export\Entity\Dump\ControlStage;
+use FactorioItemBrowser\Export\Entity\Dump\DataStage;
+use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\InternalException;
+use FactorioItemBrowser\Export\Exception\InvalidDumpException;
 use FactorioItemBrowser\Export\Factorio\DumpExtractor;
+use JMS\Serializer\SerializerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
+use stdClass;
 
 /**
  * The PHPUnit test of the DumpExtractor class.
@@ -20,231 +26,252 @@ use ReflectionException;
 class DumpExtractorTest extends TestCase
 {
     use ReflectionTrait;
+    
+    /**
+     * The mocked serializer.
+     * @var SerializerInterface&MockObject
+     */
+    protected $serializer;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        $this->serializer = $this->createMock(SerializerInterface::class);
+    }
+    
+    /**
+     * Tests the constructing.
+     * @throws ReflectionException
+     * @covers ::__construct
+     */
+    public function testConstruct(): void
+    {
+        $dumpExtractor = new DumpExtractor($this->serializer);
+        
+        $this->assertSame($this->serializer, $this->extractProperty($dumpExtractor, 'serializer'));
+    }
 
     /**
      * Tests the extract method.
-     * @throws DumpException
+     * @throws ExportException
      * @covers ::extract
      */
     public function testExtract(): void
     {
-        $output = 'foo';
-        $expectedResult = new DataContainer([
-            'items' => ['abc' => 'cba'],
-            'fluids' => ['def' => 'fed'],
-            'recipes' => [
-                'normal' => ['ghi' => 'ihg'],
-                'expensive' => ['jkl' => 'lkj'],
-            ],
-            'machines' => ['mno' => 'onm'],
-            'icons' => ['pqr' => 'rqp'],
-            'fluidBoxes' => ['stu' => 'uts'],
-        ]);
+        $output = 'abc';
+        $dataStageData = 'def';
+        $controlStageData = 'ghi';
+        $modNames = ['jkl', 'mno'];
 
-        /* @var DumpExtractor|MockObject $dumpExtractor */
+        /* @var DataStage&MockObject $dataStage */
+        $dataStage = $this->createMock(DataStage::class);
+        /* @var ControlStage&MockObject $controlStage */
+        $controlStage = $this->createMock(ControlStage::class);
+        
+        /* @var DumpExtractor&MockObject $dumpExtractor */
         $dumpExtractor = $this->getMockBuilder(DumpExtractor::class)
-                              ->setMethods(['extractDumpData'])
-                              ->disableOriginalConstructor()
+                              ->onlyMethods(['detectModOrder', 'extractRawDumpData', 'parseDump'])
+                              ->setConstructorArgs([$this->serializer])
                               ->getMock();
-        $dumpExtractor->expects($this->exactly(7))
-                      ->method('extractDumpData')
+        $dumpExtractor->expects($this->once())
+                      ->method('detectModOrder')
+                      ->with($output)
+                      ->willReturn($modNames);
+        $dumpExtractor->expects($this->exactly(2))
+                      ->method('extractRawDumpData')
                       ->withConsecutive(
-                          [$output, 'ITEMS'],
-                          [$output, 'FLUIDS'],
-                          [$output, 'RECIPES_NORMAL'],
-                          [$output, 'RECIPES_EXPENSIVE'],
-                          [$output, 'MACHINES'],
-                          [$output, 'ICONS'],
-                          [$output, 'FLUID_BOXES']
+                          [$this->identicalTo($output), $this->identicalTo('data')],
+                          [$this->identicalTo($output), $this->identicalTo('control')]
                       )
                       ->willReturnOnConsecutiveCalls(
-                          ['abc' => 'cba'],
-                          ['def' => 'fed'],
-                          ['ghi' => 'ihg'],
-                          ['jkl' => 'lkj'],
-                          ['mno' => 'onm'],
-                          ['pqr' => 'rqp'],
-                          ['stu' => 'uts']
+                          $dataStageData,
+                          $controlStageData
+                      );
+        $dumpExtractor->expects($this->exactly(2))
+                      ->method('parseDump')
+                      ->withConsecutive(
+                          [
+                              $this->identicalTo('data'),
+                              $this->identicalTo($dataStageData),
+                              $this->identicalTo(DataStage::class),
+                          ],
+                          [
+                              $this->identicalTo('control'),
+                              $this->identicalTo($controlStageData),
+                              $this->identicalTo(ControlStage::class),
+                          ]
+                      )
+                      ->willReturnOnConsecutiveCalls(
+                          $dataStage,
+                          $controlStage
                       );
 
         $result = $dumpExtractor->extract($output);
-        $this->assertEquals($expectedResult, $result);
+        $this->assertSame($dataStage, $result->getDataStage());
+        $this->assertSame($controlStage, $result->getControlStage());
     }
 
     /**
-     * Tests the extractDumpData method.
+     * Tests the extractRawDumpData method.
      * @throws ReflectionException
-     * @covers ::extractDumpData
+     * @covers ::extractRawDumpData
      */
-    public function testExtractDumpData(): void
+    public function testExtractRawDumpData(): void
     {
-        $name = 'abc';
-        $output = 'def';
-        $rawDump = 'ghi';
-        $dumpData = ['jkl' => 'mno'];
+        $output = 'abc>>>FOO>>>def<<<FOO<<<ghi';
+        $stage = 'foo';
+        $expectedResult = 'def';
 
-        /* @var DumpExtractor|MockObject $dumpExtractor */
-        $dumpExtractor = $this->getMockBuilder(DumpExtractor::class)
-                              ->setMethods(['extractRawDump', 'parseDump'])
-                              ->disableOriginalConstructor()
-                              ->getMock();
-        $dumpExtractor->expects($this->once())
-                      ->method('extractRawDump')
-                      ->with($output, $name)
-                      ->willReturn($rawDump);
-        $dumpExtractor->expects($this->once())
-                      ->method('parseDump')
-                      ->with($name, $rawDump)
-                      ->willReturn($dumpData);
+        $dumpExtractor = new DumpExtractor($this->serializer);
 
-        $result = $this->invokeMethod($dumpExtractor, 'extractDumpData', $output, $name);
-        $this->assertSame($dumpData, $result);
-    }
+        $result = $this->invokeMethod($dumpExtractor, 'extractRawDumpData', $output, $stage);
 
-    /**
-     * Provides the data for the extractRawDump test.
-     * @return array
-     */
-    public function provideExtractRawDump(): array
-    {
-        return [
-            ['abc>def<ghi', 4, 7, false, 'def'],
-            ['fail', null, 42, true, null],
-            ['fail', 42, null, true, null],
-            ['fail', 1337, 42, true, null],
-        ];
-    }
-
-    /**
-     * Tests the extractRawDump method.
-     * @param string $output
-     * @param int|null $startPosition
-     * @param int|null $endPosition
-     * @param bool $expectException
-     * @param null|string $expectedResult
-     * @throws ReflectionException
-     * @covers ::extractRawDump
-     * @dataProvider provideExtractRawDump
-     */
-    public function testExtractRawDump(
-        string $output,
-        ?int $startPosition,
-        ?int $endPosition,
-        bool $expectException,
-        ?string $expectedResult
-    ): void {
-        $name = 'foo';
-
-        /* @var DumpExtractor|MockObject $dumpExtractor */
-        $dumpExtractor = $this->getMockBuilder(DumpExtractor::class)
-                              ->setMethods(['getStartPosition', 'getEndPosition'])
-                              ->disableOriginalConstructor()
-                              ->getMock();
-        $dumpExtractor->expects($this->once())
-                      ->method('getStartPosition')
-                      ->with($output, $name)
-                      ->willReturn($startPosition);
-        $dumpExtractor->expects($this->once())
-                      ->method('getEndPosition')
-                      ->with($output, $name)
-                      ->willReturn($endPosition);
-
-        if ($expectException) {
-            $this->expectException(DumpException::class);
-        }
-
-        $result = $this->invokeMethod($dumpExtractor, 'extractRawDump', $output, $name);
         $this->assertSame($expectedResult, $result);
     }
 
     /**
-     * Provides the data for the getStartPosition test.
-     * @return array
+     * Provides the data for the extractRawDumpData test.
+     * @return array<mixed>
      */
-    public function provideGetStartPosition(): array
+    public function provideExtractRawDumpDataWithException(): array
     {
         return [
-            ['abcFOO>>>---def', 'FOO', 12],
-            ['fail', 'FOO', null],
+            ['abc>>>FOO>>>def', 'foo'], // Missing end placeholder
+            ['abc<<<FOO<<<def', 'foo'], // Missing start placeholder
+            ['abc<<<FOO<<<def>>>FOO>>>ghi', 'foo'], // Wrong order of placeholders
         ];
     }
 
     /**
-     * Tests the getStartPosition method.
+     * Tests the extractRawDumpData method.
      * @param string $output
-     * @param string $name
-     * @param int|null $expectedResult
+     * @param string $stage
      * @throws ReflectionException
-     * @covers ::getStartPosition
-     * @dataProvider provideGetStartPosition
+     * @covers ::extractRawDumpData
+     * @dataProvider provideExtractRawDumpDataWithException
      */
-    public function testGetStartPosition(string $output, string $name, ?int $expectedResult): void
+    public function testExtractRawDumpDataWithException(string $output, string $stage): void
     {
-        $dumpExtractor = new DumpExtractor();
-        $result = $this->invokeMethod($dumpExtractor, 'getStartPosition', $output, $name);
-        $this->assertSame($expectedResult, $result);
-    }
+        $this->expectException(InvalidDumpException::class);
 
-    /**
-     * Provides the data for the getEndPosition test.
-     * @return array
-     */
-    public function provideGetEndPosition(): array
-    {
-        return [
-            ['abc---<<<FOOdef', 'FOO', 3],
-            ['fail', 'FOO', null],
-        ];
-    }
+        $dumpExtractor = new DumpExtractor($this->serializer);
 
-    /**
-     * Tests the getEndPosition method.
-     * @param string $output
-     * @param string $name
-     * @param int|null $expectedResult
-     * @throws ReflectionException
-     * @covers ::getEndPosition
-     * @dataProvider provideGetEndPosition
-     */
-    public function testGetEndPosition(string $output, string $name, ?int $expectedResult): void
-    {
-        $dumpExtractor = new DumpExtractor();
-        $result = $this->invokeMethod($dumpExtractor, 'getEndPosition', $output, $name);
-        $this->assertSame($expectedResult, $result);
-    }
-
-    /**
-     * Provides the data for the parseDump test.
-     * @return array
-     */
-    public function provideParseDump(): array
-    {
-        return [
-            ['{"abc":"def","ghi":"jkl"}', false, ['abc' => 'def', 'ghi' => 'jkl']],
-            ['N;', true, null],
-            ['fail"json', true, null],
-        ];
+        $this->invokeMethod($dumpExtractor, 'extractRawDumpData', $output, $stage);
     }
 
     /**
      * Tests the parseDump method.
-     * @param string $dump
-     * @param bool $expectException
-     * @param array|null $expectedResult
      * @throws ReflectionException
      * @covers ::parseDump
-     * @dataProvider provideParseDump
      */
-    public function testParseDump(string $dump, bool $expectException, ?array $expectedResult): void
+    public function testParseDump(): void
     {
-        $name = 'foo';
+        $stage = 'abc';
+        $dumpData = 'def';
+        $className = 'ghi';
 
-        if ($expectException) {
-            $this->expectException(DumpException::class);
-        }
+        /* @var stdClass&MockObject $object */
+        $object = $this->createMock(stdClass::class);
 
-        $dumpExtractor = new DumpExtractor();
-        $result = $this->invokeMethod($dumpExtractor, 'parseDump', $name, $dump);
-        $this->assertEquals($expectedResult, $result);
+        $this->serializer->expects($this->once())
+                         ->method('deserialize')
+                         ->with(
+                             $this->identicalTo($dumpData),
+                             $this->identicalTo($className),
+                             $this->identicalTo('json')
+                         )
+                         ->willReturn($object);
+
+        $dumpExtractor = new DumpExtractor($this->serializer);
+
+        $result = $this->invokeMethod($dumpExtractor, 'parseDump', $stage, $dumpData, $className);
+
+        $this->assertSame($object, $result);
+    }
+
+    /**
+     * Tests the parseDump method.
+     * @throws ReflectionException
+     * @covers ::parseDump
+     */
+    public function testParseDumpWithException(): void
+    {
+        $stage = 'abc';
+        $dumpData = 'def';
+        $className = 'ghi';
+
+        $this->serializer->expects($this->once())
+                         ->method('deserialize')
+                         ->with(
+                             $this->identicalTo($dumpData),
+                             $this->identicalTo($className),
+                             $this->identicalTo('json')
+                         )
+                         ->willThrowException($this->createMock(Exception::class));
+
+        $this->expectException(InvalidDumpException::class);
+
+        $dumpExtractor = new DumpExtractor($this->serializer);
+
+        $this->invokeMethod($dumpExtractor, 'parseDump', $stage, $dumpData, $className);
+    }
+
+    /**
+     * Tests the detectModOrder method.
+     * @throws ReflectionException
+     * @covers ::detectModOrder
+     */
+    public function testDetectModOrder(): void
+    {
+        $output = <<<EOT
+   7.754 Checksum for core: 2087614386
+   7.754 Checksum of base: 1061071205
+   7.754 Checksum of foo: 1234567890
+   7.754 Checksum of Dump: 9876543210
+EOT;
+        $expectedResult = ['base', 'foo'];
+
+        $dumpExtractor = new DumpExtractor($this->serializer);
+        $result = $this->invokeMethod($dumpExtractor, 'detectModOrder', $output);
+
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Tests the detectModOrder method.
+     * @throws ReflectionException
+     * @covers ::detectModOrder
+     */
+    public function testDetectModOrderWithMissingDumpMod(): void
+    {
+        $output = <<<EOT
+   7.754 Checksum for core: 2087614386
+   7.754 Checksum of base: 1061071205
+   7.754 Checksum of foo: 1234567890
+EOT;
+
+        $this->expectException(InternalException::class);
+
+        $dumpExtractor = new DumpExtractor($this->serializer);
+        $this->invokeMethod($dumpExtractor, 'detectModOrder', $output);
+    }
+
+    /**
+     * Tests the detectModOrder method.
+     * @throws ReflectionException
+     * @covers ::detectModOrder
+     */
+    public function testDetectModOrderWithInvalidOutput(): void
+    {
+        $output = 'invalid';
+
+        $this->expectException(InternalException::class);
+
+        $dumpExtractor = new DumpExtractor($this->serializer);
+        $this->invokeMethod($dumpExtractor, 'detectModOrder', $output);
     }
 }

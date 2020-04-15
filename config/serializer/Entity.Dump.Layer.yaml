@@ -1,0 +1,22 @@
+FactorioItemBrowser\Export\Entity\Dump\Layer:
+  access_type: public_method
+  exclusion_policy: all
+  properties:
+    file:
+      type: string
+    size:
+      type: integer
+    scale:
+      type: float
+    shiftX:
+      type: integer
+    shiftY:
+      type: integer
+    tintRed:
+      type: float
+    tintGreen:
+      type: float
+    tintBlue:
+      type: float
+    tintAlpha:
+      type: float

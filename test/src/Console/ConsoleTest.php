@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Console;
 
-use BluePsyduck\Common\Test\ReflectionTrait;
+use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
-use Zend\Console\Adapter\AdapterInterface;
-use Zend\Console\ColorInterface;
-use Zend\ProgressBar\Adapter\AbstractAdapter;
-use Zend\ProgressBar\Adapter\Console as ProgressBarConsole;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * The PHPUnit test of the Console class.
@@ -26,86 +25,85 @@ class ConsoleTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked output.
+     * @var OutputInterface&MockObject
+     */
+    protected $output;
+
+    /**
+     * Sets up the test case.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->output = $this->createMock(OutputInterface::class);
+    }
+
+    /**
      * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
-        /* @var AdapterInterface $consoleAdapter */
-        $consoleAdapter = $this->createMock(AdapterInterface::class);
+        $console = new Console($this->output, true);
 
-        $console = new Console($consoleAdapter);
-
-        $this->assertSame($consoleAdapter, $this->extractProperty($console, 'consoleAdapter'));
+        $this->assertSame($this->output, $this->extractProperty($console, 'output'));
+        $this->assertTrue($this->extractProperty($console, 'isDebug'));
     }
 
     /**
-     * Tests the write method.
-     * @covers ::write
+     * Tests the writeHeadline method.
+     * @covers ::writeHeadline
      */
-    public function testWrite(): void
+    public function testWriteHeadline(): void
     {
         $message = 'abc';
-        $color = 42;
+        $expectedMessages = ['', '---', ' abc', '---'];
 
-        /* @var AdapterInterface|MockObject $consoleAdapter */
-        $consoleAdapter = $this->getMockBuilder(AdapterInterface::class)
-                               ->setMethods(['write'])
-                               ->getMockForAbstractClass();
-        $consoleAdapter->expects($this->once())
-                       ->method('write')
-                       ->with($message, $color);
-
-        $console = new Console($consoleAdapter);
-        $result = $console->write($message, $color);
-
-        $this->assertSame($console, $result);
-    }
-
-    /**
-     * Tests the writeLine method.
-     * @covers ::writeLine
-     */
-    public function testWriteLine(): void
-    {
-        $message = 'abc';
-        $color = 42;
-
-        /* @var AdapterInterface|MockObject $consoleAdapter */
-        $consoleAdapter = $this->getMockBuilder(AdapterInterface::class)
-                               ->setMethods(['writeLine'])
-                               ->getMockForAbstractClass();
-        $consoleAdapter->expects($this->once())
-                       ->method('writeLine')
-                       ->with($message, $color);
-
-        $console = new Console($consoleAdapter);
-        $result = $console->writeLine($message, $color);
-
-        $this->assertSame($console, $result);
-    }
-
-    /**
-     * Tests the writeCommand method.
-     * @covers ::writeCommand
-     */
-    public function testWriteCommand(): void
-    {
-        $command = 'abc';
-        $expectedMessage = '$ abc';
-
-        /* @var Console|MockObject $console */
+        /* @var Console&MockObject $console */
         $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeLine'])
-                        ->disableOriginalConstructor()
-                        ->getMockForAbstractClass();
+                        ->onlyMethods(['createHorizontalLine', 'writeWithDecoration'])
+                        ->setConstructorArgs([$this->output, true])
+                        ->getMock();
+        $console->expects($this->exactly(2))
+                ->method('createHorizontalLine')
+                ->with('-')
+                ->willReturn('---');
         $console->expects($this->once())
-                ->method('writeLine')
-                ->with($expectedMessage, ColorInterface::GRAY)
-                ->willReturnSelf();
+                ->method('writeWithDecoration')
+                ->with($this->identicalTo($expectedMessages), $this->identicalTo('yellow'), $this->identicalTo('bold'));
 
-        $result = $console->writeCommand($command);
+        $result = $console->writeHeadline($message);
+
+        $this->assertSame($console, $result);
+    }
+
+    /**
+     * Tests the writeStep method.
+     * @covers ::writeStep
+     */
+    public function testWriteStep(): void
+    {
+        $step = 'abc';
+        $expectedMessages = ['', ' abc', '---'];
+
+        /* @var Console&MockObject $console */
+        $console = $this->getMockBuilder(Console::class)
+                        ->onlyMethods(['createHorizontalLine', 'writeWithDecoration'])
+                        ->setConstructorArgs([$this->output, true])
+                        ->getMock();
+        $console->expects($this->once())
+                ->method('createHorizontalLine')
+                ->with('-')
+                ->willReturn('---');
+        $console->expects($this->once())
+                ->method('writeWithDecoration')
+                ->with($this->identicalTo($expectedMessages), $this->identicalTo('blue'), $this->identicalTo('bold'));
+
+        $result = $console->writeStep($step);
+
         $this->assertSame($console, $result);
     }
 
@@ -115,189 +113,169 @@ class ConsoleTest extends TestCase
      */
     public function testWriteAction(): void
     {
-        $action = 'abc';
-        $expectedMessage = '> abc...';
+        $this->output->expects($this->once())
+                     ->method('writeln')
+                     ->with($this->identicalTo('> abc...'));
 
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeLine'])
-                        ->disableOriginalConstructor()
-                        ->getMockForAbstractClass();
-        $console->expects($this->once())
-                ->method('writeLine')
-                ->with($expectedMessage, null)
-                ->willReturnSelf();
+        $console = new Console($this->output, true);
+        $result = $console->writeAction('abc');
 
-        $result = $console->writeAction($action);
         $this->assertSame($console, $result);
     }
-    
-    /**
-     * Tests the writeBanner method.
-     * @covers ::writeBanner
-     */
-    public function testWriteBanner(): void
-    {
-        $message = 'abc';
-        $color = 42;
-        $expectedMessage = ' abc';
 
-        /* @var Console|MockObject $console */
+    /**
+     * Tests the writeMessage method.
+     * @covers ::writeMessage
+     */
+    public function testWriteMessage(): void
+    {
+        $this->output->expects($this->once())
+                     ->method('writeln')
+                     ->with($this->identicalTo('# abc'));
+
+        $console = new Console($this->output, true);
+        $result = $console->writeMessage('abc');
+
+        $this->assertSame($console, $result);
+    }
+
+    /**
+     * Tests the writeException method.
+     * @covers ::writeException
+     */
+    public function testWriteException(): void
+    {
+        $exception = new ExportException('abc');
+        $expectedMessages = ['! ExportException: abc'];
+
+        /* @var Console&MockObject $console */
         $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeHorizontalLine', 'writeLine'])
-                        ->disableOriginalConstructor()
-                        ->getMockForAbstractClass();
+                        ->onlyMethods(['createHorizontalLine', 'writeWithDecoration'])
+                        ->setConstructorArgs([$this->output, false])
+                        ->getMock();
+        $console->expects($this->never())
+                ->method('createHorizontalLine');
+        $console->expects($this->once())
+                ->method('writeWithDecoration')
+                ->with($this->identicalTo($expectedMessages), $this->identicalTo('red'), $this->identicalTo('bold'));
+
+        $result = $console->writeException($exception);
+
+        $this->assertSame($console, $result);
+    }
+
+    /**
+     * Tests the writeException method.
+     * @covers ::writeException
+     */
+    public function testWriteExceptionWithDebug(): void
+    {
+        $exception = new ExportException('abc');
+        $expectedMessages1 = ['! ExportException: abc'];
+        $expectedMessages2 = ['---', $exception->getTraceAsString(), '---'];
+
+        /* @var Console&MockObject $console */
+        $console = $this->getMockBuilder(Console::class)
+                        ->onlyMethods(['createHorizontalLine', 'writeWithDecoration'])
+                        ->setConstructorArgs([$this->output, true])
+                        ->getMock();
         $console->expects($this->exactly(2))
-                ->method('writeHorizontalLine')
-                ->with('-', $color)
-                ->willReturnSelf();
-        $console->expects($this->once())
-                ->method('writeLine')
-                ->with($expectedMessage, $color)
-                ->willReturnSelf();
+                ->method('createHorizontalLine')
+                ->with('-')
+                ->willReturn('---');
+        $console->expects($this->exactly(2))
+                ->method('writeWithDecoration')
+                ->withConsecutive(
+                    [$this->identicalTo($expectedMessages1), $this->identicalTo('red'), $this->identicalTo('bold')],
+                    [$this->identicalTo($expectedMessages2), $this->identicalTo('red'), $this->identicalTo('')]
+                );
 
-        $result = $console->writeBanner($message, $color);
+        $result = $console->writeException($exception);
+
         $this->assertSame($console, $result);
     }
 
     /**
-     * Tests the writeHorizontalLine method.
-     * @covers ::writeHorizontalLine
+     * Tests the writeData method.
+     * @covers ::writeData
      */
-    public function testWriteHorizontalLine(): void
+    public function testWriteData(): void
     {
-        $character = '#';
-        $color = 42;
-        $width = 10;
-        $expectedMessage = '##########';
+        $this->output->expects($this->once())
+                     ->method('write')
+                     ->with($this->identicalTo('abc'), $this->isFalse(), $this->identicalTo(ConsoleOutput::OUTPUT_RAW));
 
-        /* @var AdapterInterface|MockObject $consoleAdapter */
-        $consoleAdapter = $this->getMockBuilder(AdapterInterface::class)
-                               ->setMethods(['getWidth'])
-                               ->getMockForAbstractClass();
-        $consoleAdapter->expects($this->once())
-                       ->method('getWidth')
-                       ->willReturn($width);
+        $console = new Console($this->output, true);
+        $result = $console->writeData('abc');
 
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['writeLine'])
-                        ->setConstructorArgs([$consoleAdapter])
-                        ->getMock();
-        $console->expects($this->once())
-                ->method('writeLine')
-                ->with($expectedMessage, $color)
-                ->willReturnSelf();
-
-        $result = $console->writeHorizontalLine($character, $color);
         $this->assertSame($console, $result);
     }
 
     /**
-     * Provides the data for the formatModName test.
-     * @return array
+     * Provides the data for the writeWithDecoration test.
+     * @return array<mixed>
      */
-    public function provideFormatModName(): array
+    public function provideWriteWithDecoration(): array
     {
         return [
-
-            ['abc', '', '                                                             abc'],
-            ['abc-def-ghi-jkl', '', '                                                 abc-def-ghi-jkl'],
-            ['abc', 'def', '                                                             abcdef'],
+            ['foo', 'bar', 'fg=foo;options=bar'],
+            ['foo', '', 'fg=foo'],
+            ['', 'bar', 'options=bar'],
         ];
     }
 
     /**
-     * Tests the formatModName method.
-     * @param string $modName
-     * @param string $suffix
-     * @param string $expectedResult
-     * @covers ::formatModName
-     * @dataProvider provideFormatModName
-     */
-    public function testFormatModName(string $modName, string $suffix, string $expectedResult): void
-    {
-        /* @var AdapterInterface $consoleAdapter */
-        $consoleAdapter = $this->createMock(AdapterInterface::class);
-        $console = new Console($consoleAdapter);
-
-        $result = $console->formatModName($modName, $suffix);
-        $this->assertSame($expectedResult, $result);
-    }
-
-    /**
-     * Provides the data for the formatVersion test.
-     * @return array
-     */
-    public function provideFormatVersion(): array
-    {
-        return [
-            ['1.2.3', false, '1.2.3     '],
-            ['1.2.3', true, '     1.2.3'],
-            ['1', false, '1.0.0     '],
-            ['', false, '          ']
-        ];
-    }
-    /**
-     * Tests the formatVersion method.
-     * @param string $version
-     * @param bool $padLeft
-     * @param string $expectedResult
-     * @covers ::formatVersion
-     * @dataProvider provideFormatVersion
-     */
-    public function testFormatVersion(string $version, bool $padLeft, string $expectedResult): void
-    {
-        /* @var AdapterInterface $consoleAdapter */
-        $consoleAdapter = $this->createMock(AdapterInterface::class);
-        $console = new Console($consoleAdapter);
-
-        $result = $console->formatVersion($version, $padLeft);
-        $this->assertSame($expectedResult, $result);
-    }
-
-    /**
-     * Tests the createProgressBar method.
-     * @covers ::createProgressBar
-     */
-    public function testCreateProgressBar(): void
-    {
-        $numberOfSteps = 42;
-
-        /* @var AbstractAdapter $progressBarAdapter */
-        $progressBarAdapter = $this->createMock(AbstractAdapter::class);
-
-        /* @var Console|MockObject $console */
-        $console = $this->getMockBuilder(Console::class)
-                        ->setMethods(['createProgressBarAdapter'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
-        $console->expects($this->once())
-                ->method('createProgressBarAdapter')
-                ->willReturn($progressBarAdapter);
-
-        $result = $console->createProgressBar($numberOfSteps);
-        $this->assertSame($progressBarAdapter, $result->getAdapter());
-    }
-
-    /**
-     * Tests the createProgressBarAdapter method.
+     * Tests the writeWithDecoration method.
+     * @param string $color
+     * @param string $options
+     * @param string $expectedFormatString
      * @throws ReflectionException
-     * @covers ::createProgressBarAdapter
+     * @covers ::writeWithDecoration
+     * @dataProvider provideWriteWithDecoration
      */
-    public function testCreateProgressBarAdapter(): void
+    public function testWriteWithDecoration(string $color, string $options, string $expectedFormatString): void
     {
-        /* @var AdapterInterface|MockObject $consoleAdapter */
-        $consoleAdapter = $this->getMockBuilder(AdapterInterface::class)
-                               ->setMethods(['getWidth'])
-                               ->getMockForAbstractClass();
-        $consoleAdapter->expects($this->once())
-                       ->method('getWidth')
-                       ->willReturn(50);
+        $messages = ['abc', 'def', 'ghi'];
+        $expectedMessages = ["<{$expectedFormatString}>abc", 'def', 'ghi</>'];
 
-        $console = new Console($consoleAdapter);
+        $this->output->expects($this->once())
+                     ->method('writeln')
+                     ->with($this->identicalTo($expectedMessages));
 
-        $result = $this->invokeMethod($console, 'createProgressBarAdapter');
-        $this->assertInstanceOf(ProgressBarConsole::class, $result);
+        $console = new Console($this->output, true);
+        $this->invokeMethod($console, 'writeWithDecoration', $messages, $color, $options);
+    }
+
+    /**
+     * Tests the writeWithDecoration method.
+     * @throws ReflectionException
+     * @covers ::writeWithDecoration
+     */
+    public function testWriteWithDecorationWithoutFormats(): void
+    {
+        $messages = ['abc', 'def', 'ghi'];
+
+        $this->output->expects($this->once())
+                     ->method('writeln')
+                     ->with($this->identicalTo($messages));
+
+        $console = new Console($this->output, true);
+        $this->invokeMethod($console, 'writeWithDecoration', $messages);
+    }
+
+    /**
+     * Tests the createHorizontalLine method.
+     * @throws ReflectionException
+     * @covers ::createHorizontalLine
+     */
+    public function testCreateHorizontalLine(): void
+    {
+        $character = '-';
+        $expectedResult = '--------------------------------------------------------------------------------';
+
+        $console = new Console($this->output, true);
+        $result = $this->invokeMethod($console, 'createHorizontalLine', $character);
+
+        $this->assertSame($expectedResult, $result);
     }
 }

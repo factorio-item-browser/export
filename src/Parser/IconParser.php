@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
-use BluePsyduck\Common\Data\DataContainer;
 use FactorioItemBrowser\Common\Constant\EntityType;
-use FactorioItemBrowser\Export\Constant\Config;
-use FactorioItemBrowser\ExportData\Entity\Icon;
-use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
-use FactorioItemBrowser\ExportData\Entity\Mod\Combination;
-use FactorioItemBrowser\ExportData\Registry\EntityRegistry;
-use FactorioItemBrowser\ExportData\Utils\EntityUtils;
+use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Entity\Dump\Icon as DumpIcon;
+use FactorioItemBrowser\Export\Entity\Dump\Layer as DumpLayer;
+use FactorioItemBrowser\Export\Helper\HashCalculator;
+use FactorioItemBrowser\ExportData\Entity\Combination;
+use FactorioItemBrowser\ExportData\Entity\Icon as ExportIcon;
+use FactorioItemBrowser\ExportData\Entity\Icon\Layer as ExportLayer;
 
 /**
- * The class parsing the icons of the dump data.
+ * The parser of the icons.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
@@ -22,107 +22,109 @@ use FactorioItemBrowser\ExportData\Utils\EntityUtils;
 class IconParser implements ParserInterface
 {
     /**
-     * The icon registry.
-     * @var EntityRegistry
+     * The types which are blacklisted from the parser.
      */
-    protected $iconRegistry;
+    protected const BLACKLISTED_TYPES = [
+        'technology',
+        'tutorial',
+    ];
+
+    /**
+     * The hash calculator.
+     * @var HashCalculator
+     */
+    protected $hashCalculator;
 
     /**
      * The parsed icons.
-     * @var array|Icon[]
+     * @var array|ExportIcon[][]
      */
     protected $parsedIcons = [];
 
     /**
      * The icons which are used by any entity.
-     * @var array|Icon[]
+     * @var array|ExportIcon[]
      */
     protected $usedIcons = [];
 
     /**
      * Initializes the parser.
-     * @param EntityRegistry $iconRegistry
+     * @param HashCalculator $hashCalculator
      */
-    public function __construct(EntityRegistry $iconRegistry)
+    public function __construct(HashCalculator $hashCalculator)
     {
-        $this->iconRegistry = $iconRegistry;
+        $this->hashCalculator = $hashCalculator;
     }
 
     /**
-     * Resets any previously aggregated data.
+     * Prepares the parser to be able to later parse the dump.
+     * @param Dump $dump
      */
-    public function reset(): void
+    public function prepare(Dump $dump): void
     {
         $this->parsedIcons = [];
         $this->usedIcons = [];
-    }
 
-    /**
-     * Parses the data from the dump into actual entities.
-     * @param DataContainer $dumpData
-     */
-    public function parse(DataContainer $dumpData): void
-    {
-        foreach ($dumpData->getObjectArray('icons') as $iconData) {
-            $icon = $this->parseIcon($iconData);
-
-            $name = $iconData->getString('name');
-            $type = $iconData->getString('type');
-
-            switch ($type) {
-                case EntityType::FLUID:
-                case EntityType::ITEM:
-                case EntityType::RECIPE:
-                    $this->addParsedIcon($type, $name, $icon, true);
-                    break;
-
-                case 'technology':
-                case 'tutorial':
-                    // Types are blacklisted and must not provide any icons.
-                    break;
-
-                default:
-                    $this->addParsedIcon(EntityType::ITEM, $name, $icon, false);
-                    $this->addParsedIcon(EntityType::MACHINE, $name, $icon, false);
-                    break;
+        foreach ($dump->getDataStage()->getIcons() as $dumpIcon) {
+            if ($this->isIconValid($dumpIcon)) {
+                $this->addParsedIcon($dumpIcon->getType(), strtolower($dumpIcon->getName()), $this->mapIcon($dumpIcon));
             }
         }
     }
 
     /**
-     * Parses the icon data to an entity.
-     * @param DataContainer $iconData
-     * @return Icon
+     * Returns whether the icon is valid and can be processed further.
+     * @param DumpIcon $dumpIcon
+     * @return bool
      */
-    protected function parseIcon(DataContainer $iconData): Icon
+    protected function isIconValid(DumpIcon $dumpIcon): bool
     {
-        $icon = new Icon();
-        foreach ($iconData->getObjectArray('icons') as $layerData) {
-            $icon->addLayer($this->parseLayer($layerData));
-        }
-        $icon->setSize($iconData->getInteger('iconSize', Config::ICON_SIZE))
-             ->setRenderedSize(Config::ICON_SIZE);
-        return $icon;
+        return !in_array($dumpIcon->getType(), self::BLACKLISTED_TYPES, true);
     }
 
     /**
-     * Parses the layer data to an entity.
-     * @param DataContainer $layerData
-     * @return Layer
+     * Maps the dump icon to an export one.
+     * @param DumpIcon $dumpIcon
+     * @return ExportIcon
      */
-    protected function parseLayer(DataContainer $layerData): Layer
+    protected function mapIcon(DumpIcon $dumpIcon): ExportIcon
     {
-        $layer = new Layer();
-        $layer->setFileName($layerData->getString('icon'))
-              ->setOffsetX($layerData->getInteger(['shift', '0'], 0))
-              ->setOffsetY($layerData->getInteger(['shift', '1'], 0))
-              ->setScale($layerData->getFloat('scale', 1.));
+        $exportIcon = new ExportIcon();
 
-        $layer->getTintColor()->setRed($this->convertColorValue($layerData->getFloat(['tint', 'r'], 1.)))
-                              ->setGreen($this->convertColorValue($layerData->getFloat(['tint', 'g'], 1.)))
-                              ->setBlue($this->convertColorValue($layerData->getFloat(['tint', 'b'], 1.)))
-                              ->setAlpha($this->convertColorValue($layerData->getFloat(['tint', 'a'], 1.)));
-        return $layer;
+        $isFirstLayer = true;
+        foreach ($dumpIcon->getLayers() as $dumpLayer) {
+            $layer = $this->mapLayer($dumpLayer);
+            $exportIcon->addLayer($layer);
+
+            if ($isFirstLayer) {
+                $scaledSize = (int) ($layer->getSize() * $layer->getScale());
+                $exportIcon->setSize($scaledSize);
+                $isFirstLayer = false;
+            }
+        }
+
+        $exportIcon->setId($this->hashCalculator->hashIcon($exportIcon));
+        return $exportIcon;
+    }
+
+    /**
+     * Maps the dump layer to an export one.
+     * @param DumpLayer $dumpLayer
+     * @return ExportLayer
+     */
+    protected function mapLayer(DumpLayer $dumpLayer): ExportLayer
+    {
+        $exportLayer = new ExportLayer();
+        $exportLayer->setFileName($dumpLayer->getFile())
+                    ->setScale($dumpLayer->getScale())
+                    ->setSize($dumpLayer->getSize());
+        $exportLayer->getOffset()->setX($dumpLayer->getShiftX())
+                                 ->setY($dumpLayer->getShiftY());
+        $exportLayer->getTint()->setRed($this->convertColorValue($dumpLayer->getTintRed()))
+                               ->setGreen($this->convertColorValue($dumpLayer->getTintGreen()))
+                               ->setBlue($this->convertColorValue($dumpLayer->getTintBlue()))
+                               ->setAlpha($this->convertColorValue($dumpLayer->getTintAlpha()));
+        return $exportLayer;
     }
 
     /**
@@ -136,64 +138,63 @@ class IconParser implements ParserInterface
     }
 
     /**
-     * Adds the specified icon to the list of parsed icons.
+     * Adds a parsed icon to the property array.
      * @param string $type
      * @param string $name
-     * @param Icon $icon
-     * @param bool $overwriteExistingIcon
+     * @param ExportIcon $icon
      */
-    protected function addParsedIcon(string $type, string $name, Icon $icon, bool $overwriteExistingIcon): void
+    protected function addParsedIcon(string $type, string $name, ExportIcon $icon): void
     {
-        $key = $this->buildArrayKey($type, $name);
-        if (!isset($this->parsedIcons[$key]) || $overwriteExistingIcon) {
-            $this->parsedIcons[$key] = $icon;
+        switch ($type) {
+            case EntityType::FLUID:
+            case EntityType::ITEM:
+            case EntityType::RECIPE:
+                $this->parsedIcons[$type][$name] = $icon;
+                break;
+
+            default:
+                if (!isset($this->parsedIcons[EntityType::ITEM][$name])) {
+                    $this->parsedIcons[EntityType::ITEM][$name] = $icon;
+                }
+                if (!isset($this->parsedIcons[EntityType::MACHINE][$name])) {
+                    $this->parsedIcons[EntityType::MACHINE][$name] = $icon;
+                }
+                break;
         }
     }
 
     /**
-     * Checks the parsed data.
-     */
-    public function check(): void
-    {
-    }
-
-    /**
-     * Persists the parsed data into the combination.
+     * Parses the data from the dump into the combination.
+     * @param Dump $dump
      * @param Combination $combination
      */
-    public function persist(Combination $combination): void
+    public function parse(Dump $dump, Combination $combination): void
     {
-        foreach ($this->usedIcons as $icon) {
-            $this->iconRegistry->set($icon);
-        }
-        $combination->setIconHashes(array_keys($this->usedIcons));
     }
 
     /**
-     * Returns the icon hash for the specified entity, if available.
-     * @param string $type
-     * @param string $name
-     * @return string|null
+     * Validates the data in the combination as a second parsing step.
+     * @param Combination $combination
      */
-    public function getIconHashForEntity(string $type, string $name): ?string
+    public function validate(Combination $combination): void
     {
-        $iconHash = null;
-        $icon = $this->parsedIcons[$this->buildArrayKey($type, $name)] ?? null;
-        if ($icon instanceof Icon) {
-            $iconHash = $icon->calculateHash();
-            $this->usedIcons[$iconHash] = $icon;
-        }
-        return $iconHash;
+        $combination->setIcons(array_merge($combination->getIcons(), array_values($this->usedIcons)));
     }
 
     /**
-     * Returns the key used in the array.
+     * Returns the icon id for the specified type and name, if available.
      * @param string $type
      * @param string $name
      * @return string
      */
-    protected function buildArrayKey(string $type, string $name): string
+    public function getIconId(string $type, string $name): string
     {
-        return EntityUtils::buildIdentifier([$type, $name]);
+        $result = '';
+        $icon = $this->parsedIcons[$type][$name] ?? null;
+        if ($icon !== null) {
+            $this->usedIcons[$icon->getId()] = $icon;
+            $result = $icon->getId();
+        }
+        return $result;
     }
 }
