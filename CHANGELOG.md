@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.0.0 - 2020-04-15
 
 - Full re-implementation of the export project.
 
