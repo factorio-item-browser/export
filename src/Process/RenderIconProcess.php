@@ -32,7 +32,7 @@ class RenderIconProcess extends Process
         $this->icon = $icon;
 
         parent::__construct([
-            'php',
+            $_SERVER['_'] ?? 'php',
             $_SERVER['SCRIPT_FILENAME'],
             'render-icon',
             $exportDataSerializer->serialize($icon, 'json'),
