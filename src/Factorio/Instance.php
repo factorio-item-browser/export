@@ -251,7 +251,7 @@ class Instance
      */
     protected function createFactorioSymlink(string $directoryOrFile): void
     {
-        symlink($this->getFactorioPath($directoryOrFile), $this->getInstancePath($directoryOrFile));
+        symlink((string) realpath($this->getFactorioPath($directoryOrFile)), $this->getInstancePath($directoryOrFile));
     }
 
     /**
@@ -265,7 +265,7 @@ class Instance
         $info = $this->modFileManager->getInfo($modName);
         $source = $this->modFileManager->getLocalDirectory($modName);
         $destination = $this->getInstancePath(sprintf('mods/%s_%s', $modName, $info->getVersion()));
-        symlink($source, $destination);
+        symlink((string) realpath($source), $destination);
     }
 
     /**
