@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Extracted icon renderer to Go-based binary for major performance improvement.
+
+### Fixed
+
+- Export did not recognize tints when specified without named keys.
+
 ## 2.0.0 - 2020-04-15
 
 - Full re-implementation of the export project.

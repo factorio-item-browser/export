@@ -9,7 +9,7 @@ use FactorioItemBrowser\Export\Entity\Dump\Fluid;
 use FactorioItemBrowser\Export\Entity\Dump\Item;
 use FactorioItemBrowser\Export\Entity\Dump\Machine;
 use FactorioItemBrowser\Export\Entity\Dump\Recipe;
-use FactorioItemBrowserTestAsset\Export\SerializerTestCase;
+use FactorioItemBrowserTestSerializer\Export\SerializerTestCase;
 
 /**
  * The PHPUnit test of serializing the ControlStage class.
