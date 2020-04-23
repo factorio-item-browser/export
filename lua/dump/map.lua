@@ -195,10 +195,10 @@ function map.layer(prototype, first_layer_size, default_size)
     end
 
     if prototype.tint then
-        layer.tint_red = prototype.tint.r
-        layer.tint_green = prototype.tint.g
-        layer.tint_blue = prototype.tint.b
-        layer.tint_alpha = prototype.tint.a
+        layer.tint_red = prototype.tint.r or prototype.tint[1]
+        layer.tint_green = prototype.tint.g or prototype.tint[2]
+        layer.tint_blue = prototype.tint.b or prototype.tint[3]
+        layer.tint_alpha = prototype.tint.a or prototype.tint[4]
     end
 
     return layer
