@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Process;
 
 use FactorioItemBrowser\ExportData\Entity\Icon;
-use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Process\Process;
 
 /**
@@ -24,22 +23,15 @@ class RenderIconProcess extends Process
 
     /**
      * Initializes the process.
-     * @param SerializerInterface $exportDataSerializer
      * @param Icon $icon
+     * @param array<string> $command
+     * @param array<string, string> $env
      */
-    public function __construct(SerializerInterface $exportDataSerializer, Icon $icon)
+    public function __construct(Icon $icon, array $command, array $env)
     {
+        parent::__construct($command, null, $env, null, null);
+
         $this->icon = $icon;
-
-        parent::__construct([
-            $_SERVER['_'] ?? 'php',
-            $_SERVER['SCRIPT_FILENAME'],
-            'render-icon',
-            $exportDataSerializer->serialize($icon, 'json'),
-        ]);
-
-        $this->setEnv(['SUBCMD' => 1]);
-        $this->setTimeout(null);
     }
 
     /**

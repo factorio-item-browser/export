@@ -31,6 +31,7 @@ return [
                 Command\ProcessStep\UploadStep::class,
                 Command\ProcessStep\DoneStep::class,
             ],
+            ConfigKey::RENDER_ICON_BINARY => 'bin/render-icon',
         ],
     ],
 ];

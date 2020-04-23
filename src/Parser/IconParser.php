@@ -22,6 +22,11 @@ use FactorioItemBrowser\ExportData\Entity\Icon\Layer as ExportLayer;
 class IconParser implements ParserInterface
 {
     /**
+     * The size to render the icons to.
+     */
+    protected const RENDERED_ICON_SIZE = 64;
+
+    /**
      * The types which are blacklisted from the parser.
      */
     protected const BLACKLISTED_TYPES = [
@@ -90,17 +95,10 @@ class IconParser implements ParserInterface
     protected function mapIcon(DumpIcon $dumpIcon): ExportIcon
     {
         $exportIcon = new ExportIcon();
+        $exportIcon->setSize(self::RENDERED_ICON_SIZE);
 
-        $isFirstLayer = true;
         foreach ($dumpIcon->getLayers() as $dumpLayer) {
-            $layer = $this->mapLayer($dumpLayer);
-            $exportIcon->addLayer($layer);
-
-            if ($isFirstLayer) {
-                $scaledSize = (int) ($layer->getSize() * $layer->getScale());
-                $exportIcon->setSize($scaledSize);
-                $isFirstLayer = false;
-            }
+            $exportIcon->addLayer($this->mapLayer($dumpLayer));
         }
 
         $exportIcon->setId($this->hashCalculator->hashIcon($exportIcon));

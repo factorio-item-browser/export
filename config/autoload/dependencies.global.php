@@ -60,6 +60,8 @@ return [
             Parser\RecipeParser::class => AutoWireFactory::class,
             Parser\TranslationParser::class => AutoWireFactory::class,
 
+            Process\RenderIconProcessFactory::class => AutoWireFactory::class,
+
             Renderer\IconRenderer::class => AutoWireFactory::class,
 
             // 3rd-party services
@@ -81,6 +83,7 @@ return [
             'string $factorioDownloadUsername' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_USERNAME),
             'string $instancesDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
             'string $modsDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
+            'string $renderIconBinary' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::RENDER_ICON_BINARY),
             'string $tempDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),
             'string $uploadFtpHost' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_HOST),
             'string $uploadFtpUsername' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_USERNAME),

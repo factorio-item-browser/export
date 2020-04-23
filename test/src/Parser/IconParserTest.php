@@ -149,31 +149,20 @@ class IconParserTest extends TestCase
         $dumpLayer1 = $this->createMock(DumpLayer::class);
         /* @var DumpLayer&MockObject $dumpLayer2 */
         $dumpLayer2 = $this->createMock(DumpLayer::class);
+        /* @var ExportLayer&MockObject $exportLayer1 */
+        $exportLayer1 = $this->createMock(ExportLayer::class);
+        /* @var ExportLayer&MockObject $exportLayer2 */
+        $exportLayer2 = $this->createMock(ExportLayer::class);
 
         $dumpIcon = new DumpIcon();
         $dumpIcon->setLayers([$dumpLayer1, $dumpLayer2]);
 
-        /* @var ExportLayer&MockObject $exportLayer1 */
-        $exportLayer1 = $this->createMock(ExportLayer::class);
-        $exportLayer1->expects($this->once())
-                     ->method('getSize')
-                     ->willReturn(42);
-        $exportLayer1->expects($this->once())
-                     ->method('getScale')
-                     ->willReturn(0.5);
-
-        /* @var ExportLayer&MockObject $exportLayer2 */
-        $exportLayer2 = $this->createMock(ExportLayer::class);
-        $exportLayer2->expects($this->never())
-                     ->method('getSize');
-
-
         $expectedIcon = new ExportIcon();
-        $expectedIcon->setSize(21)
+        $expectedIcon->setSize(64)
                      ->setLayers([$exportLayer1, $exportLayer2]);
 
         $expectedResult = new ExportIcon();
-        $expectedResult->setSize(21)
+        $expectedResult->setSize(64)
                        ->setLayers([$exportLayer1, $exportLayer2])
                        ->setId($iconId);
 

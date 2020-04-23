@@ -73,6 +73,11 @@ interface ConfigKey
     public const PROCESS_STEPS = 'process-steps';
 
     /**
+     * The key holding the path to the render-icon binary.
+     */
+    public const RENDER_ICON_BINARY = 'render-icon-binary';
+
+    /**
      * The key holding the configuration for the upload FTP server.
      */
     public const UPLOAD_FTP = 'upload-ftp';
