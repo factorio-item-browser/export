@@ -59,6 +59,12 @@ class Instance
     protected $instancesDirectory;
 
     /**
+     * The version of the export project.
+     * @var string
+     */
+    protected $version;
+
+    /**
      * The directory for the combination instance.
      * @var string
      */
@@ -72,6 +78,7 @@ class Instance
      * @param SerializerInterface $exportSerializer
      * @param string $factorioDirectory
      * @param string $instancesDirectory
+     * @param string $version
      */
     public function __construct(
         Console $console,
@@ -79,7 +86,8 @@ class Instance
         ModFileManager $modFileManager,
         SerializerInterface $exportSerializer,
         string $factorioDirectory,
-        string $instancesDirectory
+        string $instancesDirectory,
+        string $version
     ) {
         $this->console = $console;
         $this->dumpExtractor = $dumpExtractor;
@@ -87,6 +95,7 @@ class Instance
         $this->serializer = $exportSerializer;
         $this->factorioDirectory = $factorioDirectory;
         $this->instancesDirectory = $instancesDirectory;
+        $this->version = $version;
     }
 
     /**
@@ -180,7 +189,7 @@ class Instance
         $info->setName('Dump')
              ->setTitle('Factorio Item Browser - Dump')
              ->setAuthor('factorio-item-browser')
-             ->setVersion('1.0.0')
+             ->setVersion($this->version)
              ->setFactorioVersion($baseInfo->getVersion())
              ->setDependencies($modNames);
 

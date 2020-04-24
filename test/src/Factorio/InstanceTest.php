@@ -79,6 +79,7 @@ class InstanceTest extends TestCase
     {
         $factorioDirectory = 'foo';
         $instancesDirectory = 'bar';
+        $version = '1.2.3';
 
         $instance = new Instance(
             $this->console,
@@ -86,7 +87,8 @@ class InstanceTest extends TestCase
             $this->modFileManager,
             $this->serializer,
             $factorioDirectory,
-            $instancesDirectory
+            $instancesDirectory,
+            $version
         );
 
         $this->assertSame($this->console, $this->extractProperty($instance, 'console'));
@@ -95,6 +97,7 @@ class InstanceTest extends TestCase
         $this->assertSame($this->serializer, $this->extractProperty($instance, 'serializer'));
         $this->assertSame($factorioDirectory, $this->extractProperty($instance, 'factorioDirectory'));
         $this->assertSame($instancesDirectory, $this->extractProperty($instance, 'instancesDirectory'));
+        $this->assertSame($version, $this->extractProperty($instance, 'version'));
     }
 
     /**
@@ -143,6 +146,7 @@ class InstanceTest extends TestCase
                              $this->serializer,
                              'foo',
                              $instancesDirectory,
+                             '1.2.3',
                          ])
                          ->getMock();
         $instance->expects($this->once())
@@ -233,6 +237,7 @@ class InstanceTest extends TestCase
     public function testCreateDumpInfoJson(): void
     {
         $baseVersion = '1.2.3';
+        $version = '2.3.4';
         $modNames = ['abc', 'def'];
 
         /* @var InfoJson&MockObject $baseInfo */
@@ -250,7 +255,7 @@ class InstanceTest extends TestCase
         $expectedResult->setName('Dump')
                        ->setTitle('Factorio Item Browser - Dump')
                        ->setAuthor('factorio-item-browser')
-                       ->setVersion('1.0.0')
+                       ->setVersion($version)
                        ->setFactorioVersion($baseVersion)
                        ->setDependencies($modNames);
 
@@ -260,7 +265,8 @@ class InstanceTest extends TestCase
             $this->modFileManager,
             $this->serializer,
             'foo',
-            'bar'
+            'bar',
+            $version
         );
 
         $result = $this->invokeMethod($instance, 'createDumpInfoJson', $modNames);
@@ -456,7 +462,8 @@ class InstanceTest extends TestCase
             $this->modFileManager,
             $this->serializer,
             $factorioDirectory,
-            'bar'
+            'bar',
+            '1.2.3',
         );
 
         $result = $this->invokeMethod($instance, 'getFactorioPath', $fileName);
@@ -481,7 +488,8 @@ class InstanceTest extends TestCase
             $this->modFileManager,
             $this->serializer,
             'foo',
-            'bar'
+            'bar',
+            '1.2.3',
         );
         $this->injectProperty($instance, 'combinationInstanceDirectory', $combinationInstanceDirectory);
 
