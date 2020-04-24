@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTestSerializer\Export\Entity\Dump;
 
 use FactorioItemBrowser\Export\Entity\Dump\Fluid;
-use FactorioItemBrowserTestAsset\Export\SerializerTestCase;
+use FactorioItemBrowserTestSerializer\Export\SerializerTestCase;
 
 /**
  * The PHPUnit test of serializing the Fluid class.

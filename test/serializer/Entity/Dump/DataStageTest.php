@@ -6,7 +6,7 @@ namespace FactorioItemBrowserTestSerializer\Export\Entity\Dump;
 
 use FactorioItemBrowser\Export\Entity\Dump\DataStage;
 use FactorioItemBrowser\Export\Entity\Dump\Icon;
-use FactorioItemBrowserTestAsset\Export\SerializerTestCase;
+use FactorioItemBrowserTestSerializer\Export\SerializerTestCase;
 
 /**
  * The PHPUnit test of serializing the DataStage class.

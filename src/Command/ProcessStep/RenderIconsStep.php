@@ -9,10 +9,9 @@ use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Process\RenderIconProcess;
-use FactorioItemBrowser\ExportData\Entity\Icon;
+use FactorioItemBrowser\Export\Process\RenderIconProcessFactory;
 use FactorioItemBrowser\ExportData\ExportData;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
-use JMS\Serializer\SerializerInterface;
 
 /**
  * The step for rendering all the icons and thumbnails.
@@ -29,10 +28,10 @@ class RenderIconsStep implements ProcessStepInterface
     protected $console;
 
     /**
-     * The serializer.
-     * @var SerializerInterface
+     * The render icon process factory.
+     * @var RenderIconProcessFactory
      */
-    protected $serializer;
+    protected $renderIconProcessFactory;
 
     /**
      * The number of parallel render processes.
@@ -43,16 +42,16 @@ class RenderIconsStep implements ProcessStepInterface
     /**
      * RenderIconsStep constructor.
      * @param Console $console
-     * @param SerializerInterface $exportDataSerializer
+     * @param RenderIconProcessFactory $renderIconProcessFactory
      * @param int $numberOfParallelRenderProcesses
      */
     public function __construct(
         Console $console,
-        SerializerInterface $exportDataSerializer,
+        RenderIconProcessFactory $renderIconProcessFactory,
         int $numberOfParallelRenderProcesses
     ) {
         $this->console = $console;
-        $this->serializer = $exportDataSerializer;
+        $this->renderIconProcessFactory = $renderIconProcessFactory;
         $this->numberOfParallelRenderProcesses = $numberOfParallelRenderProcesses;
     }
 
@@ -82,7 +81,7 @@ class RenderIconsStep implements ProcessStepInterface
     {
         $processManager = $this->createProcessManager($processStepData->getExportData());
         foreach ($processStepData->getExportData()->getCombination()->getIcons() as $icon) {
-            $processManager->addProcess($this->createProcessForIcon($icon));
+            $processManager->addProcess($this->renderIconProcessFactory->create($icon));
         }
         $processManager->waitForAllProcesses();
     }
@@ -125,15 +124,5 @@ class RenderIconsStep implements ProcessStepInterface
         } else {
             $this->console->writeData($process->getOutput());
         }
-    }
-
-    /**
-     * Creates the render process for the icon.
-     * @param Icon $icon
-     * @return RenderIconProcess<string>
-     */
-    protected function createProcessForIcon(Icon $icon): RenderIconProcess
-    {
-        return new RenderIconProcess($this->serializer, $icon);
     }
 }

@@ -6,7 +6,6 @@ namespace FactorioItemBrowserTest\Export\Process;
 
 use FactorioItemBrowser\Export\Process\RenderIconProcess;
 use FactorioItemBrowser\ExportData\Entity\Icon;
-use JMS\Serializer\SerializerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -26,25 +25,18 @@ class RenderIconProcessTest extends TestCase
      */
     public function testConstruct(): void
     {
-        $serializedIcon = 'abc';
-        $expectedCommandLine = "'php' '{$_SERVER['SCRIPT_FILENAME']}' 'render-icon' 'abc'";
+        $commandLine = ['abc', 'def'];
+        $env = ['ghi' => 'jkl'];
+        $expectedCommandLine = "'abc' 'def'";
 
         /* @var Icon&MockObject $icon */
         $icon = $this->createMock(Icon::class);
 
-        /* @var SerializerInterface&MockObject $serializer */
-        $serializer = $this->createMock(SerializerInterface::class);
-        $serializer->expects($this->once())
-                   ->method('serialize')
-                   ->with($this->identicalTo($icon), $this->identicalTo('json'))
-                   ->willReturn($serializedIcon);
-
-
-        $process = new RenderIconProcess($serializer, $icon);
+        $process = new RenderIconProcess($icon, $commandLine, $env);
 
         $this->assertSame($icon, $process->getIcon());
-        $this->assertSame(['SUBCMD' => 1], $process->getEnv());
-        $this->assertNull($process->getTimeout());
         $this->assertSame($expectedCommandLine, $process->getCommandLine());
+        $this->assertSame($env, $process->getEnv());
+        $this->assertNull($process->getTimeout());
     }
 }

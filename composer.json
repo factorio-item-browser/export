@@ -26,7 +26,6 @@
     "factorio-item-browser/common": "^1.2",
     "factorio-item-browser/export-data": "^3.0",
     "factorio-item-browser/export-queue-client": "^1.1",
-    "imagine/imagine": "^1.2",
     "laminas/laminas-config-aggregator": "^1.0",
     "laminas/laminas-i18n": "^2.7",
     "laminas/laminas-servicemanager": "^3.3",
@@ -55,7 +54,6 @@
   "autoload-dev": {
     "psr-4": {
       "FactorioItemBrowserTest\\Export\\": "test/src",
-      "FactorioItemBrowserTestAsset\\Export\\": "test/asset",
       "FactorioItemBrowserTestSerializer\\Export\\": "test/serializer"
     }
   },

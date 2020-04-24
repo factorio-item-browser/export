@@ -6,7 +6,7 @@ namespace FactorioItemBrowserTestSerializer\Export\Entity\Dump;
 
 use FactorioItemBrowser\Export\Entity\Dump\Icon;
 use FactorioItemBrowser\Export\Entity\Dump\Layer;
-use FactorioItemBrowserTestAsset\Export\SerializerTestCase;
+use FactorioItemBrowserTestSerializer\Export\SerializerTestCase;
 
 /**
  * The PHPUnit test of serializing the Icon class.

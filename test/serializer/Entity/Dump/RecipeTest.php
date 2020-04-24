@@ -7,7 +7,7 @@ namespace FactorioItemBrowserTestSerializer\Export\Entity\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Ingredient;
 use FactorioItemBrowser\Export\Entity\Dump\Product;
 use FactorioItemBrowser\Export\Entity\Dump\Recipe;
-use FactorioItemBrowserTestAsset\Export\SerializerTestCase;
+use FactorioItemBrowserTestSerializer\Export\SerializerTestCase;
 
 /**
  * The PHPUnit test of serializing the Recipe class.

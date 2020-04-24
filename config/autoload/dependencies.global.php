@@ -14,7 +14,6 @@ namespace FactorioItemBrowser\Export;
 use BluePsyduck\FactorioModPortalClient\Constant\ConfigKey as ModConfigKey;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
-use Imagine\Image\ImagineInterface;
 use JMS\Serializer\SerializerInterface;
 use Laminas\I18n\Translator\Translator;
 use Laminas\I18n\Translator\TranslatorInterface;
@@ -37,7 +36,6 @@ return [
             Command\ProcessStep\ParserStep::class => AutoWireFactory::class,
             Command\ProcessStep\RenderIconsStep::class => AutoWireFactory::class,
             Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
-            Command\RenderIconCommand::class => AutoWireFactory::class,
 
             Console\Console::class => AutoWireFactory::class,
 
@@ -60,11 +58,10 @@ return [
             Parser\RecipeParser::class => AutoWireFactory::class,
             Parser\TranslationParser::class => AutoWireFactory::class,
 
-            Renderer\IconRenderer::class => AutoWireFactory::class,
+            Process\RenderIconProcessFactory::class => AutoWireFactory::class,
 
             // 3rd-party services
             Filesystem::class => AutoWireFactory::class,
-            ImagineInterface::class => Renderer\ImagineFactory::class,
             SerializerInterface::class . ' $exportSerializer' => Serializer\SerializerFactory::class,
 
             // Auto-wire helpers
@@ -81,6 +78,7 @@ return [
             'string $factorioDownloadUsername' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_USERNAME),
             'string $instancesDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
             'string $modsDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
+            'string $renderIconBinary' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::RENDER_ICON_BINARY),
             'string $tempDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),
             'string $uploadFtpHost' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_HOST),
             'string $uploadFtpUsername' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_USERNAME),

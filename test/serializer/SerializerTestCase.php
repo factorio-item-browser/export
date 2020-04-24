@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTestAsset\Export;
+namespace FactorioItemBrowserTestSerializer\Export;
 
 use FactorioItemBrowser\Export\Serializer\SerializerFactory;
 use Interop\Container\ContainerInterface;
@@ -53,7 +53,7 @@ abstract class SerializerTestCase extends TestCase
 
     /**
      * Returns the serialized data.
-     * @return array
+     * @return array<mixed>
      */
     abstract protected function getData(): array;
 }
