@@ -21,9 +21,4 @@ interface CommandName
      * The name of the processing command.
      */
     public const PROCESS = 'process';
-
-    /**
-     * The name of the command rendering an icon.
-     */
-    public const RENDER_ICON = 'render-icon';
 }

@@ -14,7 +14,6 @@ namespace FactorioItemBrowser\Export;
 use BluePsyduck\FactorioModPortalClient\Constant\ConfigKey as ModConfigKey;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
-use Imagine\Image\ImagineInterface;
 use JMS\Serializer\SerializerInterface;
 use Laminas\I18n\Translator\Translator;
 use Laminas\I18n\Translator\TranslatorInterface;
@@ -37,7 +36,6 @@ return [
             Command\ProcessStep\ParserStep::class => AutoWireFactory::class,
             Command\ProcessStep\RenderIconsStep::class => AutoWireFactory::class,
             Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
-            Command\RenderIconCommand::class => AutoWireFactory::class,
 
             Console\Console::class => AutoWireFactory::class,
 
@@ -62,11 +60,8 @@ return [
 
             Process\RenderIconProcessFactory::class => AutoWireFactory::class,
 
-            Renderer\IconRenderer::class => AutoWireFactory::class,
-
             // 3rd-party services
             Filesystem::class => AutoWireFactory::class,
-            ImagineInterface::class => Renderer\ImagineFactory::class,
             SerializerInterface::class . ' $exportSerializer' => Serializer\SerializerFactory::class,
 
             // Auto-wire helpers
