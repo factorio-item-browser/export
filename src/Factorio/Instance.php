@@ -163,14 +163,15 @@ class Instance
      */
     protected function setupDumpMod(array $modNames): void
     {
+        $modDirectory = sprintf('mods/Dump_%s', $this->version);
         exec(sprintf(
             'cp -r "%s" "%s"',
             __DIR__ . '/../../lua/dump',
-            $this->getInstancePath('mods/Dump_1.0.0')
+            $this->getInstancePath($modDirectory)
         ));
 
         file_put_contents(
-            $this->getInstancePath('mods/Dump_1.0.0/info.json'),
+            $this->getInstancePath(sprintf('%s/info.json', $modDirectory)),
             $this->serializer->serialize($this->createDumpInfoJson($modNames), 'json')
         );
     }

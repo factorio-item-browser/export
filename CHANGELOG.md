@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.3 - 2020-04-24
+
+### Fixed
+
+- Mismatched version between the mod directory and its generated info.json file.
+
 ## 2.0.2 - 2020-04-24
 
 ### Fixed
