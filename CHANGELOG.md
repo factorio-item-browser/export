@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased
+## 2.0.1 - 2020-04-24
 
 ### Changed
 
 - Extracted icon renderer to Go-based binary for major performance improvement.
+- Improved error message in the case that Factorio crashed.
 
 ### Fixed
 
