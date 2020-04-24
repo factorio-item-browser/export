@@ -9,6 +9,7 @@ use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\FactorioExecutionException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Process\Process;
@@ -177,6 +178,7 @@ class Instance
 
         $info = new InfoJson();
         $info->setName('Dump')
+             ->setTitle('Factorio Item Browser - Dump')
              ->setAuthor('factorio-item-browser')
              ->setVersion('1.0.0')
              ->setFactorioVersion($baseInfo->getVersion())
@@ -188,11 +190,16 @@ class Instance
     /**
      * Executes the Factorio instance.
      * @return string
+     * @throws ExportException
      */
     protected function execute(): string
     {
         $process = $this->createProcess();
         $process->run();
+        if (!$process->isSuccessful()) {
+            throw new FactorioExecutionException((int) $process->getExitCode(), $process->getOutput());
+        }
+
         return $process->getOutput();
     }
 

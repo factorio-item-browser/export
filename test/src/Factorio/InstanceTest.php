@@ -10,6 +10,7 @@ use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\FactorioExecutionException;
 use FactorioItemBrowser\Export\Factorio\DumpExtractor;
 use FactorioItemBrowser\Export\Factorio\Instance;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
@@ -247,6 +248,7 @@ class InstanceTest extends TestCase
 
         $expectedResult = new InfoJson();
         $expectedResult->setName('Dump')
+                       ->setTitle('Factorio Item Browser - Dump')
                        ->setAuthor('factorio-item-browser')
                        ->setVersion('1.0.0')
                        ->setFactorioVersion($baseVersion)
@@ -274,18 +276,18 @@ class InstanceTest extends TestCase
     {
         $output = 'abc';
 
-        /* @var Process|MockObject $process */
-        $process = $this->getMockBuilder(Process::class)
-                        ->onlyMethods(['run', 'getOutput'])
-                        ->disableOriginalConstructor()
-                        ->getMock();
+        /* @var Process&MockObject $process */
+        $process = $this->createMock(Process::class);
         $process->expects($this->once())
                 ->method('run');
+        $process->expects($this->once())
+                ->method('isSuccessful')
+                ->willReturn(true);
         $process->expects($this->once())
                 ->method('getOutput')
                 ->willReturn($output);
 
-        /* @var Instance|MockObject $instance */
+        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
                          ->onlyMethods(['createProcess'])
                          ->disableOriginalConstructor()
@@ -300,6 +302,45 @@ class InstanceTest extends TestCase
     }
 
     /**
+     * Tests the execute method.
+     * @throws ReflectionException
+     * @covers ::execute
+     */
+    public function testExecuteWithException(): void
+    {
+        $output = 'abc';
+        $exitCode = 42;
+
+        /* @var Process&MockObject $process */
+        $process = $this->createMock(Process::class);
+        $process->expects($this->once())
+                ->method('run');
+        $process->expects($this->once())
+                ->method('isSuccessful')
+                ->willReturn(false);
+        $process->expects($this->once())
+                ->method('getExitCode')
+                ->willReturn($exitCode);
+        $process->expects($this->once())
+                ->method('getOutput')
+                ->willReturn($output);
+
+        $this->expectException(FactorioExecutionException::class);
+        $this->expectExceptionCode($exitCode);
+
+        /* @var Instance&MockObject $instance */
+        $instance = $this->getMockBuilder(Instance::class)
+                         ->onlyMethods(['createProcess'])
+                         ->disableOriginalConstructor()
+                         ->getMock();
+        $instance->expects($this->once())
+                 ->method('createProcess')
+                 ->willReturn($process);
+
+        $this->invokeMethod($instance, 'execute');
+    }
+
+    /**
      * Tests the createProcess method.
      * @throws ReflectionException
      * @covers ::createProcess
@@ -308,7 +349,7 @@ class InstanceTest extends TestCase
     {
         $expectedCommandLine = "'abc' '--no-log-rotation' '--create=def' '--mod-directory=ghi'";
 
-        /* @var Instance|MockObject $instance */
+        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
                          ->onlyMethods(['getInstancePath'])
                          ->disableOriginalConstructor()
@@ -341,7 +382,7 @@ class InstanceTest extends TestCase
     {
         $directory = vfsStream::setup('root');
 
-        /* @var Instance|MockObject $instance */
+        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
                          ->onlyMethods(['getInstancePath'])
                          ->disableOriginalConstructor()
@@ -377,7 +418,7 @@ class InstanceTest extends TestCase
         $factorioPath = vfsStream::url('root/factorio/abc');
         $instancePath = vfsStream::url('root/instance/abc');
 
-        /* @var Instance|MockObject $instance */
+        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
                          ->onlyMethods(['getFactorioPath', 'getInstancePath'])
                          ->disableOriginalConstructor()
