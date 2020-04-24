@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2 - 2020-04-24
+
+### Fixed
+
+- Missing version in auto-wiring.
+
 ## 2.0.1 - 2020-04-24
 
 ### Changed
