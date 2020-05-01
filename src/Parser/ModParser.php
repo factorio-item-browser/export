@@ -123,15 +123,14 @@ class ModParser implements ParserInterface
      */
     protected function mapThumbnail(Mod $mod): ?Icon
     {
-        try {
-            $this->modFileManager->readFile($mod->getName(), self::THUMBNAIL_FILENAME);
-        } catch (ExportException $e) {
+        $thumbnailSize = $this->getThumbnailSize($mod);
+        if ($thumbnailSize === 0) {
             return null;
         }
 
         $layer = new Layer();
         $layer->setFileName(sprintf('__%s__/%s', $mod->getName(), self::THUMBNAIL_FILENAME))
-              ->setSize(self::RENDERED_THUMBNAIL_SIZE);
+              ->setSize($thumbnailSize);
 
         $thumbnail = new Icon();
         $thumbnail->setSize(self::RENDERED_THUMBNAIL_SIZE)
@@ -139,6 +138,27 @@ class ModParser implements ParserInterface
 
         $thumbnail->setId($this->hashCalculator->hashIcon($thumbnail));
         return $thumbnail;
+    }
+
+    /**
+     * Returns the size of the thumbnail, or 0 if no thumbnail is available.
+     * @param Mod $mod
+     * @return int
+     */
+    protected function getThumbnailSize(Mod $mod): int
+    {
+        try {
+            $content = $this->modFileManager->readFile($mod->getName(), self::THUMBNAIL_FILENAME);
+        } catch (ExportException $e) {
+            return 0;
+        }
+
+        $image = @imagecreatefromstring($content);
+        if ($image === false) {
+            return 0;
+        }
+
+        return imagesx($image);
     }
 
     /**

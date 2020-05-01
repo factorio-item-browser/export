@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Rendering of thumbnails which do not have a size of 144px.
+
 ## 2.0.3 - 2020-04-24
 
 ### Fixed
