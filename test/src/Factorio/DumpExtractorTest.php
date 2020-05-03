@@ -6,6 +6,7 @@ use BluePsyduck\TestHelper\ReflectionTrait;
 use Exception;
 use FactorioItemBrowser\Export\Entity\Dump\ControlStage;
 use FactorioItemBrowser\Export\Entity\Dump\DataStage;
+use FactorioItemBrowser\Export\Exception\DumpModNotLoadedException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Exception\InvalidDumpException;
@@ -254,7 +255,7 @@ EOT;
    7.754 Checksum of foo: 1234567890
 EOT;
 
-        $this->expectException(InternalException::class);
+        $this->expectException(DumpModNotLoadedException::class);
 
         $dumpExtractor = new DumpExtractor($this->serializer);
         $this->invokeMethod($dumpExtractor, 'detectModOrder', $output);

@@ -8,6 +8,7 @@ use Exception;
 use FactorioItemBrowser\Export\Entity\Dump\ControlStage;
 use FactorioItemBrowser\Export\Entity\Dump\DataStage;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Exception\DumpModNotLoadedException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Exception\InvalidDumpException;
@@ -58,11 +59,12 @@ class DumpExtractor
      */
     public function extract(string $output): Dump
     {
+        $modNames = $this->detectModOrder($output);
         $dataStageData = $this->extractRawDumpData($output, 'data');
         $controlStageData = $this->extractRawDumpData($output, 'control');
 
         $result = new Dump();
-        $result->setModNames($this->detectModOrder($output))
+        $result->setModNames($modNames)
                ->setDataStage($this->parseDump('data', $dataStageData, DataStage::class))
                ->setControlStage($this->parseDump('control', $controlStageData, ControlStage::class));
         return $result;
@@ -124,7 +126,7 @@ class DumpExtractor
 
         $lastMod = array_pop($matches[1]);
         if ($lastMod !== 'Dump') {
-            throw new InternalException('The Dump mod is not the last loaded mod.');
+            throw new DumpModNotLoadedException();
         }
 
         return $matches[1];

@@ -5,6 +5,7 @@
 ### Fixed
 
 - Rendering of thumbnails which do not have a size of 144px.
+- Wrong error message when mods are not compatible to Factorio (and thus the Dump mod was not loaded at all).
 
 ## 2.0.3 - 2020-04-24
 
