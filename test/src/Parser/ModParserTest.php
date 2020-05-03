@@ -8,6 +8,7 @@ use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Parser\ModParser;
@@ -219,15 +220,15 @@ class ModParserTest extends TestCase
     public function testMapThumbnail(): void
     {
         $modName = 'abc';
-        $thumbnailFile = 'def';
-        $thumbnailId = 'ghi';
+        $thumbnailId = 'def';
+        $size = 32;
 
         $mod = new Mod();
         $mod->setName($modName);
 
         $expectedLayer = new Layer();
         $expectedLayer->setFileName('__abc__/thumbnail.png')
-                      ->setSize(144);
+                      ->setSize($size);
 
         $expectedThumbnail = new Icon();
         $expectedThumbnail->setSize(144)
@@ -238,17 +239,21 @@ class ModParserTest extends TestCase
                        ->setLayers([$expectedLayer])
                        ->setId($thumbnailId);
 
-        $this->modFileManager->expects($this->once())
-                             ->method('readFile')
-                             ->with($this->identicalTo($modName), $this->identicalTo('thumbnail.png'))
-                             ->willReturn($thumbnailFile);
-
         $this->hashCalculator->expects($this->once())
                              ->method('hashIcon')
                              ->with($this->equalTo($expectedThumbnail))
                              ->willReturn($thumbnailId);
 
-        $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
+        /* @var ModParser&MockObject $parser */
+        $parser = $this->getMockBuilder(ModParser::class)
+                       ->onlyMethods(['getThumbnailSize'])
+                       ->setConstructorArgs([$this->hashCalculator, $this->modFileManager, $this->translationParser])
+                       ->getMock();
+        $parser->expects($this->once())
+               ->method('getThumbnailSize')
+               ->with($this->identicalTo($mod))
+               ->willReturn($size);
+
         $result = $this->invokeMethod($parser, 'mapThumbnail', $mod);
 
         $this->assertEquals($expectedResult, $result);
@@ -259,9 +264,41 @@ class ModParserTest extends TestCase
      * @throws ReflectionException
      * @covers ::mapThumbnail
      */
-    public function testMapThumbnailWithException(): void
+    public function testMapThumbnailWithoutSize(): void
     {
         $modName = 'abc';
+
+        $mod = new Mod();
+        $mod->setName($modName);
+
+        $this->hashCalculator->expects($this->never())
+                             ->method('hashIcon');
+
+        /* @var ModParser&MockObject $parser */
+        $parser = $this->getMockBuilder(ModParser::class)
+                       ->onlyMethods(['getThumbnailSize'])
+                       ->setConstructorArgs([$this->hashCalculator, $this->modFileManager, $this->translationParser])
+                       ->getMock();
+        $parser->expects($this->once())
+               ->method('getThumbnailSize')
+               ->with($this->identicalTo($mod))
+               ->willReturn(0);
+
+        $result = $this->invokeMethod($parser, 'mapThumbnail', $mod);
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * Tests the getThumbnailSize method.
+     * @throws ReflectionException
+     * @covers ::getThumbnailSize
+     */
+    public function testGetThumbnailSize(): void
+    {
+        $modName = 'abc';
+        $content = file_get_contents(__DIR__ . '/../../asset/icon.png');
+        $expectedResult = 32;
 
         $mod = new Mod();
         $mod->setName($modName);
@@ -269,15 +306,61 @@ class ModParserTest extends TestCase
         $this->modFileManager->expects($this->once())
                              ->method('readFile')
                              ->with($this->identicalTo($modName), $this->identicalTo('thumbnail.png'))
-                             ->willThrowException($this->createMock(ExportException::class));
-
-        $this->hashCalculator->expects($this->never())
-                             ->method('hashIcon');
+                             ->willReturn($content);
 
         $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
-        $result = $this->invokeMethod($parser, 'mapThumbnail', $mod);
+        $result = $this->invokeMethod($parser, 'getThumbnailSize', $mod);
 
-        $this->assertNull($result);
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Tests the getThumbnailSize method.
+     * @throws ReflectionException
+     * @covers ::getThumbnailSize
+     */
+    public function testGetThumbnailSizeWithoutThumbnail(): void
+    {
+        $modName = 'abc';
+        $expectedResult = 0;
+
+        $mod = new Mod();
+        $mod->setName($modName);
+
+        $this->modFileManager->expects($this->once())
+                             ->method('readFile')
+                             ->with($this->identicalTo($modName), $this->identicalTo('thumbnail.png'))
+                             ->willThrowException($this->createMock(FileNotFoundInModException::class));
+
+        $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
+        $result = $this->invokeMethod($parser, 'getThumbnailSize', $mod);
+
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * Tests the getThumbnailSize method.
+     * @throws ReflectionException
+     * @covers ::getThumbnailSize
+     */
+    public function testGetThumbnailSizeWithInvalidContent(): void
+    {
+        $modName = 'abc';
+        $content = 'not-an-image';
+        $expectedResult = 0;
+
+        $mod = new Mod();
+        $mod->setName($modName);
+
+        $this->modFileManager->expects($this->once())
+                             ->method('readFile')
+                             ->with($this->identicalTo($modName), $this->identicalTo('thumbnail.png'))
+                             ->willReturn($content);
+
+        $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
+        $result = $this->invokeMethod($parser, 'getThumbnailSize', $mod);
+
+        $this->assertSame($expectedResult, $result);
     }
 
     /**
