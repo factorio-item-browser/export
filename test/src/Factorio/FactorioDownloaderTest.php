@@ -225,7 +225,7 @@ class FactorioDownloaderTest extends TestCase
         $archiveFile = 'abc';
         $directory = 'def';
 
-        $expectedResult = new Process(['tar', '-xf', 'abc', '-C', 'def']);
+        $expectedResult = new Process(['tar', '-xf', 'abc', '-C', 'def'], null, null, null, null);
 
         $this->fileSystem->expects($this->once())
                          ->method('remove')
@@ -280,12 +280,23 @@ class FactorioDownloaderTest extends TestCase
         $headlessDirectory = 'abc';
         $factorioDirectory = 'def';
 
-        $this->fileSystem->expects($this->once())
+        $this->fileSystem->expects($this->exactly(3))
                          ->method('remove')
-                         ->with($this->identicalTo($factorioDirectory));
-        $this->fileSystem->expects($this->once())
+                         ->withConsecutive(
+                             [$this->identicalTo('def/bin')],
+                             [$this->identicalTo('def/data')],
+                             [$this->identicalTo('def/config-path.cfg')]
+                         );
+        $this->fileSystem->expects($this->exactly(3))
                          ->method('rename')
-                         ->with($this->identicalTo('abc/factorio'), $this->identicalTo($factorioDirectory));
+                         ->withConsecutive(
+                             [$this->identicalTo('abc/factorio/bin'), $this->identicalTo('def/bin')],
+                             [$this->identicalTo('abc/factorio/data'), $this->identicalTo('def/data')],
+                             [
+                                 $this->identicalTo('abc/factorio/config-path.cfg'),
+                                 $this->identicalTo('def/config-path.cfg'),
+                             ],
+                         );
 
         $downloader = new FactorioDownloader(
             $this->console,

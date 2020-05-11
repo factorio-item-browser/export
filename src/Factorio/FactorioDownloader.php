@@ -33,6 +33,15 @@ class FactorioDownloader
     protected const VARIANT_FULL = 'alpha';
 
     /**
+     * The files and directories of factorio which we need to copy.
+     */
+    protected const FACTORIO_FILES = [
+        'bin',
+        'data',
+        'config-path.cfg',
+    ];
+
+    /**
      * The console.
      * @var Console
      */
@@ -169,7 +178,10 @@ class FactorioDownloader
     {
         $this->fileSystem->remove($directory);
         $this->fileSystem->mkdir($directory);
-        return new Process(['tar', '-xf', $archiveFile, '-C', $directory]);
+
+        $process = new Process(['tar', '-xf', $archiveFile, '-C', $directory]);
+        $process->setTimeout(null);
+        return $process;
     }
 
     /**
@@ -193,7 +205,9 @@ class FactorioDownloader
      */
     protected function replaceOldVersion(string $headlessDirectory): void
     {
-        $this->fileSystem->remove($this->factorioDirectory);
-        $this->fileSystem->rename($headlessDirectory . '/factorio', $this->factorioDirectory);
+        foreach (self::FACTORIO_FILES as $file) {
+            $this->fileSystem->remove("{$this->factorioDirectory}/{$file}");
+            $this->fileSystem->rename("{$headlessDirectory}/factorio/{$file}", "{$this->factorioDirectory}/{$file}");
+        }
     }
 }

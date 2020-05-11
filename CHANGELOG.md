@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.5 - 2020-05-11
+
+### Fixed
+
+- Extracting downloaded Factorio running into a command timeout on slower machines.
+- Command `download-factorio` erased potential symlink of `data/factorio`.
+
 ## 2.0.4 - 2020-05-03
 
 ### Fixed
