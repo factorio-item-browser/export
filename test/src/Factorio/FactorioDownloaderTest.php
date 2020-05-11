@@ -225,7 +225,7 @@ class FactorioDownloaderTest extends TestCase
         $archiveFile = 'abc';
         $directory = 'def';
 
-        $expectedResult = new Process(['tar', '-xf', 'abc', '-C', 'def']);
+        $expectedResult = new Process(['tar', '-xf', 'abc', '-C', 'def'], null, null, null, null);
 
         $this->fileSystem->expects($this->once())
                          ->method('remove')

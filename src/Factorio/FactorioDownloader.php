@@ -169,7 +169,10 @@ class FactorioDownloader
     {
         $this->fileSystem->remove($directory);
         $this->fileSystem->mkdir($directory);
-        return new Process(['tar', '-xf', $archiveFile, '-C', $directory]);
+
+        $process = new Process(['tar', '-xf', $archiveFile, '-C', $directory]);
+        $process->setTimeout(null);
+        return $process;
     }
 
     /**

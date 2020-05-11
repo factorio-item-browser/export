@@ -15,9 +15,7 @@
   "require": {
     "php": "^7.3",
     "ext-ftp": "*",
-    "ext-gd": "*",
     "ext-json": "*",
-    "ext-PDO": "*",
     "ext-zip": "*",
     "bluepsyduck/factorio-mod-portal-client": "^1.2",
     "bluepsyduck/symfony-process-manager": "^1.0",
