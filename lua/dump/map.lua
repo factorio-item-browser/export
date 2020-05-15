@@ -144,7 +144,7 @@ function map.icon(prototype)
     local layered_icons
     if prototype.icons then
         layered_icons = prototype.icons
-    elseif prototype.icon then
+    elseif type(prototype.icon) == "string" then
         -- Fallback to simple icon definition.
         layered_icons = {
             {

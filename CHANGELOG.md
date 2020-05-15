@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.6 - 2020-05-15
+
+### Fixed
+
+- Process launching Factorio running in a timeout of 60secs.
+- Small mapping issue with icons of shortcuts.
+
 ## 2.0.5 - 2020-05-11
 
 ### Fixed

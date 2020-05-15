@@ -377,6 +377,7 @@ class InstanceTest extends TestCase
         $result = $this->invokeMethod($instance, 'createProcess');
 
         $this->assertSame($expectedCommandLine, $result->getCommandLine());
+        $this->assertNull($result->getTimeout());
     }
 
     /**

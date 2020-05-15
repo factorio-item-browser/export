@@ -226,7 +226,9 @@ class Instance
             '--mod-directory=' . $this->getInstancePath('mods')
         ];
 
-        return new Process($command);
+        $process = new Process($command);
+        $process->setTimeout(null);
+        return $process;
     }
 
     /**
