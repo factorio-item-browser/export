@@ -584,7 +584,7 @@ class ModDownloaderTest extends TestCase
 
         $this->modFileManager->expects($this->once())
                              ->method('extractModZip')
-                             ->with($this->identicalTo($destinationFile));
+                             ->with($this->identicalTo($modName), $this->identicalTo($destinationFile));
 
         $this->assertTrue($directory->hasChild('test.zip'));
 
