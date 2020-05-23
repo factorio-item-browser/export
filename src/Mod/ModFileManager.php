@@ -28,11 +28,6 @@ class ModFileManager
     protected const FILENAME_INFO = 'info.json';
 
     /**
-     * The regular expression used to match the mod directory.
-     */
-    protected const REGEXP_MOD_DIRECTORY = '#^(.*)_\d+\.\d+\.\d+/#';
-
-    /**
      * The serializer.
      * @var SerializerInterface
      */
@@ -65,10 +60,11 @@ class ModFileManager
 
     /**
      * Extracts the zip file into the working directory of the mods.
+     * @param string $modName
      * @param string $modZipPath
-     * @throws ExportException
+     * @throws InvalidModFileException
      */
-    public function extractModZip(string $modZipPath): void
+    public function extractModZip(string $modName, string $modZipPath): void
     {
         $zipArchive = new ZipArchive();
         $success = $zipArchive->open($modZipPath);
@@ -77,26 +73,20 @@ class ModFileManager
         }
 
         try {
-            $firstStat = $zipArchive->statIndex(0);
-            if ($firstStat === false || preg_match(self::REGEXP_MOD_DIRECTORY, $firstStat['name'], $match) !== 1) {
-                throw new InvalidModFileException($modZipPath, 'Unable to determine mod directory.');
-            }
-            $modDirectory = $match[0];
-            $modDirectoryLength = strlen($modDirectory);
-            $modName = $match[1];
-
             $this->removeModDirectory($modName);
 
             $targetDirectory = $this->getLocalDirectory($modName);
             mkdir($targetDirectory, 0777, true);
             for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
                 $stat = $zipArchive->statIndex($i);
+
                 if (
                     $stat !== false
                     && substr($stat['name'], -1) !== '/' // Ignore directories
-                    && substr($stat['name'], 0, $modDirectoryLength) === $modDirectory
+                    && strpos($stat['name'], '/') !== false
                 ) {
-                    $fileName = $targetDirectory . '/' . substr($stat['name'], $modDirectoryLength);
+                    $fileName = $targetDirectory . substr($stat['name'], strpos($stat['name'], '/'));
+
                     if (!is_dir(dirname($fileName))) {
                         mkdir(dirname($fileName), 0777, true);
                     }

@@ -259,7 +259,7 @@ class ModDownloader
         }
 
         $this->console->writeAction(sprintf('Extracting %s', $process->getMod()->getName()));
-        $this->modFileManager->extractModZip($process->getDestinationFile());
+        $this->modFileManager->extractModZip($process->getMod()->getName(), $process->getDestinationFile());
         unlink($process->getDestinationFile());
     }
 }

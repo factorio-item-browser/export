@@ -17,5 +17,5 @@ return [
     ConfigAggregator::ENABLE_CACHE => true,
     'debug' => false,
     'name' => 'Factorio Item Browser - Export',
-    'version' => '2.0.6',
+    'version' => '2.0.7',
 ];

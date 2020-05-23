@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.7 - 2020-05-23
+
+### Fixed
+
+- Failing to correctly detect the directory within the mod files for certain mods.
+
 ## 2.0.6 - 2020-05-15
 
 ### Fixed

@@ -86,7 +86,7 @@ class ModFileManagerTest extends TestCase
                 ->with($this->identicalTo($expectedModName))
                 ->willReturn($targetDirectory);
 
-        $manager->extractModZip(__DIR__ . '/../../asset/mod/valid.zip');
+        $manager->extractModZip('foo', __DIR__ . '/../../asset/mod/valid.zip');
 
         $this->assertSame('abc', file_get_contents(vfsStream::url('root/foo/abc')));
         $this->assertSame('def', file_get_contents(vfsStream::url('root/foo/def')));
@@ -105,7 +105,7 @@ class ModFileManagerTest extends TestCase
         $this->expectException(InvalidModFileException::class);
 
         $manager = new ModFileManager($this->serializer, 'foo', 'bar');
-        $manager->extractModZip(__DIR__ . '/../../asset/mod/invalid.zip');
+        $manager->extractModZip('foo', __DIR__ . '/../../asset/mod/invalid.zip');
     }
 
     /**
@@ -118,7 +118,7 @@ class ModFileManagerTest extends TestCase
         $this->expectException(InvalidModFileException::class);
 
         $manager = new ModFileManager($this->serializer, 'foo', 'bar');
-        $manager->extractModZip(__DIR__ . '/../../asset/mod/invalidDirectory.zip');
+        $manager->extractModZip('foo', __DIR__ . '/../../asset/mod/invalidDirectory.zip');
     }
 
     /**
