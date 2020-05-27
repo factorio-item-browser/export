@@ -13,8 +13,9 @@
   ],
   "minimum-stability": "stable",
   "require": {
-    "php": "^7.3",
+    "php": "^7.4",
     "ext-ftp": "*",
+    "ext-gd": "*",
     "ext-json": "*",
     "ext-zip": "*",
     "bluepsyduck/factorio-mod-portal-client": "^1.2",
