@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Dependency `factorio-item-browser/export-queue-client` to version 1.2.
+- Using ordering `priority` to fetch the next job to process.
+
 ## 2.0.7 - 2020-05-23
 
 ### Fixed
