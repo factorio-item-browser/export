@@ -13,6 +13,7 @@ use BluePsyduck\FactorioModPortalClient\Response\ModListResponse;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use BluePsyduck\TestHelper\ReflectionTrait;
+use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\DownloadFailedException;
@@ -380,39 +381,42 @@ class ModDownloaderTest extends TestCase
      */
     public function testFindLatestRelease(): void
     {
+        $factorioVersion = '4.2.0';
+
         $release1 = new Release();
         $release1->setVersion('1.2.3');
+        $release1->getInfoJson()->setFactorioVersion('4.2.1');
         $release2 = new Release();
-        $release2->setVersion('2.3.4');
+        $release2->setVersion('3.4.5');
+        $release2->getInfoJson()->setFactorioVersion('2.1.0');
         $release3 = new Release();
-        $release3->setVersion('0.1.2');
+        $release3->setVersion('2.3.4');
+        $release3->getInfoJson()->setFactorioVersion('4.2.1');
+        $release4 = new Release();
+        $release4->setVersion('0.1.2');
+        $release4->getInfoJson()->setFactorioVersion('4.2.1');
 
         $mod = new Mod();
-        $mod->setReleases([$release1, $release2, $release3]);
+        $mod->setReleases([$release1, $release2, $release3, $release4]);
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        /* @var ModDownloader&MockObject $downloader */
+        $downloader = $this->getMockBuilder(ModDownloader::class)
+                           ->onlyMethods(['getFactorioVersion'])
+                           ->setConstructorArgs([
+                               $this->console,
+                               $this->modFileManager,
+                               $this->modPortalClientFacade,
+                               42,
+                               'foo',
+                           ])
+                           ->getMock();
+        $downloader->expects($this->any())
+                   ->method('getFactorioVersion')
+                   ->willReturn($factorioVersion);
+
         $result = $this->invokeMethod($downloader, 'findLatestRelease', $mod);
 
-        $this->assertSame($release2, $result);
-    }
-
-    /**
-     * Tests the findLatestRelease method.
-     * @throws ReflectionException
-     * @covers ::findLatestRelease
-     */
-    public function testFindLatestReleaseWithPropertySet(): void
-    {
-        /* @var Release&MockObject $release */
-        $release = $this->createMock(Release::class);
-
-        $mod = new Mod();
-        $mod->setLatestRelease($release);
-
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
-        $result = $this->invokeMethod($downloader, 'findLatestRelease', $mod);
-
-        $this->assertSame($release, $result);
+        $this->assertSame($release3, $result);
     }
 
     /**
@@ -428,6 +432,51 @@ class ModDownloaderTest extends TestCase
 
         $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->invokeMethod($downloader, 'findLatestRelease', $mod);
+    }
+
+    /**
+     * Tests the getFactorioVersion method.
+     * @throws ReflectionException
+     * @covers ::getFactorioVersion
+     */
+    public function testGetFactorioVersion(): void
+    {
+        $baseVersion = '1.2.3';
+
+        $baseInfo = new InfoJson();
+        $baseInfo->setVersion($baseVersion);
+
+        $this->modFileManager->expects($this->once())
+                             ->method('getInfo')
+                             ->with($this->identicalTo(Constant::MOD_NAME_BASE))
+                             ->willReturn($baseInfo);
+
+        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $this->injectProperty($downloader, 'factorioVersion', null);
+
+        $result = $this->invokeMethod($downloader, 'getFactorioVersion');
+        $this->assertSame($baseVersion, $result);
+        $this->assertSame($baseVersion, $this->extractProperty($downloader, 'factorioVersion'));
+    }
+
+    /**
+     * Tests the getFactorioVersion method.
+     * @throws ReflectionException
+     * @covers ::getFactorioVersion
+     */
+    public function testGetFactorioVersionWithAvailableVersion(): void
+    {
+        $factorioVersion = '1.2.3';
+
+        $this->modFileManager->expects($this->never())
+                             ->method('getInfo');
+
+        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $this->injectProperty($downloader, 'factorioVersion', $factorioVersion);
+
+        $result = $this->invokeMethod($downloader, 'getFactorioVersion');
+        $this->assertSame($factorioVersion, $result);
+        $this->assertSame($factorioVersion, $this->extractProperty($downloader, 'factorioVersion'));
     }
 
     /**

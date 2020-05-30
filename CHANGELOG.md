@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+- Downloader ignoring the Factorio version and downloading the wrong releases.
+
 ### Changed
 
 - Dependency `factorio-item-browser/export-queue-client` to version 1.2.
