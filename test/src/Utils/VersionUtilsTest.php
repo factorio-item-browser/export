@@ -103,4 +103,37 @@ class VersionUtilsTest extends TestCase
         $result = VersionUtils::getGreater($leftVersion, $rightVersion);
         $this->assertSame($expectedResult, $result);
     }
+
+    /**
+     * Provides the data for the hasFactorioVersion test.
+     * @return array<mixed>
+     */
+    public function provideHasFactorioVersion(): array
+    {
+        return [
+            ['0.18.42', '0.18.0', true],
+            ['0.18.42', '0.18.100', true],
+
+            ['0.18.42', '0.19.0', false],
+            ['0.18.42', '1.0.0', false],
+        ];
+    }
+
+    /**
+     * Tests the hasFactorioVersion method.
+     * @param string $currentFactorioVersion
+     * @param string $requiredVersion
+     * @param bool $expectedResult
+     * @covers ::hasFactorioVersion
+     * @dataProvider provideHasFactorioVersion
+     */
+    public function testHasFactorioVersion(
+        string $currentFactorioVersion,
+        string $requiredVersion,
+        bool $expectedResult
+    ): void {
+        $result = VersionUtils::hasFactorioVersion($currentFactorioVersion, $requiredVersion);
+
+        $this->assertSame($expectedResult, $result);
+    }
 }

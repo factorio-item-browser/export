@@ -60,6 +60,12 @@ class ModDownloader
     protected $tempDirectory;
 
     /**
+     * The current version of Factorio.
+     * @var string|null
+     */
+    protected $factorioVersion;
+
+    /**
      * Initializes the downloader.
      * @param Console $console
      * @param ModFileManager $modFileManager
@@ -180,13 +186,18 @@ class ModDownloader
      */
     protected function findLatestRelease(Mod $mod): Release
     {
-        if ($mod->getLatestRelease() instanceof Release) {
-            return $mod->getLatestRelease();
-        }
-
         /* @var Release|null $result */
         $result = null;
         foreach ($mod->getReleases() as $release) {
+            if (
+                !VersionUtils::hasFactorioVersion(
+                    $this->getFactorioVersion(),
+                    $release->getInfoJson()->getFactorioVersion()
+                )
+            ) {
+                continue;
+            }
+
             if ($result === null || VersionUtils::compare($release->getVersion(), $result->getVersion()) > 0) {
                 $result = $release;
             }
@@ -195,6 +206,19 @@ class ModDownloader
             throw new NoValidReleaseException($mod->getName());
         }
         return $result;
+    }
+
+    /**
+     * Returns the current version of Factorio.
+     * @return string
+     * @throws ExportException
+     */
+    protected function getFactorioVersion(): string
+    {
+        if ($this->factorioVersion === null) {
+            $this->factorioVersion = $this->modFileManager->getInfo(Constant::MOD_NAME_BASE)->getVersion();
+        }
+        return $this->factorioVersion;
     }
 
     /**

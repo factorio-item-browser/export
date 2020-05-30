@@ -44,6 +44,20 @@ class VersionUtils
     }
 
     /**
+     * Returns whether the specified version fulfills the factorio version.
+     * @param string $currentFactorioVersion
+     * @param string $requiredVersion
+     * @return bool
+     */
+    public static function hasFactorioVersion(string $currentFactorioVersion, string $requiredVersion): bool
+    {
+        $requiredParts = self::splitVersion($requiredVersion);
+        $factorioParts = self::splitVersion($currentFactorioVersion);
+
+        return ($requiredParts[0] === $factorioParts[0] && $requiredParts[1] === $factorioParts[1]);
+    }
+
+    /**
      * Splits the specified version into an array of three integer values. Missing values are filled with 0.
      * @param string $version
      * @return array|int[]
