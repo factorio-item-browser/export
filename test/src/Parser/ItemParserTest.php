@@ -171,19 +171,19 @@ class ItemParserTest extends TestCase
                          ->with($this->identicalTo(EntityType::ITEM), $this->identicalTo('def'))
                          ->willReturn($iconId);
 
-        $this->translationParser->expects($this->once())
-                                ->method('translateNames')
-                                ->with(
-                                    $this->isInstanceOf(LocalisedString::class),
-                                    $this->identicalTo($dumpItem->getLocalisedName()),
-                                    $this->identicalTo($dumpItem->getLocalisedEntityName())
-                                );
-        $this->translationParser->expects($this->once())
-                                ->method('translateDescriptions')
-                                ->with(
-                                    $this->isInstanceOf(LocalisedString::class),
-                                    $this->identicalTo($dumpItem->getLocalisedDescription()),
-                                    $this->identicalTo($dumpItem->getLocalisedEntityDescription())
+        $this->translationParser->expects($this->exactly(2))
+                                ->method('translate')
+                                ->withConsecutive(
+                                    [
+                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($dumpItem->getLocalisedName()),
+                                        $this->identicalTo($dumpItem->getLocalisedEntityName()),
+                                    ],
+                                    [
+                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($dumpItem->getLocalisedDescription()),
+                                        $this->identicalTo($dumpItem->getLocalisedEntityDescription()),
+                                    ],
                                 );
 
         $parser = new ItemParser($this->iconParser, $this->translationParser);
@@ -214,19 +214,19 @@ class ItemParserTest extends TestCase
                          ->with($this->identicalTo(EntityType::FLUID), $this->identicalTo('def'))
                          ->willReturn($iconId);
 
-        $this->translationParser->expects($this->once())
-                                ->method('translateNames')
-                                ->with(
-                                    $this->isInstanceOf(LocalisedString::class),
-                                    $this->identicalTo($dumpFluid->getLocalisedName()),
-                                    $this->isNull()
-                                );
-        $this->translationParser->expects($this->once())
-                                ->method('translateDescriptions')
-                                ->with(
-                                    $this->isInstanceOf(LocalisedString::class),
-                                    $this->identicalTo($dumpFluid->getLocalisedDescription()),
-                                    $this->isNull()
+        $this->translationParser->expects($this->exactly(2))
+                                ->method('translate')
+                                ->withConsecutive(
+                                    [
+                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($dumpFluid->getLocalisedName()),
+                                        $this->isNull(),
+                                    ],
+                                    [
+                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($dumpFluid->getLocalisedDescription()),
+                                        $this->isNull(),
+                                    ],
                                 );
 
         $parser = new ItemParser($this->iconParser, $this->translationParser);

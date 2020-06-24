@@ -77,12 +77,12 @@ class ItemParser implements ParserInterface
                    ->setName(strtolower($dumpItem->getName()))
                    ->setIconId($this->iconParser->getIconId(EntityType::ITEM, strtolower($dumpItem->getName())));
 
-        $this->translationParser->translateNames(
+        $this->translationParser->translate(
             $exportItem->getLabels(),
             $dumpItem->getLocalisedName(),
             $dumpItem->getLocalisedEntityName()
         );
-        $this->translationParser->translateDescriptions(
+        $this->translationParser->translate(
             $exportItem->getDescriptions(),
             $dumpItem->getLocalisedDescription(),
             $dumpItem->getLocalisedEntityDescription()
@@ -103,11 +103,8 @@ class ItemParser implements ParserInterface
                    ->setName(strtolower($dumpFluid->getName()))
                    ->setIconId($this->iconParser->getIconId(EntityType::FLUID, strtolower($dumpFluid->getName())));
 
-        $this->translationParser->translateNames($exportItem->getLabels(), $dumpFluid->getLocalisedName());
-        $this->translationParser->translateDescriptions(
-            $exportItem->getDescriptions(),
-            $dumpFluid->getLocalisedDescription()
-        );
+        $this->translationParser->translate($exportItem->getLabels(), $dumpFluid->getLocalisedName());
+        $this->translationParser->translate($exportItem->getDescriptions(), $dumpFluid->getLocalisedDescription());
 
         return $exportItem;
     }

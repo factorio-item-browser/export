@@ -82,11 +82,8 @@ class MachineParser implements ParserInterface
                       );
 
         $this->mapEnergyUsage($exportMachine, $dumpMachine->getEnergyUsage());
-        $this->translationParser->translateNames($exportMachine->getLabels(), $dumpMachine->getLocalisedName());
-        $this->translationParser->translateDescriptions(
-            $exportMachine->getDescriptions(),
-            $dumpMachine->getLocalisedDescription()
-        );
+        $this->translationParser->translate($exportMachine->getLabels(), $dumpMachine->getLocalisedName());
+        $this->translationParser->translate($exportMachine->getDescriptions(), $dumpMachine->getLocalisedDescription());
 
         return $exportMachine;
     }

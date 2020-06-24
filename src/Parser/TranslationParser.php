@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
+use BluePsyduck\FactorioTranslator\Exception\NoSupportedLoaderException;
+use BluePsyduck\FactorioTranslator\Translator;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
-use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\I18n\Translator;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 
@@ -19,6 +20,12 @@ use FactorioItemBrowser\ExportData\Entity\LocalisedString;
 class TranslationParser implements ParserInterface
 {
     /**
+     * The mod file manager.
+     * @var ModFileManager
+     */
+    protected $modFileManager;
+
+    /**
      * The translator.
      * @var Translator
      */
@@ -26,21 +33,26 @@ class TranslationParser implements ParserInterface
 
     /**
      * Initializes the parser.
+     * @param ModFileManager $modFileManager
      * @param Translator $translator
      */
-    public function __construct(Translator $translator)
+    public function __construct(ModFileManager $modFileManager, Translator $translator)
     {
+        $this->modFileManager = $modFileManager;
         $this->translator = $translator;
     }
 
     /**
      * Prepares the parser to be able to later parse the dump.
      * @param Dump $dump
-     * @throws ExportException
+     * @throws NoSupportedLoaderException
      */
     public function prepare(Dump $dump): void
     {
-        $this->translator->loadFromModNames($dump->getModNames());
+        $this->translator->loadMod($this->modFileManager->getLocalDirectory('core'));
+        foreach ($dump->getModNames() as $modName) {
+            $this->translator->loadMod($this->modFileManager->getLocalDirectory($modName));
+        }
     }
 
     /**
@@ -61,47 +73,21 @@ class TranslationParser implements ParserInterface
     }
 
     /**
-     * Translates the names into the specified localised string.
-     * @param LocalisedString $names
+     * Translates the localised string into all the languages.
+     * @param LocalisedString $entity
      * @param mixed $translation
-     * @param mixed $secondaryTranslation
+     * @param mixed|null $secondaryTranslation
      */
-    public function translateNames(LocalisedString $names, $translation, $secondaryTranslation = null): void
+    public function translate(LocalisedString $entity, $translation, $secondaryTranslation = null): void
     {
-        $this->translator->addTranslationsToEntity($names, 'name', $translation, $secondaryTranslation);
-    }
-
-    /**
-     * Translates the descriptions into the specified localised string.
-     * @param LocalisedString $descriptions
-     * @param mixed $translation
-     * @param mixed $secondaryTranslation
-     */
-    public function translateDescriptions(
-        LocalisedString $descriptions,
-        $translation,
-        $secondaryTranslation = null
-    ): void {
-        $this->translator->addTranslationsToEntity($descriptions, 'description', $translation, $secondaryTranslation);
-    }
-
-    /**
-     * Translates the names of a mod into the specified localised string.
-     * @param LocalisedString $names
-     * @param string $modName
-     */
-    public function translateModNames(LocalisedString $names, string $modName): void
-    {
-        $this->translator->addTranslationsToEntity($names, 'mod-name', ['mod-name.' . $modName]);
-    }
-
-    /**
-     * Translates the descriptions of a mod into the specified localised string.
-     * @param LocalisedString $descriptions
-     * @param string $modName
-     */
-    public function translateModDescriptions(LocalisedString $descriptions, string $modName): void
-    {
-        $this->translator->addTranslationsToEntity($descriptions, 'mod-description', ['mod-description.' . $modName]);
+        foreach ($this->translator->getAllLocales() as $locale) {
+            $value = $this->translator->translate($locale, $translation);
+            if ($value === '' && $secondaryTranslation !== null) {
+                $value = $this->translator->translate($locale, $secondaryTranslation);
+            }
+            if ($value !== '') {
+                $entity->addTranslation($locale, $value);
+            }
+        }
     }
 }

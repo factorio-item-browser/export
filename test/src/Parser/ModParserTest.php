@@ -174,6 +174,8 @@ class ModParserTest extends TestCase
     public function testMapMod(): void
     {
         $modName = 'abc';
+        $expectedTitleTranslation = ['mod-name.abc'];
+        $expectedDescriptionTranslation = ['mod-description.abc'];
 
         $infoJson = new InfoJson();
         $infoJson->setVersion('1.2.3')
@@ -199,12 +201,18 @@ class ModParserTest extends TestCase
                              ->with($this->identicalTo($modName))
                              ->willReturn($infoJson);
 
-        $this->translationParser->expects($this->once())
-                                ->method('translateModNames')
-                                ->with($this->equalTo($expectedTitles), $this->identicalTo($modName));
-        $this->translationParser->expects($this->once())
-                                ->method('translateModDescriptions')
-                                ->with($this->equalTo($expectedDescriptions), $this->identicalTo($modName));
+        $this->translationParser->expects($this->exactly(2))
+                                ->method('translate')
+                                ->withConsecutive(
+                                    [
+                                        $this->equalTo($expectedTitles),
+                                        $this->identicalTo($expectedTitleTranslation),
+                                    ],
+                                    [
+                                        $this->equalTo($expectedDescriptions),
+                                        $this->identicalTo($expectedDescriptionTranslation),
+                                    ],
+                                );
 
         $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
         $result = $this->invokeMethod($parser, 'mapMod', $modName);

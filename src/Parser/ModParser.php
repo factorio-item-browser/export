@@ -110,8 +110,8 @@ class ModParser implements ParserInterface
         $mod->getTitles()->addTranslation('en', $info->getTitle());
         $mod->getDescriptions()->addTranslation('en', $info->getDescription());
 
-        $this->translationParser->translateModNames($mod->getTitles(), $modName);
-        $this->translationParser->translateModDescriptions($mod->getDescriptions(), $modName);
+        $this->translationParser->translate($mod->getTitles(), ["mod-name.${modName}"]);
+        $this->translationParser->translate($mod->getDescriptions(), ["mod-description.${modName}"]);
 
         return $mod;
     }
