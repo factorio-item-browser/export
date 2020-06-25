@@ -277,7 +277,6 @@ class ModDownloaderTest extends TestCase
 
         return [
             [['abc', 'base', 'def'], ['abc' => $mod1, 'def' => $mod2], false],
-            [['abc', 'def'], ['abc' => $mod1, 'def' => $mod2], true],
             [['abc', 'base', 'def'], ['abc' => $mod1], true],
         ];
     }

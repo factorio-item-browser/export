@@ -9,6 +9,8 @@ use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
+use FactorioItemBrowser\Export\Entity\ModList\Mod;
+use FactorioItemBrowser\Export\Entity\ModListJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FactorioExecutionException;
 use FactorioItemBrowser\Export\Factorio\DumpExtractor;
@@ -270,6 +272,86 @@ class InstanceTest extends TestCase
         );
 
         $result = $this->invokeMethod($instance, 'createDumpInfoJson', $modNames);
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * Tests the createModListJson method.
+     * @throws ReflectionException
+     * @covers ::createModListJson
+     */
+    public function testCreateModListJson(): void
+    {
+        $modNames = ['abc', 'base', 'def'];
+
+        $expectedMod1 = new Mod();
+        $expectedMod1->setName('base')
+                     ->setEnabled(true);
+        $expectedMod2 = new Mod();
+        $expectedMod2->setName('Dump')
+                     ->setEnabled(true);
+        $expectedMod3 = new Mod();
+        $expectedMod3->setName('abc')
+                     ->setEnabled(true);
+        $expectedMod4 = new Mod();
+        $expectedMod4->setName('def')
+                     ->setEnabled(true);
+
+        $expectedResult = new ModListJson();
+        $expectedResult->setMods([$expectedMod1, $expectedMod2, $expectedMod3, $expectedMod4]);
+
+        $instance = new Instance(
+            $this->console,
+            $this->dumpExtractor,
+            $this->modFileManager,
+            $this->serializer,
+            'foo',
+            'bar',
+            '1.2.3',
+        );
+
+        $result = $this->invokeMethod($instance, 'createModListJson', $modNames);
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * Tests the createModListJson method.
+     * @throws ReflectionException
+     * @covers ::createModListJson
+     */
+    public function testCreateModListJsonWithoutBase(): void
+    {
+        $modNames = ['abc', 'def'];
+
+        $expectedMod1 = new Mod();
+        $expectedMod1->setName('base')
+                     ->setEnabled(false);
+        $expectedMod2 = new Mod();
+        $expectedMod2->setName('Dump')
+                     ->setEnabled(true);
+        $expectedMod3 = new Mod();
+        $expectedMod3->setName('abc')
+                     ->setEnabled(true);
+        $expectedMod4 = new Mod();
+        $expectedMod4->setName('def')
+                     ->setEnabled(true);
+
+        $expectedResult = new ModListJson();
+        $expectedResult->setMods([$expectedMod1, $expectedMod2, $expectedMod3, $expectedMod4]);
+
+        $instance = new Instance(
+            $this->console,
+            $this->dumpExtractor,
+            $this->modFileManager,
+            $this->serializer,
+            'foo',
+            'bar',
+            '1.2.3',
+        );
+
+        $result = $this->invokeMethod($instance, 'createModListJson', $modNames);
+
         $this->assertEquals($expectedResult, $result);
     }
 

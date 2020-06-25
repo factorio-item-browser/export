@@ -1,0 +1,6 @@
+FactorioItemBrowser\Export\Entity\ModListJson:
+  access_type: public_method
+  exclusion_policy: all
+  properties:
+    mods:
+      type: array<FactorioItemBrowser\Export\Entity\ModList\Mod>
