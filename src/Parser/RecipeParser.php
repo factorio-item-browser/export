@@ -118,11 +118,8 @@ class RecipeParser implements ParserInterface
             }
         }
 
-        $this->translationParser->translateNames($exportRecipe->getLabels(), $dumpRecipe->getLocalisedName());
-        $this->translationParser->translateDescriptions(
-            $exportRecipe->getDescriptions(),
-            $dumpRecipe->getLocalisedDescription()
-        );
+        $this->translationParser->translate($exportRecipe->getLabels(), $dumpRecipe->getLocalisedName());
+        $this->translationParser->translate($exportRecipe->getDescriptions(), $dumpRecipe->getLocalisedDescription());
 
         $exportRecipe->setIconId($this->mapIconId($exportRecipe));
         return $exportRecipe;

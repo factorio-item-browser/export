@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Mod;
 
 use Exception;
-use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
@@ -26,6 +25,14 @@ class ModFileManager
      * The filename of the info file.
      */
     protected const FILENAME_INFO = 'info.json';
+
+    /**
+     * The default mods actually shipped with Factorio.
+     */
+    protected const DEFAULT_MODS = [
+        'base',
+        'core',
+    ];
 
     /**
      * The serializer.
@@ -129,35 +136,6 @@ class ModFileManager
     }
 
     /**
-     * Finds files of a certain mod matching a glob pattern.
-     * @param string $modName
-     * @param string $globPattern
-     * @return array|string[]
-     */
-    public function findFiles(string $modName, string $globPattern): array
-    {
-        $modDirectory = $this->getLocalDirectory($modName) . '/';
-        $modDirectoryLength = strlen($modDirectory);
-
-        $files = $this->executeGlob($modDirectory . $globPattern);
-        return array_map(function (string $value) use ($modDirectoryLength): string {
-            return substr($value, $modDirectoryLength);
-        }, $files);
-    }
-
-    /**
-     * Executes the glob on the specified pattern.
-     * @param string $pattern
-     * @return array|string[]
-     * @codeCoverageIgnore Cannot emulate glob with vfsStream.
-     */
-    protected function executeGlob(string $pattern): array
-    {
-        $result = glob($pattern);
-        return ($result === false) ? [] : $result;
-    }
-
-    /**
      * Reads a file from a mod, throwing an exception if it is not present.
      * @param string $modName
      * @param string $fileName
@@ -180,7 +158,7 @@ class ModFileManager
      */
     public function getLocalDirectory(string $modName): string
     {
-        if ($modName === Constant::MOD_NAME_BASE) {
+        if (in_array($modName, self::DEFAULT_MODS, true)) {
             return $this->factorioDirectory . '/data/' . $modName;
         }
         return $this->modsDirectory . '/' . $modName;

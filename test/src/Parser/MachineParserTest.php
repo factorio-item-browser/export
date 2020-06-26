@@ -163,19 +163,19 @@ class MachineParserTest extends TestCase
                          )
                          ->willReturn($iconId);
 
-        $this->translationParser->expects($this->once())
-                                ->method('translateNames')
-                                ->with(
-                                    $this->isInstanceOf(LocalisedString::class),
-                                    $this->identicalTo($dumpMachine->getLocalisedName()),
-                                    $this->isNull()
-                                );
-        $this->translationParser->expects($this->once())
-                                ->method('translateDescriptions')
-                                ->with(
-                                    $this->isInstanceOf(LocalisedString::class),
-                                    $this->identicalTo($dumpMachine->getLocalisedDescription()),
-                                    $this->isNull()
+        $this->translationParser->expects($this->exactly(2))
+                                ->method('translate')
+                                ->withConsecutive(
+                                    [
+                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($dumpMachine->getLocalisedName()),
+                                        $this->isNull(),
+                                    ],
+                                    [
+                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($dumpMachine->getLocalisedDescription()),
+                                        $this->isNull(),
+                                    ],
                                 );
 
         /* @var MachineParser&MockObject $parser */

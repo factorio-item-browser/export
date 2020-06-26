@@ -193,38 +193,6 @@ class ModFileManagerTest extends TestCase
     }
 
     /**
-     * Tests the findFiles method.
-     * @covers ::findFiles
-     */
-    public function testFindFiles(): void
-    {
-        $modName = 'abc';
-        $globPattern = 'def';
-        $modDirectory = 'ghi';
-        $expectedPattern = 'ghi/def';
-        $files = ['ghi/jkl.foo', 'ghi/mno/pqr.foo'];
-        $expectedResult = ['jkl.foo', 'mno/pqr.foo'];
-
-        /* @var ModFileManager&MockObject $manager */
-        $manager = $this->getMockBuilder(ModFileManager::class)
-                        ->onlyMethods(['getLocalDirectory', 'executeGlob'])
-                        ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
-                        ->getMock();
-        $manager->expects($this->once())
-                ->method('getLocalDirectory')
-                ->with($this->identicalTo($modName))
-                ->willReturn($modDirectory);
-        $manager->expects($this->once())
-                ->method('executeGlob')
-                ->with($this->identicalTo($expectedPattern))
-                ->willReturn($files);
-
-        $result = $manager->findFiles($modName, $globPattern);
-
-        $this->assertSame($expectedResult, $result);
-    }
-
-    /**
      * Tests the readFile method.
      * @throws ExportException
      * @covers ::readFile

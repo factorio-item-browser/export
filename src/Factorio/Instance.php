@@ -144,7 +144,6 @@ class Instance
     /**
      * Sets up the mods to use for the combination.
      * @param array|string[] $modNames
-     * @throws ExportException
      */
     protected function setUpMods(array $modNames): void
     {
@@ -163,15 +162,14 @@ class Instance
      */
     protected function setupDumpMod(array $modNames): void
     {
-        $modDirectory = sprintf('mods/Dump_%s', $this->version);
         exec(sprintf(
             'cp -r "%s" "%s"',
             __DIR__ . '/../../lua/dump',
-            $this->getInstancePath($modDirectory)
+            $this->getInstancePath('mods/Dump')
         ));
 
         file_put_contents(
-            $this->getInstancePath(sprintf('%s/info.json', $modDirectory)),
+            $this->getInstancePath('mods/Dump/info.json'),
             $this->serializer->serialize($this->createDumpInfoJson($modNames), 'json')
         );
     }
@@ -276,14 +274,12 @@ class Instance
     /**
      * Creates a symlink to the specified mod name.
      * @param string $modName
-     * @throws ExportException
      * @codeCoverageIgnore Unable to test symlink with vfsStream.
      */
     protected function createModSymlink(string $modName): void
     {
-        $info = $this->modFileManager->getInfo($modName);
         $source = $this->modFileManager->getLocalDirectory($modName);
-        $destination = $this->getInstancePath(sprintf('mods/%s_%s', $modName, $info->getVersion()));
+        $destination = $this->getInstancePath(sprintf('mods/%s', $modName));
         symlink((string) realpath($source), $destination);
     }
 

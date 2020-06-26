@@ -223,19 +223,19 @@ class RecipeParserTest extends TestCase
                        ->setProducts([$exportProduct1])
                        ->setIconId($iconId);
 
-        $this->translationParser->expects($this->once())
-                                ->method('translateNames')
-                                ->with(
-                                    $this->isInstanceOf(LocalisedString::class),
-                                    $this->identicalTo($dumpRecipe->getLocalisedName()),
-                                    $this->isNull()
-                                );
-        $this->translationParser->expects($this->once())
-                                ->method('translateDescriptions')
-                                ->with(
-                                    $this->isInstanceOf(LocalisedString::class),
-                                    $this->identicalTo($dumpRecipe->getLocalisedDescription()),
-                                    $this->isNull()
+        $this->translationParser->expects($this->exactly(2))
+                                ->method('translate')
+                                ->withConsecutive(
+                                    [
+                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($dumpRecipe->getLocalisedName()),
+                                        $this->isNull(),
+                                    ],
+                                    [
+                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($dumpRecipe->getLocalisedDescription()),
+                                        $this->isNull(),
+                                    ],
                                 );
 
         /* @var RecipeParser&MockObject $parser */

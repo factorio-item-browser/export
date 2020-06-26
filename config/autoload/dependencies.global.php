@@ -12,21 +12,17 @@ namespace FactorioItemBrowser\Export;
  */
 
 use BluePsyduck\FactorioModPortalClient\Constant\ConfigKey as ModConfigKey;
+use BluePsyduck\FactorioTranslator\Translator as FactorioTranslator;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use JMS\Serializer\SerializerInterface;
-use Laminas\I18n\Translator\Translator;
-use Laminas\I18n\Translator\TranslatorInterface;
-
 use Symfony\Component\Filesystem\Filesystem;
+
 use function BluePsyduck\LaminasAutoWireFactory\injectAliasArray;
 use function BluePsyduck\LaminasAutoWireFactory\readConfig;
 
 return [
     'dependencies' => [
-        'aliases' => [
-            Translator::class . ' $placeholderTranslator' => TranslatorInterface::class
-        ],
         'factories' => [
             Command\DownloadFactorioCommand::class => AutoWireFactory::class,
             Command\ProcessCommand::class => AutoWireFactory::class,
@@ -45,9 +41,6 @@ return [
 
             Helper\HashCalculator::class => AutoWireFactory::class,
 
-            I18n\LocaleReader::class => AutoWireFactory::class,
-            I18n\Translator::class => AutoWireFactory::class,
-
             Mod\ModDownloader::class => AutoWireFactory::class,
             Mod\ModFileManager::class => AutoWireFactory::class,
 
@@ -63,6 +56,7 @@ return [
             // 3rd-party services
             Filesystem::class => AutoWireFactory::class,
             SerializerInterface::class . ' $exportSerializer' => Serializer\SerializerFactory::class,
+            FactorioTranslator::class => Translator\TranslatorFactory::class,
 
             // Auto-wire helpers
             'array $exportParsers' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARSERS),

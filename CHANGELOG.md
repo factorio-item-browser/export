@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Translator implementation with new package `bluepsyduck/factorio-translator` to fix some issues with the translated
+  strings.
+- Mod directories no longer use the versions of the mods, as they are not required anymore in Factorio 0.18.31 and 
+  newer. 
+
 ## 2.0.8 - 2020-05-30
 
 ### Fixed

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Parser;
 
+use BluePsyduck\FactorioTranslator\Exception\NoSupportedLoaderException;
+use BluePsyduck\FactorioTranslator\Translator;
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
-use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\I18n\Translator;
+use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
 use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\Entity\LocalisedString;
@@ -27,6 +28,12 @@ class TranslationParserTest extends TestCase
     use ReflectionTrait;
 
     /**
+     * The mocked mod file manager.
+     * @var ModFileManager&MockObject
+     */
+    protected $modFileManager;
+
+    /**
      * The mocked translator.
      * @var Translator&MockObject
      */
@@ -39,6 +46,7 @@ class TranslationParserTest extends TestCase
     {
         parent::setUp();
 
+        $this->modFileManager = $this->createMock(ModFileManager::class);
         $this->translator = $this->createMock(Translator::class);
     }
 
@@ -49,31 +57,49 @@ class TranslationParserTest extends TestCase
      */
     public function testConstruct(): void
     {
-        $parser = new TranslationParser($this->translator);
+        $parser = new TranslationParser($this->modFileManager, $this->translator);
 
+        $this->assertSame($this->modFileManager, $this->extractProperty($parser, 'modFileManager'));
         $this->assertSame($this->translator, $this->extractProperty($parser, 'translator'));
     }
 
     /**
      * Tests the prepare method.
-     * @throws ExportException
+     * @throws NoSupportedLoaderException
      * @covers ::prepare
      */
     public function testPrepare(): void
     {
         $modNames = ['abc', 'def'];
 
-        /* @var Dump&MockObject $dump */
         $dump = $this->createMock(Dump::class);
         $dump->expects($this->once())
              ->method('getModNames')
              ->willReturn($modNames);
 
-        $this->translator->expects($this->once())
-                         ->method('loadFromModNames')
-                         ->with($this->identicalTo($modNames));
+        $this->modFileManager->expects($this->exactly(3))
+                             ->method('getLocalDirectory')
+                             ->withConsecutive(
+                                 [$this->identicalTo('core')],
+                                 [$this->identicalTo('abc')],
+                                 [$this->identicalTo('def')],
+                             )
+                             ->willReturnOnConsecutiveCalls(
+                                 'ghi',
+                                 'jkl',
+                                 'mno',
+                             );
 
-        $parser = new TranslationParser($this->translator);
+        $this->translator->expects($this->exactly(3))
+                         ->method('loadMod')
+                         ->withConsecutive(
+                             [$this->identicalTo('ghi')],
+                             [$this->identicalTo('jkl')],
+                             [$this->identicalTo('mno')],
+                         )
+                         ->willReturnSelf();
+
+        $parser = new TranslationParser($this->modFileManager, $this->translator);
         $parser->prepare($dump);
     }
 
@@ -88,7 +114,7 @@ class TranslationParserTest extends TestCase
         /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
 
-        $parser = new TranslationParser($this->translator);
+        $parser = new TranslationParser($this->modFileManager, $this->translator);
         $parser->parse($dump, $combination);
 
         $this->addToAssertionCount(1);
@@ -103,107 +129,51 @@ class TranslationParserTest extends TestCase
         /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
 
-        $parser = new TranslationParser($this->translator);
+        $parser = new TranslationParser($this->modFileManager, $this->translator);
         $parser->validate($combination);
 
         $this->addToAssertionCount(1);
     }
 
     /**
-     * Tests the translateNames method.
-     * @covers ::translateNames
+     * Tests the translate method.
+     * @covers ::translate
      */
-    public function testTranslateNames(): void
+    public function testTranslate(): void
     {
-        $translation = ['abc'];
-        $secondaryTranslation = ['def'];
+        $locales = ['abc', 'def', 'ghi'];
+        $translation = 'foo';
+        $secondaryTranslation = 'bar';
 
-        /* @var LocalisedString&MockObject $names */
-        $names = $this->createMock(LocalisedString::class);
+        $entity = $this->createMock(LocalisedString::class);
+        $entity->expects($this->exactly(2))
+               ->method('addTranslation')
+               ->withConsecutive(
+                   [$this->identicalTo('abc'), $this->identicalTo('jkl')],
+                   [$this->identicalTo('def'), $this->identicalTo('mno')],
+               );
 
         $this->translator->expects($this->once())
-                         ->method('addTranslationsToEntity')
-                         ->with(
-                             $this->identicalTo($names),
-                             $this->identicalTo('name'),
-                             $this->identicalTo($translation),
-                             $this->identicalTo($secondaryTranslation)
+                         ->method('getAllLocales')
+                         ->willReturn($locales);
+        $this->translator->expects($this->exactly(5))
+                         ->method('translate')
+                         ->withConsecutive(
+                             [$this->identicalTo('abc'), $this->identicalTo($translation)],
+                             [$this->identicalTo('def'), $this->identicalTo($translation)],
+                             [$this->identicalTo('def'), $this->identicalTo($secondaryTranslation)],
+                             [$this->identicalTo('ghi'), $this->identicalTo($translation)],
+                             [$this->identicalTo('ghi'), $this->identicalTo($secondaryTranslation)],
+                         )
+                         ->willReturnOnConsecutiveCalls(
+                             'jkl',
+                             '',
+                             'mno',
+                             '',
+                             '',
                          );
 
-        $parser = new TranslationParser($this->translator);
-        $parser->translateNames($names, $translation, $secondaryTranslation);
-    }
-
-    /**
-     * Tests the translateDescriptions method.
-     * @covers ::translateDescriptions
-     */
-    public function testTranslateDescriptions(): void
-    {
-        $translation = ['abc'];
-        $secondaryTranslation = ['def'];
-
-        /* @var LocalisedString&MockObject $descriptions */
-        $descriptions = $this->createMock(LocalisedString::class);
-
-        $this->translator->expects($this->once())
-                         ->method('addTranslationsToEntity')
-                         ->with(
-                             $this->identicalTo($descriptions),
-                             $this->identicalTo('description'),
-                             $this->identicalTo($translation),
-                             $this->identicalTo($secondaryTranslation)
-                         );
-
-        $parser = new TranslationParser($this->translator);
-        $parser->translateDescriptions($descriptions, $translation, $secondaryTranslation);
-    }
-
-    /**
-     * Tests the translateModNames method.
-     * @covers ::translateModNames
-     */
-    public function testTranslateModNames(): void
-    {
-        $modName = 'abc';
-
-        /* @var LocalisedString&MockObject $descriptions */
-        $descriptions = $this->createMock(LocalisedString::class);
-
-        $this->translator->expects($this->once())
-                         ->method('addTranslationsToEntity')
-                         ->with(
-                             $this->identicalTo($descriptions),
-                             $this->identicalTo('mod-name'),
-                             $this->identicalTo(['mod-name.abc']),
-                             $this->isNull()
-                         );
-
-        $parser = new TranslationParser($this->translator);
-        $parser->translateModNames($descriptions, $modName);
-    }
-
-    /**
-     * Tests the translateModDescriptions method.
-     * @covers ::translateModDescriptions
-     */
-    public function testTranslateModDescriptions(): void
-    {
-        $modName = 'abc';
-
-        /* @var LocalisedString&MockObject $descriptions */
-        $descriptions = $this->createMock(LocalisedString::class);
-
-        $this->translator->expects($this->once())
-                         ->method('addTranslationsToEntity')
-                         ->with(
-                             $this->identicalTo($descriptions),
-                             $this->identicalTo('mod-description'),
-                             $this->identicalTo(['mod-description.abc']),
-                             $this->isNull()
-                         );
-
-        $parser = new TranslationParser($this->translator);
-        $parser->translateModDescriptions($descriptions, $modName);
+        $parser = new TranslationParser($this->modFileManager, $this->translator);
+        $parser->translate($entity, $translation, $secondaryTranslation);
     }
 }
