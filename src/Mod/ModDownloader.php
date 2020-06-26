@@ -142,17 +142,14 @@ class ModDownloader
      */
     protected function verifyMods(array $modNames, array $mods): void
     {
-        $hasBase = false;
         foreach ($modNames as $modName) {
             if ($modName === Constant::MOD_NAME_BASE) {
-                $hasBase = true;
-            } elseif (!isset($mods[$modName])) {
+                continue;
+            }
+
+            if (!isset($mods[$modName])) {
                 throw new MissingModException($modName);
             }
-        }
-
-        if (!$hasBase) {
-            throw new MissingModException(Constant::MOD_NAME_BASE);
         }
     }
 

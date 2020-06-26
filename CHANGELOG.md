@@ -8,6 +8,7 @@
   strings.
 - Mod directories no longer use the versions of the mods, as they are not required anymore in Factorio 0.18.31 and 
   newer. 
+- `base` mod to be optional for an export (as of FFF #343).
 
 ## 2.0.8 - 2020-05-30
 

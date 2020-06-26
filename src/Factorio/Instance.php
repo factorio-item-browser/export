@@ -8,6 +8,8 @@ use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
+use FactorioItemBrowser\Export\Entity\ModList\Mod;
+use FactorioItemBrowser\Export\Entity\ModListJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FactorioExecutionException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
@@ -172,6 +174,14 @@ class Instance
             $this->getInstancePath('mods/Dump/info.json'),
             $this->serializer->serialize($this->createDumpInfoJson($modNames), 'json')
         );
+        file_put_contents(
+            $this->getInstancePath('mods/mod-list.json'),
+            $this->serializer->serialize($this->createModListJson($modNames), 'json')
+        );
+        file_put_contents(
+            $this->getInstancePath('mods/mod-list-foo.json'),
+            $this->serializer->serialize($this->createModListJson($modNames), 'json')
+        );
     }
 
     /**
@@ -193,6 +203,42 @@ class Instance
              ->setDependencies($modNames);
 
         return $info;
+    }
+
+    /**
+     * Creates the mod-list.json instance.
+     * @param array|string[] $modNames
+     * @return ModListJson
+     */
+    protected function createModListJson(array $modNames): ModListJson
+    {
+        $modList = new ModListJson();
+
+        // Base mod must always be present, especially if disabled.
+        $baseMod = new Mod();
+        $baseMod->setName(Constant::MOD_NAME_BASE)
+                ->setEnabled(in_array(Constant::MOD_NAME_BASE, $modNames, true));
+        $modList->addMod($baseMod);
+
+        // Dump mod must always be enabled.
+        $dumpMod = new Mod();
+        $dumpMod->setName('Dump')
+                ->setEnabled(true);
+        $modList->addMod($dumpMod);
+
+        // Add all the other mods as well.
+        foreach ($modNames as $modName) {
+            if ($modName === Constant::MOD_NAME_BASE) {
+                continue;
+            }
+
+            $mod = new Mod();
+            $mod->setName($modName)
+                ->setEnabled(true);
+            $modList->addMod($mod);
+        }
+
+        return $modList;
     }
 
     /**
