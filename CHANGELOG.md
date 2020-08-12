@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Allow Factorio 1.0 to load mods from 0.18 (as of FFF #359).
+
 ## 2.0.9 - 2020-06-26
 
 ### Changed

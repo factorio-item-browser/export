@@ -52,9 +52,12 @@ class VersionUtils
     public static function hasFactorioVersion(string $currentFactorioVersion, string $requiredVersion): bool
     {
         $requiredParts = self::splitVersion($requiredVersion);
-        $factorioParts = self::splitVersion($currentFactorioVersion);
+        $required = [$requiredParts[0], $requiredParts[1]];
 
-        return ($requiredParts[0] === $factorioParts[0] && $requiredParts[1] === $factorioParts[1]);
+        $factorioParts = self::splitVersion($currentFactorioVersion);
+        $factorio = [$factorioParts[0], $factorioParts[1]];
+
+        return ($required === $factorio) || ($required === [0, 18] && $factorio === [1, 0]);
     }
 
     /**

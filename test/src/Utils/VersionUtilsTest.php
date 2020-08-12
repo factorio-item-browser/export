@@ -116,6 +116,9 @@ class VersionUtilsTest extends TestCase
 
             ['0.18.42', '0.19.0', false],
             ['0.18.42', '1.0.0', false],
+
+            // Special case as of FFF #359: 0.18 mods can be used in Factorio 1.0
+            ['1.0.0', '0.18.0', true],
         ];
     }
 
