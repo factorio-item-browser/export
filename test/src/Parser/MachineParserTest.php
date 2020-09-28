@@ -71,7 +71,6 @@ class MachineParserTest extends TestCase
      */
     public function testPrepare(): void
     {
-        /* @var Dump&MockObject $dump */
         $dump = $this->createMock(Dump::class);
 
         $parser = new MachineParser($this->iconParser, $this->translationParser);
@@ -86,19 +85,14 @@ class MachineParserTest extends TestCase
      */
     public function testParse(): void
     {
-        /* @var DumpMachine&MockObject $dumpMachine1 */
         $dumpMachine1 = $this->createMock(DumpMachine::class);
-        /* @var DumpMachine&MockObject $dumpMachine2 */
         $dumpMachine2 = $this->createMock(DumpMachine::class);
-        /* @var ExportMachine&MockObject $exportMachine1 */
         $exportMachine1 = $this->createMock(ExportMachine::class);
-        /* @var ExportMachine&MockObject $exportMachine2 */
         $exportMachine2 = $this->createMock(ExportMachine::class);
 
         $dump = new Dump();
         $dump->getControlStage()->setMachines([$dumpMachine1, $dumpMachine2]);
 
-        /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
         $combination->expects($this->exactly(2))
                     ->method('addMachine')
@@ -107,7 +101,6 @@ class MachineParserTest extends TestCase
                         [$this->identicalTo($exportMachine2)]
                     );
 
-        /* @var MachineParser&MockObject $parser */
         $parser = $this->getMockBuilder(MachineParser::class)
                        ->onlyMethods(['mapMachine'])
                        ->setConstructorArgs([$this->iconParser, $this->translationParser])
@@ -136,7 +129,7 @@ class MachineParserTest extends TestCase
         $iconId = 'abc';
 
         $dumpMachine = new DumpMachine();
-        $dumpMachine->setName('Def')
+        $dumpMachine->setName('def')
                     ->setCraftingCategories(['ghi', 'jkl'])
                     ->setCraftingSpeed(13.37)
                     ->setItemSlots(12)
@@ -178,7 +171,6 @@ class MachineParserTest extends TestCase
                                     ],
                                 );
 
-        /* @var MachineParser&MockObject $parser */
         $parser = $this->getMockBuilder(MachineParser::class)
                        ->onlyMethods(['mapEnergyUsage'])
                        ->setConstructorArgs([$this->iconParser, $this->translationParser])
@@ -225,7 +217,6 @@ class MachineParserTest extends TestCase
      */
     public function testMapEnergyUsage(float $energyUsage, float $expectedEnergyUsage, string $expectedUnit): void
     {
-        /* @var ExportMachine&MockObject $exportMachine */
         $exportMachine = $this->createMock(ExportMachine::class);
         $exportMachine->expects($this->once())
                       ->method('setEnergyUsage')
@@ -246,7 +237,6 @@ class MachineParserTest extends TestCase
      */
     public function testValidate(): void
     {
-        /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
 
         $parser = new MachineParser($this->iconParser, $this->translationParser);

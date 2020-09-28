@@ -64,19 +64,17 @@ class IconParserTest extends TestCase
     {
         $dumpIcon1 = new DumpIcon();
         $dumpIcon1->setType('abc')
-                  ->setName('Def');
+                  ->setName('def');
 
         $dumpIcon2 = new DumpIcon();
         $dumpIcon2->setType('ghi')
-                  ->setName('Jkl');
+                  ->setName('jkl');
 
-        /* @var ExportIcon&MockObject $mappedIcon */
         $mappedIcon = $this->createMock(ExportIcon::class);
 
         $dump = new Dump();
         $dump->getDataStage()->setIcons([$dumpIcon1, $dumpIcon2]);
 
-        /* @var IconParser&MockObject $parser */
         $parser = $this->getMockBuilder(IconParser::class)
                        ->onlyMethods(['isIconValid', 'mapIcon', 'addParsedIcon'])
                        ->setConstructorArgs([$this->hashCalculator])
@@ -145,13 +143,9 @@ class IconParserTest extends TestCase
     {
         $iconId = 'abc';
 
-        /* @var DumpLayer&MockObject $dumpLayer1 */
         $dumpLayer1 = $this->createMock(DumpLayer::class);
-        /* @var DumpLayer&MockObject $dumpLayer2 */
         $dumpLayer2 = $this->createMock(DumpLayer::class);
-        /* @var ExportLayer&MockObject $exportLayer1 */
         $exportLayer1 = $this->createMock(ExportLayer::class);
-        /* @var ExportLayer&MockObject $exportLayer2 */
         $exportLayer2 = $this->createMock(ExportLayer::class);
 
         $dumpIcon = new DumpIcon();
@@ -171,7 +165,6 @@ class IconParserTest extends TestCase
                              ->with($this->equalTo($expectedIcon))
                              ->willReturn($iconId);
 
-        /* @var IconParser&MockObject $parser */
         $parser = $this->getMockBuilder(IconParser::class)
                        ->onlyMethods(['mapLayer'])
                        ->setConstructorArgs([$this->hashCalculator])
@@ -221,7 +214,6 @@ class IconParserTest extends TestCase
                                   ->setBlue(76.54)
                                   ->setAlpha(87.65);
 
-        /* @var IconParser&MockObject $parser */
         $parser = $this->getMockBuilder(IconParser::class)
                        ->onlyMethods(['convertColorValue'])
                        ->setConstructorArgs([$this->hashCalculator])
@@ -283,11 +275,8 @@ class IconParserTest extends TestCase
      */
     public function provideAddParsedIcon(): array
     {
-        /* @var ExportIcon&MockObject $icon1 */
         $icon1 = $this->createMock(ExportIcon::class);
-        /* @var ExportIcon&MockObject $icon2 */
         $icon2 = $this->createMock(ExportIcon::class);
-        /* @var ExportIcon&MockObject $icon3 */
         $icon3 = $this->createMock(ExportIcon::class);
 
         return [
@@ -373,9 +362,7 @@ class IconParserTest extends TestCase
      */
     public function testParse(): void
     {
-        /* @var Dump&MockObject $dump */
         $dump = $this->createMock(Dump::class);
-        /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
 
         $parser = new IconParser($this->hashCalculator);
@@ -391,18 +378,13 @@ class IconParserTest extends TestCase
      */
     public function testValidate(): void
     {
-        /* @var ExportIcon&MockObject $icon1 */
         $icon1 = $this->createMock(ExportIcon::class);
-        /* @var ExportIcon&MockObject $icon2 */
         $icon2 = $this->createMock(ExportIcon::class);
-        /* @var ExportIcon&MockObject $icon3 */
         $icon3 = $this->createMock(ExportIcon::class);
-        /* @var ExportIcon&MockObject $icon4 */
         $icon4 = $this->createMock(ExportIcon::class);
 
         $usedIcons = [$icon3, $icon4];
 
-        /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
         $combination->expects($this->once())
                     ->method('getIcons')
@@ -431,7 +413,6 @@ class IconParserTest extends TestCase
         $icon1 = new ExportIcon();
         $icon1->setId($iconId);
 
-        /* @var ExportIcon&MockObject $icon2 */
         $icon2 = $this->createMock(ExportIcon::class);
 
         $parsedIcons = [

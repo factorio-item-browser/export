@@ -1,6 +1,12 @@
 # Changelog
 
-## 2.0.10 - 2020-089-12
+## 2.0.11 - 2020-09-28
+
+### Fixed
+
+- Using lowercase of the names of items, recipes and machines, whereas Factorio is case-sensitive.
+
+## 2.0.10 - 2020-08-12
 
 ### Changed
 

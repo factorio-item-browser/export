@@ -100,7 +100,7 @@ class RecipeParser implements ParserInterface
     protected function mapRecipe(DumpRecipe $dumpRecipe, string $mode): ExportRecipe
     {
         $exportRecipe = new ExportRecipe();
-        $exportRecipe->setName(strtolower($dumpRecipe->getName()))
+        $exportRecipe->setName($dumpRecipe->getName())
                      ->setMode($mode)
                      ->setCraftingTime($dumpRecipe->getCraftingTime())
                      ->setCraftingCategory($dumpRecipe->getCraftingCategory());
@@ -133,8 +133,8 @@ class RecipeParser implements ParserInterface
     protected function mapIngredient(DumpIngredient $dumpIngredient): ExportIngredient
     {
         $exportIngredient = new ExportIngredient();
-        $exportIngredient->setType(strtolower($dumpIngredient->getType()))
-                         ->setName(strtolower($dumpIngredient->getName()))
+        $exportIngredient->setType($dumpIngredient->getType())
+                         ->setName($dumpIngredient->getName())
                          ->setAmount($dumpIngredient->getAmount());
         return $exportIngredient;
     }
@@ -157,8 +157,8 @@ class RecipeParser implements ParserInterface
     protected function mapProduct(DumpProduct $dumpProduct): ExportProduct
     {
         $exportProduct = new ExportProduct();
-        $exportProduct->setType(strtolower($dumpProduct->getType()))
-                      ->setName(strtolower($dumpProduct->getName()))
+        $exportProduct->setType($dumpProduct->getType())
+                      ->setName($dumpProduct->getName())
                       ->setAmountMin($dumpProduct->getAmountMin())
                       ->setAmountMax($dumpProduct->getAmountMax())
                       ->setProbability($dumpProduct->getProbability());

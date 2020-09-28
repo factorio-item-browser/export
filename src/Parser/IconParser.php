@@ -72,7 +72,7 @@ class IconParser implements ParserInterface
 
         foreach ($dump->getDataStage()->getIcons() as $dumpIcon) {
             if ($this->isIconValid($dumpIcon)) {
-                $this->addParsedIcon($dumpIcon->getType(), strtolower($dumpIcon->getName()), $this->mapIcon($dumpIcon));
+                $this->addParsedIcon($dumpIcon->getType(), $dumpIcon->getName(), $this->mapIcon($dumpIcon));
             }
         }
     }

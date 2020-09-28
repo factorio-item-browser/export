@@ -99,22 +99,13 @@ class RecipeParserTest extends TestCase
      */
     public function testParse(): void
     {
-        /* @var DumpRecipe&MockObject $dumpRecipe1 */
         $dumpRecipe1 = $this->createMock(DumpRecipe::class);
-        /* @var DumpRecipe&MockObject $dumpRecipe2 */
         $dumpRecipe2 = $this->createMock(DumpRecipe::class);
-        /* @var DumpRecipe&MockObject $dumpRecipe3 */
         $dumpRecipe3 = $this->createMock(DumpRecipe::class);
-        /* @var DumpRecipe&MockObject $dumpRecipe4 */
         $dumpRecipe4 = $this->createMock(DumpRecipe::class);
-
-        /* @var ExportRecipe&MockObject $normalRecipe1 */
         $normalRecipe1 = $this->createMock(ExportRecipe::class);
-        /* @var ExportRecipe&MockObject $normalRecipe2 */
         $normalRecipe2 = $this->createMock(ExportRecipe::class);
-        /* @var ExportRecipe&MockObject $expensiveRecipe1 */
         $expensiveRecipe1 = $this->createMock(ExportRecipe::class);
-        /* @var ExportRecipe&MockObject $expensiveRecipe2 */
         $expensiveRecipe2 = $this->createMock(ExportRecipe::class);
 
         $normalRecipeHash1 = 'abc';
@@ -128,7 +119,6 @@ class RecipeParserTest extends TestCase
         $dump->getControlStage()->setNormalRecipes([$dumpRecipe1, $dumpRecipe2])
                                 ->setExpensiveRecipes([$dumpRecipe3, $dumpRecipe4]);
 
-        /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
         $combination->expects($this->once())
                     ->method('setRecipes')
@@ -149,7 +139,6 @@ class RecipeParserTest extends TestCase
                                  $expensiveRecipeHash2
                              );
 
-        /* @var RecipeParser&MockObject $parser */
         $parser = $this->getMockBuilder(RecipeParser::class)
                        ->onlyMethods(['mapRecipe'])
                        ->setConstructorArgs([$this->hashCalculator, $this->iconParser, $this->translationParser])
@@ -182,25 +171,17 @@ class RecipeParserTest extends TestCase
         $iconId = 'abc';
         $mode = 'def';
 
-        /* @var DumpIngredient&MockObject $dumpIngredient1 */
         $dumpIngredient1 = $this->createMock(DumpIngredient::class);
-        /* @var DumpIngredient&MockObject $dumpIngredient2 */
         $dumpIngredient2 = $this->createMock(DumpIngredient::class);
-        /* @var DumpProduct&MockObject $dumpProduct1 */
         $dumpProduct1 = $this->createMock(DumpProduct::class);
-        /* @var DumpProduct&MockObject $dumpProduct2 */
         $dumpProduct2 = $this->createMock(DumpProduct::class);
-        /* @var ExportIngredient&MockObject $exportIngredient1 */
         $exportIngredient1 = $this->createMock(ExportIngredient::class);
-        /* @var ExportIngredient&MockObject $exportIngredient2 */
         $exportIngredient2 = $this->createMock(ExportIngredient::class);
-        /* @var ExportProduct&MockObject $exportProduct1 */
         $exportProduct1 = $this->createMock(ExportProduct::class);
-        /* @var ExportProduct&MockObject $exportProduct2 */
         $exportProduct2 = $this->createMock(ExportProduct::class);
 
         $dumpRecipe = new DumpRecipe();
-        $dumpRecipe->setName('Ghi')
+        $dumpRecipe->setName('ghi')
                    ->setCraftingTime(13.37)
                    ->setCraftingCategory('jkl')
                    ->setIngredients([$dumpIngredient1, $dumpIngredient2])
@@ -238,7 +219,6 @@ class RecipeParserTest extends TestCase
                                     ],
                                 );
 
-        /* @var RecipeParser&MockObject $parser */
         $parser = $this->getMockBuilder(RecipeParser::class)
                        ->onlyMethods([
                            'mapIngredient',
@@ -307,8 +287,8 @@ class RecipeParserTest extends TestCase
     public function testMapIngredient(): void
     {
         $dumpIngredient = new DumpIngredient();
-        $dumpIngredient->setType('Abc')
-                       ->setName('Def')
+        $dumpIngredient->setType('abc')
+                       ->setName('def')
                        ->setAmount(13.37);
 
         $expectedResult = new ExportIngredient();
@@ -364,8 +344,8 @@ class RecipeParserTest extends TestCase
     public function testMapProduct(): void
     {
         $dumpProduct = new DumpProduct();
-        $dumpProduct->setType('Abc')
-                    ->setName('Def')
+        $dumpProduct->setType('abc')
+                    ->setName('def')
                     ->setAmountMin(12.34)
                     ->setAmountMax(23.45)
                     ->setProbability(34.56);
@@ -493,7 +473,6 @@ class RecipeParserTest extends TestCase
      */
     public function testValidate(): void
     {
-        /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
 
         $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
