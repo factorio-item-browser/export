@@ -70,7 +70,7 @@ class MachineParser implements ParserInterface
     protected function mapMachine(DumpMachine $dumpMachine): ExportMachine
     {
         $exportMachine = new ExportMachine();
-        $exportMachine->setName(strtolower($dumpMachine->getName()))
+        $exportMachine->setName($dumpMachine->getName())
                       ->setCraftingCategories($dumpMachine->getCraftingCategories())
                       ->setCraftingSpeed($dumpMachine->getCraftingSpeed())
                       ->setNumberOfItemSlots($dumpMachine->getItemSlots())
@@ -78,7 +78,7 @@ class MachineParser implements ParserInterface
                       ->setNumberOfFluidOutputSlots($dumpMachine->getFluidOutputSlots())
                       ->setNumberOfModuleSlots($dumpMachine->getModuleSlots())
                       ->setIconId(
-                          $this->iconParser->getIconId(EntityType::MACHINE, strtolower($dumpMachine->getName()))
+                          $this->iconParser->getIconId(EntityType::MACHINE, $dumpMachine->getName())
                       );
 
         $this->mapEnergyUsage($exportMachine, $dumpMachine->getEnergyUsage());

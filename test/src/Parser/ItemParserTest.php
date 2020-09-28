@@ -72,7 +72,6 @@ class ItemParserTest extends TestCase
      */
     public function testPrepare(): void
     {
-        /* @var Dump&MockObject $dump */
         $dump = $this->createMock(Dump::class);
 
         $parser = new ItemParser($this->iconParser, $this->translationParser);
@@ -87,29 +86,20 @@ class ItemParserTest extends TestCase
      */
     public function testParse(): void
     {
-        /* @var DumpItem&MockObject $dumpItem1 */
         $dumpItem1 = $this->createMock(DumpItem::class);
-        /* @var DumpItem&MockObject $dumpItem2 */
         $dumpItem2 = $this->createMock(DumpItem::class);
-        /* @var DumpFluid&MockObject $dumpFluid1 */
         $dumpFluid1 = $this->createMock(DumpFluid::class);
-        /* @var DumpFluid&MockObject $dumpFluid2 */
         $dumpFluid2 = $this->createMock(DumpFluid::class);
         
         $dump = new Dump();
         $dump->getControlStage()->setItems([$dumpItem1, $dumpItem2])
                                 ->setFluids([$dumpFluid1, $dumpFluid2]);
 
-        /* @var ExportItem&MockObject $exportItem1 */
         $exportItem1 = $this->createMock(ExportItem::class);
-        /* @var ExportItem&MockObject $exportItem2 */
         $exportItem2 = $this->createMock(ExportItem::class);
-        /* @var ExportItem&MockObject $exportFluid1 */
         $exportFluid1 = $this->createMock(ExportItem::class);
-        /* @var ExportItem&MockObject $exportFluid2 */
         $exportFluid2 = $this->createMock(ExportItem::class);
         
-        /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
         $combination->expects($this->exactly(4))
                     ->method('addItem')
@@ -120,7 +110,6 @@ class ItemParserTest extends TestCase
                         [$this->identicalTo($exportFluid2)]
                     );
      
-        /* @var ItemParser&MockObject $parser */
         $parser = $this->getMockBuilder(ItemParser::class)
                        ->onlyMethods(['mapItem', 'mapFluid'])
                        ->setConstructorArgs([$this->iconParser, $this->translationParser])
@@ -159,7 +148,7 @@ class ItemParserTest extends TestCase
         $iconId = 'abc';
 
         $dumpItem = new DumpItem();
-        $dumpItem->setName('Def');
+        $dumpItem->setName('def');
 
         $expectedResult = new ExportItem();
         $expectedResult->setType(EntityType::ITEM)
@@ -202,7 +191,7 @@ class ItemParserTest extends TestCase
         $iconId = 'abc';
 
         $dumpFluid = new DumpFluid();
-        $dumpFluid->setName('Def');
+        $dumpFluid->setName('def');
 
         $expectedResult = new ExportItem();
         $expectedResult->setType(EntityType::FLUID)
@@ -241,7 +230,6 @@ class ItemParserTest extends TestCase
      */
     public function testValidate(): void
     {
-        /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
 
         $parser = new ItemParser($this->iconParser, $this->translationParser);
