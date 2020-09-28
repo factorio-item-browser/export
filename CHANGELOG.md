@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.0.11 - 2020-09-28
 
 ### Fixed
 
