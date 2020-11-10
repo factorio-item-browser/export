@@ -154,7 +154,7 @@ class ProcessCommandTest extends TestCase
 
         $this->assertSame(0, $result);
     }
-    
+
     /**
      * Tests the execute method.
      * @throws ReflectionException
@@ -177,7 +177,7 @@ class ProcessCommandTest extends TestCase
                 ->willReturn(null);
         $command->expects($this->never())
                 ->method('ruNExportJob');
-        
+
         $this->console->expects($this->once())
                       ->method('writeMessage')
                       ->with($this->identicalTo('No export job to process. Done.'));

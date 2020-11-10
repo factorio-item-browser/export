@@ -349,20 +349,20 @@ class RecipeParserTest extends TestCase
                     ->setAmountMin(12.34)
                     ->setAmountMax(23.45)
                     ->setProbability(34.56);
-        
+
         $expectedResult = new ExportProduct();
         $expectedResult->setType('abc')
                       ->setName('def')
                       ->setAmountMin(12.34)
                       ->setAmountMax(23.45)
                       ->setProbability(34.56);
-        
+
         $parser = new RecipeParser($this->hashCalculator, $this->iconParser, $this->translationParser);
         $result = $this->invokeMethod($parser, 'mapProduct', $dumpProduct);
-        
+
         $this->assertEquals($expectedResult, $result);
     }
-    
+
     /**
      * Provides the data for the isProductValid test.
      * @return array<mixed>
@@ -407,7 +407,7 @@ class RecipeParserTest extends TestCase
 
         $this->assertSame($expectedResult, $result);
     }
-    
+
     /**
      * Tests the mapIconId method.
      * @throws ReflectionException

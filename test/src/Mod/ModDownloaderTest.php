@@ -7,6 +7,7 @@ namespace FactorioItemBrowserTest\Export\Mod;
 use BluePsyduck\FactorioModPortalClient\Client\Facade;
 use BluePsyduck\FactorioModPortalClient\Entity\Mod;
 use BluePsyduck\FactorioModPortalClient\Entity\Release;
+use BluePsyduck\FactorioModPortalClient\Entity\Version;
 use BluePsyduck\FactorioModPortalClient\Exception\ClientException;
 use BluePsyduck\FactorioModPortalClient\Request\ModListRequest;
 use BluePsyduck\FactorioModPortalClient\Response\ModListResponse;
@@ -309,7 +310,7 @@ class ModDownloaderTest extends TestCase
     public function provideGetReleaseToDownload(): array
     {
         $release = new Release();
-        $release->setVersion('1.2.3');
+        $release->setVersion(new Version('1.2.3'));
 
         return [
             ['1.2.2', $release, $release], // Update to newer version
@@ -380,25 +381,14 @@ class ModDownloaderTest extends TestCase
      */
     public function testFindLatestRelease(): void
     {
-        $factorioVersion = '4.2.0';
+        $factorioVersion = new Version('4.2.0');
 
-        $release1 = new Release();
-        $release1->setVersion('1.2.3');
-        $release1->getInfoJson()->setFactorioVersion('4.2.1');
-        $release2 = new Release();
-        $release2->setVersion('3.4.5');
-        $release2->getInfoJson()->setFactorioVersion('2.1.0');
-        $release3 = new Release();
-        $release3->setVersion('2.3.4');
-        $release3->getInfoJson()->setFactorioVersion('4.2.1');
-        $release4 = new Release();
-        $release4->setVersion('0.1.2');
-        $release4->getInfoJson()->setFactorioVersion('4.2.1');
+        $release = new Release();
+        $release->getInfoJson()->setFactorioVersion($factorioVersion);
 
         $mod = new Mod();
-        $mod->setReleases([$release1, $release2, $release3, $release4]);
+        $mod->setReleases([$release]);
 
-        /* @var ModDownloader&MockObject $downloader */
         $downloader = $this->getMockBuilder(ModDownloader::class)
                            ->onlyMethods(['getFactorioVersion'])
                            ->setConstructorArgs([
@@ -415,7 +405,7 @@ class ModDownloaderTest extends TestCase
 
         $result = $this->invokeMethod($downloader, 'findLatestRelease', $mod);
 
-        $this->assertSame($release3, $result);
+        $this->assertSame($release, $result);
     }
 
     /**
@@ -441,6 +431,7 @@ class ModDownloaderTest extends TestCase
     public function testGetFactorioVersion(): void
     {
         $baseVersion = '1.2.3';
+        $expectedVersion = new Version('1.2.3');
 
         $baseInfo = new InfoJson();
         $baseInfo->setVersion($baseVersion);
@@ -454,8 +445,8 @@ class ModDownloaderTest extends TestCase
         $this->injectProperty($downloader, 'factorioVersion', null);
 
         $result = $this->invokeMethod($downloader, 'getFactorioVersion');
-        $this->assertSame($baseVersion, $result);
-        $this->assertSame($baseVersion, $this->extractProperty($downloader, 'factorioVersion'));
+        $this->assertEquals($expectedVersion, $result);
+        $this->assertEquals($expectedVersion, $this->extractProperty($downloader, 'factorioVersion'));
     }
 
     /**
@@ -465,7 +456,7 @@ class ModDownloaderTest extends TestCase
      */
     public function testGetFactorioVersionWithAvailableVersion(): void
     {
-        $factorioVersion = '1.2.3';
+        $factorioVersion = $this->createMock(Version::class);
 
         $this->modFileManager->expects($this->never())
                              ->method('getInfo');
@@ -568,7 +559,7 @@ class ModDownloaderTest extends TestCase
     public function testHandleProcessStart(): void
     {
         $modName = 'abc';
-        $releaseVersion = '1.2.3';
+        $releaseVersion = new Version('1.2.3');
 
         $mod = new Mod();
         $mod->setName($modName);

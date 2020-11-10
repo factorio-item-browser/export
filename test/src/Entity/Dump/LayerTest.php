@@ -44,7 +44,7 @@ class LayerTest extends TestCase
     {
         $file = 'abc';
         $entity = new Layer();
-    
+
         $this->assertSame($entity, $entity->setFile($file));
         $this->assertSame($file, $entity->getFile());
     }
@@ -114,7 +114,7 @@ class LayerTest extends TestCase
     {
         $tintRed = 13.37;
         $entity = new Layer();
-    
+
         $this->assertSame($entity, $entity->setTintRed($tintRed));
         $this->assertSame($tintRed, $entity->getTintRed());
     }
