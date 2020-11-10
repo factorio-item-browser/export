@@ -27,7 +27,7 @@ use stdClass;
 class DumpExtractorTest extends TestCase
 {
     use ReflectionTrait;
-    
+
     /**
      * The mocked serializer.
      * @var SerializerInterface&MockObject
@@ -40,10 +40,10 @@ class DumpExtractorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->serializer = $this->createMock(SerializerInterface::class);
     }
-    
+
     /**
      * Tests the constructing.
      * @throws ReflectionException
@@ -52,7 +52,7 @@ class DumpExtractorTest extends TestCase
     public function testConstruct(): void
     {
         $dumpExtractor = new DumpExtractor($this->serializer);
-        
+
         $this->assertSame($this->serializer, $this->extractProperty($dumpExtractor, 'serializer'));
     }
 
@@ -72,7 +72,7 @@ class DumpExtractorTest extends TestCase
         $dataStage = $this->createMock(DataStage::class);
         /* @var ControlStage&MockObject $controlStage */
         $controlStage = $this->createMock(ControlStage::class);
-        
+
         /* @var DumpExtractor&MockObject $dumpExtractor */
         $dumpExtractor = $this->getMockBuilder(DumpExtractor::class)
                               ->onlyMethods(['detectModOrder', 'extractRawDumpData', 'parseDump'])

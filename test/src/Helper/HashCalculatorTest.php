@@ -88,7 +88,7 @@ class HashCalculatorTest extends TestCase
 
         $this->assertSame($hash, $result);
     }
-    
+
     /**
      * Tests the hashRecipe method.
      * @covers ::hashRecipe

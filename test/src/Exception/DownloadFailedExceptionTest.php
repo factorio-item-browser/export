@@ -6,6 +6,7 @@ namespace FactorioItemBrowserTest\Export\Exception;
 
 use BluePsyduck\FactorioModPortalClient\Entity\Mod;
 use BluePsyduck\FactorioModPortalClient\Entity\Release;
+use BluePsyduck\FactorioModPortalClient\Entity\Version;
 use Exception;
 use FactorioItemBrowser\Export\Exception\DownloadFailedException;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -28,7 +29,7 @@ class DownloadFailedExceptionTest extends TestCase
     {
         $message = 'abc';
         $modName = 'def';
-        $releaseVersion = '1.2.3';
+        $releaseVersion = new Version('1.2.3');
         $expectedMessage = 'Download of mod def (1.2.3) failed: abc';
 
         /* @var Exception&MockObject $previous */

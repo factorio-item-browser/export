@@ -30,6 +30,11 @@ class DownloadFailedException extends ExportException
      */
     public function __construct(Mod $mod, Release $release, string $message, ?Throwable $previous = null)
     {
-        parent::__construct(sprintf(self::MESSAGE, $mod->getName(), $release->getVersion(), $message), 0, $previous);
+        parent::__construct(sprintf(
+            self::MESSAGE,
+            $mod->getName(),
+            (string) $release->getVersion(),
+            $message,
+        ), 0, $previous);
     }
 }

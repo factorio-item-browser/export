@@ -7,8 +7,10 @@ namespace FactorioItemBrowser\Export\Mod;
 use BluePsyduck\FactorioModPortalClient\Client\Facade;
 use BluePsyduck\FactorioModPortalClient\Entity\Mod;
 use BluePsyduck\FactorioModPortalClient\Entity\Release;
+use BluePsyduck\FactorioModPortalClient\Entity\Version;
 use BluePsyduck\FactorioModPortalClient\Exception\ClientException;
 use BluePsyduck\FactorioModPortalClient\Request\ModListRequest;
+use BluePsyduck\FactorioModPortalClient\Utils\ModUtils;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use FactorioItemBrowser\Common\Constant\Constant;
@@ -19,7 +21,6 @@ use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Exception\MissingModException;
 use FactorioItemBrowser\Export\Exception\NoValidReleaseException;
 use FactorioItemBrowser\Export\Process\ModDownloadProcess;
-use FactorioItemBrowser\Export\Utils\VersionUtils;
 
 /**
  * The class responsible for downloading requested mods to the local storage.
@@ -61,7 +62,7 @@ class ModDownloader
 
     /**
      * The current version of Factorio.
-     * @var string|null
+     * @var Version|null
      */
     protected $factorioVersion;
 
@@ -161,15 +162,15 @@ class ModDownloader
      */
     protected function getReleaseToDownload(Mod $mod): ?Release
     {
+        $currentVersion = null;
         $result = null;
         try {
-            $currentVersion = $this->modFileManager->getInfo($mod->getName())->getVersion();
+            $currentVersion = new Version($this->modFileManager->getInfo($mod->getName())->getVersion());
         } catch (ExportException $e) {
-            $currentVersion = '';
         }
 
         $release = $this->findLatestRelease($mod);
-        if ($currentVersion === '' || VersionUtils::compare($release->getVersion(), $currentVersion) > 0) {
+        if ($currentVersion === null || $release->getVersion()->compareTo($currentVersion) > 0) {
             $result = $release;
         }
         return $result;
@@ -183,22 +184,7 @@ class ModDownloader
      */
     protected function findLatestRelease(Mod $mod): Release
     {
-        /* @var Release|null $result */
-        $result = null;
-        foreach ($mod->getReleases() as $release) {
-            if (
-                !VersionUtils::hasFactorioVersion(
-                    $this->getFactorioVersion(),
-                    $release->getInfoJson()->getFactorioVersion()
-                )
-            ) {
-                continue;
-            }
-
-            if ($result === null || VersionUtils::compare($release->getVersion(), $result->getVersion()) > 0) {
-                $result = $release;
-            }
-        }
+        $result = ModUtils::selectLatestRelease($mod, $this->getFactorioVersion());
         if ($result === null) {
             throw new NoValidReleaseException($mod->getName());
         }
@@ -207,13 +193,13 @@ class ModDownloader
 
     /**
      * Returns the current version of Factorio.
-     * @return string
+     * @return Version
      * @throws ExportException
      */
-    protected function getFactorioVersion(): string
+    protected function getFactorioVersion(): Version
     {
         if ($this->factorioVersion === null) {
-            $this->factorioVersion = $this->modFileManager->getInfo(Constant::MOD_NAME_BASE)->getVersion();
+            $this->factorioVersion = new Version($this->modFileManager->getInfo(Constant::MOD_NAME_BASE)->getVersion());
         }
         return $this->factorioVersion;
     }
@@ -259,7 +245,7 @@ class ModDownloader
         $this->console->writeAction(sprintf(
             'Downloading %s (%s)',
             $process->getMod()->getName(),
-            $process->getRelease()->getVersion()
+            (string) $process->getRelease()->getVersion()
         ));
     }
 

@@ -90,7 +90,7 @@ class ItemParserTest extends TestCase
         $dumpItem2 = $this->createMock(DumpItem::class);
         $dumpFluid1 = $this->createMock(DumpFluid::class);
         $dumpFluid2 = $this->createMock(DumpFluid::class);
-        
+
         $dump = new Dump();
         $dump->getControlStage()->setItems([$dumpItem1, $dumpItem2])
                                 ->setFluids([$dumpFluid1, $dumpFluid2]);
@@ -99,7 +99,7 @@ class ItemParserTest extends TestCase
         $exportItem2 = $this->createMock(ExportItem::class);
         $exportFluid1 = $this->createMock(ExportItem::class);
         $exportFluid2 = $this->createMock(ExportItem::class);
-        
+
         $combination = $this->createMock(Combination::class);
         $combination->expects($this->exactly(4))
                     ->method('addItem')
@@ -109,7 +109,7 @@ class ItemParserTest extends TestCase
                         [$this->identicalTo($exportFluid1)],
                         [$this->identicalTo($exportFluid2)]
                     );
-     
+
         $parser = $this->getMockBuilder(ItemParser::class)
                        ->onlyMethods(['mapItem', 'mapFluid'])
                        ->setConstructorArgs([$this->iconParser, $this->translationParser])
