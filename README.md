@@ -1,9 +1,14 @@
-# Factorio Item Browser - Export
+![Factorio Item Browser](https://raw.githubusercontent.com/factorio-item-browser/documentation/master/asset/image/logo.png) 
 
-[![Latest Stable Version](https://poser.pugx.org/factorio-item-browser/export/v/stable)](https://packagist.org/packages/factorio-item-browser/export) 
-[![License](https://poser.pugx.org/factorio-item-browser/export/license)](https://packagist.org/packages/factorio-item-browser/export)
-[![Build Status](https://travis-ci.com/factorio-item-browser/export.svg?branch=master)](https://travis-ci.com/factorio-item-browser/export)
-[![codecov](https://codecov.io/gh/factorio-item-browser/export/branch/master/graph/badge.svg)](https://codecov.io/gh/factorio-item-browser/export)
+# Export
+
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/factorio-item-browser/export)](https://github.com/factorio-item-browser/export/releases)
+[![GitHub](https://img.shields.io/github/license/factorio-item-browser/export)](LICENSE.md)
+[![build](https://img.shields.io/github/workflow/status/factorio-item-browser/export/CI?logo=github)](https://github.com/factorio-item-browser/export/actions)
+[![Codecov](https://img.shields.io/codecov/c/gh/factorio-item-browser/export?logo=codecov)](https://codecov.io/gh/factorio-item-browser/export)
 
 This project is the exporting part of the Factorio Item Browser, generating all the needed data to be imported into the
-database.
+API database.
+
+A detailed documentation of the export and its process is available in the 
+[wiki](https://github.com/factorio-item-browser/documentation/wiki/Export) of the project. 
