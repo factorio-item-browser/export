@@ -22,11 +22,11 @@ class InvalidModFileException extends ExportException
     /**
      * Initializes the exception.
      * @param string $fileName
-     * @param string $message
+     * @param string $errorMessage
      * @param Throwable|null $previous
      */
-    public function __construct(string $fileName, string $message, ?Throwable $previous = null)
+    public function __construct(string $fileName, string $errorMessage, ?Throwable $previous = null)
     {
-        parent::__construct(sprintf(self::MESSAGE, basename($fileName), $message), 0, $previous);
+        parent::__construct(sprintf(self::MESSAGE, basename($fileName), $errorMessage), 0, $previous);
     }
 }

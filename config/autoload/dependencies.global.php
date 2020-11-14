@@ -35,7 +35,6 @@ return [
 
             Console\Console::class => AutoWireFactory::class,
 
-            Factorio\DumpExtractor::class => AutoWireFactory::class,
             Factorio\FactorioDownloader::class => AutoWireFactory::class,
             Factorio\Instance::class => AutoWireFactory::class,
 
@@ -44,6 +43,16 @@ return [
             Mod\ModDownloader::class => AutoWireFactory::class,
             Mod\ModFileManager::class => AutoWireFactory::class,
 
+            OutputProcessor\DumpOutputProcessor::class => AutoWireFactory::class,
+            OutputProcessor\DumpProcessor\ExpensiveRecipeDumpProcessor::class => AutoWireFactory::class,
+            OutputProcessor\DumpProcessor\FluidDumpProcessor::class => AutoWireFactory::class,
+            OutputProcessor\DumpProcessor\IconDumpProcessor::class => AutoWireFactory::class,
+            OutputProcessor\DumpProcessor\ItemDumpProcessor::class => AutoWireFactory::class,
+            OutputProcessor\DumpProcessor\MachineDumpProcessor::class => AutoWireFactory::class,
+            OutputProcessor\DumpProcessor\NormalRecipeDumpProcessor::class => AutoWireFactory::class,
+            OutputProcessor\ErrorOutputProcessor::class => AutoWireFactory::class,
+            OutputProcessor\ModNameOutputProcessor::class => AutoWireFactory::class,
+
             Parser\IconParser::class => AutoWireFactory::class,
             Parser\ItemParser::class => AutoWireFactory::class,
             Parser\MachineParser::class => AutoWireFactory::class,
@@ -51,6 +60,7 @@ return [
             Parser\RecipeParser::class => AutoWireFactory::class,
             Parser\TranslationParser::class => AutoWireFactory::class,
 
+            Process\FactorioProcessFactory::class => AutoWireFactory::class,
             Process\RenderIconProcessFactory::class => AutoWireFactory::class,
 
             // 3rd-party services
@@ -59,6 +69,8 @@ return [
             FactorioTranslator::class => Translator\TranslatorFactory::class,
 
             // Auto-wire helpers
+            'array $exportOutputProcessors' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::OUTPUT_PROCESSORS),
+            'array $exportOutputDumpProcessors' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::OUTPUT_DUMP_PROCESSORS),
             'array $exportParsers' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARSERS),
             'array $exportProcessSteps' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PROCESS_STEPS),
 

@@ -9,7 +9,7 @@ function dump.add(name, data)
         return
     end
 
-    print(string.format("#DUMP#%s>%s", name, json.encode(data)))
+    print(string.format(">DUMP>%s>%s<", name, json.encode(data)))
 end
 
 --- Flushes the dump. This will write any data not yet written to the output.

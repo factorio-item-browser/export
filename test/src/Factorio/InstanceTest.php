@@ -12,16 +12,15 @@ use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Entity\ModList\Mod;
 use FactorioItemBrowser\Export\Entity\ModListJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Exception\FactorioExecutionException;
-use FactorioItemBrowser\Export\Factorio\DumpExtractor;
 use FactorioItemBrowser\Export\Factorio\Instance;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Process\FactorioProcess;
+use FactorioItemBrowser\Export\Process\FactorioProcessFactory;
 use JMS\Serializer\SerializerInterface;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
-use Symfony\Component\Process\Process;
 
 /**
  * The PHPUnit test of the Instance class.
@@ -34,46 +33,26 @@ class InstanceTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked console.
-     * @var Console&MockObject
-     */
-    protected $console;
+    /** @var Console&MockObject */
+    private Console $console;
+    /** @var FactorioProcessFactory&MockObject */
+    private FactorioProcessFactory $factorioProcessFactory;
+    /** @var ModFileManager&MockObject */
+    private ModFileManager $modFileManager;
+    /** @var SerializerInterface&MockObject */
+    private SerializerInterface $serializer;
 
-    /**
-     * The mocked dump extractor.
-     * @var DumpExtractor&MockObject
-     */
-    protected $dumpExtractor;
-
-    /**
-     * The mocked mod file manager.
-     * @var ModFileManager&MockObject
-     */
-    protected $modFileManager;
-
-    /**
-     * The mocked serializer.
-     * @var SerializerInterface&MockObject
-     */
-    protected $serializer;
-
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->console = $this->createMock(Console::class);
-        $this->dumpExtractor = $this->createMock(DumpExtractor::class);
+        $this->factorioProcessFactory = $this->createMock(FactorioProcessFactory::class);
         $this->modFileManager = $this->createMock(ModFileManager::class);
         $this->serializer = $this->createMock(SerializerInterface::class);
     }
 
-
     /**
-     * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
@@ -85,7 +64,7 @@ class InstanceTest extends TestCase
 
         $instance = new Instance(
             $this->console,
-            $this->dumpExtractor,
+            $this->factorioProcessFactory,
             $this->modFileManager,
             $this->serializer,
             $factorioDirectory,
@@ -94,7 +73,7 @@ class InstanceTest extends TestCase
         );
 
         $this->assertSame($this->console, $this->extractProperty($instance, 'console'));
-        $this->assertSame($this->dumpExtractor, $this->extractProperty($instance, 'dumpExtractor'));
+        $this->assertSame($this->factorioProcessFactory, $this->extractProperty($instance, 'factorioProcessFactory'));
         $this->assertSame($this->modFileManager, $this->extractProperty($instance, 'modFileManager'));
         $this->assertSame($this->serializer, $this->extractProperty($instance, 'serializer'));
         $this->assertSame($factorioDirectory, $this->extractProperty($instance, 'factorioDirectory'));
@@ -102,8 +81,8 @@ class InstanceTest extends TestCase
         $this->assertSame($version, $this->extractProperty($instance, 'version'));
     }
 
+
     /**
-     * Tests the run method.
      * @throws ExportException
      * @throws ReflectionException
      * @covers ::run
@@ -113,37 +92,39 @@ class InstanceTest extends TestCase
         $instancesDirectory = 'abc';
         $combinationId = 'def';
         $modNames = ['ghi', 'jkl'];
-        $output = 'mno';
         $expectedCombinationInstanceDirectory = 'abc/def';
 
-        /* @var Dump&MockObject $dump */
         $dump = $this->createMock(Dump::class);
 
-        $this->console->expects($this->exactly(3))
+        $process = $this->createMock(FactorioProcess::class);
+        $process->expects($this->once())
+                ->method('run');
+        $process->expects($this->once())
+                ->method('getDump')
+                ->willReturn($dump);
+
+        $this->console->expects($this->exactly(2))
                       ->method('writeAction')
                       ->withConsecutive(
                           [$this->identicalTo('Preparing Factorio instance')],
-                          [$this->identicalTo('Launching Factorio')],
-                          [$this->identicalTo('Extracting dumped data')]
+                          [$this->identicalTo('Executing Factorio')],
                       );
 
-        $this->dumpExtractor->expects($this->once())
-                            ->method('extract')
-                            ->with($this->identicalTo($output))
-                            ->willReturn($dump);
+        $this->factorioProcessFactory->expects($this->once())
+                                     ->method('create')
+                                     ->with($this->identicalTo($expectedCombinationInstanceDirectory))
+                                     ->willReturn($process);
 
-        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
                          ->onlyMethods([
                              'setupInstance',
                              'setUpMods',
                              'setUpDumpMod',
-                             'execute',
                              'removeInstanceDirectory',
                          ])
                          ->setConstructorArgs([
                              $this->console,
-                             $this->dumpExtractor,
+                             $this->factorioProcessFactory,
                              $this->modFileManager,
                              $this->serializer,
                              'foo',
@@ -160,9 +141,6 @@ class InstanceTest extends TestCase
                  ->method('setUpDumpMod')
                  ->with($this->identicalTo($modNames));
         $instance->expects($this->once())
-                 ->method('execute')
-                 ->willReturn($output);
-        $instance->expects($this->once())
                  ->method('removeInstanceDirectory');
 
         $result = $instance->run($combinationId, $modNames);
@@ -175,13 +153,11 @@ class InstanceTest extends TestCase
     }
 
     /**
-     * Tests the setUpInstance method.
      * @throws ReflectionException
      * @covers ::setUpInstance
      */
     public function testSetUpInstance(): void
     {
-        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
                          ->onlyMethods(['removeInstanceDirectory', 'createDirectory', 'copy', 'createFactorioSymlink'])
                          ->disableOriginalConstructor()
@@ -208,7 +184,6 @@ class InstanceTest extends TestCase
     }
 
     /**
-     * Tests the setUpMods method.
      * @throws ReflectionException
      * @covers ::setUpMods
      */
@@ -216,7 +191,6 @@ class InstanceTest extends TestCase
     {
         $modNames = ['abc', 'def'];
 
-        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
                          ->onlyMethods(['createModSymlink'])
                          ->disableOriginalConstructor()
@@ -232,7 +206,6 @@ class InstanceTest extends TestCase
     }
 
     /**
-     * Tests the createDumpInfoJson method.
      * @throws ReflectionException
      * @covers ::createDumpInfoJson
      */
@@ -242,7 +215,6 @@ class InstanceTest extends TestCase
         $version = '2.3.4';
         $modNames = ['abc', 'def'];
 
-        /* @var InfoJson&MockObject $baseInfo */
         $baseInfo = $this->createMock(InfoJson::class);
         $baseInfo->expects($this->once())
                  ->method('getVersion')
@@ -263,7 +235,7 @@ class InstanceTest extends TestCase
 
         $instance = new Instance(
             $this->console,
-            $this->dumpExtractor,
+            $this->factorioProcessFactory,
             $this->modFileManager,
             $this->serializer,
             'foo',
@@ -274,6 +246,7 @@ class InstanceTest extends TestCase
         $result = $this->invokeMethod($instance, 'createDumpInfoJson', $modNames);
         $this->assertEquals($expectedResult, $result);
     }
+
 
     /**
      * Tests the createModListJson method.
@@ -302,7 +275,7 @@ class InstanceTest extends TestCase
 
         $instance = new Instance(
             $this->console,
-            $this->dumpExtractor,
+            $this->factorioProcessFactory,
             $this->modFileManager,
             $this->serializer,
             'foo',
@@ -314,6 +287,7 @@ class InstanceTest extends TestCase
 
         $this->assertEquals($expectedResult, $result);
     }
+
 
     /**
      * Tests the createModListJson method.
@@ -342,7 +316,7 @@ class InstanceTest extends TestCase
 
         $instance = new Instance(
             $this->console,
-            $this->dumpExtractor,
+            $this->factorioProcessFactory,
             $this->modFileManager,
             $this->serializer,
             'foo',
@@ -356,114 +330,6 @@ class InstanceTest extends TestCase
     }
 
     /**
-     * Tests the execute method.
-     * @throws ReflectionException
-     * @covers ::execute
-     */
-    public function testExecute(): void
-    {
-        $output = 'abc';
-
-        /* @var Process&MockObject $process */
-        $process = $this->createMock(Process::class);
-        $process->expects($this->once())
-                ->method('run');
-        $process->expects($this->once())
-                ->method('isSuccessful')
-                ->willReturn(true);
-        $process->expects($this->once())
-                ->method('getOutput')
-                ->willReturn($output);
-
-        /* @var Instance&MockObject $instance */
-        $instance = $this->getMockBuilder(Instance::class)
-                         ->onlyMethods(['createProcess'])
-                         ->disableOriginalConstructor()
-                         ->getMock();
-        $instance->expects($this->once())
-                 ->method('createProcess')
-                 ->willReturn($process);
-
-        $result = $this->invokeMethod($instance, 'execute');
-
-        $this->assertSame($output, $result);
-    }
-
-    /**
-     * Tests the execute method.
-     * @throws ReflectionException
-     * @covers ::execute
-     */
-    public function testExecuteWithException(): void
-    {
-        $output = 'abc';
-        $exitCode = 42;
-
-        /* @var Process&MockObject $process */
-        $process = $this->createMock(Process::class);
-        $process->expects($this->once())
-                ->method('run');
-        $process->expects($this->once())
-                ->method('isSuccessful')
-                ->willReturn(false);
-        $process->expects($this->once())
-                ->method('getExitCode')
-                ->willReturn($exitCode);
-        $process->expects($this->once())
-                ->method('getOutput')
-                ->willReturn($output);
-
-        $this->expectException(FactorioExecutionException::class);
-        $this->expectExceptionCode($exitCode);
-
-        /* @var Instance&MockObject $instance */
-        $instance = $this->getMockBuilder(Instance::class)
-                         ->onlyMethods(['createProcess'])
-                         ->disableOriginalConstructor()
-                         ->getMock();
-        $instance->expects($this->once())
-                 ->method('createProcess')
-                 ->willReturn($process);
-
-        $this->invokeMethod($instance, 'execute');
-    }
-
-    /**
-     * Tests the createProcess method.
-     * @throws ReflectionException
-     * @covers ::createProcess
-     */
-    public function testCreateProcess(): void
-    {
-        $expectedCommandLine = "'abc' '--no-log-rotation' '--create=def' '--mod-directory=ghi'";
-
-        /* @var Instance&MockObject $instance */
-        $instance = $this->getMockBuilder(Instance::class)
-                         ->onlyMethods(['getInstancePath'])
-                         ->disableOriginalConstructor()
-                         ->getMock();
-        $instance->expects($this->exactly(3))
-                 ->method('getInstancePath')
-                 ->withConsecutive(
-                     ['bin/x64/factorio'],
-                     ['dump'],
-                     ['mods']
-                 )
-                 ->willReturnOnConsecutiveCalls(
-                     'abc',
-                     'def',
-                     'ghi'
-                 );
-
-        /* @var Process $result */
-        $result = $this->invokeMethod($instance, 'createProcess');
-
-        $this->assertSame($expectedCommandLine, $result->getCommandLine());
-        $this->assertNull($result->getTimeout());
-    }
-
-    /**
-     * Tests the createDirectory method.
      * @throws ReflectionException
      * @covers ::createDirectory
      */
@@ -489,7 +355,6 @@ class InstanceTest extends TestCase
     }
 
     /**
-     * Tests the copy method.
      * @throws ReflectionException
      * @covers ::copy
      */
@@ -507,7 +372,6 @@ class InstanceTest extends TestCase
         $factorioPath = vfsStream::url('root/factorio/abc');
         $instancePath = vfsStream::url('root/instance/abc');
 
-        /* @var Instance&MockObject $instance */
         $instance = $this->getMockBuilder(Instance::class)
                          ->onlyMethods(['getFactorioPath', 'getInstancePath'])
                          ->disableOriginalConstructor()
@@ -529,7 +393,6 @@ class InstanceTest extends TestCase
     }
 
     /**
-     * Tests the getFactorioPath method.
      * @throws ReflectionException
      * @covers ::getFactorioPath
      */
@@ -541,7 +404,7 @@ class InstanceTest extends TestCase
 
         $instance = new Instance(
             $this->console,
-            $this->dumpExtractor,
+            $this->factorioProcessFactory,
             $this->modFileManager,
             $this->serializer,
             $factorioDirectory,
@@ -555,7 +418,6 @@ class InstanceTest extends TestCase
     }
 
     /**
-     * Tests the getInstancePath method.
      * @throws ReflectionException
      * @covers ::getInstancePath
      */
@@ -567,7 +429,7 @@ class InstanceTest extends TestCase
 
         $instance = new Instance(
             $this->console,
-            $this->dumpExtractor,
+            $this->factorioProcessFactory,
             $this->modFileManager,
             $this->serializer,
             'foo',

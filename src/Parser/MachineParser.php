@@ -19,80 +19,47 @@ use FactorioItemBrowser\ExportData\Entity\Machine as ExportMachine;
  */
 class MachineParser implements ParserInterface
 {
-    /**
-     * The icon parser.
-     * @var IconParser
-     */
-    protected $iconParser;
+    protected IconParser $iconParser;
+    protected TranslationParser $translationParser;
 
-    /**
-     * The translation parser.
-     * @var TranslationParser
-     */
-    protected $translationParser;
-
-    /**
-     * Initializes the parser.
-     * @param IconParser $iconParser
-     * @param TranslationParser $translationParser
-     */
     public function __construct(IconParser $iconParser, TranslationParser $translationParser)
     {
         $this->iconParser = $iconParser;
         $this->translationParser = $translationParser;
     }
 
-    /**
-     * Prepares the parser to be able to later parse the dump.
-     * @param Dump $dump
-     */
     public function prepare(Dump $dump): void
     {
     }
 
-    /**
-     * Parses the data from the dump into the combination.
-     * @param Dump $dump
-     * @param Combination $combination
-     */
     public function parse(Dump $dump, Combination $combination): void
     {
-        foreach ($dump->getControlStage()->getMachines() as $dumpMachine) {
+        foreach ($dump->machines as $dumpMachine) {
             $combination->addMachine($this->mapMachine($dumpMachine));
         }
     }
 
-    /**
-     * Maps the dump machine to an export one.
-     * @param DumpMachine $dumpMachine
-     * @return ExportMachine
-     */
     protected function mapMachine(DumpMachine $dumpMachine): ExportMachine
     {
         $exportMachine = new ExportMachine();
-        $exportMachine->setName($dumpMachine->getName())
-                      ->setCraftingCategories($dumpMachine->getCraftingCategories())
-                      ->setCraftingSpeed($dumpMachine->getCraftingSpeed())
-                      ->setNumberOfItemSlots($dumpMachine->getItemSlots())
-                      ->setNumberOfFluidInputSlots($dumpMachine->getFluidInputSlots())
-                      ->setNumberOfFluidOutputSlots($dumpMachine->getFluidOutputSlots())
-                      ->setNumberOfModuleSlots($dumpMachine->getModuleSlots())
+        $exportMachine->setName($dumpMachine->name)
+                      ->setCraftingCategories($dumpMachine->craftingCategories)
+                      ->setCraftingSpeed($dumpMachine->craftingSpeed)
+                      ->setNumberOfItemSlots($dumpMachine->itemSlots)
+                      ->setNumberOfFluidInputSlots($dumpMachine->fluidInputSlots)
+                      ->setNumberOfFluidOutputSlots($dumpMachine->fluidOutputSlots)
+                      ->setNumberOfModuleSlots($dumpMachine->moduleSlots)
                       ->setIconId(
-                          $this->iconParser->getIconId(EntityType::MACHINE, $dumpMachine->getName())
+                          $this->iconParser->getIconId(EntityType::MACHINE, $dumpMachine->name)
                       );
 
-        $this->mapEnergyUsage($exportMachine, $dumpMachine->getEnergyUsage());
-        $this->translationParser->translate($exportMachine->getLabels(), $dumpMachine->getLocalisedName());
-        $this->translationParser->translate($exportMachine->getDescriptions(), $dumpMachine->getLocalisedDescription());
+        $this->mapEnergyUsage($exportMachine, $dumpMachine->energyUsage);
+        $this->translationParser->translate($exportMachine->getLabels(), $dumpMachine->localisedName);
+        $this->translationParser->translate($exportMachine->getDescriptions(), $dumpMachine->localisedDescription);
 
         return $exportMachine;
     }
 
-    /**
-     * Parses the energy usage into the specified machine.
-     * @param ExportMachine $exportMachine
-     * @param float $energyUsage
-     */
     protected function mapEnergyUsage(ExportMachine $exportMachine, float $energyUsage): void
     {
         $unit = EnergyUsageUnit::WATT;
@@ -108,10 +75,6 @@ class MachineParser implements ParserInterface
                       ->setEnergyUsageUnit($unit);
     }
 
-    /**
-     * Validates the data in the combination as a second parsing step.
-     * @param Combination $combination
-     */
     public function validate(Combination $combination): void
     {
     }

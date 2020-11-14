@@ -22,11 +22,11 @@ class InvalidDumpException extends ExportException
     /**
      * Initializes the exception.
      * @param string $stage
-     * @param string $message
+     * @param string $errorMessage
      * @param Throwable|null $previous
      */
-    public function __construct(string $stage, string $message, ?Throwable $previous = null)
+    public function __construct(string $stage, string $errorMessage, ?Throwable $previous = null)
     {
-        parent::__construct(sprintf(self::MESSAGE, $stage, $message), 0, $previous);
+        parent::__construct(sprintf(self::MESSAGE, $stage, $errorMessage), 0, $previous);
     }
 }

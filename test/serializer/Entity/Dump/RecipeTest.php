@@ -25,23 +25,23 @@ class RecipeTest extends SerializerTestCase
     protected function getObject(): object
     {
         $ingredient1 = new Ingredient();
-        $ingredient1->setName('mno');
+        $ingredient1->name = 'mno';
         $ingredient2 = new Ingredient();
-        $ingredient2->setName('pqr');
+        $ingredient2->name = 'pqr';
 
         $product1 = new Product();
-        $product1->setName('stu');
+        $product1->name = 'stu';
         $product2 = new Product();
-        $product2->setName('vwx');
+        $product2->name = 'vwx';
 
         $result = new Recipe();
-        $result->setName('abc')
-               ->setLocalisedName('def')
-               ->setLocalisedDescription(['ghi'])
-               ->setCraftingCategory('jkl')
-               ->setCraftingTime(13.37)
-               ->setIngredients([$ingredient1, $ingredient2])
-               ->setProducts([$product1, $product2]);
+        $result->name = 'abc';
+        $result->localisedName = 'def';
+        $result->localisedDescription = ['ghi'];
+        $result->craftingCategory = 'jkl';
+        $result->craftingTime = 13.37;
+        $result->ingredients = [$ingredient1, $ingredient2];
+        $result->products = [$product1, $product2];
         return $result;
     }
 

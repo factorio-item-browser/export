@@ -33,27 +33,13 @@ class ModParserTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked hash calculator.
-     * @var HashCalculator&MockObject
-     */
-    protected $hashCalculator;
+    /** @var HashCalculator&MockObject */
+    private HashCalculator $hashCalculator;
+    /** @var ModFileManager&MockObject */
+    private ModFileManager $modFileManager;
+    /** @var TranslationParser&MockObject */
+    private TranslationParser $translationParser;
 
-    /**
-     * The mocked mod file manager.
-     * @var ModFileManager&MockObject
-     */
-    protected $modFileManager;
-
-    /**
-     * The mocked translation parser.
-     * @var TranslationParser&MockObject
-     */
-    protected $translationParser;
-
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -102,30 +88,23 @@ class ModParserTest extends TestCase
         $modNames = ['abc', 'def'];
         $thumbnailId = 'ghi';
 
-        /* @var Mod&MockObject $mod1 */
         $mod1 = $this->createMock(Mod::class);
         $mod1->expects($this->once())
              ->method('setThumbnailId')
              ->with($this->identicalTo($thumbnailId));
 
-        /* @var Mod&MockObject $mod2 */
         $mod2 = $this->createMock(Mod::class);
         $mod2->expects($this->never())
              ->method('setThumbnailId');
 
-        /* @var Dump&MockObject $dump */
-        $dump = $this->createMock(Dump::class);
-        $dump->expects($this->once())
-             ->method('getModNames')
-             ->willReturn($modNames);
+        $dump = new Dump();
+        $dump->modNames = $modNames;
 
-        /* @var Icon&MockObject $thumbnail */
         $thumbnail = $this->createMock(Icon::class);
         $thumbnail->expects($this->once())
                   ->method('getId')
                   ->willReturn($thumbnailId);
 
-        /* @var Combination&MockObject $combination */
         $combination = $this->createMock(Combination::class);
         $combination->expects($this->exactly(2))
                     ->method('addMod')
@@ -137,7 +116,6 @@ class ModParserTest extends TestCase
                     ->method('addIcon')
                     ->with($this->identicalTo($thumbnail));
 
-        /* @var ModParser&MockObject $parser */
         $parser = $this->getMockBuilder(ModParser::class)
                        ->onlyMethods(['mapMod', 'mapThumbnail'])
                        ->setConstructorArgs([$this->hashCalculator, $this->modFileManager, $this->translationParser])
@@ -373,6 +351,7 @@ class ModParserTest extends TestCase
 
     /**
      * Tests the validate method.
+     * @throws ExportException
      * @covers ::validate
      */
     public function testValidate(): void

@@ -23,11 +23,11 @@ class ProductTest extends SerializerTestCase
     protected function getObject(): object
     {
         $result = new Product();
-        $result->setType('ghi')
-               ->setName('jkl')
-               ->setAmountMin(12.34)
-               ->setAmountMax(23.45)
-               ->setProbability(34.56);
+        $result->type = 'ghi';
+        $result->name = 'jkl';
+        $result->amountMin = 12.34;
+        $result->amountMax = 23.45;
+        $result->probability = 34.56;
         return $result;
     }
 

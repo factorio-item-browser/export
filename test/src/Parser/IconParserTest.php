@@ -8,6 +8,7 @@ use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Icon as DumpIcon;
 use FactorioItemBrowser\Export\Entity\Dump\Layer as DumpLayer;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use FactorioItemBrowser\ExportData\Entity\Combination;
@@ -28,15 +29,9 @@ class IconParserTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked hash calculator.
-     * @var HashCalculator&MockObject
-     */
-    protected $hashCalculator;
+    /** @var HashCalculator&MockObject */
+    private HashCalculator $hashCalculator;
 
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -63,17 +58,17 @@ class IconParserTest extends TestCase
     public function testPrepare(): void
     {
         $dumpIcon1 = new DumpIcon();
-        $dumpIcon1->setType('abc')
-                  ->setName('def');
+        $dumpIcon1->type = 'abc';
+        $dumpIcon1->name = 'def';
 
         $dumpIcon2 = new DumpIcon();
-        $dumpIcon2->setType('ghi')
-                  ->setName('jkl');
+        $dumpIcon2->type = 'ghi';
+        $dumpIcon2->name = 'jkl';
 
         $mappedIcon = $this->createMock(ExportIcon::class);
 
         $dump = new Dump();
-        $dump->getDataStage()->setIcons([$dumpIcon1, $dumpIcon2]);
+        $dump->icons = [$dumpIcon1, $dumpIcon2];
 
         $parser = $this->getMockBuilder(IconParser::class)
                        ->onlyMethods(['isIconValid', 'mapIcon', 'addParsedIcon'])
@@ -126,7 +121,7 @@ class IconParserTest extends TestCase
     public function testIsIconValid(string $type, bool $expectedResult): void
     {
         $dumpIcon = new DumpIcon();
-        $dumpIcon->setType($type);
+        $dumpIcon->type = $type;
 
         $parser = new IconParser($this->hashCalculator);
         $result = $this->invokeMethod($parser, 'isIconValid', $dumpIcon);
@@ -149,7 +144,7 @@ class IconParserTest extends TestCase
         $exportLayer2 = $this->createMock(ExportLayer::class);
 
         $dumpIcon = new DumpIcon();
-        $dumpIcon->setLayers([$dumpLayer1, $dumpLayer2]);
+        $dumpIcon->layers = [$dumpLayer1, $dumpLayer2];
 
         $expectedIcon = new ExportIcon();
         $expectedIcon->setSize(64)
@@ -193,15 +188,15 @@ class IconParserTest extends TestCase
     public function testMapLayer(): void
     {
         $dumpLayer = new DumpLayer();
-        $dumpLayer->setFile('abc')
-                  ->setSize(1337)
-                  ->setShiftX(42)
-                  ->setShiftY(21)
-                  ->setScale(12.34)
-                  ->setTintRed(23.45)
-                  ->setTintGreen(34.56)
-                  ->setTintBlue(45.67)
-                  ->setTintAlpha(56.78);
+        $dumpLayer->file = 'abc';
+        $dumpLayer->size = 1337;
+        $dumpLayer->shiftX = 42;
+        $dumpLayer->shiftY = 21;
+        $dumpLayer->scale = 12.34;
+        $dumpLayer->tintRed = 23.45;
+        $dumpLayer->tintGreen = 34.56;
+        $dumpLayer->tintBlue = 45.67;
+        $dumpLayer->tintAlpha = 56.78;
 
         $expectedResult = new ExportLayer();
         $expectedResult->setFileName('abc')
@@ -358,6 +353,7 @@ class IconParserTest extends TestCase
 
     /**
      * Tests the parse method.
+     * @throws ExportException
      * @covers ::parse
      */
     public function testParse(): void
@@ -373,6 +369,7 @@ class IconParserTest extends TestCase
 
     /**
      * Tests the validate method.
+     * @throws ExportException
      * @throws ReflectionException
      * @covers ::validate
      */

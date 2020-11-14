@@ -10,6 +10,7 @@ use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Ingredient as DumpIngredient;
 use FactorioItemBrowser\Export\Entity\Dump\Product as DumpProduct;
 use FactorioItemBrowser\Export\Entity\Dump\Recipe as DumpRecipe;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use FactorioItemBrowser\Export\Parser\RecipeParser;
@@ -34,23 +35,12 @@ class RecipeParserTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked hash calculator.
-     * @var HashCalculator&MockObject
-     */
-    protected $hashCalculator;
-
-    /**
-     * The mocked icon parser.
-     * @var IconParser&MockObject
-     */
-    protected $iconParser;
-
-    /**
-     * The mocked translation parser.
-     * @var TranslationParser&MockObject
-     */
-    protected $translationParser;
+    /** @var HashCalculator&MockObject */
+    private HashCalculator $hashCalculator;
+    /** @var IconParser&MockObject */
+    private IconParser $iconParser;
+    /** @var TranslationParser&MockObject */
+    private TranslationParser $translationParser;
 
     /**
      * Sets up the test case.
@@ -95,6 +85,7 @@ class RecipeParserTest extends TestCase
 
     /**
      * Tests the parse method.
+     * @throws ExportException
      * @covers ::parse
      */
     public function testParse(): void
@@ -116,8 +107,8 @@ class RecipeParserTest extends TestCase
         $expectedRecipes = [$normalRecipe1, $normalRecipe2, $expensiveRecipe1];
 
         $dump = new Dump();
-        $dump->getControlStage()->setNormalRecipes([$dumpRecipe1, $dumpRecipe2])
-                                ->setExpensiveRecipes([$dumpRecipe3, $dumpRecipe4]);
+        $dump->normalRecipes = [$dumpRecipe1, $dumpRecipe2];
+        $dump->expensiveRecipes = [$dumpRecipe3, $dumpRecipe4];
 
         $combination = $this->createMock(Combination::class);
         $combination->expects($this->once())
@@ -181,17 +172,19 @@ class RecipeParserTest extends TestCase
         $exportProduct2 = $this->createMock(ExportProduct::class);
 
         $dumpRecipe = new DumpRecipe();
-        $dumpRecipe->setName('ghi')
-                   ->setCraftingTime(13.37)
-                   ->setCraftingCategory('jkl')
-                   ->setIngredients([$dumpIngredient1, $dumpIngredient2])
-                   ->setProducts([$dumpProduct1, $dumpProduct2]);
+        $dumpRecipe->name = 'ghi';
+        $dumpRecipe->localisedName = 'jkl';
+        $dumpRecipe->localisedDescription = 'mno';
+        $dumpRecipe->craftingTime = 13.37;
+        $dumpRecipe->craftingCategory = 'pqr';
+        $dumpRecipe->ingredients = [$dumpIngredient1, $dumpIngredient2];
+        $dumpRecipe->products = [$dumpProduct1, $dumpProduct2];
 
         $expectedRecipe = new ExportRecipe();
         $expectedRecipe->setName('ghi')
                        ->setMode('def')
                        ->setCraftingTime(13.37)
-                       ->setCraftingCategory('jkl')
+                       ->setCraftingCategory('pqr')
                        ->setIngredients([$exportIngredient1])
                        ->setProducts([$exportProduct1]);
 
@@ -199,7 +192,7 @@ class RecipeParserTest extends TestCase
         $expectedResult->setName('ghi')
                        ->setMode('def')
                        ->setCraftingTime(13.37)
-                       ->setCraftingCategory('jkl')
+                       ->setCraftingCategory('pqr')
                        ->setIngredients([$exportIngredient1])
                        ->setProducts([$exportProduct1])
                        ->setIconId($iconId);
@@ -209,12 +202,12 @@ class RecipeParserTest extends TestCase
                                 ->withConsecutive(
                                     [
                                         $this->isInstanceOf(LocalisedString::class),
-                                        $this->identicalTo($dumpRecipe->getLocalisedName()),
+                                        $this->identicalTo('jkl'),
                                         $this->isNull(),
                                     ],
                                     [
                                         $this->isInstanceOf(LocalisedString::class),
-                                        $this->identicalTo($dumpRecipe->getLocalisedDescription()),
+                                        $this->identicalTo('mno'),
                                         $this->isNull(),
                                     ],
                                 );
@@ -287,9 +280,9 @@ class RecipeParserTest extends TestCase
     public function testMapIngredient(): void
     {
         $dumpIngredient = new DumpIngredient();
-        $dumpIngredient->setType('abc')
-                       ->setName('def')
-                       ->setAmount(13.37);
+        $dumpIngredient->type = 'abc';
+        $dumpIngredient->name = 'def';
+        $dumpIngredient->amount = 13.37;
 
         $expectedResult = new ExportIngredient();
         $expectedResult->setType('abc')
@@ -344,11 +337,11 @@ class RecipeParserTest extends TestCase
     public function testMapProduct(): void
     {
         $dumpProduct = new DumpProduct();
-        $dumpProduct->setType('abc')
-                    ->setName('def')
-                    ->setAmountMin(12.34)
-                    ->setAmountMax(23.45)
-                    ->setProbability(34.56);
+        $dumpProduct->type = 'abc';
+        $dumpProduct->name = 'def';
+        $dumpProduct->amountMin = 12.34;
+        $dumpProduct->amountMax = 23.45;
+        $dumpProduct->probability = 34.56;
 
         $expectedResult = new ExportProduct();
         $expectedResult->setType('abc')
@@ -469,6 +462,7 @@ class RecipeParserTest extends TestCase
 
     /**
      * Tests the validate method.
+     * @throws ExportException
      * @covers ::validate
      */
     public function testValidate(): void

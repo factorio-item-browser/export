@@ -52,6 +52,9 @@ interface ConfigKey
      */
     public const DIRECTORY_TEMP = 'temp';
 
+    public const OUTPUT_PROCESSORS = 'output-processors';
+    public const OUTPUT_DUMP_PROCESSORS = 'output-dump-processors';
+
     /**
      * The key holding the number of parallel downloads to use.
      */

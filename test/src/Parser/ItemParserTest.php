@@ -9,6 +9,7 @@ use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Fluid as DumpFluid;
 use FactorioItemBrowser\Export\Entity\Dump\Item as DumpItem;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use FactorioItemBrowser\Export\Parser\ItemParser;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
@@ -30,21 +31,11 @@ class ItemParserTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked icon parser.
-     * @var IconParser&MockObject
-     */
-    protected $iconParser;
+    /** @var IconParser&MockObject */
+    protected IconParser $iconParser;
+    /** @var TranslationParser&MockObject */
+    protected TranslationParser $translationParser;
 
-    /**
-     * The mocked translation parser.
-     * @var TranslationParser&MockObject
-     */
-    protected $translationParser;
-
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -54,7 +45,6 @@ class ItemParserTest extends TestCase
     }
 
     /**
-     * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
@@ -67,7 +57,7 @@ class ItemParserTest extends TestCase
     }
 
     /**
-     * Tests the prepare method.
+     * @throws ExportException
      * @covers ::prepare
      */
     public function testPrepare(): void
@@ -81,7 +71,7 @@ class ItemParserTest extends TestCase
     }
 
     /**
-     * Tests the parse method.
+     * @throws ExportException
      * @covers ::parse
      */
     public function testParse(): void
@@ -92,8 +82,8 @@ class ItemParserTest extends TestCase
         $dumpFluid2 = $this->createMock(DumpFluid::class);
 
         $dump = new Dump();
-        $dump->getControlStage()->setItems([$dumpItem1, $dumpItem2])
-                                ->setFluids([$dumpFluid1, $dumpFluid2]);
+        $dump->items = [$dumpItem1, $dumpItem2];
+        $dump->fluids = [$dumpFluid1, $dumpFluid2];
 
         $exportItem1 = $this->createMock(ExportItem::class);
         $exportItem2 = $this->createMock(ExportItem::class);
@@ -139,7 +129,6 @@ class ItemParserTest extends TestCase
     }
 
     /**
-     * Tests the mapItem method.
      * @throws ReflectionException
      * @covers ::mapItem
      */
@@ -148,7 +137,11 @@ class ItemParserTest extends TestCase
         $iconId = 'abc';
 
         $dumpItem = new DumpItem();
-        $dumpItem->setName('def');
+        $dumpItem->name = 'def';
+        $dumpItem->localisedName = 'ghi';
+        $dumpItem->localisedEntityName = 'jkl';
+        $dumpItem->localisedDescription = 'mno';
+        $dumpItem->localisedEntityDescription = 'pqr';
 
         $expectedResult = new ExportItem();
         $expectedResult->setType(EntityType::ITEM)
@@ -165,13 +158,13 @@ class ItemParserTest extends TestCase
                                 ->withConsecutive(
                                     [
                                         $this->isInstanceOf(LocalisedString::class),
-                                        $this->identicalTo($dumpItem->getLocalisedName()),
-                                        $this->identicalTo($dumpItem->getLocalisedEntityName()),
+                                        $this->identicalTo($dumpItem->localisedName),
+                                        $this->identicalTo($dumpItem->localisedEntityName),
                                     ],
                                     [
                                         $this->isInstanceOf(LocalisedString::class),
-                                        $this->identicalTo($dumpItem->getLocalisedDescription()),
-                                        $this->identicalTo($dumpItem->getLocalisedEntityDescription()),
+                                        $this->identicalTo($dumpItem->localisedDescription),
+                                        $this->identicalTo($dumpItem->localisedEntityDescription),
                                     ],
                                 );
 
@@ -182,7 +175,6 @@ class ItemParserTest extends TestCase
     }
 
     /**
-     * Tests the mapFluid method.
      * @throws ReflectionException
      * @covers ::mapFluid
      */
@@ -191,7 +183,9 @@ class ItemParserTest extends TestCase
         $iconId = 'abc';
 
         $dumpFluid = new DumpFluid();
-        $dumpFluid->setName('def');
+        $dumpFluid->name = 'def';
+        $dumpFluid->localisedName = 'ghi';
+        $dumpFluid->localisedDescription = 'jkl';
 
         $expectedResult = new ExportItem();
         $expectedResult->setType(EntityType::FLUID)
@@ -208,12 +202,12 @@ class ItemParserTest extends TestCase
                                 ->withConsecutive(
                                     [
                                         $this->isInstanceOf(LocalisedString::class),
-                                        $this->identicalTo($dumpFluid->getLocalisedName()),
+                                        $this->identicalTo($dumpFluid->localisedName),
                                         $this->isNull(),
                                     ],
                                     [
                                         $this->isInstanceOf(LocalisedString::class),
-                                        $this->identicalTo($dumpFluid->getLocalisedDescription()),
+                                        $this->identicalTo($dumpFluid->localisedDescription),
                                         $this->isNull(),
                                     ],
                                 );
@@ -225,7 +219,7 @@ class ItemParserTest extends TestCase
     }
 
     /**
-     * Tests the validate method.
+     * @throws ExportException
      * @covers ::validate
      */
     public function testValidate(): void
