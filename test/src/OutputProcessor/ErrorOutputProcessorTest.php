@@ -7,6 +7,7 @@ namespace FactorioItemBrowserTest\Export\OutputProcessor;
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Exception\FactorioExecutionException;
 use FactorioItemBrowser\Export\OutputProcessor\ErrorOutputProcessor;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -99,5 +100,44 @@ EOT;
         }
 
         $this->assertEquals($expectedLines, $this->extractProperty($processor, 'errorLines'));
+    }
+
+    /**
+     * @throws ExportException
+     * @throws ReflectionException
+     * @covers ::processExitCode
+     */
+    public function testProcessExitCode(): void
+    {
+        $exitCode = 42;
+        $errorLines = ['abc', 'def'];
+        $dump = $this->createMock(Dump::class);
+
+        $this->expectException(FactorioExecutionException::class);
+        $this->expectExceptionCode($exitCode);
+        $this->expectExceptionMessage("abc\ndef");
+
+        $processor = new ErrorOutputProcessor();
+        $this->injectProperty($processor, 'errorLines', $errorLines);
+
+        $processor->processExitCode($exitCode, $dump);
+    }
+
+    /**
+     * @throws ExportException
+     * @throws ReflectionException
+     * @covers ::processExitCode
+     */
+    public function testProcessExitCodeWithoutException(): void
+    {
+        $exitCode = 0;
+        $errorLines = ['abc', 'def'];
+        $dump = $this->createMock(Dump::class);
+
+        $processor = new ErrorOutputProcessor();
+        $this->injectProperty($processor, 'errorLines', $errorLines);
+
+        $processor->processExitCode($exitCode, $dump);
+        $this->addToAssertionCount(1);
     }
 }

@@ -18,7 +18,8 @@ use Symfony\Component\Process\Process;
 class FactorioProcess
 {
     /** @var array<OutputProcessorInterface>|OutputProcessorInterface[] */
-    private array $outputProcessors;
+    protected array $outputProcessors;
+
     protected Dump $dump;
     /** @var Process<string>  */
     protected Process $process;
@@ -48,8 +49,9 @@ class FactorioProcess
     {
         $this->process->run([$this, 'handleOutput']);
 
+        $exitCode = (int) $this->process->getExitCode();
         foreach ($this->outputProcessors as $outputProcessor) {
-            $outputProcessor->processExitCode((int) $this->process->getExitCode(), $this->dump);
+            $outputProcessor->processExitCode($exitCode, $this->dump);
         }
     }
 
@@ -60,7 +62,7 @@ class FactorioProcess
      */
     public function handleOutput(string $type, string $contents): void
     {
-        if ($type === 'out') {
+        if ($type === Process::OUT) {
             foreach (explode(PHP_EOL, $contents) as $content) {
                 if ($content !== "") {
                     foreach ($this->outputProcessors as $outputProcessor) {
