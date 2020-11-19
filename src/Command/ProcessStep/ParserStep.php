@@ -73,12 +73,12 @@ class ParserStep implements ProcessStepInterface
 
         $this->console->writeAction('Parsing');
         foreach ($this->parsers as $parser) {
-            $parser->parse($processStepData->getDump(), $processStepData->getExportData()->getCombination());
+            $parser->parse($processStepData->getDump(), $processStepData->getExportData());
         }
 
         $this->console->writeAction('Validating');
         foreach ($this->parsers as $parser) {
-            $parser->validate($processStepData->getExportData()->getCombination());
+            $parser->validate($processStepData->getExportData());
         }
     }
 }

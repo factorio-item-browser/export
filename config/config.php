@@ -24,6 +24,7 @@ $aggregator = new ConfigAggregator([
     new ArrayProvider($cacheConfig),
 
     \BluePsyduck\FactorioModPortalClient\ConfigProvider::class,
+    \BluePsyduck\MapperManager\ConfigProvider::class,
     \FactorioItemBrowser\ExportData\ConfigProvider::class,
     \FactorioItemBrowser\ExportQueue\Client\ConfigProvider::class,
 

@@ -130,7 +130,7 @@ class ItemParserTest extends TestCase
 
     /**
      * @throws ReflectionException
-     * @covers ::mapItem
+     * @covers ::createItem
      */
     public function testMapItem(): void
     {
@@ -176,7 +176,7 @@ class ItemParserTest extends TestCase
 
     /**
      * @throws ReflectionException
-     * @covers ::mapFluid
+     * @covers ::createFluid
      */
     public function testMapFluid(): void
     {

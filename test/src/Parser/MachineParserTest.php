@@ -114,7 +114,7 @@ class MachineParserTest extends TestCase
     /**
      * Tests the mapMachine method.
      * @throws ReflectionException
-     * @covers ::mapMachine
+     * @covers ::createMachine
      */
     public function testMapMachine(): void
     {

@@ -40,6 +40,15 @@ return [
 
             Helper\HashCalculator::class => AutoWireFactory::class,
 
+            Mapper\FluidMapper::class => AutoWireFactory::class,
+            Mapper\IconLayerMapper::class => AutoWireFactory::class,
+            Mapper\IconMapper::class => AutoWireFactory::class,
+            Mapper\ItemMapper::class => AutoWireFactory::class,
+            Mapper\MachineMapper::class => AutoWireFactory::class,
+            Mapper\RecipeIngredientMapper::class => AutoWireFactory::class,
+            Mapper\RecipeMapper::class => AutoWireFactory::class,
+            Mapper\RecipeProductMapper::class => AutoWireFactory::class,
+
             Mod\ModDownloader::class => AutoWireFactory::class,
             Mod\ModFileManager::class => AutoWireFactory::class,
 

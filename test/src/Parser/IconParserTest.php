@@ -132,7 +132,7 @@ class IconParserTest extends TestCase
     /**
      * Tests the mapIcon method.
      * @throws ReflectionException
-     * @covers ::mapIcon
+     * @covers ::createIcon
      */
     public function testMapIcon(): void
     {

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
+use BluePsyduck\MapperManager\MapperManagerInterface;
 use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Fluid as DumpFluid;
 use FactorioItemBrowser\Export\Entity\Dump\Item as DumpItem;
-use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\Entity\Item as ExportItem;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The parser of the items and fluids.
@@ -20,11 +21,16 @@ use FactorioItemBrowser\ExportData\Entity\Item as ExportItem;
 class ItemParser implements ParserInterface
 {
     protected IconParser $iconParser;
+    protected MapperManagerInterface $mapperManager;
     protected TranslationParser $translationParser;
 
-    public function __construct(IconParser $iconParser, TranslationParser $translationParser)
-    {
+    public function __construct(
+        IconParser $iconParser,
+        MapperManagerInterface $mapperManager,
+        TranslationParser $translationParser
+    ) {
         $this->iconParser = $iconParser;
+        $this->mapperManager = $mapperManager;
         $this->translationParser = $translationParser;
     }
 
@@ -32,30 +38,28 @@ class ItemParser implements ParserInterface
     {
     }
 
-    public function parse(Dump $dump, Combination $combination): void
+    public function parse(Dump $dump, ExportData $exportData): void
     {
         foreach ($dump->items as $dumpItem) {
-            $combination->addItem($this->mapItem($dumpItem));
+            $exportData->getItems()->add($this->createItem($dumpItem));
         }
         foreach ($dump->fluids as $dumpFluid) {
-            $combination->addItem($this->mapFluid($dumpFluid));
+            $exportData->getItems()->add($this->createFluid($dumpFluid));
         }
     }
 
-    protected function mapItem(DumpItem $dumpItem): ExportItem
+    protected function createItem(DumpItem $dumpItem): ExportItem
     {
-        $exportItem = new ExportItem();
-        $exportItem->setType(EntityType::ITEM)
-                   ->setName($dumpItem->name)
-                   ->setIconId($this->iconParser->getIconId(EntityType::ITEM, $dumpItem->name));
+        $exportItem = $this->mapperManager->map($dumpItem, new ExportItem());
+        $exportItem->iconId = $this->iconParser->getIconId(EntityType::ITEM, $dumpItem->name);
 
         $this->translationParser->translate(
-            $exportItem->getLabels(),
+            $exportItem->labels,
             $dumpItem->localisedName,
             $dumpItem->localisedEntityName,
         );
         $this->translationParser->translate(
-            $exportItem->getDescriptions(),
+            $exportItem->descriptions,
             $dumpItem->localisedDescription,
             $dumpItem->localisedEntityDescription,
         );
@@ -63,20 +67,18 @@ class ItemParser implements ParserInterface
         return $exportItem;
     }
 
-    protected function mapFluid(DumpFluid $dumpFluid): ExportItem
+    protected function createFluid(DumpFluid $dumpFluid): ExportItem
     {
-        $exportItem = new ExportItem();
-        $exportItem->setType(EntityType::FLUID)
-                   ->setName($dumpFluid->name)
-                   ->setIconId($this->iconParser->getIconId(EntityType::FLUID, $dumpFluid->name));
+        $exportItem = $this->mapperManager->map($dumpFluid, new ExportItem());
+        $exportItem->iconId = $this->iconParser->getIconId(EntityType::FLUID, $dumpFluid->name);
 
-        $this->translationParser->translate($exportItem->getLabels(), $dumpFluid->localisedName);
-        $this->translationParser->translate($exportItem->getDescriptions(), $dumpFluid->localisedDescription);
+        $this->translationParser->translate($exportItem->labels, $dumpFluid->localisedName);
+        $this->translationParser->translate($exportItem->descriptions, $dumpFluid->localisedDescription);
 
         return $exportItem;
     }
 
-    public function validate(Combination $combination): void
+    public function validate(ExportData $exportData): void
     {
     }
 }

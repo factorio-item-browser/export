@@ -147,7 +147,7 @@ class ModParserTest extends TestCase
     /**
      * Tests the mapMod method.
      * @throws ReflectionException
-     * @covers ::mapMod
+     * @covers ::createMod
      */
     public function testMapMod(): void
     {
@@ -201,7 +201,7 @@ class ModParserTest extends TestCase
     /**
      * Tests the mapThumbnail method.
      * @throws ReflectionException
-     * @covers ::mapThumbnail
+     * @covers ::createThumbnail
      */
     public function testMapThumbnail(): void
     {
@@ -248,7 +248,7 @@ class ModParserTest extends TestCase
     /**
      * Tests the mapThumbnail method.
      * @throws ReflectionException
-     * @covers ::mapThumbnail
+     * @covers ::createThumbnail
      */
     public function testMapThumbnailWithoutSize(): void
     {

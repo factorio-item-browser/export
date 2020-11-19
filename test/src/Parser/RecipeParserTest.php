@@ -155,7 +155,7 @@ class RecipeParserTest extends TestCase
     /**
      * Tests the mapRecipe method.
      * @throws ReflectionException
-     * @covers ::mapRecipe
+     * @covers ::createRecipe
      */
     public function testMapRecipe(): void
     {
@@ -404,7 +404,7 @@ class RecipeParserTest extends TestCase
     /**
      * Tests the mapIconId method.
      * @throws ReflectionException
-     * @covers ::mapIconId
+     * @covers ::getIconId
      */
     public function testMapIconId(): void
     {
@@ -428,7 +428,7 @@ class RecipeParserTest extends TestCase
     /**
      * Tests the mapIconId method.
      * @throws ReflectionException
-     * @covers ::mapIconId
+     * @covers ::getIconId
      */
     public function testMapIconIdWithFirstProductId(): void
     {
