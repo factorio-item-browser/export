@@ -26,24 +26,15 @@ class HashCalculatorTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked serializer.
-     * @var SerializerInterface&MockObject
-     */
-    protected $serializer;
+    /** @var SerializerInterface&MockObject */
+    private $serializer;
 
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->serializer = $this->createMock(SerializerInterface::class);
     }
 
     /**
-     * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
@@ -55,26 +46,23 @@ class HashCalculatorTest extends TestCase
     }
 
     /**
-     * Tests the hashIcon method.
      * @covers ::hashIcon
      */
     public function testHashIcon(): void
     {
         $hash = 'foo';
 
-        /* @var Layer&MockObject $layer */
         $layer = $this->createMock(Layer::class);
 
         $icon = new Icon();
-        $icon->setId('abc')
-             ->setSize(42)
-             ->addLayer($layer);
+        $icon->id = 'abc';
+        $icon->size = 42;
+        $icon->layers[] = $layer;
 
         $expectedIcon = new Icon();
-        $expectedIcon->setSize(42)
-                     ->addLayer($layer);
+        $expectedIcon->size = 42;
+        $expectedIcon->layers[] = $layer;
 
-        /* @var HashCalculator&MockObject $helper */
         $helper = $this->getMockBuilder(HashCalculator::class)
                        ->onlyMethods(['hashEntity'])
                        ->setConstructorArgs([$this->serializer])
@@ -90,7 +78,6 @@ class HashCalculatorTest extends TestCase
     }
 
     /**
-     * Tests the hashRecipe method.
      * @covers ::hashRecipe
      */
     public function testHashRecipe(): void
@@ -98,17 +85,16 @@ class HashCalculatorTest extends TestCase
         $hash = 'foo';
 
         $recipe = new Recipe();
-        $recipe->setName('abc')
-               ->setMode('def')
-               ->setCraftingCategory('ghi')
-               ->setCraftingTime(13.37)
-               ->setIconId('jkl');
+        $recipe->name = 'abc';
+        $recipe->mode = 'def';
+        $recipe->craftingCategory = 'ghi';
+        $recipe->craftingTime = 13.37;
+        $recipe->iconId = 'jkl';
 
         $expectedRecipe = new Recipe();
-        $expectedRecipe->setCraftingCategory('ghi')
-                       ->setCraftingTime(13.37);
+        $expectedRecipe->craftingCategory = 'ghi';
+        $expectedRecipe->craftingTime = 13.37;
 
-        /* @var HashCalculator&MockObject $helper */
         $helper = $this->getMockBuilder(HashCalculator::class)
                        ->onlyMethods(['hashEntity'])
                        ->setConstructorArgs([$this->serializer])
@@ -124,7 +110,6 @@ class HashCalculatorTest extends TestCase
     }
 
     /**
-     * Tests the hashEntity method.
      * @throws ReflectionException
      * @covers ::hashEntity
      */
@@ -133,7 +118,6 @@ class HashCalculatorTest extends TestCase
         $serializedEntity = 'abc';
         $expectedResult = '90015098-3cd2-4fb0-d696-3f7d28e17f72';
 
-        /* @var stdClass&MockObject $entity */
         $entity = $this->createMock(stdClass::class);
 
         $this->serializer->expects($this->once())

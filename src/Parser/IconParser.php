@@ -31,7 +31,7 @@ class IconParser implements ParserInterface
     /** @var array<string,array<string,ExportIcon>> */
     protected array $parsedIcons = [];
     /** @var array<string,ExportIcon> */
-    protected $usedIcons = [];
+    protected array $usedIcons = [];
 
     public function __construct(HashCalculator $hashCalculator, MapperManagerInterface $mapperManager)
     {

@@ -50,7 +50,7 @@ class MachineMapper implements StaticMapperInterface
      * @param float $energyUsage
      * @return array{float, string}
      */
-    protected function convertEnergyUsage(float $energyUsage): array
+    private function convertEnergyUsage(float $energyUsage): array
     {
         $unit = EnergyUsageUnit::WATT;
         foreach (EnergyUsageUnit::ORDERED_UNITS as $currentUnit) {

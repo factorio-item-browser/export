@@ -8,7 +8,7 @@ use BluePsyduck\FactorioTranslator\Exception\NoSupportedLoaderException;
 use BluePsyduck\FactorioTranslator\Translator;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
-use FactorioItemBrowser\ExportData\Collection\Translations;
+use FactorioItemBrowser\ExportData\Collection\DictionaryInterface;
 use FactorioItemBrowser\ExportData\ExportData;
 
 /**
@@ -49,12 +49,15 @@ class TranslationParser implements ParserInterface
     }
 
     /**
-     * @param Translations $translations
+     * @param DictionaryInterface $translations
      * @param mixed $localisedString
      * @param mixed|null $fallbackLocalisedString
      */
-    public function translate(Translations $translations, $localisedString, $fallbackLocalisedString = null): void
-    {
+    public function translate(
+        DictionaryInterface $translations,
+        $localisedString,
+        $fallbackLocalisedString = null
+    ): void {
         foreach ($this->translator->getAllLocales() as $locale) {
             $value = $this->translator->translate($locale, $localisedString);
             if ($value === '' && $fallbackLocalisedString !== null) {

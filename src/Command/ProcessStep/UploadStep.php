@@ -21,12 +21,7 @@ use FtpClient\FtpException;
  */
 class UploadStep implements ProcessStepInterface
 {
-    /**
-     * The console.
-     * @var Console
-     */
-    protected $console;
-
+    protected Console $console;
     protected ExportDataService $exportDataService;
 
     /**
@@ -47,13 +42,6 @@ class UploadStep implements ProcessStepInterface
      */
     protected $ftpPassword;
 
-    /**
-     * Initializes the step.
-     * @param Console $console
-     * @param string $uploadFtpHost
-     * @param string $uploadFtpUsername
-     * @param string $uploadFtpPassword
-     */
     public function __construct(
         Console $console,
         ExportDataService $exportDataService,

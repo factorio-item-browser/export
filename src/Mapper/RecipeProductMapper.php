@@ -38,5 +38,6 @@ class RecipeProductMapper implements StaticMapperInterface
         $destination->name = $source->name;
         $destination->amountMin = $source->amountMin;
         $destination->amountMax = $source->amountMax;
+        $destination->probability = $source->probability;
     }
 }
