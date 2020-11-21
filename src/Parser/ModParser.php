@@ -21,40 +21,13 @@ use FactorioItemBrowser\ExportData\Entity\Mod;
  */
 class ModParser implements ParserInterface
 {
-    /**
-     * The size of the rendered thumbnails.
-     */
     protected const RENDERED_THUMBNAIL_SIZE = 144;
-
-    /**
-     * The filename of the thumbnail.
-     */
     protected const THUMBNAIL_FILENAME = 'thumbnail.png';
 
-    /**
-     * The hash calculator.
-     * @var HashCalculator
-     */
-    protected $hashCalculator;
+    protected HashCalculator $hashCalculator;
+    protected ModFileManager $modFileManager;
+    protected TranslationParser $translationParser;
 
-    /**
-     * The mod file manager.
-     * @var ModFileManager
-     */
-    protected $modFileManager;
-
-    /**
-     * The translation parser.
-     * @var TranslationParser
-     */
-    protected $translationParser;
-
-    /**
-     * Initializes the parser.
-     * @param HashCalculator $hashCalculator
-     * @param ModFileManager $modFileManager
-     * @param TranslationParser $translationParser
-     */
     public function __construct(
         HashCalculator $hashCalculator,
         ModFileManager $modFileManager,
@@ -65,23 +38,13 @@ class ModParser implements ParserInterface
         $this->translationParser = $translationParser;
     }
 
-    /**
-     * Prepares the parser to be able to later parse the dump.
-     * @param Dump $dump
-     */
     public function prepare(Dump $dump): void
     {
     }
 
-    /**
-     * Parses the data from the dump into the combination.
-     * @param Dump $dump
-     * @param Combination $combination
-     * @throws ExportException
-     */
     public function parse(Dump $dump, Combination $combination): void
     {
-        foreach ($dump->getModNames() as $modName) {
+        foreach ($dump->modNames as $modName) {
             $mod = $this->mapMod($modName);
             $thumbnail = $this->mapThumbnail($mod);
             if ($thumbnail !== null) {
@@ -93,7 +56,6 @@ class ModParser implements ParserInterface
     }
 
     /**
-     * Maps the mod entity of the specified name.
      * @param string $modName
      * @return Mod
      * @throws ExportException
@@ -116,11 +78,6 @@ class ModParser implements ParserInterface
         return $mod;
     }
 
-    /**
-     * Maps the thumbnail of the mod to an entity, if there is one to map.
-     * @param Mod $mod
-     * @return Icon|null
-     */
     protected function mapThumbnail(Mod $mod): ?Icon
     {
         $thumbnailSize = $this->getThumbnailSize($mod);
@@ -141,9 +98,8 @@ class ModParser implements ParserInterface
     }
 
     /**
-     * Returns the size of the thumbnail, or 0 if no thumbnail is available.
      * @param Mod $mod
-     * @return int
+     * @return int The size of the thumbnail, or 0 if no thumbnail is available.
      */
     protected function getThumbnailSize(Mod $mod): int
     {
@@ -161,10 +117,6 @@ class ModParser implements ParserInterface
         return imagesx($image);
     }
 
-    /**
-     * Validates the data in the combination as a second parsing step.
-     * @param Combination $combination
-     */
     public function validate(Combination $combination): void
     {
     }

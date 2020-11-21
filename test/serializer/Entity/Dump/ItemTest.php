@@ -23,11 +23,11 @@ class ItemTest extends SerializerTestCase
     protected function getObject(): object
     {
         $result = new Item();
-        $result->setName('abc')
-               ->setLocalisedName('def')
-               ->setLocalisedDescription(['ghi'])
-               ->setLocalisedEntityName('jkl')
-               ->setLocalisedEntityDescription(['mno']);
+        $result->name = 'abc';
+        $result->localisedName = 'def';
+        $result->localisedDescription = ['ghi'];
+        $result->localisedEntityName = 'jkl';
+        $result->localisedEntityDescription = ['mno'];
         return $result;
     }
 

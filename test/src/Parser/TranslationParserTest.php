@@ -8,6 +8,7 @@ use BluePsyduck\FactorioTranslator\Exception\NoSupportedLoaderException;
 use BluePsyduck\FactorioTranslator\Translator;
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
 use FactorioItemBrowser\ExportData\Entity\Combination;
@@ -27,17 +28,10 @@ class TranslationParserTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked mod file manager.
-     * @var ModFileManager&MockObject
-     */
-    protected $modFileManager;
-
-    /**
-     * The mocked translator.
-     * @var Translator&MockObject
-     */
-    protected $translator;
+    /** @var ModFileManager&MockObject */
+    private ModFileManager $modFileManager;
+    /** @var Translator&MockObject */
+    private Translator $translator;
 
     /**
      * Sets up the test case.
@@ -70,12 +64,8 @@ class TranslationParserTest extends TestCase
      */
     public function testPrepare(): void
     {
-        $modNames = ['abc', 'def'];
-
-        $dump = $this->createMock(Dump::class);
-        $dump->expects($this->once())
-             ->method('getModNames')
-             ->willReturn($modNames);
+        $dump = new Dump();
+        $dump->modNames = ['abc', 'def'];
 
         $this->modFileManager->expects($this->exactly(3))
                              ->method('getLocalDirectory')
@@ -105,6 +95,7 @@ class TranslationParserTest extends TestCase
 
     /**
      * Tests the parse method.
+     * @throws ExportException
      * @covers ::parse
      */
     public function testParse(): void
@@ -122,6 +113,7 @@ class TranslationParserTest extends TestCase
 
     /**
      * Tests the validate method.
+     * @throws ExportException
      * @covers ::validate
      */
     public function testValidate(): void

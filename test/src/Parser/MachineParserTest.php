@@ -8,6 +8,7 @@ use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Machine as DumpMachine;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use FactorioItemBrowser\Export\Parser\MachineParser;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
@@ -29,21 +30,11 @@ class MachineParserTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked icon parser.
-     * @var IconParser&MockObject
-     */
-    protected $iconParser;
+    /** @var IconParser&MockObject */
+    private IconParser $iconParser;
+    /** @var TranslationParser&MockObject */
+    private TranslationParser $translationParser;
 
-    /**
-     * The mocked translation parser.
-     * @var TranslationParser&MockObject
-     */
-    protected $translationParser;
-
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -53,7 +44,6 @@ class MachineParserTest extends TestCase
     }
 
     /**
-     * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
@@ -67,6 +57,7 @@ class MachineParserTest extends TestCase
 
     /**
      * Tests the prepare method.
+     * @throws ExportException
      * @covers ::prepare
      */
     public function testPrepare(): void
@@ -81,6 +72,7 @@ class MachineParserTest extends TestCase
 
     /**
      * Tests the parse method.
+     * @throws ExportException
      * @covers ::parse
      */
     public function testParse(): void
@@ -91,7 +83,7 @@ class MachineParserTest extends TestCase
         $exportMachine2 = $this->createMock(ExportMachine::class);
 
         $dump = new Dump();
-        $dump->getControlStage()->setMachines([$dumpMachine1, $dumpMachine2]);
+        $dump->machines = [$dumpMachine1, $dumpMachine2];
 
         $combination = $this->createMock(Combination::class);
         $combination->expects($this->exactly(2))
@@ -129,18 +121,20 @@ class MachineParserTest extends TestCase
         $iconId = 'abc';
 
         $dumpMachine = new DumpMachine();
-        $dumpMachine->setName('def')
-                    ->setCraftingCategories(['ghi', 'jkl'])
-                    ->setCraftingSpeed(13.37)
-                    ->setItemSlots(12)
-                    ->setFluidInputSlots(34)
-                    ->setFluidOutputSlots(56)
-                    ->setModuleSlots(78)
-                    ->setEnergyUsage(73.31);
+        $dumpMachine->name = 'def';
+        $dumpMachine->localisedName = 'ghi';
+        $dumpMachine->localisedDescription = 'jkl';
+        $dumpMachine->craftingCategories = ['mno', 'pqr'];
+        $dumpMachine->craftingSpeed = 13.37;
+        $dumpMachine->itemSlots = 12;
+        $dumpMachine->fluidInputSlots = 34;
+        $dumpMachine->fluidOutputSlots = 56;
+        $dumpMachine->moduleSlots = 78;
+        $dumpMachine->energyUsage = 73.31;
 
         $expectedResult = new ExportMachine();
         $expectedResult->setName('def')
-                       ->setCraftingCategories(['ghi', 'jkl'])
+                       ->setCraftingCategories(['mno', 'pqr'])
                        ->setCraftingSpeed(13.37)
                        ->setNumberOfItemSlots(12)
                        ->setNumberOfFluidInputSlots(34)
@@ -161,12 +155,12 @@ class MachineParserTest extends TestCase
                                 ->withConsecutive(
                                     [
                                         $this->isInstanceOf(LocalisedString::class),
-                                        $this->identicalTo($dumpMachine->getLocalisedName()),
+                                        $this->identicalTo('ghi'),
                                         $this->isNull(),
                                     ],
                                     [
                                         $this->isInstanceOf(LocalisedString::class),
-                                        $this->identicalTo($dumpMachine->getLocalisedDescription()),
+                                        $this->identicalTo('jkl'),
                                         $this->isNull(),
                                     ],
                                 );
@@ -233,6 +227,7 @@ class MachineParserTest extends TestCase
 
     /**
      * Tests the validate method.
+     * @throws ExportException
      * @covers ::validate
      */
     public function testValidate(): void

@@ -15,6 +15,19 @@ use FactorioItemBrowser\Export\Constant\ConfigKey;
 return [
     ConfigKey::PROJECT => [
         ConfigKey::EXPORT => [
+            ConfigKey::OUTPUT_PROCESSORS => [
+                OutputProcessor\DumpOutputProcessor::class,
+                OutputProcessor\ErrorOutputProcessor::class,
+                OutputProcessor\ModNameOutputProcessor::class,
+            ],
+            ConfigKey::OUTPUT_DUMP_PROCESSORS => [
+                OutputProcessor\DumpProcessor\ExpensiveRecipeDumpProcessor::class,
+                OutputProcessor\DumpProcessor\FluidDumpProcessor::class,
+                OutputProcessor\DumpProcessor\IconDumpProcessor::class,
+                OutputProcessor\DumpProcessor\ItemDumpProcessor::class,
+                OutputProcessor\DumpProcessor\MachineDumpProcessor::class,
+                OutputProcessor\DumpProcessor\NormalRecipeDumpProcessor::class,
+            ],
             ConfigKey::PARSERS => [
                 Parser\IconParser::class,
                 Parser\ItemParser::class,

@@ -1,6 +1,0 @@
-FactorioItemBrowser\Export\Entity\Dump\DataStage:
-  access_type: public_method
-  exclusion_policy: all
-  properties:
-    icons:
-      type: array<FactorioItemBrowser\Export\Entity\Dump\Icon>

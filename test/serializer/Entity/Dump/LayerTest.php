@@ -23,15 +23,15 @@ class LayerTest extends SerializerTestCase
     protected function getObject(): object
     {
         $result = new Layer();
-        $result->setFile('abc')
-               ->setSize(1337)
-               ->setShiftX(42)
-               ->setShiftY(21)
-               ->setScale(12.34)
-               ->setTintRed(23.45)
-               ->setTintGreen(34.56)
-               ->setTintBlue(45.67)
-               ->setTintAlpha(56.78);
+        $result->file = 'abc';
+        $result->size = 1337;
+        $result->shiftX = 42;
+        $result->shiftY = 21;
+        $result->scale = 12.34;
+        $result->tintRed = 23.45;
+        $result->tintGreen = 34.56;
+        $result->tintBlue = 45.67;
+        $result->tintAlpha = 56.78;
         return $result;
     }
 

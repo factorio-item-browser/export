@@ -23,16 +23,16 @@ class MachineTest extends SerializerTestCase
     protected function getObject(): object
     {
         $result = new Machine();
-        $result->setName('abc')
-               ->setLocalisedName('def')
-               ->setLocalisedDescription(['ghi'])
-               ->setCraftingCategories(['jkl', 'mno'])
-               ->setCraftingSpeed(13.37)
-               ->setItemSlots(12)
-               ->setFluidInputSlots(23)
-               ->setFluidOutputSlots(34)
-               ->setModuleSlots(45)
-               ->setEnergyUsage(73.31);
+        $result->name = 'abc';
+        $result->localisedName = 'def';
+        $result->localisedDescription = ['ghi'];
+        $result->craftingCategories = ['jkl', 'mno'];
+        $result->craftingSpeed = 13.37;
+        $result->itemSlots = 12;
+        $result->fluidInputSlots = 23;
+        $result->fluidOutputSlots = 34;
+        $result->moduleSlots = 45;
+        $result->energyUsage = 73.31;
         return $result;
     }
 

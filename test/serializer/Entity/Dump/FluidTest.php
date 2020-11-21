@@ -23,9 +23,9 @@ class FluidTest extends SerializerTestCase
     protected function getObject(): object
     {
         $result = new Fluid();
-        $result->setName('abc')
-               ->setLocalisedName('def')
-               ->setLocalisedDescription(['ghi']);
+        $result->name = 'abc';
+        $result->localisedName = 'def';
+        $result->localisedDescription = ['ghi'];
         return $result;
     }
 

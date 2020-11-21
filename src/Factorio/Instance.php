@@ -11,10 +11,9 @@ use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Entity\ModList\Mod;
 use FactorioItemBrowser\Export\Entity\ModListJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Exception\FactorioExecutionException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Process\FactorioProcessFactory;
 use JMS\Serializer\SerializerInterface;
-use Symfony\Component\Process\Process;
 
 /**
  * The instance of Factorio being run to get the dump data.
@@ -24,67 +23,18 @@ use Symfony\Component\Process\Process;
  */
 class Instance
 {
-    /**
-     * The console.
-     * @var Console
-     */
-    protected $console;
+    protected Console $console;
+    protected FactorioProcessFactory $factorioProcessFactory;
+    protected ModFileManager $modFileManager;
+    protected SerializerInterface $serializer;
+    protected string $factorioDirectory;
+    protected string $instancesDirectory;
+    protected string $version;
+    protected string $combinationInstanceDirectory = '';
 
-    /**
-     * The dump extractor.
-     * @var DumpExtractor
-     */
-    protected $dumpExtractor;
-
-    /**
-     * The mod file manager.
-     * @var ModFileManager
-     */
-    protected $modFileManager;
-
-    /**
-     * The serializer.
-     * @var SerializerInterface
-     */
-    protected $serializer;
-
-    /**
-     * The directory containing the actual Factorio game.
-     * @var string
-     */
-    protected $factorioDirectory;
-
-    /**
-     * The directory of the instances.
-     * @var string
-     */
-    protected $instancesDirectory;
-
-    /**
-     * The version of the export project.
-     * @var string
-     */
-    protected $version;
-
-    /**
-     * The directory for the combination instance.
-     * @var string
-     */
-    protected $combinationInstanceDirectory = '';
-
-    /**
-     * Initializes the instance.
-     * @param Console $console
-     * @param DumpExtractor $dumpExtractor
-     * @param ModFileManager $modFileManager
-     * @param SerializerInterface $exportSerializer
-     * @param string $factorioDirectory
-     * @param string $instancesDirectory
-     * @param string $version
-     */
     public function __construct(
         Console $console,
-        DumpExtractor $dumpExtractor,
+        FactorioProcessFactory $factorioProcessFactory,
         ModFileManager $modFileManager,
         SerializerInterface $exportSerializer,
         string $factorioDirectory,
@@ -92,7 +42,7 @@ class Instance
         string $version
     ) {
         $this->console = $console;
-        $this->dumpExtractor = $dumpExtractor;
+        $this->factorioProcessFactory = $factorioProcessFactory;
         $this->modFileManager = $modFileManager;
         $this->serializer = $exportSerializer;
         $this->factorioDirectory = $factorioDirectory;
@@ -103,7 +53,7 @@ class Instance
     /**
      * Runs the Factorio instance.
      * @param string $combinationId
-     * @param array|string[] $modNames
+     * @param array<string> $modNames
      * @return Dump
      * @throws ExportException
      */
@@ -117,19 +67,15 @@ class Instance
             $this->setUpMods($modNames);
             $this->setupDumpMod($modNames);
 
-            $this->console->writeAction('Launching Factorio');
-            $output = $this->execute();
+            $this->console->writeAction('Executing Factorio');
+            $process = $this->factorioProcessFactory->create($this->combinationInstanceDirectory);
+            $process->run();
+            return $process->getDump();
         } finally {
             $this->removeInstanceDirectory();
         }
-
-        $this->console->writeAction('Extracting dumped data');
-        return $this->dumpExtractor->extract($output);
     }
 
-    /**
-     * Sets up the instance.
-     */
     protected function setUpInstance(): void
     {
         $this->removeInstanceDirectory();
@@ -145,7 +91,7 @@ class Instance
 
     /**
      * Sets up the mods to use for the combination.
-     * @param array|string[] $modNames
+     * @param array<string> $modNames
      */
     protected function setUpMods(array $modNames): void
     {
@@ -158,7 +104,7 @@ class Instance
 
     /**
      * Sets up the dump mod to be used.
-     * @param array|string[] $modNames
+     * @param array<string> $modNames
      * @throws ExportException
      * @codeCoverageIgnore Unable to mock cp -r with virtual file system.
      */
@@ -186,7 +132,7 @@ class Instance
 
     /**
      * Creates the info.json instance used for the dump mod.
-     * @param array|string[] $modNames
+     * @param array<string> $modNames
      * @return InfoJson
      * @throws ExportException
      */
@@ -207,7 +153,7 @@ class Instance
 
     /**
      * Creates the mod-list.json instance.
-     * @param array|string[] $modNames
+     * @param array<string> $modNames
      * @return ModListJson
      */
     protected function createModListJson(array $modNames): ModListJson
@@ -242,40 +188,6 @@ class Instance
     }
 
     /**
-     * Executes the Factorio instance.
-     * @return string
-     * @throws ExportException
-     */
-    protected function execute(): string
-    {
-        $process = $this->createProcess();
-        $process->run();
-        if (!$process->isSuccessful()) {
-            throw new FactorioExecutionException((int) $process->getExitCode(), $process->getOutput());
-        }
-
-        return $process->getOutput();
-    }
-
-    /**
-     * Creates the process which will actually run Factorio.
-     * @return Process<string>
-     */
-    protected function createProcess(): Process
-    {
-        $command = [
-            $this->getInstancePath('bin/x64/factorio'),
-            '--no-log-rotation',
-            '--create=' . $this->getInstancePath('dump'),
-            '--mod-directory=' . $this->getInstancePath('mods')
-        ];
-
-        $process = new Process($command);
-        $process->setTimeout(null);
-        return $process;
-    }
-
-    /**
      * Removes the specified directory if it exists.
      * @codeCoverageIgnore Unable to rm -rf in virtual file system.
      */
@@ -286,19 +198,11 @@ class Instance
         }
     }
 
-    /**
-     * Creates the specified directory.
-     * @param string $directory
-     */
     protected function createDirectory(string $directory): void
     {
         mkdir($this->getInstancePath($directory), 0777, true);
     }
 
-    /**
-     * Copies a file or directory to the instance.
-     * @param string $directoryOrFile
-     */
     protected function copy(string $directoryOrFile): void
     {
         $destination = $this->getInstancePath($directoryOrFile);
@@ -329,21 +233,11 @@ class Instance
         symlink((string) realpath($source), $destination);
     }
 
-    /**
-     * Returns the specified directory or file in context of the Factorio game.
-     * @param string $directoryOrFile
-     * @return string
-     */
     protected function getFactorioPath(string $directoryOrFile): string
     {
         return $this->factorioDirectory . '/' . $directoryOrFile;
     }
 
-    /**
-     * Returns the specified directory or file in context of the instance directory.
-     * @param string $directoryOrFile
-     * @return string
-     */
     protected function getInstancePath(string $directoryOrFile): string
     {
         return $this->combinationInstanceDirectory . '/' . $directoryOrFile;

@@ -24,30 +24,10 @@ use FactorioItemBrowser\ExportData\Entity\Recipe\Product as ExportProduct;
  */
 class RecipeParser implements ParserInterface
 {
-    /**
-     * The hash calculator.
-     * @var HashCalculator
-     */
-    protected $hashCalculator;
+    protected HashCalculator $hashCalculator;
+    protected IconParser $iconParser;
+    protected TranslationParser $translationParser;
 
-    /**
-     * The icon parser.
-     * @var IconParser
-     */
-    protected $iconParser;
-
-    /**
-     * The translation parser.
-     * @var TranslationParser
-     */
-    protected $translationParser;
-
-    /**
-     * Initializes the parser.
-     * @param HashCalculator $hashCalculator
-     * @param IconParser $iconParser
-     * @param TranslationParser $translationParser
-     */
     public function __construct(
         HashCalculator $hashCalculator,
         IconParser $iconParser,
@@ -58,28 +38,19 @@ class RecipeParser implements ParserInterface
         $this->translationParser = $translationParser;
     }
 
-    /**
-     * Prepares the parser to be able to later parse the dump.
-     * @param Dump $dump
-     */
     public function prepare(Dump $dump): void
     {
     }
 
-    /**
-     * Parses the data from the dump into the combination.
-     * @param Dump $dump
-     * @param Combination $combination
-     */
     public function parse(Dump $dump, Combination $combination): void
     {
         $recipes = [];
-        foreach ($dump->getControlStage()->getNormalRecipes() as $dumpRecipe) {
+        foreach ($dump->normalRecipes as $dumpRecipe) {
             $normalRecipe = $this->mapRecipe($dumpRecipe, RecipeMode::NORMAL);
             $recipes[$this->hashCalculator->hashRecipe($normalRecipe)] = $normalRecipe;
         }
 
-        foreach ($dump->getControlStage()->getExpensiveRecipes() as $dumpRecipe) {
+        foreach ($dump->expensiveRecipes as $dumpRecipe) {
             $expensiveRecipe = $this->mapRecipe($dumpRecipe, RecipeMode::EXPENSIVE);
             $hash = $this->hashCalculator->hashRecipe($expensiveRecipe);
 
@@ -91,96 +62,65 @@ class RecipeParser implements ParserInterface
         $combination->setRecipes(array_values($recipes));
     }
 
-    /**
-     * Maps a dump recipe to an export one.
-     * @param DumpRecipe $dumpRecipe
-     * @param string $mode
-     * @return ExportRecipe
-     */
     protected function mapRecipe(DumpRecipe $dumpRecipe, string $mode): ExportRecipe
     {
         $exportRecipe = new ExportRecipe();
-        $exportRecipe->setName($dumpRecipe->getName())
+        $exportRecipe->setName($dumpRecipe->name)
                      ->setMode($mode)
-                     ->setCraftingTime($dumpRecipe->getCraftingTime())
-                     ->setCraftingCategory($dumpRecipe->getCraftingCategory());
+                     ->setCraftingTime($dumpRecipe->craftingTime)
+                     ->setCraftingCategory($dumpRecipe->craftingCategory);
 
-        foreach ($dumpRecipe->getIngredients() as $dumpIngredient) {
+        foreach ($dumpRecipe->ingredients as $dumpIngredient) {
             $exportIngredient = $this->mapIngredient($dumpIngredient);
             if ($this->isIngredientValid($exportIngredient)) {
                 $exportRecipe->addIngredient($exportIngredient);
             }
         }
-        foreach ($dumpRecipe->getProducts() as $dumpProduct) {
+        foreach ($dumpRecipe->products as $dumpProduct) {
             $exportProduct = $this->mapProduct($dumpProduct);
             if ($this->isProductValid($exportProduct)) {
                 $exportRecipe->addProduct($exportProduct);
             }
         }
 
-        $this->translationParser->translate($exportRecipe->getLabels(), $dumpRecipe->getLocalisedName());
-        $this->translationParser->translate($exportRecipe->getDescriptions(), $dumpRecipe->getLocalisedDescription());
+        $this->translationParser->translate($exportRecipe->getLabels(), $dumpRecipe->localisedName);
+        $this->translationParser->translate($exportRecipe->getDescriptions(), $dumpRecipe->localisedDescription);
 
         $exportRecipe->setIconId($this->mapIconId($exportRecipe));
         return $exportRecipe;
     }
 
-    /**
-     * Maps the dump ingredient to an export one.
-     * @param DumpIngredient $dumpIngredient
-     * @return ExportIngredient
-     */
     protected function mapIngredient(DumpIngredient $dumpIngredient): ExportIngredient
     {
         $exportIngredient = new ExportIngredient();
-        $exportIngredient->setType($dumpIngredient->getType())
-                         ->setName($dumpIngredient->getName())
-                         ->setAmount($dumpIngredient->getAmount());
+        $exportIngredient->setType($dumpIngredient->type)
+                         ->setName($dumpIngredient->name)
+                         ->setAmount($dumpIngredient->amount);
         return $exportIngredient;
     }
 
-    /**
-     * Returns whether the specified ingredient is valid.
-     * @param ExportIngredient $ingredient
-     * @return bool
-     */
     protected function isIngredientValid(ExportIngredient $ingredient): bool
     {
         return $ingredient->getAmount() > 0;
     }
 
-    /**
-     * Maps the dump product to an export one.
-     * @param DumpProduct $dumpProduct
-     * @return ExportProduct
-     */
     protected function mapProduct(DumpProduct $dumpProduct): ExportProduct
     {
         $exportProduct = new ExportProduct();
-        $exportProduct->setType($dumpProduct->getType())
-                      ->setName($dumpProduct->getName())
-                      ->setAmountMin($dumpProduct->getAmountMin())
-                      ->setAmountMax($dumpProduct->getAmountMax())
-                      ->setProbability($dumpProduct->getProbability());
+        $exportProduct->setType($dumpProduct->type)
+                      ->setName($dumpProduct->name)
+                      ->setAmountMin($dumpProduct->amountMin)
+                      ->setAmountMax($dumpProduct->amountMax)
+                      ->setProbability($dumpProduct->probability);
         return $exportProduct;
     }
 
-    /**
-     * Returns whether the specified product is valid.
-     * @param ExportProduct $product
-     * @return bool
-     */
     protected function isProductValid(ExportProduct $product): bool
     {
         $amount = ($product->getAmountMin() + $product->getAmountMax()) / 2 * $product->getProbability();
         return $amount > 0;
     }
 
-    /**
-     * Maps the icon hash to the recipe.
-     * @param ExportRecipe $recipe
-     * @return string
-     */
     protected function mapIconId(ExportRecipe $recipe): string
     {
         $iconId = $this->iconParser->getIconId(EntityType::RECIPE, $recipe->getName());
@@ -194,10 +134,6 @@ class RecipeParser implements ParserInterface
         return $iconId;
     }
 
-    /**
-     * Validates the data in the combination as a second parsing step.
-     * @param Combination $combination
-     */
     public function validate(Combination $combination): void
     {
     }
