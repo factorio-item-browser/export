@@ -8,10 +8,10 @@ use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
-use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Mod;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The parser of the mods.
@@ -42,16 +42,16 @@ class ModParser implements ParserInterface
     {
     }
 
-    public function parse(Dump $dump, Combination $combination): void
+    public function parse(Dump $dump, ExportData $exportData): void
     {
         foreach ($dump->modNames as $modName) {
-            $mod = $this->mapMod($modName);
-            $thumbnail = $this->mapThumbnail($mod);
+            $mod = $this->createMod($modName);
+            $thumbnail = $this->createThumbnail($mod);
             if ($thumbnail !== null) {
-                $mod->setThumbnailId($thumbnail->getId());
-                $combination->addIcon($thumbnail);
+                $mod->thumbnailId = $thumbnail->id;
+                $exportData->getIcons()->add($thumbnail);
             }
-            $combination->addMod($mod);
+            $exportData->getMods()->add($mod);
         }
     }
 
@@ -60,25 +60,25 @@ class ModParser implements ParserInterface
      * @return Mod
      * @throws ExportException
      */
-    protected function mapMod(string $modName): Mod
+    protected function createMod(string $modName): Mod
     {
         $info = $this->modFileManager->getInfo($modName);
 
         $mod = new Mod();
-        $mod->setName($modName)
-            ->setVersion($info->getVersion())
-            ->setAuthor($info->getAuthor());
+        $mod->name = $modName;
+        $mod->version = $info->getVersion();
+        $mod->author = $info->getAuthor();
 
-        $mod->getTitles()->addTranslation('en', $info->getTitle());
-        $mod->getDescriptions()->addTranslation('en', $info->getDescription());
+        $mod->titles->set('en', $info->getTitle());
+        $mod->descriptions->set('en', $info->getDescription());
 
-        $this->translationParser->translate($mod->getTitles(), ["mod-name.${modName}"]);
-        $this->translationParser->translate($mod->getDescriptions(), ["mod-description.${modName}"]);
+        $this->translationParser->translate($mod->titles, ["mod-name.${modName}"]);
+        $this->translationParser->translate($mod->descriptions, ["mod-description.${modName}"]);
 
         return $mod;
     }
 
-    protected function mapThumbnail(Mod $mod): ?Icon
+    protected function createThumbnail(Mod $mod): ?Icon
     {
         $thumbnailSize = $this->getThumbnailSize($mod);
         if ($thumbnailSize === 0) {
@@ -86,14 +86,13 @@ class ModParser implements ParserInterface
         }
 
         $layer = new Layer();
-        $layer->setFileName(sprintf('__%s__/%s', $mod->getName(), self::THUMBNAIL_FILENAME))
-              ->setSize($thumbnailSize);
+        $layer->fileName = sprintf('__%s__/%s', $mod->name, self::THUMBNAIL_FILENAME);
+        $layer->size = $thumbnailSize;
 
         $thumbnail = new Icon();
-        $thumbnail->setSize(self::RENDERED_THUMBNAIL_SIZE)
-                  ->addLayer($layer);
-
-        $thumbnail->setId($this->hashCalculator->hashIcon($thumbnail));
+        $thumbnail->size = self::RENDERED_THUMBNAIL_SIZE;
+        $thumbnail->layers[] = $layer;
+        $thumbnail->id = $this->hashCalculator->hashIcon($thumbnail);
         return $thumbnail;
     }
 
@@ -104,7 +103,7 @@ class ModParser implements ParserInterface
     protected function getThumbnailSize(Mod $mod): int
     {
         try {
-            $content = $this->modFileManager->readFile($mod->getName(), self::THUMBNAIL_FILENAME);
+            $content = $this->modFileManager->readFile($mod->name, self::THUMBNAIL_FILENAME);
         } catch (ExportException $e) {
             return 0;
         }
@@ -117,7 +116,7 @@ class ModParser implements ParserInterface
         return imagesx($image);
     }
 
-    public function validate(Combination $combination): void
+    public function validate(ExportData $exportData): void
     {
     }
 }

@@ -11,7 +11,6 @@ use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Parser\ParserInterface;
-use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\ExportData;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -29,24 +28,15 @@ class ParserStepTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked console.
-     * @var Console&MockObject
-     */
-    protected $console;
+    /** @var Console&MockObject */
+    private $console;
 
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->console = $this->createMock(Console::class);
     }
 
     /**
-     * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
@@ -64,7 +54,6 @@ class ParserStepTest extends TestCase
     }
 
     /**
-     * Tests the getLabel method.
      * @covers ::getLabel
      */
     public function testGetLabel(): void
@@ -77,7 +66,6 @@ class ParserStepTest extends TestCase
     }
 
     /**
-     * Tests the getExportJobStatus method.
      * @covers ::getExportJobStatus
      */
     public function testGetExportJobStatus(): void
@@ -90,50 +78,39 @@ class ParserStepTest extends TestCase
     }
 
     /**
-     * Tests the run method.
      * @throws ExportException
      * @covers ::run
      */
     public function testRun(): void
     {
-        /* @var Dump&MockObject $dump */
         $dump = $this->createMock(Dump::class);
-        /* @var Combination&MockObject $combination */
-        $combination = $this->createMock(Combination::class);
-
-        /* @var ExportData&MockObject $exportData */
         $exportData = $this->createMock(ExportData::class);
-        $exportData->expects($this->any())
-                   ->method('getCombination')
-                   ->willReturn($combination);
 
         $data = new ProcessStepData();
         $data->setDump($dump)
              ->setExportData($exportData);
 
-        /* @var ParserInterface&MockObject $parser1 */
         $parser1 = $this->createMock(ParserInterface::class);
         $parser1->expects($this->once())
                 ->method('prepare')
                 ->with($this->identicalTo($dump));
         $parser1->expects($this->once())
                 ->method('parse')
-                ->with($this->identicalTo($dump), $this->identicalTo($combination));
+                ->with($this->identicalTo($dump), $this->identicalTo($exportData));
         $parser1->expects($this->once())
                 ->method('validate')
-                ->with($this->identicalTo($combination));
+                ->with($this->identicalTo($exportData));
 
-        /* @var ParserInterface&MockObject $parser2 */
         $parser2 = $this->createMock(ParserInterface::class);
         $parser2->expects($this->once())
                 ->method('prepare')
                 ->with($this->identicalTo($dump));
         $parser2->expects($this->once())
                 ->method('parse')
-                ->with($this->identicalTo($dump), $this->identicalTo($combination));
+                ->with($this->identicalTo($dump), $this->identicalTo($exportData));
         $parser2->expects($this->once())
                 ->method('validate')
-                ->with($this->identicalTo($combination));
+                ->with($this->identicalTo($exportData));
 
         $parsers = [$parser1, $parser2];
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Parser;
 
+use BluePsyduck\MapperManager\MapperManagerInterface;
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
@@ -13,9 +14,9 @@ use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use FactorioItemBrowser\Export\Parser\ItemParser;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
-use FactorioItemBrowser\ExportData\Entity\Combination;
+use FactorioItemBrowser\ExportData\Collection\ChunkedCollection;
 use FactorioItemBrowser\ExportData\Entity\Item as ExportItem;
-use FactorioItemBrowser\ExportData\Entity\LocalisedString;
+use FactorioItemBrowser\ExportData\ExportData;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -32,15 +33,16 @@ class ItemParserTest extends TestCase
     use ReflectionTrait;
 
     /** @var IconParser&MockObject */
-    protected IconParser $iconParser;
+    private IconParser $iconParser;
+    /** @var MapperManagerInterface&MockObject */
+    private MapperManagerInterface $mapperManager;
     /** @var TranslationParser&MockObject */
-    protected TranslationParser $translationParser;
+    private TranslationParser $translationParser;
 
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->iconParser = $this->createMock(IconParser::class);
+        $this->mapperManager = $this->createMock(MapperManagerInterface::class);
         $this->translationParser = $this->createMock(TranslationParser::class);
     }
 
@@ -50,9 +52,10 @@ class ItemParserTest extends TestCase
      */
     public function testConstruct(): void
     {
-        $parser = new ItemParser($this->iconParser, $this->translationParser);
+        $parser = new ItemParser($this->iconParser, $this->mapperManager, $this->translationParser);
 
         $this->assertSame($this->iconParser, $this->extractProperty($parser, 'iconParser'));
+        $this->assertSame($this->mapperManager, $this->extractProperty($parser, 'mapperManager'));
         $this->assertSame($this->translationParser, $this->extractProperty($parser, 'translationParser'));
     }
 
@@ -64,7 +67,7 @@ class ItemParserTest extends TestCase
     {
         $dump = $this->createMock(Dump::class);
 
-        $parser = new ItemParser($this->iconParser, $this->translationParser);
+        $parser = new ItemParser($this->iconParser, $this->mapperManager, $this->translationParser);
         $parser->prepare($dump);
 
         $this->addToAssertionCount(1);
@@ -90,22 +93,27 @@ class ItemParserTest extends TestCase
         $exportFluid1 = $this->createMock(ExportItem::class);
         $exportFluid2 = $this->createMock(ExportItem::class);
 
-        $combination = $this->createMock(Combination::class);
-        $combination->expects($this->exactly(4))
-                    ->method('addItem')
-                    ->withConsecutive(
-                        [$this->identicalTo($exportItem1)],
-                        [$this->identicalTo($exportItem2)],
-                        [$this->identicalTo($exportFluid1)],
-                        [$this->identicalTo($exportFluid2)]
-                    );
+        $items = $this->createMock(ChunkedCollection::class);
+        $items->expects($this->exactly(4))
+              ->method('add')
+              ->withConsecutive(
+                  [$this->identicalTo($exportItem1)],
+                  [$this->identicalTo($exportItem2)],
+                  [$this->identicalTo($exportFluid1)],
+                  [$this->identicalTo($exportFluid2)],
+              );
+
+        $exportData = $this->createMock(ExportData::class);
+        $exportData->expects($this->any())
+                   ->method('getItems')
+                   ->willReturn($items);
 
         $parser = $this->getMockBuilder(ItemParser::class)
-                       ->onlyMethods(['mapItem', 'mapFluid'])
-                       ->setConstructorArgs([$this->iconParser, $this->translationParser])
+                       ->onlyMethods(['createItem', 'createFluid'])
+                       ->setConstructorArgs([$this->iconParser, $this->mapperManager, $this->translationParser])
                        ->getMock();
         $parser->expects($this->exactly(2))
-               ->method('mapItem')
+               ->method('createItem')
                ->withConsecutive(
                    [$this->identicalTo($dumpItem1)],
                    [$this->identicalTo($dumpItem2)]
@@ -115,7 +123,7 @@ class ItemParserTest extends TestCase
                    $exportItem2
                );
         $parser->expects($this->exactly(2))
-               ->method('mapFluid')
+               ->method('createFluid')
                ->withConsecutive(
                    [$this->identicalTo($dumpFluid1)],
                    [$this->identicalTo($dumpFluid2)]
@@ -125,14 +133,14 @@ class ItemParserTest extends TestCase
                    $exportFluid2
                );
 
-        $parser->parse($dump, $combination);
+        $parser->parse($dump, $exportData);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::mapItem
+     * @covers ::createItem
      */
-    public function testMapItem(): void
+    public function testCreateItem(): void
     {
         $iconId = 'abc';
 
@@ -143,42 +151,49 @@ class ItemParserTest extends TestCase
         $dumpItem->localisedDescription = 'mno';
         $dumpItem->localisedEntityDescription = 'pqr';
 
+        $exportItem = new ExportItem();
+        $exportItem->name = 'def';
+
         $expectedResult = new ExportItem();
-        $expectedResult->setType(EntityType::ITEM)
-                       ->setName('def')
-                       ->setIconId('abc');
+        $expectedResult->name = 'def';
+        $expectedResult->iconId = 'abc';
 
         $this->iconParser->expects($this->once())
                          ->method('getIconId')
                          ->with($this->identicalTo(EntityType::ITEM), $this->identicalTo('def'))
                          ->willReturn($iconId);
 
+        $this->mapperManager->expects($this->once())
+                            ->method('map')
+                            ->with($this->identicalTo($dumpItem), $this->isInstanceOf(ExportItem::class))
+                            ->willReturn($exportItem);
+
         $this->translationParser->expects($this->exactly(2))
                                 ->method('translate')
                                 ->withConsecutive(
                                     [
-                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($exportItem->labels),
                                         $this->identicalTo($dumpItem->localisedName),
                                         $this->identicalTo($dumpItem->localisedEntityName),
                                     ],
                                     [
-                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($exportItem->descriptions),
                                         $this->identicalTo($dumpItem->localisedDescription),
                                         $this->identicalTo($dumpItem->localisedEntityDescription),
                                     ],
                                 );
 
-        $parser = new ItemParser($this->iconParser, $this->translationParser);
-        $result = $this->invokeMethod($parser, 'mapItem', $dumpItem);
+        $parser = new ItemParser($this->iconParser, $this->mapperManager, $this->translationParser);
+        $result = $this->invokeMethod($parser, 'createItem', $dumpItem);
 
         $this->assertEquals($expectedResult, $result);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::mapFluid
+     * @covers ::createFluid
      */
-    public function testMapFluid(): void
+    public function testCreateFluid(): void
     {
         $iconId = 'abc';
 
@@ -187,33 +202,40 @@ class ItemParserTest extends TestCase
         $dumpFluid->localisedName = 'ghi';
         $dumpFluid->localisedDescription = 'jkl';
 
+        $exportItem = new ExportItem();
+        $exportItem->name = 'def';
+
         $expectedResult = new ExportItem();
-        $expectedResult->setType(EntityType::FLUID)
-                       ->setName('def')
-                       ->setIconId('abc');
+        $expectedResult->name = 'def';
+        $expectedResult->iconId = 'abc';
 
         $this->iconParser->expects($this->once())
                          ->method('getIconId')
                          ->with($this->identicalTo(EntityType::FLUID), $this->identicalTo('def'))
                          ->willReturn($iconId);
 
+        $this->mapperManager->expects($this->once())
+                            ->method('map')
+                            ->with($this->identicalTo($dumpFluid), $this->isInstanceOf(ExportItem::class))
+                            ->willReturn($exportItem);
+
         $this->translationParser->expects($this->exactly(2))
                                 ->method('translate')
                                 ->withConsecutive(
                                     [
-                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($exportItem->labels),
                                         $this->identicalTo($dumpFluid->localisedName),
                                         $this->isNull(),
                                     ],
                                     [
-                                        $this->isInstanceOf(LocalisedString::class),
+                                        $this->identicalTo($exportItem->descriptions),
                                         $this->identicalTo($dumpFluid->localisedDescription),
                                         $this->isNull(),
                                     ],
                                 );
 
-        $parser = new ItemParser($this->iconParser, $this->translationParser);
-        $result = $this->invokeMethod($parser, 'mapFluid', $dumpFluid);
+        $parser = new ItemParser($this->iconParser, $this->mapperManager, $this->translationParser);
+        $result = $this->invokeMethod($parser, 'createFluid', $dumpFluid);
 
         $this->assertEquals($expectedResult, $result);
     }
@@ -224,10 +246,10 @@ class ItemParserTest extends TestCase
      */
     public function testValidate(): void
     {
-        $combination = $this->createMock(Combination::class);
+        $exportData = $this->createMock(ExportData::class);
 
-        $parser = new ItemParser($this->iconParser, $this->translationParser);
-        $parser->validate($combination);
+        $parser = new ItemParser($this->iconParser, $this->mapperManager, $this->translationParser);
+        $parser->validate($exportData);
 
         $this->addToAssertionCount(1);
     }

@@ -12,9 +12,10 @@ use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Process\RenderIconProcess;
 use FactorioItemBrowser\Export\Process\RenderIconProcessFactory;
-use FactorioItemBrowser\ExportData\Entity\Combination;
+use FactorioItemBrowser\ExportData\Collection\DictionaryInterface;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\ExportData;
+use FactorioItemBrowser\ExportData\Storage\Storage;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -31,31 +32,18 @@ class RenderIconsStepTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked console.
-     * @var Console&MockObject
-     */
-    protected $console;
+    /** @var Console&MockObject */
+    private $console;
+    /** @var RenderIconProcessFactory&MockObject */
+    private $renderIconProcessFactory;
 
-    /**
-     * The mocked render icon process factory.
-     * @var RenderIconProcessFactory&MockObject
-     */
-    protected $renderIconProcessFactory;
-
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->console = $this->createMock(Console::class);
         $this->renderIconProcessFactory = $this->createMock(RenderIconProcessFactory::class);
     }
 
     /**
-     * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
@@ -71,7 +59,6 @@ class RenderIconsStepTest extends TestCase
     }
 
     /**
-     * Tests the getLabel method.
      * @covers ::getLabel
      */
     public function testGetLabel(): void
@@ -84,7 +71,6 @@ class RenderIconsStepTest extends TestCase
     }
 
     /**
-     * Tests the getExportJobStatus method.
      * @covers ::getExportJobStatus
      */
     public function testGetExportJobStatus(): void
@@ -97,34 +83,23 @@ class RenderIconsStepTest extends TestCase
     }
 
     /**
-     * Tests the run method.
      * @covers ::run
      */
     public function testRun(): void
     {
-        /* @var Icon&MockObject $icon1 */
         $icon1 = $this->createMock(Icon::class);
-        /* @var Icon&MockObject $icon2 */
         $icon2 = $this->createMock(Icon::class);
 
-        /* @var RenderIconProcess&MockObject $process1 */
         $process1 = $this->createMock(RenderIconProcess::class);
-        /* @var RenderIconProcess&MockObject $process2 */
         $process2 = $this->createMock(RenderIconProcess::class);
 
-        $combination = new Combination();
-        $combination->setIcons([$icon1, $icon2]);
-
-        /* @var ExportData&MockObject $exportData */
-        $exportData = $this->createMock(ExportData::class);
-        $exportData->expects($this->once())
-                   ->method('getCombination')
-                   ->willReturn($combination);
+        $exportData = new ExportData($this->createMock(Storage::class), 'foo');
+        $exportData->getIcons()->add($icon1)
+                               ->add($icon2);
 
         $data = new ProcessStepData();
         $data->setExportData($exportData);
 
-        /* @var ProcessManagerInterface&MockObject $processManager */
         $processManager = $this->createMock(ProcessManagerInterface::class);
         $processManager->expects($this->exactly(2))
                        ->method('addProcess')
@@ -146,7 +121,6 @@ class RenderIconsStepTest extends TestCase
                                            $process2
                                        );
 
-        /* @var RenderIconsStep&MockObject $step */
         $step = $this->getMockBuilder(RenderIconsStep::class)
                      ->onlyMethods(['createProcessManager'])
                      ->setConstructorArgs([$this->console, $this->renderIconProcessFactory, 42])
@@ -159,7 +133,6 @@ class RenderIconsStepTest extends TestCase
     }
 
     /**
-     * Tests the createProcessManager method.
      * @throws ReflectionException
      * @covers ::createProcessManager
      */
@@ -198,16 +171,14 @@ class RenderIconsStepTest extends TestCase
     }
 
     /**
-     * Tests the handleProcessStart method.
      * @throws ReflectionException
      * @covers ::handleProcessStart
      */
     public function testHandleProcessStart(): void
     {
         $icon = new Icon();
-        $icon->setId('abc');
+        $icon->id = 'abc';
 
-        /* @var RenderIconProcess&MockObject $process */
         $process = $this->createMock(RenderIconProcess::class);
         $process->expects($this->once())
                 ->method('getIcon')
@@ -222,18 +193,16 @@ class RenderIconsStepTest extends TestCase
     }
 
     /**
-     * Tests the handleProcessFinish method.
      * @throws ReflectionException
      * @covers ::handleProcessFinish
      */
     public function testHandleProcessFinish(): void
     {
         $output = 'abc';
+        $iconId = 'def';
+        $icon = new Icon();
+        $icon->id = $iconId;
 
-        /* @var Icon&MockObject $icon */
-        $icon = $this->createMock(Icon::class);
-
-        /* @var RenderIconProcess&MockObject $process */
         $process = $this->createMock(RenderIconProcess::class);
         $process->expects($this->once())
                 ->method('isSuccessful')
@@ -245,18 +214,21 @@ class RenderIconsStepTest extends TestCase
                 ->method('getOutput')
                 ->willReturn($output);
 
-        /* @var ExportData&MockObject $exportData */
+        $renderedIcons = $this->createMock(DictionaryInterface::class);
+        $renderedIcons->expects($this->once())
+                      ->method('set')
+                      ->with($this->identicalTo($iconId), $this->identicalTo($output));
+
         $exportData = $this->createMock(ExportData::class);
         $exportData->expects($this->once())
-                   ->method('addRenderedIcon')
-                   ->with($this->identicalTo($icon), $this->identicalTo($output));
+                   ->method('getRenderedIcons')
+                   ->willReturn($renderedIcons);
 
         $step = new RenderIconsStep($this->console, $this->renderIconProcessFactory, 42);
         $this->invokeMethod($step, 'handleProcessFinish', $exportData, $process);
     }
 
     /**
-     * Tests the handleProcessFinish method.
      * @throws ReflectionException
      * @covers ::handleProcessFinish
      */
@@ -264,7 +236,6 @@ class RenderIconsStepTest extends TestCase
     {
         $output = 'abc';
 
-        /* @var RenderIconProcess&MockObject $process */
         $process = $this->createMock(RenderIconProcess::class);
         $process->expects($this->once())
                 ->method('isSuccessful')
@@ -273,10 +244,9 @@ class RenderIconsStepTest extends TestCase
                 ->method('getOutput')
                 ->willReturn($output);
 
-        /* @var ExportData&MockObject $exportData */
         $exportData = $this->createMock(ExportData::class);
         $exportData->expects($this->never())
-                   ->method('addRenderedIcon');
+                   ->method('getRenderedIcons');
 
         $this->console->expects($this->once())
                       ->method('writeData')

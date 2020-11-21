@@ -8,8 +8,8 @@ use BluePsyduck\FactorioTranslator\Exception\NoSupportedLoaderException;
 use BluePsyduck\FactorioTranslator\Translator;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
-use FactorioItemBrowser\ExportData\Entity\Combination;
-use FactorioItemBrowser\ExportData\Entity\LocalisedString;
+use FactorioItemBrowser\ExportData\Collection\DictionaryInterface;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The parser of the translations.
@@ -40,28 +40,31 @@ class TranslationParser implements ParserInterface
         }
     }
 
-    public function parse(Dump $dump, Combination $combination): void
+    public function parse(Dump $dump, ExportData $exportData): void
     {
     }
 
-    public function validate(Combination $combination): void
+    public function validate(ExportData $exportData): void
     {
     }
 
     /**
-     * @param LocalisedString $entity
-     * @param mixed $translation
-     * @param mixed|null $secondaryTranslation
+     * @param DictionaryInterface $translations
+     * @param mixed $localisedString
+     * @param mixed|null $fallbackLocalisedString
      */
-    public function translate(LocalisedString $entity, $translation, $secondaryTranslation = null): void
-    {
+    public function translate(
+        DictionaryInterface $translations,
+        $localisedString,
+        $fallbackLocalisedString = null
+    ): void {
         foreach ($this->translator->getAllLocales() as $locale) {
-            $value = $this->translator->translate($locale, $translation);
-            if ($value === '' && $secondaryTranslation !== null) {
-                $value = $this->translator->translate($locale, $secondaryTranslation);
+            $value = $this->translator->translate($locale, $localisedString);
+            if ($value === '' && $fallbackLocalisedString !== null) {
+                $value = $this->translator->translate($locale, $fallbackLocalisedString);
             }
             if ($value !== '') {
-                $entity->addTranslation($locale, $value);
+                $translations->set($locale, $value);
             }
         }
     }

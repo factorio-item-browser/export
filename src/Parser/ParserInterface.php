@@ -6,7 +6,7 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\ExportData\Entity\Combination;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The interface of the parsers.
@@ -26,15 +26,15 @@ interface ParserInterface
     /**
      * Parses the data from the dump into the combination.
      * @param Dump $dump
-     * @param Combination $combination
+     * @param ExportData $exportData
      * @throws ExportException
      */
-    public function parse(Dump $dump, Combination $combination): void;
+    public function parse(Dump $dump, ExportData $exportData): void;
 
     /**
      * Validates the data in the combination as a second parsing step.
-     * @param Combination $combination
+     * @param ExportData $exportData
      * @throws ExportException
      */
-    public function validate(Combination $combination): void;
+    public function validate(ExportData $exportData): void;
 }

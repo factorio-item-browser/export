@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
+use BluePsyduck\MapperManager\MapperManagerInterface;
 use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Common\Constant\RecipeMode;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
-use FactorioItemBrowser\Export\Entity\Dump\Ingredient as DumpIngredient;
-use FactorioItemBrowser\Export\Entity\Dump\Product as DumpProduct;
 use FactorioItemBrowser\Export\Entity\Dump\Recipe as DumpRecipe;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
-use FactorioItemBrowser\ExportData\Entity\Combination;
 use FactorioItemBrowser\ExportData\Entity\Recipe as ExportRecipe;
-use FactorioItemBrowser\ExportData\Entity\Recipe\Ingredient as ExportIngredient;
-use FactorioItemBrowser\ExportData\Entity\Recipe\Product as ExportProduct;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The class parsing the recipes of the dump.
@@ -26,15 +23,18 @@ class RecipeParser implements ParserInterface
 {
     protected HashCalculator $hashCalculator;
     protected IconParser $iconParser;
+    protected MapperManagerInterface $mapperManager;
     protected TranslationParser $translationParser;
 
     public function __construct(
         HashCalculator $hashCalculator,
         IconParser $iconParser,
+        MapperManagerInterface $mapperManager,
         TranslationParser $translationParser
     ) {
         $this->hashCalculator = $hashCalculator;
         $this->iconParser = $iconParser;
+        $this->mapperManager = $mapperManager;
         $this->translationParser = $translationParser;
     }
 
@@ -42,16 +42,16 @@ class RecipeParser implements ParserInterface
     {
     }
 
-    public function parse(Dump $dump, Combination $combination): void
+    public function parse(Dump $dump, ExportData $exportData): void
     {
         $recipes = [];
         foreach ($dump->normalRecipes as $dumpRecipe) {
-            $normalRecipe = $this->mapRecipe($dumpRecipe, RecipeMode::NORMAL);
+            $normalRecipe = $this->createRecipe($dumpRecipe, RecipeMode::NORMAL);
             $recipes[$this->hashCalculator->hashRecipe($normalRecipe)] = $normalRecipe;
         }
 
         foreach ($dump->expensiveRecipes as $dumpRecipe) {
-            $expensiveRecipe = $this->mapRecipe($dumpRecipe, RecipeMode::EXPENSIVE);
+            $expensiveRecipe = $this->createRecipe($dumpRecipe, RecipeMode::EXPENSIVE);
             $hash = $this->hashCalculator->hashRecipe($expensiveRecipe);
 
             if (!isset($recipes[$hash])) {
@@ -59,82 +59,37 @@ class RecipeParser implements ParserInterface
             }
         }
 
-        $combination->setRecipes(array_values($recipes));
+        foreach ($recipes as $recipe) {
+            $exportData->getRecipes()->add($recipe);
+        }
     }
 
-    protected function mapRecipe(DumpRecipe $dumpRecipe, string $mode): ExportRecipe
+    protected function createRecipe(DumpRecipe $dumpRecipe, string $mode): ExportRecipe
     {
-        $exportRecipe = new ExportRecipe();
-        $exportRecipe->setName($dumpRecipe->name)
-                     ->setMode($mode)
-                     ->setCraftingTime($dumpRecipe->craftingTime)
-                     ->setCraftingCategory($dumpRecipe->craftingCategory);
+        $exportRecipe = $this->mapperManager->map($dumpRecipe, new ExportRecipe());
+        $exportRecipe->mode = $mode;
 
-        foreach ($dumpRecipe->ingredients as $dumpIngredient) {
-            $exportIngredient = $this->mapIngredient($dumpIngredient);
-            if ($this->isIngredientValid($exportIngredient)) {
-                $exportRecipe->addIngredient($exportIngredient);
-            }
-        }
-        foreach ($dumpRecipe->products as $dumpProduct) {
-            $exportProduct = $this->mapProduct($dumpProduct);
-            if ($this->isProductValid($exportProduct)) {
-                $exportRecipe->addProduct($exportProduct);
-            }
-        }
+        $this->translationParser->translate($exportRecipe->labels, $dumpRecipe->localisedName);
+        $this->translationParser->translate($exportRecipe->descriptions, $dumpRecipe->localisedDescription);
 
-        $this->translationParser->translate($exportRecipe->getLabels(), $dumpRecipe->localisedName);
-        $this->translationParser->translate($exportRecipe->getDescriptions(), $dumpRecipe->localisedDescription);
-
-        $exportRecipe->setIconId($this->mapIconId($exportRecipe));
+        $exportRecipe->iconId = $this->getIconId($exportRecipe);
         return $exportRecipe;
     }
 
-    protected function mapIngredient(DumpIngredient $dumpIngredient): ExportIngredient
+    protected function getIconId(ExportRecipe $recipe): string
     {
-        $exportIngredient = new ExportIngredient();
-        $exportIngredient->setType($dumpIngredient->type)
-                         ->setName($dumpIngredient->name)
-                         ->setAmount($dumpIngredient->amount);
-        return $exportIngredient;
-    }
-
-    protected function isIngredientValid(ExportIngredient $ingredient): bool
-    {
-        return $ingredient->getAmount() > 0;
-    }
-
-    protected function mapProduct(DumpProduct $dumpProduct): ExportProduct
-    {
-        $exportProduct = new ExportProduct();
-        $exportProduct->setType($dumpProduct->type)
-                      ->setName($dumpProduct->name)
-                      ->setAmountMin($dumpProduct->amountMin)
-                      ->setAmountMax($dumpProduct->amountMax)
-                      ->setProbability($dumpProduct->probability);
-        return $exportProduct;
-    }
-
-    protected function isProductValid(ExportProduct $product): bool
-    {
-        $amount = ($product->getAmountMin() + $product->getAmountMax()) / 2 * $product->getProbability();
-        return $amount > 0;
-    }
-
-    protected function mapIconId(ExportRecipe $recipe): string
-    {
-        $iconId = $this->iconParser->getIconId(EntityType::RECIPE, $recipe->getName());
+        $iconId = $this->iconParser->getIconId(EntityType::RECIPE, $recipe->name);
 
         // If the recipe does not have an own icon, it may fall back to its first product's icon.
-        if ($iconId === '' && count($recipe->getProducts()) > 0) {
-            $firstProduct = $recipe->getProducts()[0];
-            $iconId = $this->iconParser->getIconId($firstProduct->getType(), $firstProduct->getName());
+        if ($iconId === '' && count($recipe->products) > 0) {
+            $firstProduct = $recipe->products[0];
+            $iconId = $this->iconParser->getIconId($firstProduct->type, $firstProduct->name);
         }
 
         return $iconId;
     }
 
-    public function validate(Combination $combination): void
+    public function validate(ExportData $exportData): void
     {
     }
 }

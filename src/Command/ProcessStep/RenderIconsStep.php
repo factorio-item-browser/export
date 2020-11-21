@@ -80,7 +80,7 @@ class RenderIconsStep implements ProcessStepInterface
     public function run(ProcessStepData $processStepData): void
     {
         $processManager = $this->createProcessManager($processStepData->getExportData());
-        foreach ($processStepData->getExportData()->getCombination()->getIcons() as $icon) {
+        foreach ($processStepData->getExportData()->getIcons() as $icon) {
             $processManager->addProcess($this->renderIconProcessFactory->create($icon));
         }
         $processManager->waitForAllProcesses();
@@ -109,7 +109,7 @@ class RenderIconsStep implements ProcessStepInterface
      */
     protected function handleProcessStart(RenderIconProcess $process): void
     {
-        $this->console->writeAction(sprintf('Rendering icon %s', $process->getIcon()->getId()));
+        $this->console->writeAction(sprintf('Rendering icon %s', $process->getIcon()->id));
     }
 
     /**
@@ -120,7 +120,7 @@ class RenderIconsStep implements ProcessStepInterface
     protected function handleProcessFinish(ExportData $exportData, RenderIconProcess $process): void
     {
         if ($process->isSuccessful()) {
-            $exportData->addRenderedIcon($process->getIcon(), $process->getOutput());
+            $exportData->getRenderedIcons()->set($process->getIcon()->id, $process->getOutput());
         } else {
             $this->console->writeData($process->getOutput());
         }

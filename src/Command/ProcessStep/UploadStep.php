@@ -8,6 +8,7 @@ use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\UploadFailedException;
+use FactorioItemBrowser\ExportData\ExportDataService;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 use FtpClient\FtpClient;
 use FtpClient\FtpException;
@@ -20,11 +21,8 @@ use FtpClient\FtpException;
  */
 class UploadStep implements ProcessStepInterface
 {
-    /**
-     * The console.
-     * @var Console
-     */
-    protected $console;
+    protected Console $console;
+    protected ExportDataService $exportDataService;
 
     /**
      * The host of the FTP server to upload to.
@@ -44,20 +42,15 @@ class UploadStep implements ProcessStepInterface
      */
     protected $ftpPassword;
 
-    /**
-     * Initializes the step.
-     * @param Console $console
-     * @param string $uploadFtpHost
-     * @param string $uploadFtpUsername
-     * @param string $uploadFtpPassword
-     */
     public function __construct(
         Console $console,
+        ExportDataService $exportDataService,
         string $uploadFtpHost,
         string $uploadFtpUsername,
         string $uploadFtpPassword
     ) {
         $this->console = $console;
+        $this->exportDataService = $exportDataService;
         $this->ftpHost = $uploadFtpHost;
         $this->ftpUsername = $uploadFtpUsername;
         $this->ftpPassword = $uploadFtpPassword;
@@ -88,7 +81,7 @@ class UploadStep implements ProcessStepInterface
      */
     public function run(ProcessStepData $processStepData): void
     {
-        $fileName = $processStepData->getExportData()->persist();
+        $fileName = $this->exportDataService->persistExport($processStepData->getExportData());
         $this->console->writeAction(sprintf('Uploading file %s', basename($fileName)));
 
         try {
@@ -106,7 +99,6 @@ class UploadStep implements ProcessStepInterface
     /**
      * Creates the FTP client instance.
      * @return FtpClient
-     * @throws FtpException
      */
     protected function createFtpClient(): FtpClient
     {

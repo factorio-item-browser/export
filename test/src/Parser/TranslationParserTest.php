@@ -11,8 +11,8 @@ use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
-use FactorioItemBrowser\ExportData\Entity\Combination;
-use FactorioItemBrowser\ExportData\Entity\LocalisedString;
+use FactorioItemBrowser\ExportData\Collection\DictionaryInterface;
+use FactorioItemBrowser\ExportData\ExportData;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -33,19 +33,13 @@ class TranslationParserTest extends TestCase
     /** @var Translator&MockObject */
     private Translator $translator;
 
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->modFileManager = $this->createMock(ModFileManager::class);
         $this->translator = $this->createMock(Translator::class);
     }
 
     /**
-     * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
@@ -58,7 +52,6 @@ class TranslationParserTest extends TestCase
     }
 
     /**
-     * Tests the prepare method.
      * @throws NoSupportedLoaderException
      * @covers ::prepare
      */
@@ -94,19 +87,16 @@ class TranslationParserTest extends TestCase
     }
 
     /**
-     * Tests the parse method.
      * @throws ExportException
      * @covers ::parse
      */
     public function testParse(): void
     {
-        /* @var Dump&MockObject $dump */
         $dump = $this->createMock(Dump::class);
-        /* @var Combination&MockObject $combination */
-        $combination = $this->createMock(Combination::class);
+        $exportData = $this->createMock(ExportData::class);
 
         $parser = new TranslationParser($this->modFileManager, $this->translator);
-        $parser->parse($dump, $combination);
+        $parser->parse($dump, $exportData);
 
         $this->addToAssertionCount(1);
     }
@@ -118,11 +108,10 @@ class TranslationParserTest extends TestCase
      */
     public function testValidate(): void
     {
-        /* @var Combination&MockObject $combination */
-        $combination = $this->createMock(Combination::class);
+        $exportData = $this->createMock(ExportData::class);
 
         $parser = new TranslationParser($this->modFileManager, $this->translator);
-        $parser->validate($combination);
+        $parser->validate($exportData);
 
         $this->addToAssertionCount(1);
     }
@@ -134,16 +123,16 @@ class TranslationParserTest extends TestCase
     public function testTranslate(): void
     {
         $locales = ['abc', 'def', 'ghi'];
-        $translation = 'foo';
-        $secondaryTranslation = 'bar';
+        $localisedString = 'foo';
+        $fallbackLocalisedString = 'bar';
 
-        $entity = $this->createMock(LocalisedString::class);
-        $entity->expects($this->exactly(2))
-               ->method('addTranslation')
-               ->withConsecutive(
-                   [$this->identicalTo('abc'), $this->identicalTo('jkl')],
-                   [$this->identicalTo('def'), $this->identicalTo('mno')],
-               );
+        $translations = $this->createMock(DictionaryInterface::class);
+        $translations->expects($this->exactly(2))
+                     ->method('set')
+                     ->withConsecutive(
+                         [$this->identicalTo('abc'), $this->identicalTo('jkl')],
+                         [$this->identicalTo('def'), $this->identicalTo('mno')]
+                     );
 
         $this->translator->expects($this->once())
                          ->method('getAllLocales')
@@ -151,11 +140,11 @@ class TranslationParserTest extends TestCase
         $this->translator->expects($this->exactly(5))
                          ->method('translate')
                          ->withConsecutive(
-                             [$this->identicalTo('abc'), $this->identicalTo($translation)],
-                             [$this->identicalTo('def'), $this->identicalTo($translation)],
-                             [$this->identicalTo('def'), $this->identicalTo($secondaryTranslation)],
-                             [$this->identicalTo('ghi'), $this->identicalTo($translation)],
-                             [$this->identicalTo('ghi'), $this->identicalTo($secondaryTranslation)],
+                             [$this->identicalTo('abc'), $this->identicalTo($localisedString)],
+                             [$this->identicalTo('def'), $this->identicalTo($localisedString)],
+                             [$this->identicalTo('def'), $this->identicalTo($fallbackLocalisedString)],
+                             [$this->identicalTo('ghi'), $this->identicalTo($localisedString)],
+                             [$this->identicalTo('ghi'), $this->identicalTo($fallbackLocalisedString)],
                          )
                          ->willReturnOnConsecutiveCalls(
                              'jkl',
@@ -166,6 +155,6 @@ class TranslationParserTest extends TestCase
                          );
 
         $parser = new TranslationParser($this->modFileManager, $this->translator);
-        $parser->translate($entity, $translation, $secondaryTranslation);
+        $parser->translate($translations, $localisedString, $fallbackLocalisedString);
     }
 }

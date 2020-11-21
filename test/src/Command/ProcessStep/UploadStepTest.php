@@ -11,6 +11,7 @@ use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\UploadFailedException;
 use FactorioItemBrowser\ExportData\ExportData;
+use FactorioItemBrowser\ExportData\ExportDataService;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 use FtpClient\FtpClient;
 use FtpClient\FtpException;
@@ -29,24 +30,18 @@ class UploadStepTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked console.
-     * @var Console&MockObject
-     */
-    protected $console;
+    /** @var Console&MockObject */
+    private $console;
+    /** @var ExportDataService&MockObject */
+    private ExportDataService $exportDataService;
 
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->console = $this->createMock(Console::class);
+        $this->exportDataService = $this->createMock(ExportDataService::class);
     }
 
     /**
-     * Tests the constructing.
      * @throws ReflectionException
      * @covers ::__construct
      */
@@ -56,7 +51,7 @@ class UploadStepTest extends TestCase
         $ftpUsername = 'def';
         $ftpPassword = 'ghi';
 
-        $step = new UploadStep($this->console, $ftpHost, $ftpUsername, $ftpPassword);
+        $step = new UploadStep($this->console, $this->exportDataService, $ftpHost, $ftpUsername, $ftpPassword);
 
         $this->assertSame($this->console, $this->extractProperty($step, 'console'));
         $this->assertSame($ftpHost, $this->extractProperty($step, 'ftpHost'));
@@ -71,7 +66,7 @@ class UploadStepTest extends TestCase
     public function testGetLabel(): void
     {
         $expectedResult = 'Uploading export file to importer';
-        $step = new UploadStep($this->console, 'foo', 'bar', 'baz');
+        $step = new UploadStep($this->console, $this->exportDataService, 'foo', 'bar', 'baz');
 
         $result = $step->getLabel();
         $this->assertSame($expectedResult, $result);
@@ -84,14 +79,13 @@ class UploadStepTest extends TestCase
     public function testGetExportJobStatus(): void
     {
         $expectedResult = JobStatus::UPLOADING;
-        $step = new UploadStep($this->console, 'foo', 'bar', 'baz');
+        $step = new UploadStep($this->console, $this->exportDataService, 'foo', 'bar', 'baz');
 
         $result = $step->getExportJobStatus();
         $this->assertSame($expectedResult, $result);
     }
 
     /**
-     * Tests the run method.
      * @throws ExportException
      * @covers ::run
      */
@@ -102,16 +96,11 @@ class UploadStepTest extends TestCase
         $ftpPassword = 'ghi';
         $fileName = 'jkl/mno.zip';
 
-        /* @var ExportData&MockObject $exportData */
         $exportData = $this->createMock(ExportData::class);
-        $exportData->expects($this->once())
-                   ->method('persist')
-                   ->willReturn($fileName);
 
         $data = new ProcessStepData();
         $data->setExportData($exportData);
 
-        /* @var FtpClient&MockObject $ftpClient */
         $ftpClient = $this->createMock(FtpClient::class);
         $ftpClient->expects($this->once())
                   ->method('connect')
@@ -130,10 +119,20 @@ class UploadStepTest extends TestCase
                       ->method('writeAction')
                       ->with($this->identicalTo('Uploading file mno.zip'));
 
-        /* @var UploadStep&MockObject $step */
+        $this->exportDataService->expects($this->once())
+                                ->method('persistExport')
+                                ->with($this->identicalTo($exportData))
+                                ->willReturn($fileName);
+
         $step = $this->getMockBuilder(UploadStep::class)
                      ->onlyMethods(['createFtpClient'])
-                     ->setConstructorArgs([$this->console, $ftpHost, $ftpUsername, $ftpPassword])
+                     ->setConstructorArgs([
+                         $this->console,
+                         $this->exportDataService,
+                         $ftpHost,
+                         $ftpUsername,
+                         $ftpPassword,
+                     ])
                      ->getMock();
         $step->expects($this->once())
              ->method('createFtpClient')
@@ -143,7 +142,6 @@ class UploadStepTest extends TestCase
     }
 
     /**
-     * Tests the run method.
      * @throws ExportException
      * @covers ::run
      */
@@ -154,16 +152,11 @@ class UploadStepTest extends TestCase
         $ftpPassword = 'ghi';
         $fileName = 'jkl/mno.zip';
 
-        /* @var ExportData&MockObject $exportData */
         $exportData = $this->createMock(ExportData::class);
-        $exportData->expects($this->once())
-                   ->method('persist')
-                   ->willReturn($fileName);
 
         $data = new ProcessStepData();
         $data->setExportData($exportData);
 
-        /* @var FtpClient&MockObject $ftpClient */
         $ftpClient = $this->createMock(FtpClient::class);
         $ftpClient->expects($this->once())
                   ->method('connect')
@@ -183,12 +176,22 @@ class UploadStepTest extends TestCase
                       ->method('writeAction')
                       ->with($this->identicalTo('Uploading file mno.zip'));
 
+        $this->exportDataService->expects($this->once())
+                                ->method('persistExport')
+                                ->with($this->identicalTo($exportData))
+                                ->willReturn($fileName);
+
         $this->expectException(UploadFailedException::class);
 
-        /* @var UploadStep&MockObject $step */
         $step = $this->getMockBuilder(UploadStep::class)
                      ->onlyMethods(['createFtpClient'])
-                     ->setConstructorArgs([$this->console, $ftpHost, $ftpUsername, $ftpPassword])
+                     ->setConstructorArgs([
+                         $this->console,
+                         $this->exportDataService,
+                         $ftpHost,
+                         $ftpUsername,
+                         $ftpPassword,
+                     ])
                      ->getMock();
         $step->expects($this->once())
              ->method('createFtpClient')
@@ -198,8 +201,6 @@ class UploadStepTest extends TestCase
     }
 
     /**
-     * Tests the createFtpClient method.
-     * @throws FtpException
      * @throws ReflectionException
      * @covers ::createFtpClient
      */
@@ -207,7 +208,7 @@ class UploadStepTest extends TestCase
     {
         $expectedResult = new FtpClient();
 
-        $step = new UploadStep($this->console, 'foo', 'bar', 'baz');
+        $step = new UploadStep($this->console, $this->exportDataService, 'foo', 'bar', 'baz');
         $result = $this->invokeMethod($step, 'createFtpClient');
 
         $this->assertEquals($expectedResult, $result);
