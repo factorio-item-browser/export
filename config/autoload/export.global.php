@@ -16,6 +16,7 @@ return [
     ConfigKey::PROJECT => [
         ConfigKey::EXPORT => [
             ConfigKey::OUTPUT_PROCESSORS => [
+                OutputProcessor\ConsoleOutputProcessor::class,
                 OutputProcessor\DumpOutputProcessor::class,
                 OutputProcessor\ErrorOutputProcessor::class,
                 OutputProcessor\ModNameOutputProcessor::class,

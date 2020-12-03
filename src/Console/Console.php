@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Console;
 
 use Exception;
+use Generator;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
+use Symfony\Component\Console\Output\ConsoleSectionOutput;
 
 /**
  * The wrapper class for the actual console.
@@ -17,24 +19,10 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class Console
 {
-    /**
-     * The output instance.
-     * @var OutputInterface
-     */
-    protected $output;
+    protected ConsoleOutputInterface $output;
+    protected bool $isDebug;
 
-    /**
-     * Whether the debug mode is enabled.
-     * @var bool
-     */
-    protected $isDebug;
-
-    /**
-     * Initializes the console wrapper.
-     * @param OutputInterface $output
-     * @param bool $isDebug
-     */
-    public function __construct(OutputInterface $output, bool $isDebug)
+    public function __construct(ConsoleOutputInterface $output, bool $isDebug)
     {
         $this->output = $output;
         $this->isDebug = $isDebug;
@@ -159,5 +147,41 @@ class Console
     protected function createHorizontalLine(string $character): string
     {
         return str_pad('', 80, $character);
+    }
+
+    /**
+     * Creates a progress bar, using the specified label.
+     * @param string $label
+     * @return ProgressBar
+     */
+    public function createProgressBar(string $label): ProgressBar
+    {
+        return new ProgressBar($this->output, $label);
+    }
+
+    /**
+     * Iterates through a list of items, displaying a progress bar for them, showing the progress of the iteration.
+     * @template TKey
+     * @template TValue
+     * @param string $label
+     * @param iterable<TKey, TValue> $iterable
+     * @return Generator<TKey, TValue>
+     */
+    public function iterateWithProgressbar(string $label, iterable $iterable): Generator
+    {
+        $progressBar = $this->createProgressBar($label);
+        if (is_countable($iterable)) {
+            $progressBar->setNumberOfSteps(count($iterable));
+        }
+
+        foreach ($iterable as $key => $value) {
+            yield $key => $value;
+            $progressBar->finish((string) $key);
+        }
+    }
+
+    public function createSection(): ConsoleSectionOutput
+    {
+        return $this->output->section();
     }
 }

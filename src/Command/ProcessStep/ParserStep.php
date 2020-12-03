@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
-use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Parser\ParserInterface;
@@ -18,26 +17,14 @@ use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
  */
 class ParserStep implements ProcessStepInterface
 {
-    /**
-     * The console.
-     * @var Console
-     */
-    protected $console;
+    /** @var array<ParserInterface> */
+    protected array $parsers;
 
     /**
-     * The parsers to use.
-     * @var array|ParserInterface[]
+     * @param array<ParserInterface> $exportParsers
      */
-    protected $parsers;
-
-    /**
-     * Initializes the step.
-     * @param Console $console
-     * @param array|ParserInterface[] $exportParsers
-     */
-    public function __construct(Console $console, array $exportParsers)
+    public function __construct(array $exportParsers)
     {
-        $this->console = $console;
         $this->parsers = $exportParsers;
     }
 
@@ -66,17 +53,14 @@ class ParserStep implements ProcessStepInterface
      */
     public function run(ProcessStepData $processStepData): void
     {
-        $this->console->writeAction('Preparing');
         foreach ($this->parsers as $parser) {
             $parser->prepare($processStepData->getDump());
         }
 
-        $this->console->writeAction('Parsing');
         foreach ($this->parsers as $parser) {
             $parser->parse($processStepData->getDump(), $processStepData->getExportData());
         }
 
-        $this->console->writeAction('Validating');
         foreach ($this->parsers as $parser) {
             $parser->validate($processStepData->getExportData());
         }

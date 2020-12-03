@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace FactorioItemBrowser\Export\Console;
+
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\ConsoleSectionOutput;
+use Symfony\Component\Console\Terminal;
+
+/**
+ * The output of a process, limited to a constant number of lines.
+ *
+ * @author BluePsyduck <bluepsyduck@gmx.com>
+ * @license http://opensource.org/licenses/GPL-3.0 GPL v3
+ */
+class ProcessOutput
+{
+    private const NUMBER_OF_LINES = 32;
+
+    private ConsoleSectionOutput $output;
+    private Terminal $terminal;
+
+    /** @var array<string> */
+    private array $lines = [];
+
+    public function __construct(ConsoleOutput $output)
+    {
+        $this->output = $output->section();
+        $this->terminal = new Terminal();
+    }
+
+    public function addLine(string $line): self
+    {
+        $width = $this->terminal->getWidth();
+        $lines = str_split($line, $width);
+        if ($lines !== false) {
+            $this->lines = array_slice(array_merge($this->lines, $lines), -self::NUMBER_OF_LINES);
+
+            $this->output->overwrite([
+                ' Process output:',
+                str_pad('', $width, '-'),
+                ...$this->lines,
+                str_pad('', $width, '-'),
+            ]);
+        }
+        return $this;
+    }
+}

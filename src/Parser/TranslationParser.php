@@ -6,6 +6,7 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\FactorioTranslator\Exception\NoSupportedLoaderException;
 use BluePsyduck\FactorioTranslator\Translator;
+use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\ExportData\Collection\DictionaryInterface;
@@ -19,11 +20,13 @@ use FactorioItemBrowser\ExportData\ExportData;
  */
 class TranslationParser implements ParserInterface
 {
+    protected Console $console;
     protected ModFileManager $modFileManager;
     protected Translator $translator;
 
-    public function __construct(ModFileManager $modFileManager, Translator $translator)
+    public function __construct(Console $console, ModFileManager $modFileManager, Translator $translator)
     {
+        $this->console = $console;
         $this->modFileManager = $modFileManager;
         $this->translator = $translator;
     }
@@ -35,7 +38,7 @@ class TranslationParser implements ParserInterface
     public function prepare(Dump $dump): void
     {
         $this->translator->loadMod($this->modFileManager->getLocalDirectory('core'));
-        foreach ($dump->modNames as $modName) {
+        foreach ($this->console->iterateWithProgressbar('Preparing translations', $dump->modNames) as $modName) {
             $this->translator->loadMod($this->modFileManager->getLocalDirectory($modName));
         }
     }

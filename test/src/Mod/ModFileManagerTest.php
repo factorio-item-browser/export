@@ -10,7 +10,7 @@ use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
 use FactorioItemBrowser\Export\Exception\InvalidInfoJsonFileException;
-use FactorioItemBrowser\Export\Exception\InvalidModFileException;
+use FactorioItemBrowser\Export\Exception\InvalidZipArchiveException;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
 use JMS\Serializer\SerializerInterface;
 use org\bovigo\vfs\vfsStream;
@@ -102,7 +102,7 @@ class ModFileManagerTest extends TestCase
      */
     public function testExtractModZipWithInvalidZip(): void
     {
-        $this->expectException(InvalidModFileException::class);
+        $this->expectException(InvalidZipArchiveException::class);
 
         $manager = new ModFileManager($this->serializer, 'foo', 'bar');
         $manager->extractModZip('foo', __DIR__ . '/../../asset/mod/invalid.zip');
@@ -115,7 +115,7 @@ class ModFileManagerTest extends TestCase
      */
     public function testExtractModZipWithInvalidModDirectory(): void
     {
-        $this->expectException(InvalidModFileException::class);
+        $this->expectException(InvalidZipArchiveException::class);
 
         $manager = new ModFileManager($this->serializer, 'foo', 'bar');
         $manager->extractModZip('foo', __DIR__ . '/../../asset/mod/invalidDirectory.zip');

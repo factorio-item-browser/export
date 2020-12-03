@@ -9,9 +9,8 @@ use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
 use FactorioItemBrowser\Export\Exception\InvalidInfoJsonFileException;
-use FactorioItemBrowser\Export\Exception\InvalidModFileException;
+use FactorioItemBrowser\Export\Helper\ZipArchiveExtractor;
 use JMS\Serializer\SerializerInterface;
-use ZipArchive;
 
 /**
  * The manager of all the mod files.
@@ -34,33 +33,19 @@ class ModFileManager
         'core',
     ];
 
-    /**
-     * The serializer.
-     * @var SerializerInterface
-     */
-    protected $serializer;
+    protected SerializerInterface $serializer;
+    protected ZipArchiveExtractor $zipArchiveExtractor;
+    protected string $factorioDirectory;
+    protected string $modsDirectory;
 
-    /**
-     * The directory of the Factorio game itself.
-     * @var string
-     */
-    protected $factorioDirectory;
-
-    /**
-     * The directory to store the mod files in.
-     * @var string
-     */
-    protected $modsDirectory;
-
-    /**
-     * Initializes the manager.
-     * @param SerializerInterface $exportSerializer
-     * @param string $factorioDirectory
-     * @param string $modsDirectory
-     */
-    public function __construct(SerializerInterface $exportSerializer, string $factorioDirectory, string $modsDirectory)
-    {
+    public function __construct(
+        SerializerInterface $exportSerializer,
+        ZipArchiveExtractor $zipArchiveExtractor,
+        string $factorioDirectory,
+        string $modsDirectory
+    ) {
         $this->serializer = $exportSerializer;
+        $this->zipArchiveExtractor = $zipArchiveExtractor;
         $this->factorioDirectory = $factorioDirectory;
         $this->modsDirectory = $modsDirectory;
     }
@@ -69,53 +54,11 @@ class ModFileManager
      * Extracts the zip file into the working directory of the mods.
      * @param string $modName
      * @param string $modZipPath
-     * @throws InvalidModFileException
+     * @throws ExportException
      */
     public function extractModZip(string $modName, string $modZipPath): void
     {
-        $zipArchive = new ZipArchive();
-        $success = $zipArchive->open($modZipPath);
-        if ($success !== true || $zipArchive->numFiles === 0) {
-            throw new InvalidModFileException($modZipPath, 'Unable to open zip file.');
-        }
-
-        try {
-            $this->removeModDirectory($modName);
-
-            $targetDirectory = $this->getLocalDirectory($modName);
-            mkdir($targetDirectory, 0777, true);
-            for ($i = 0; $i < $zipArchive->numFiles; ++$i) {
-                $stat = $zipArchive->statIndex($i);
-
-                if (
-                    $stat !== false
-                    && substr($stat['name'], -1) !== '/' // Ignore directories
-                    && strpos($stat['name'], '/') !== false
-                ) {
-                    $fileName = $targetDirectory . substr($stat['name'], strpos($stat['name'], '/'));
-
-                    if (!is_dir(dirname($fileName))) {
-                        mkdir(dirname($fileName), 0777, true);
-                    }
-                    file_put_contents($fileName, $zipArchive->getStream($stat['name']));
-                }
-            }
-        } finally {
-            $zipArchive->close();
-        }
-    }
-
-    /**
-     * Removes the directory of the specified mod, if present.
-     * @param string $modName
-     * @codeCoverageIgnore Unable to rm -rf in virtual file system.
-     */
-    protected function removeModDirectory(string $modName): void
-    {
-        $modDirectory = $this->getLocalDirectory($modName);
-        if (is_dir($modDirectory)) {
-            exec(sprintf('rm -rf "%s"', $modDirectory));
-        }
+        $this->zipArchiveExtractor->extract($modZipPath, $this->getLocalDirectory($modName));
     }
 
     /**

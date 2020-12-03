@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Factorio;
 
 use FactorioItemBrowser\Common\Constant\Constant;
-use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Entity\ModList\Mod;
@@ -23,7 +22,6 @@ use JMS\Serializer\SerializerInterface;
  */
 class Instance
 {
-    protected Console $console;
     protected FactorioProcessFactory $factorioProcessFactory;
     protected ModFileManager $modFileManager;
     protected SerializerInterface $serializer;
@@ -33,7 +31,6 @@ class Instance
     protected string $combinationInstanceDirectory = '';
 
     public function __construct(
-        Console $console,
         FactorioProcessFactory $factorioProcessFactory,
         ModFileManager $modFileManager,
         SerializerInterface $exportSerializer,
@@ -41,7 +38,6 @@ class Instance
         string $instancesDirectory,
         string $version
     ) {
-        $this->console = $console;
         $this->factorioProcessFactory = $factorioProcessFactory;
         $this->modFileManager = $modFileManager;
         $this->serializer = $exportSerializer;
@@ -60,14 +56,12 @@ class Instance
     public function run(string $combinationId, array $modNames): Dump
     {
         try {
-            $this->console->writeAction('Preparing Factorio instance');
             $this->combinationInstanceDirectory = $this->instancesDirectory . '/' . $combinationId;
 
             $this->setUpInstance();
             $this->setUpMods($modNames);
             $this->setupDumpMod($modNames);
 
-            $this->console->writeAction('Executing Factorio');
             $process = $this->factorioProcessFactory->create($this->combinationInstanceDirectory);
             $process->run();
             return $process->getDump();
@@ -122,10 +116,6 @@ class Instance
         );
         file_put_contents(
             $this->getInstancePath('mods/mod-list.json'),
-            $this->serializer->serialize($this->createModListJson($modNames), 'json')
-        );
-        file_put_contents(
-            $this->getInstancePath('mods/mod-list-foo.json'),
             $this->serializer->serialize($this->createModListJson($modNames), 'json')
         );
     }

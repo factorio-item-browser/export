@@ -17,12 +17,12 @@ use Symfony\Component\Process\Process;
  */
 class FactorioProcess
 {
-    /** @var array<OutputProcessorInterface>|OutputProcessorInterface[] */
-    protected array $outputProcessors;
+    /** @var array<OutputProcessorInterface> */
+    private array $outputProcessors;
 
-    protected Dump $dump;
+    private Dump $dump;
     /** @var Process<string>  */
-    protected Process $process;
+    private Process $process;
 
     /**
      * @param array<OutputProcessorInterface> $outputProcessors

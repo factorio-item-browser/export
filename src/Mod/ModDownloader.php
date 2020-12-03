@@ -14,13 +14,14 @@ use BluePsyduck\FactorioModPortalClient\Utils\ModUtils;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use FactorioItemBrowser\Common\Constant\Constant;
-use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Console\ModDownloadStatusOutput;
 use FactorioItemBrowser\Export\Exception\DownloadFailedException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Exception\MissingModException;
 use FactorioItemBrowser\Export\Exception\NoValidReleaseException;
 use FactorioItemBrowser\Export\Process\ModDownloadProcess;
+use FactorioItemBrowser\Export\Process\ModDownloadProcessFactory;
 
 /**
  * The class responsible for downloading requested mods to the local storage.
@@ -30,91 +31,78 @@ use FactorioItemBrowser\Export\Process\ModDownloadProcess;
  */
 class ModDownloader
 {
-    /**
-     * The console.
-     * @var Console
-     */
-    protected $console;
+    protected ModDownloadProcessFactory $modDownloadProcessFactory;
+    protected ModDownloadStatusOutput $modDownloadStatusOutput;
+    protected ModFileManager $modFileManager;
+    protected Facade $modPortalClientFacade;
+    protected int $numberOfParallelDownloads;
+    protected ?Version $factorioVersion = null;
 
-    /**
-     * The mod file manager.
-     * @var ModFileManager
-     */
-    protected $modFileManager;
-
-    /**
-     * The mod portal client facade.
-     * @var Facade
-     */
-    protected $modPortalClientFacade;
-
-    /**
-     * The number of parallel downloads to use.
-     * @var int
-     */
-    protected $numberOfParallelDownloads;
-
-    /**
-     * The temp directory to store downloaded mods in.
-     * @var string
-     */
-    protected $tempDirectory;
-
-    /**
-     * The current version of Factorio.
-     * @var Version|null
-     */
-    protected $factorioVersion;
-
-    /**
-     * Initializes the downloader.
-     * @param Console $console
-     * @param ModFileManager $modFileManager
-     * @param Facade $modPortalClientFacade
-     * @param int $numberOfParallelDownloads
-     * @param string $tempDirectory
-     */
     public function __construct(
-        Console $console,
+        ModDownloadProcessFactory $modDownloadProcessFactory,
+        ModDownloadStatusOutput $modDownloadStatusOutput,
         ModFileManager $modFileManager,
         Facade $modPortalClientFacade,
-        int $numberOfParallelDownloads,
-        string $tempDirectory
+        int $numberOfParallelDownloads
     ) {
-        $this->console = $console;
+        $this->modDownloadProcessFactory = $modDownloadProcessFactory;
+        $this->modDownloadStatusOutput = $modDownloadStatusOutput;
         $this->modFileManager = $modFileManager;
         $this->modPortalClientFacade = $modPortalClientFacade;
         $this->numberOfParallelDownloads = $numberOfParallelDownloads;
-        $this->tempDirectory = $tempDirectory;
     }
 
     /**
      * Downloads the specified mods if they are not already available and up-to-date.
-     * @param array|string[] $modNames
+     * @param array<string> $modNames
      * @throws ExportException
      */
     public function download(array $modNames): void
     {
-        $this->console->writeAction('Loading meta information from the Mod Portal');
+        $currentVersions = $this->getCurrentVersions($modNames);
         $mods = $this->fetchMetaData($modNames);
         $this->verifyMods($modNames, $mods);
 
         $processManager = $this->createProcessManager();
         foreach ($mods as $mod) {
-            $release = $this->getReleaseToDownload($mod);
+            $currentVersion = (string) $currentVersions[$mod->getName()] ?? '';
+            $release = $this->getReleaseToDownload($mod, $currentVersions[$mod->getName()] ?? null);
             if ($release === null) {
-                $this->console->writeMessage(sprintf('Mod %s is already up-to-date.', $mod->getName()));
-                continue;
+                $this->modDownloadStatusOutput->addMod($mod->getName(), $currentVersion);
+            } else {
+                $this->modDownloadStatusOutput->addMod(
+                    $mod->getName(),
+                    $currentVersion,
+                    (string) $release->getVersion(),
+                );
+                $processManager->addProcess($this->modDownloadProcessFactory->create($mod, $release));
             }
-            $processManager->addProcess($this->createDownloadProcess($mod, $release));
         }
+        $this->modDownloadStatusOutput->render();
         $processManager->waitForAllProcesses();
     }
 
     /**
+     * @param array<string> $modNames
+     * @return array<string, ?Version>
+     */
+    protected function getCurrentVersions(array $modNames): array
+    {
+        $modVersions = [];
+        foreach ($modNames as $modName) {
+            try {
+                $modVersions[$modName] = new Version($this->modFileManager->getInfo($modName)->getVersion());
+            } catch (ExportException $e) {
+                $modVersions[$modName] = null;
+            }
+        }
+        return $modVersions;
+    }
+
+    /**
      * Fetches the meta data to the specified mod names.
-     * @param array|string[] $modNames
-     * @return array|Mod[]
+     * @param array<string> $modNames
+     * @return array<string, Mod>
      * @throws ExportException
      */
     protected function fetchMetaData(array $modNames): array
@@ -137,8 +125,8 @@ class ModDownloader
 
     /**
      * Verifies that all mods are present which have been requested.
-     * @param array|string[] $modNames
-     * @param array|Mod[] $mods
+     * @param array<string> $modNames
+     * @param array<string, Mod> $mods
      * @throws ExportException
      */
     protected function verifyMods(array $modNames, array $mods): void
@@ -157,23 +145,18 @@ class ModDownloader
     /**
      * Returns the release to actually download, or null if no download is required.
      * @param Mod $mod
+     * @param Version|null $currentVersion
      * @return Release|null
      * @throws ExportException
      */
-    protected function getReleaseToDownload(Mod $mod): ?Release
+    protected function getReleaseToDownload(Mod $mod, ?Version $currentVersion): ?Release
     {
-        $currentVersion = null;
-        $result = null;
-        try {
-            $currentVersion = new Version($this->modFileManager->getInfo($mod->getName())->getVersion());
-        } catch (ExportException $e) {
-        }
-
         $release = $this->findLatestRelease($mod);
         if ($currentVersion === null || $release->getVersion()->compareTo($currentVersion) > 0) {
-            $result = $release;
+            return $release;
         }
-        return $result;
+
+        return null;
     }
 
     /**
@@ -221,32 +204,12 @@ class ModDownloader
     }
 
     /**
-     * Creates a download process for the specified mod and release.
-     * @param Mod $mod
-     * @param Release $release
-     * @return ModDownloadProcess<string>
-     */
-    protected function createDownloadProcess(Mod $mod, Release $release): ModDownloadProcess
-    {
-        return new ModDownloadProcess(
-            $mod,
-            $release,
-            $this->modPortalClientFacade->getDownloadUrl($release->getDownloadUrl()),
-            $this->tempDirectory . '/' . $release->getFileName()
-        );
-    }
-
-    /**
      * Handles the start of a download process.
      * @param ModDownloadProcess<string> $process
      */
     protected function handleProcessStart(ModDownloadProcess $process): void
     {
-        $this->console->writeAction(sprintf(
-            'Downloading %s (%s)',
-            $process->getMod()->getName(),
-            (string) $process->getRelease()->getVersion()
-        ));
+        $this->modDownloadStatusOutput->startDownloading($process->getMod()->getName());
     }
 
     /**
@@ -265,8 +228,9 @@ class ModDownloader
             throw new DownloadFailedException($process->getMod(), $process->getRelease(), 'Hash mismatch.');
         }
 
-        $this->console->writeAction(sprintf('Extracting %s', $process->getMod()->getName()));
+        $this->modDownloadStatusOutput->startExtracting($process->getMod()->getName());
         $this->modFileManager->extractModZip($process->getMod()->getName(), $process->getDestinationFile());
         unlink($process->getDestinationFile());
+        $this->modDownloadStatusOutput->finish($process->getMod()->getName());
     }
 }

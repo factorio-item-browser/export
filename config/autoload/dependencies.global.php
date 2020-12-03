@@ -16,6 +16,9 @@ use BluePsyduck\FactorioTranslator\Translator as FactorioTranslator;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use JMS\Serializer\SerializerInterface;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 use function BluePsyduck\LaminasAutoWireFactory\injectAliasArray;
@@ -23,6 +26,10 @@ use function BluePsyduck\LaminasAutoWireFactory\readConfig;
 
 return [
     'dependencies' => [
+        'aliases' => [
+            OutputInterface::class => ConsoleOutput::class,
+            ConsoleOutput::class => ConsoleOutputInterface::class, // Temporary
+        ],
         'factories' => [
             Command\DownloadFactorioCommand::class => AutoWireFactory::class,
             Command\ProcessCommand::class => AutoWireFactory::class,
@@ -34,11 +41,14 @@ return [
             Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
 
             Console\Console::class => AutoWireFactory::class,
+            Console\ModDownloadStatusOutput::class => AutoWireFactory::class,
+            Console\ProcessOutput::class => AutoWireFactory::class,
 
             Factorio\FactorioDownloader::class => AutoWireFactory::class,
             Factorio\Instance::class => AutoWireFactory::class,
 
             Helper\HashCalculator::class => AutoWireFactory::class,
+            Helper\ZipArchiveExtractor::class => AutoWireFactory::class,
 
             Mapper\FluidMapper::class => AutoWireFactory::class,
             Mapper\IconLayerMapper::class => AutoWireFactory::class,
@@ -52,6 +62,7 @@ return [
             Mod\ModDownloader::class => AutoWireFactory::class,
             Mod\ModFileManager::class => AutoWireFactory::class,
 
+            OutputProcessor\ConsoleOutputProcessor::class => AutoWireFactory::class,
             OutputProcessor\DumpOutputProcessor::class => AutoWireFactory::class,
             OutputProcessor\DumpProcessor\ExpensiveRecipeDumpProcessor::class => AutoWireFactory::class,
             OutputProcessor\DumpProcessor\FluidDumpProcessor::class => AutoWireFactory::class,
@@ -70,6 +81,7 @@ return [
             Parser\TranslationParser::class => AutoWireFactory::class,
 
             Process\FactorioProcessFactory::class => AutoWireFactory::class,
+            Process\ModDownloadProcessFactory::class => AutoWireFactory::class,
             Process\RenderIconProcessFactory::class => AutoWireFactory::class,
 
             // 3rd-party services

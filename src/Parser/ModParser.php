@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
+use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
@@ -24,15 +25,18 @@ class ModParser implements ParserInterface
     protected const RENDERED_THUMBNAIL_SIZE = 144;
     protected const THUMBNAIL_FILENAME = 'thumbnail.png';
 
+    protected Console $console;
     protected HashCalculator $hashCalculator;
     protected ModFileManager $modFileManager;
     protected TranslationParser $translationParser;
 
     public function __construct(
+        Console $console,
         HashCalculator $hashCalculator,
         ModFileManager $modFileManager,
         TranslationParser $translationParser
     ) {
+        $this->console = $console;
         $this->hashCalculator = $hashCalculator;
         $this->modFileManager = $modFileManager;
         $this->translationParser = $translationParser;
@@ -44,7 +48,7 @@ class ModParser implements ParserInterface
 
     public function parse(Dump $dump, ExportData $exportData): void
     {
-        foreach ($dump->modNames as $modName) {
+        foreach ($this->console->iterateWithProgressbar('Parsing mods', $dump->modNames) as $modName) {
             $mod = $this->createMod($modName);
             $thumbnail = $this->createThumbnail($mod);
             if ($thumbnail !== null) {

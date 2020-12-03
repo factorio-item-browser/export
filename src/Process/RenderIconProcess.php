@@ -15,11 +15,7 @@ use Symfony\Component\Process\Process;
  */
 class RenderIconProcess extends Process
 {
-    /**
-     * The icon.
-     * @var Icon
-     */
-    protected $icon;
+    private Icon $icon;
 
     /**
      * Initializes the process.
@@ -34,10 +30,6 @@ class RenderIconProcess extends Process
         $this->icon = $icon;
     }
 
-    /**
-     * Returns the icon of the process.
-     * @return Icon
-     */
     public function getIcon(): Icon
     {
         return $this->icon;

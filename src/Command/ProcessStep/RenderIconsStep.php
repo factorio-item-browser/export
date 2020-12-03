@@ -7,11 +7,14 @@ namespace FactorioItemBrowser\Export\Command\ProcessStep;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Console\ProgressBar;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Process\RenderIconProcess;
 use FactorioItemBrowser\Export\Process\RenderIconProcessFactory;
 use FactorioItemBrowser\ExportData\ExportData;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * The step for rendering all the icons and thumbnails.
@@ -21,30 +24,13 @@ use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
  */
 class RenderIconsStep implements ProcessStepInterface
 {
-    /**
-     * The console.
-     * @var Console
-     */
-    protected $console;
+    protected Console $console;
+    protected RenderIconProcessFactory $renderIconProcessFactory;
+    protected int $numberOfParallelRenderProcesses;
 
-    /**
-     * The render icon process factory.
-     * @var RenderIconProcessFactory
-     */
-    protected $renderIconProcessFactory;
+    protected OutputInterface $errorOutput;
+    protected ProgressBar $progressBar;
 
-    /**
-     * The number of parallel render processes.
-     * @var int
-     */
-    protected $numberOfParallelRenderProcesses;
-
-    /**
-     * RenderIconsStep constructor.
-     * @param Console $console
-     * @param RenderIconProcessFactory $renderIconProcessFactory
-     * @param int $numberOfParallelRenderProcesses
-     */
     public function __construct(
         Console $console,
         RenderIconProcessFactory $renderIconProcessFactory,
@@ -55,30 +41,22 @@ class RenderIconsStep implements ProcessStepInterface
         $this->numberOfParallelRenderProcesses = $numberOfParallelRenderProcesses;
     }
 
-    /**
-     * Returns the label to identify the step.
-     * @return string
-     */
     public function getLabel(): string
     {
         return 'Rendering the thumbnails and icons';
     }
 
-    /**
-     * Returns the status to set on the export job before running this step.
-     * @return string
-     */
     public function getExportJobStatus(): string
     {
         return JobStatus::PROCESSING;
     }
 
-    /**
-     * Runs the process step.
-     * @param ProcessStepData $processStepData
-     */
     public function run(ProcessStepData $processStepData): void
     {
+        $this->errorOutput = $this->console->createSection();
+        $this->progressBar = $this->console->createProgressBar('Icons');
+        $this->progressBar->setNumberOfSteps(count($processStepData->getExportData()->getIcons()));
+
         $processManager = $this->createProcessManager($processStepData->getExportData());
         foreach ($processStepData->getExportData()->getIcons() as $icon) {
             $processManager->addProcess($this->renderIconProcessFactory->create($icon));
@@ -109,7 +87,7 @@ class RenderIconsStep implements ProcessStepInterface
      */
     protected function handleProcessStart(RenderIconProcess $process): void
     {
-        $this->console->writeAction(sprintf('Rendering icon %s', $process->getIcon()->id));
+        $this->progressBar->start($process->getIcon()->id, '<fg=yellow>Rendering</> ' . $process->getIcon()->id);
     }
 
     /**
@@ -119,10 +97,12 @@ class RenderIconsStep implements ProcessStepInterface
      */
     protected function handleProcessFinish(ExportData $exportData, RenderIconProcess $process): void
     {
+        $this->progressBar->finish($process->getIcon()->id);
+
         if ($process->isSuccessful()) {
             $exportData->getRenderedIcons()->set($process->getIcon()->id, $process->getOutput());
         } else {
-            $this->console->writeData($process->getOutput());
+            $this->errorOutput->write(trim($process->getErrorOutput()), false, ConsoleOutput::OUTPUT_RAW);
         }
     }
 }

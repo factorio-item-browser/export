@@ -14,7 +14,7 @@ use Laminas\ConfigAggregator\ConfigAggregator;
 use Laminas\ServiceManager\Config;
 use Laminas\ServiceManager\ServiceManager;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 
 $config = require(__DIR__ . '/config.php');
 
@@ -26,6 +26,6 @@ if ($config[ConfigAggregator::ENABLE_CACHE] ?? false) {
 }
 
 $container->setService('config', $config);
-$container->setService(OutputInterface::class, new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, true));
+$container->setService(ConsoleOutputInterface::class, new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, true));
 
 return $container;
