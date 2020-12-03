@@ -157,9 +157,9 @@ class ProcessCommand extends Command
         $exportData = $this->exportDataService->createExport($exportJob->getCombinationId());
 
         $result = new ProcessStepData();
-        $result->setExportJob($exportJob)
-               ->setExportData($exportData)
-               ->setDump(new Dump());
+        $result->exportJob = $exportJob;
+        $result->exportData = $exportData;
+        $result->dump = new Dump();
         return $result;
     }
 
@@ -172,13 +172,13 @@ class ProcessCommand extends Command
     protected function runProcessStep(ProcessStepInterface $step, ProcessStepData $data): void
     {
         $this->console->writeStep($step->getLabel());
-        $data->setExportJob($this->updateExportJob($data->getExportJob(), $step->getExportJobStatus()));
+        $data->exportJob = $this->updateExportJob($data->exportJob, $step->getExportJobStatus());
 
         try {
             $step->run($data);
         } catch (Exception $e) {
             $this->updateExportJob(
-                $data->getExportJob(),
+                $data->exportJob,
                 JobStatus::ERROR,
                 sprintf('%s: %s', substr((string) strrchr(get_class($e), '\\'), 1), $e->getMessage())
             );

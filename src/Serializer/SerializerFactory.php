@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Serializer;
 
 use FactorioItemBrowser\Export\Constant\ConfigKey;
+use FactorioItemBrowser\Export\Serializer\Handler\ConstructorHandler;
 use FactorioItemBrowser\Export\Serializer\Handler\RawHandler;
 use Interop\Container\ContainerInterface;
 use JMS\Serializer\Handler\HandlerRegistry;
@@ -37,6 +38,7 @@ class SerializerFactory implements FactoryInterface
             )
             ->addDefaultHandlers()
             ->configureHandlers(function (HandlerRegistry $registry): void {
+                $registry->registerSubscribingHandler(new ConstructorHandler());
                 $registry->registerSubscribingHandler(new RawHandler());
             });
 

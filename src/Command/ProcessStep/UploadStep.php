@@ -82,7 +82,7 @@ class UploadStep implements ProcessStepInterface
     public function run(ProcessStepData $processStepData): void
     {
         $this->console->writeAction('Persisting export data');
-        $fileName = $this->exportDataService->persistExport($processStepData->getExportData());
+        $fileName = $this->exportDataService->persistExport($processStepData->exportData);
         $this->console->writeAction(sprintf('Uploading file %s', basename($fileName)));
 
         try {

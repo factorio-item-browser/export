@@ -57,11 +57,10 @@ class FactorioStep implements ProcessStepInterface
      */
     public function run(ProcessStepData $processStepData): void
     {
-        $combinationId = $processStepData->getExportJob()->getCombinationId();
-        $modNames = $processStepData->getExportJob()->getModNames();
+        $combinationId = $processStepData->exportJob->getCombinationId();
+        $modNames = $processStepData->exportJob->getModNames();
 
         $dump = $this->instance->run($combinationId, $modNames);
-
-        $processStepData->setDump($dump);
+        $processStepData->dump = $dump;
     }
 }

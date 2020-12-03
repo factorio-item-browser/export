@@ -91,7 +91,7 @@ class ModDownloader
         $modVersions = [];
         foreach ($modNames as $modName) {
             try {
-                $modVersions[$modName] = new Version($this->modFileManager->getInfo($modName)->getVersion());
+                $modVersions[$modName] = $this->modFileManager->getInfo($modName)->version;
             } catch (ExportException $e) {
                 $modVersions[$modName] = null;
             }
@@ -182,7 +182,7 @@ class ModDownloader
     protected function getFactorioVersion(): Version
     {
         if ($this->factorioVersion === null) {
-            $this->factorioVersion = new Version($this->modFileManager->getInfo(Constant::MOD_NAME_BASE)->getVersion());
+            $this->factorioVersion = $this->modFileManager->getInfo(Constant::MOD_NAME_BASE)->version;
         }
         return $this->factorioVersion;
     }

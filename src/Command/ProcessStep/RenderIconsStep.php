@@ -55,10 +55,10 @@ class RenderIconsStep implements ProcessStepInterface
     {
         $this->errorOutput = $this->console->createSection();
         $this->progressBar = $this->console->createProgressBar('Icons');
-        $this->progressBar->setNumberOfSteps(count($processStepData->getExportData()->getIcons()));
+        $this->progressBar->setNumberOfSteps(count($processStepData->exportData->getIcons()));
 
-        $processManager = $this->createProcessManager($processStepData->getExportData());
-        foreach ($processStepData->getExportData()->getIcons() as $icon) {
+        $processManager = $this->createProcessManager($processStepData->exportData);
+        foreach ($processStepData->exportData->getIcons() as $icon) {
             $processManager->addProcess($this->renderIconProcessFactory->create($icon));
         }
         $processManager->waitForAllProcesses();

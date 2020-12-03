@@ -1,8 +1,9 @@
 FactorioItemBrowser\Export\Entity\ModList\Mod:
-  access_type: public_method
   exclusion_policy: all
   properties:
     name:
       type: string
-    enabled:
+    isEnabled:
       type: boolean
+      serialized_name: enabled
+

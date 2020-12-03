@@ -54,15 +54,15 @@ class ParserStep implements ProcessStepInterface
     public function run(ProcessStepData $processStepData): void
     {
         foreach ($this->parsers as $parser) {
-            $parser->prepare($processStepData->getDump());
+            $parser->prepare($processStepData->dump);
         }
 
         foreach ($this->parsers as $parser) {
-            $parser->parse($processStepData->getDump(), $processStepData->getExportData());
+            $parser->parse($processStepData->dump, $processStepData->exportData);
         }
 
         foreach ($this->parsers as $parser) {
-            $parser->validate($processStepData->getExportData());
+            $parser->validate($processStepData->exportData);
         }
     }
 }

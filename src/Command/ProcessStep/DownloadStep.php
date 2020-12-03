@@ -57,6 +57,6 @@ class DownloadStep implements ProcessStepInterface
      */
     public function run(ProcessStepData $processStepData): void
     {
-        $this->modDownloader->download($processStepData->getExportJob()->getModNames());
+        $this->modDownloader->download($processStepData->exportJob->getModNames());
     }
 }

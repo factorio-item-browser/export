@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Factorio;
 
+use BluePsyduck\FactorioModPortalClient\Entity\Dependency;
+use BluePsyduck\FactorioModPortalClient\Entity\Version;
 use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
@@ -131,13 +133,14 @@ class Instance
         $baseInfo = $this->modFileManager->getInfo(Constant::MOD_NAME_BASE);
 
         $info = new InfoJson();
-        $info->setName('Dump')
-             ->setTitle('Factorio Item Browser - Dump')
-             ->setAuthor('factorio-item-browser')
-             ->setVersion($this->version)
-             ->setFactorioVersion($baseInfo->getVersion())
-             ->setDependencies($modNames);
-
+        $info->name = 'Dump';
+        $info->title = 'Factorio Item Browser - Dump';
+        $info->author = 'factorio-item-browser';
+        $info->version = new Version($this->version);
+        $info->factorioVersion = $baseInfo->version;
+        foreach ($modNames as $modName) {
+            $info->dependencies[] = new Dependency($modName);
+        }
         return $info;
     }
 
@@ -152,15 +155,15 @@ class Instance
 
         // Base mod must always be present, especially if disabled.
         $baseMod = new Mod();
-        $baseMod->setName(Constant::MOD_NAME_BASE)
-                ->setEnabled(in_array(Constant::MOD_NAME_BASE, $modNames, true));
-        $modList->addMod($baseMod);
+        $baseMod->name = Constant::MOD_NAME_BASE;
+        $baseMod->isEnabled = (in_array(Constant::MOD_NAME_BASE, $modNames, true));
+        $modList->mods[] = $baseMod;
 
         // Dump mod must always be enabled.
         $dumpMod = new Mod();
-        $dumpMod->setName('Dump')
-                ->setEnabled(true);
-        $modList->addMod($dumpMod);
+        $dumpMod->name = 'Dump';
+        $dumpMod->isEnabled = true;
+        $modList->mods[] = $dumpMod;
 
         // Add all the other mods as well.
         foreach ($modNames as $modName) {
@@ -169,9 +172,9 @@ class Instance
             }
 
             $mod = new Mod();
-            $mod->setName($modName)
-                ->setEnabled(true);
-            $modList->addMod($mod);
+            $mod->name = $modName;
+            $mod->isEnabled = true;
+            $modList->mods[] = $mod;
         }
 
         return $modList;
