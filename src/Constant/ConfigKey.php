@@ -43,6 +43,11 @@ interface ConfigKey
     public const DIRECTORY_INSTANCES = 'instances';
 
     /**
+     * The key holding the log directory.
+     */
+    public const DIRECTORY_LOGS = 'logs';
+
+    /**
      * The key holding the mods directory.
      */
     public const DIRECTORY_MODS = 'mods';

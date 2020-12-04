@@ -16,6 +16,7 @@ use BluePsyduck\FactorioTranslator\Translator as FactorioTranslator;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use JMS\Serializer\SerializerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -27,7 +28,7 @@ use function BluePsyduck\LaminasAutoWireFactory\readConfig;
 return [
     'dependencies' => [
         'aliases' => [
-            OutputInterface::class => ConsoleOutput::class,
+            OutputInterface::class => ConsoleOutputInterface::class,
             ConsoleOutput::class => ConsoleOutputInterface::class, // Temporary
         ],
         'factories' => [
@@ -85,7 +86,9 @@ return [
             Process\RenderIconProcessFactory::class => AutoWireFactory::class,
 
             // 3rd-party services
+            ConsoleOutputInterface::class => Output\ConsoleOutputFactory::class,
             Filesystem::class => AutoWireFactory::class,
+            LoggerInterface::class => Log\LoggerFactory::class,
             SerializerInterface::class . ' $exportSerializer' => Serializer\SerializerFactory::class,
             FactorioTranslator::class => Translator\TranslatorFactory::class,
 

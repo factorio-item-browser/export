@@ -15,28 +15,16 @@ use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
  */
 class DoneStep implements ProcessStepInterface
 {
-    /**
-     * Returns the label to identify the step.
-     * @return string
-     */
     public function getLabel(): string
     {
         return 'Done.';
     }
 
-    /**
-     * Returns the status to set on the export job before running this step.
-     * @return string
-     */
     public function getExportJobStatus(): string
     {
         return JobStatus::UPLOADED;
     }
 
-    /**
-     * Runs the process step.
-     * @param ProcessStepData $processStepData
-     */
     public function run(ProcessStepData $processStepData): void
     {
     }

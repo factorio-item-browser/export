@@ -13,6 +13,7 @@ use FactorioItemBrowser\Export\Process\RenderIconProcess;
 use FactorioItemBrowser\Export\Process\RenderIconProcessFactory;
 use FactorioItemBrowser\ExportData\ExportData;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -25,6 +26,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class RenderIconsStep implements ProcessStepInterface
 {
     protected Console $console;
+    protected LoggerInterface $logger;
     protected RenderIconProcessFactory $renderIconProcessFactory;
     protected int $numberOfParallelRenderProcesses;
 
@@ -33,10 +35,12 @@ class RenderIconsStep implements ProcessStepInterface
 
     public function __construct(
         Console $console,
+        LoggerInterface $logger,
         RenderIconProcessFactory $renderIconProcessFactory,
         int $numberOfParallelRenderProcesses
     ) {
         $this->console = $console;
+        $this->logger = $logger;
         $this->renderIconProcessFactory = $renderIconProcessFactory;
         $this->numberOfParallelRenderProcesses = $numberOfParallelRenderProcesses;
     }
@@ -102,7 +106,10 @@ class RenderIconsStep implements ProcessStepInterface
         if ($process->isSuccessful()) {
             $exportData->getRenderedIcons()->set($process->getIcon()->id, $process->getOutput());
         } else {
-            $this->errorOutput->write(trim($process->getErrorOutput()), false, ConsoleOutput::OUTPUT_RAW);
+            $errorOutput = trim($process->getErrorOutput());
+
+            $this->logger->error($errorOutput, ['combination' => $exportData->getCombinationId()]);
+            $this->errorOutput->write($errorOutput, false, ConsoleOutput::OUTPUT_RAW);
         }
     }
 }

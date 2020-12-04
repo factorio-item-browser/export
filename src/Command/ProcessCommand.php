@@ -19,6 +19,7 @@ use FactorioItemBrowser\ExportQueue\Client\Entity\Job;
 use FactorioItemBrowser\ExportQueue\Client\Exception\ClientException;
 use FactorioItemBrowser\ExportQueue\Client\Request\Job\ListRequest;
 use FactorioItemBrowser\ExportQueue\Client\Request\Job\UpdateRequest;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -31,41 +32,25 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ProcessCommand extends Command
 {
-    /**
-     * The console.
-     * @var Console
-     */
-    protected $console;
+    protected Console $console;
+    protected ExportDataService $exportDataService;
+    protected Facade $exportQueueFacade;
+    protected LoggerInterface $logger;
+    /** @var array<ProcessStepInterface>  */
+    protected array $processSteps;
 
     /**
-     * The export data service.
-     * @var ExportDataService
-     */
-    protected $exportDataService;
-
-    /**
-     * The export queue facade.
-     * @var Facade
-     */
-    protected $exportQueueFacade;
-
-    /**
-     * The process steps.
-     * @var array|ProcessStepInterface[]
-     */
-    protected $processSteps;
-
-    /**
-     * ProcessCommand constructor.
      * @param Console $console
      * @param ExportDataService $exportDataService
      * @param Facade $exportQueueFacade
-     * @param array|ProcessStepInterface[] $exportProcessSteps
+     * @param LoggerInterface $logger
+     * @param array<ProcessStepInterface> $exportProcessSteps
      */
     public function __construct(
         Console $console,
         ExportDataService $exportDataService,
         Facade $exportQueueFacade,
+        LoggerInterface $logger,
         array $exportProcessSteps
     ) {
         parent::__construct();
@@ -73,6 +58,7 @@ class ProcessCommand extends Command
         $this->console = $console;
         $this->exportDataService = $exportDataService;
         $this->exportQueueFacade = $exportQueueFacade;
+        $this->logger = $logger;
         $this->processSteps = $exportProcessSteps;
     }
 
@@ -99,6 +85,7 @@ class ProcessCommand extends Command
             $exportJob = $this->fetchExportJob();
             if ($exportJob === null) {
                 $this->console->writeMessage('No export job to process. Done.');
+                $this->logger->info('No export job to process.');
                 return 0;
             }
 
@@ -139,6 +126,7 @@ class ProcessCommand extends Command
      */
     protected function runExportJob(Job $exportJob): void
     {
+        $this->logger->info('Processing export job', ['combination' => $exportJob->getCombinationId()]);
         $this->console->writeHeadline(sprintf('Processing combination %s', $exportJob->getCombinationId()));
         $processStepData = $this->createProcessStepData($exportJob);
 
@@ -177,10 +165,17 @@ class ProcessCommand extends Command
         try {
             $step->run($data);
         } catch (Exception $e) {
+            $exceptionClass = substr((string) strrchr(get_class($e), '\\'), 1);
+            $exceptionMessage = $e->getMessage();
+
+            $this->logger->error($exceptionMessage, [
+                'class' => $exceptionClass,
+                'combination' => $data->exportJob->getCombinationId(),
+            ]);
             $this->updateExportJob(
                 $data->exportJob,
                 JobStatus::ERROR,
-                sprintf('%s: %s', substr((string) strrchr(get_class($e), '\\'), 1), $e->getMessage())
+                sprintf('%s: %s', $exceptionClass, $exceptionMessage)
             );
             throw $e;
         }
