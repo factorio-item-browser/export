@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Console;
+namespace FactorioItemBrowser\Export\Output;
 
 use Exception;
 use Generator;
-use Symfony\Component\Console\Formatter\OutputFormatter;
-use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
+use Symfony\Component\Console\Terminal;
 
 /**
  * The wrapper class for the actual console.
@@ -19,13 +18,15 @@ use Symfony\Component\Console\Output\ConsoleSectionOutput;
  */
 class Console
 {
-    protected ConsoleOutputInterface $output;
-    protected bool $isDebug;
+    private ConsoleOutputInterface $output;
+    private bool $isDebug;
+    private Terminal $terminal;
 
     public function __construct(ConsoleOutputInterface $output, bool $isDebug)
     {
         $this->output = $output;
         $this->isDebug = $isDebug;
+        $this->terminal = new Terminal();
     }
 
     /**
@@ -35,12 +36,12 @@ class Console
      */
     public function writeHeadline(string $message): self
     {
-        $this->writeWithDecoration([
-            '',
-            $this->createHorizontalLine('-'),
-            ' ' . $message,
-            $this->createHorizontalLine('-'),
-        ], 'yellow', 'bold');
+        $this->output->writeln(<<<EOT
+            
+            <bg=cyan;fg=black;options=bold>{$this->createHorizontalLine(' ')}
+             {$message}
+            </>
+            EOT);
         return $this;
     }
 
@@ -51,11 +52,11 @@ class Console
      */
     public function writeStep(string $step): self
     {
-        $this->writeWithDecoration([
-            '',
-            ' ' . $step,
-            $this->createHorizontalLine('-')
-        ], 'blue', 'bold');
+        $this->output->writeln(<<<EOT
+            
+            <fg=cyan;options=bold> {$step}
+            {$this->createHorizontalLine('-')}</>
+            EOT);
         return $this;
     }
 
@@ -88,55 +89,18 @@ class Console
      */
     public function writeException(Exception $e): self
     {
-        $this->writeWithDecoration([
-            sprintf('! %s: %s', substr((string) strrchr(get_class($e), '\\'), 1), $e->getMessage()),
-        ], 'red', 'bold');
+        $exceptionName = substr((string) strrchr(get_class($e), '\\'), 1);
+        $this->output->writeln(<<<EOT
+            
+            <bg=red;fg=white;options=bold>{$this->createHorizontalLine(' ')}
+             {$exceptionName}: {$e->getMessage()}
+            </>
+            EOT);
 
         if ($this->isDebug) {
-            $this->writeWithDecoration([
-                $this->createHorizontalLine('-'),
-                $e->getTraceAsString(),
-                $this->createHorizontalLine('-'),
-            ], 'red');
+            $this->output->writeln("<fg=red>{$e->getTraceAsString()}</>");
         }
         return $this;
-    }
-
-    /**
-     * Writes raw data to the console.
-     * @param string $data
-     * @return $this
-     */
-    public function writeData(string $data): self
-    {
-        $this->output->write($data, false, ConsoleOutput::OUTPUT_RAW);
-        return $this;
-    }
-
-    /**
-     * Writes messages with decorations.
-     * @param array|string[] $messages
-     * @param string $color
-     * @param string $options
-     */
-    protected function writeWithDecoration(array $messages, string $color = '', string $options = ''): void
-    {
-        $messages = array_values(array_map([OutputFormatter::class, 'escape'], $messages));
-
-        $formats = [];
-        if ($color !== '') {
-            $formats[] = "fg={$color}";
-        }
-        if ($options !== '') {
-            $formats[] = "options={$options}";
-        }
-        $formatString = implode(';', $formats);
-        if ($formatString !== '') {
-            $messages[0] = "<{$formatString}>{$messages[0]}";
-            $messages[count($messages) - 1] .= '</>';
-        }
-
-        $this->output->writeln($messages);
     }
 
     /**
@@ -146,7 +110,25 @@ class Console
      */
     protected function createHorizontalLine(string $character): string
     {
-        return str_pad('', 80, $character);
+        return str_pad('', $this->terminal->getWidth(), $character);
+    }
+
+    /**
+     * Creates the output for the list of mods with their versions.
+     * @return ModListOutput
+     */
+    public function createModListOutput(): ModListOutput
+    {
+        return new ModListOutput($this->output->section());
+    }
+
+    /**
+     * Creates the output of a process.
+     * @return ProcessOutput
+     */
+    public function createProcessOutput(): ProcessOutput
+    {
+        return new ProcessOutput($this->output->section());
     }
 
     /**

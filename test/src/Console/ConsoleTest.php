@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Console;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
-use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -18,7 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Console\Console
+ * @coversDefaultClass \FactorioItemBrowser\Export\Output\Console
  */
 class ConsoleTest extends TestCase
 {

@@ -6,9 +6,9 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\FactorioTranslator\Exception\NoSupportedLoaderException;
 use BluePsyduck\FactorioTranslator\Translator;
-use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\ExportData\Collection\DictionaryInterface;
 use FactorioItemBrowser\ExportData\ExportData;
 

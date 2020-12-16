@@ -6,10 +6,10 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\MapperManager\MapperManagerInterface;
 use FactorioItemBrowser\Common\Constant\EntityType;
-use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Icon as DumpIcon;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\ExportData\Entity\Icon as ExportIcon;
 use FactorioItemBrowser\ExportData\ExportData;
 

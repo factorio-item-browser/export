@@ -7,10 +7,10 @@ namespace FactorioItemBrowser\Export\Parser;
 use BluePsyduck\MapperManager\MapperManagerInterface;
 use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Common\Constant\RecipeMode;
-use FactorioItemBrowser\Export\Console\Console;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Recipe as DumpRecipe;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\ExportData\Entity\Recipe as ExportRecipe;
 use FactorioItemBrowser\ExportData\ExportData;
 

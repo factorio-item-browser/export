@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\OutputProcessor;
 
-use FactorioItemBrowser\Export\Console\ProcessOutput;
+use FactorioItemBrowser\Export\Output\Console;
+use FactorioItemBrowser\Export\Output\ProcessOutput;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 
 /**
@@ -17,16 +18,21 @@ class ConsoleOutputProcessor implements OutputProcessorInterface
 {
     private const IGNORED_PREFIX = '>DUMP>';
 
-    private ProcessOutput $processOutput;
+    private Console $console;
+    private ?ProcessOutput $processOutput = null;
 
-    public function __construct(ProcessOutput $processOutput)
+    public function __construct(Console $console)
     {
-        $this->processOutput = $processOutput;
+        $this->console = $console;
     }
 
     public function processLine(string $outputLine, Dump $dump): void
     {
         if (strpos($outputLine, self::IGNORED_PREFIX) === false) {
+            if ($this->processOutput === null) {
+                $this->processOutput = $this->console->createProcessOutput();
+            }
+
             $this->processOutput->addLine($outputLine);
         }
     }

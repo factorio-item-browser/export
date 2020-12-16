@@ -15,7 +15,7 @@ use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Common\Constant\Constant;
-use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\DownloadFailedException;
 use FactorioItemBrowser\Export\Exception\ExportException;

@@ -14,12 +14,14 @@ use BluePsyduck\FactorioModPortalClient\Utils\ModUtils;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use FactorioItemBrowser\Common\Constant\Constant;
-use FactorioItemBrowser\Export\Console\ModDownloadStatusOutput;
+use FactorioItemBrowser\Export\Output\Console;
+use FactorioItemBrowser\Export\Output\ProgressBar;
 use FactorioItemBrowser\Export\Exception\DownloadFailedException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Exception\MissingModException;
 use FactorioItemBrowser\Export\Exception\NoValidReleaseException;
+use FactorioItemBrowser\Export\Output\ModListOutput;
 use FactorioItemBrowser\Export\Process\ModDownloadProcess;
 use FactorioItemBrowser\Export\Process\ModDownloadProcessFactory;
 
@@ -31,22 +33,25 @@ use FactorioItemBrowser\Export\Process\ModDownloadProcessFactory;
  */
 class ModDownloader
 {
+    protected Console $console;
     protected ModDownloadProcessFactory $modDownloadProcessFactory;
-    protected ModDownloadStatusOutput $modDownloadStatusOutput;
     protected ModFileManager $modFileManager;
     protected Facade $modPortalClientFacade;
     protected int $numberOfParallelDownloads;
+
     protected ?Version $factorioVersion = null;
+    protected ProgressBar $modsProgressBar;
+    protected ModListOutput $modListOutput;
 
     public function __construct(
+        Console $console,
         ModDownloadProcessFactory $modDownloadProcessFactory,
-        ModDownloadStatusOutput $modDownloadStatusOutput,
         ModFileManager $modFileManager,
         Facade $modPortalClientFacade,
         int $numberOfParallelDownloads
     ) {
+        $this->console = $console;
         $this->modDownloadProcessFactory = $modDownloadProcessFactory;
-        $this->modDownloadStatusOutput = $modDownloadStatusOutput;
         $this->modFileManager = $modFileManager;
         $this->modPortalClientFacade = $modPortalClientFacade;
         $this->numberOfParallelDownloads = $numberOfParallelDownloads;
@@ -63,22 +68,30 @@ class ModDownloader
         $mods = $this->fetchMetaData($modNames);
         $this->verifyMods($modNames, $mods);
 
+        $this->modListOutput = $this->console->createModListOutput();
+        $this->modsProgressBar = $this->console->createProgressBar('Downloading mods');
+
+        $numberOfMods = 0;
         $processManager = $this->createProcessManager();
         foreach ($mods as $mod) {
-            $currentVersion = (string) $currentVersions[$mod->getName()] ?? '';
             $release = $this->getReleaseToDownload($mod, $currentVersions[$mod->getName()] ?? null);
-            if ($release === null) {
-                $this->modDownloadStatusOutput->addMod($mod->getName(), $currentVersion);
-            } else {
-                $this->modDownloadStatusOutput->addMod(
-                    $mod->getName(),
-                    $currentVersion,
-                    (string) $release->getVersion(),
-                );
+
+            $this->modListOutput->add(
+                $mod->getName(),
+                $currentVersions[$mod->getName()] ?? null,
+                $release !== null ? $release->getVersion() : null,
+            );
+
+            if ($release !== null) {
+                ++$numberOfMods;
                 $processManager->addProcess($this->modDownloadProcessFactory->create($mod, $release));
             }
         }
-        $this->modDownloadStatusOutput->render();
+        $this->modListOutput->render();
+        if ($numberOfMods > 0) {
+            $this->modsProgressBar->setNumberOfSteps($numberOfMods);
+        }
+
         $processManager->waitForAllProcesses();
     }
 
@@ -209,7 +222,8 @@ class ModDownloader
      */
     protected function handleProcessStart(ModDownloadProcess $process): void
     {
-        $this->modDownloadStatusOutput->startDownloading($process->getMod()->getName());
+        $modName = $process->getMod()->getName();
+        $this->modsProgressBar->start($modName, "<fg=yellow>Downloading</> {$modName}");
     }
 
     /**
@@ -228,9 +242,11 @@ class ModDownloader
             throw new DownloadFailedException($process->getMod(), $process->getRelease(), 'Hash mismatch.');
         }
 
-        $this->modDownloadStatusOutput->startExtracting($process->getMod()->getName());
-        $this->modFileManager->extractModZip($process->getMod()->getName(), $process->getDestinationFile());
+        $modName = $process->getMod()->getName();
+
+        $this->modsProgressBar->update($modName, "<fg=blue>Extracting</> {$modName}");
+        $this->modFileManager->extractModZip($modName, $process->getDestinationFile());
         unlink($process->getDestinationFile());
-        $this->modDownloadStatusOutput->finish($process->getMod()->getName());
+        $this->modsProgressBar->finish($modName);
     }
 }

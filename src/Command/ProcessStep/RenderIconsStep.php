@@ -6,8 +6,8 @@ namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
-use FactorioItemBrowser\Export\Console\Console;
-use FactorioItemBrowser\Export\Console\ProgressBar;
+use FactorioItemBrowser\Export\Output\Console;
+use FactorioItemBrowser\Export\Output\ProgressBar;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Process\RenderIconProcess;
 use FactorioItemBrowser\Export\Process\RenderIconProcessFactory;

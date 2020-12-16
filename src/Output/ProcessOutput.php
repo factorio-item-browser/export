@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Console;
+namespace FactorioItemBrowser\Export\Output;
 
-use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Terminal;
 
@@ -24,18 +23,20 @@ class ProcessOutput
     /** @var array<string> */
     private array $lines = [];
 
-    public function __construct(ConsoleOutput $output)
+    public function __construct(ConsoleSectionOutput $output)
     {
-        $this->output = $output->section();
+        $this->output = $output;
         $this->terminal = new Terminal();
     }
 
     public function addLine(string $line): self
     {
+        $height = min($this->terminal->getHeight() - 6, self::NUMBER_OF_LINES);
         $width = $this->terminal->getWidth();
+
         $lines = str_split($line, $width);
         if ($lines !== false) {
-            $this->lines = array_slice(array_merge($this->lines, $lines), -self::NUMBER_OF_LINES);
+            $this->lines = array_slice(array_merge($this->lines, $lines), -$height);
 
             $this->output->overwrite([
                 ' Process output:',

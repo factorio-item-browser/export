@@ -6,7 +6,7 @@ namespace FactorioItemBrowserTest\Export\Command\ProcessStep;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\ProcessStep\UploadStep;
-use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\UploadFailedException;

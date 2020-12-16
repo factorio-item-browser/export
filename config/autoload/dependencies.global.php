@@ -17,7 +17,6 @@ use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use JMS\Serializer\SerializerInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
@@ -29,7 +28,6 @@ return [
     'dependencies' => [
         'aliases' => [
             OutputInterface::class => ConsoleOutputInterface::class,
-            ConsoleOutput::class => ConsoleOutputInterface::class, // Temporary
         ],
         'factories' => [
             Command\DownloadFactorioCommand::class => AutoWireFactory::class,
@@ -40,10 +38,6 @@ return [
             Command\ProcessStep\ParserStep::class => AutoWireFactory::class,
             Command\ProcessStep\RenderIconsStep::class => AutoWireFactory::class,
             Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
-
-            Console\Console::class => AutoWireFactory::class,
-            Console\ModDownloadStatusOutput::class => AutoWireFactory::class,
-            Console\ProcessOutput::class => AutoWireFactory::class,
 
             Factorio\FactorioDownloader::class => AutoWireFactory::class,
             Factorio\Instance::class => AutoWireFactory::class,
@@ -62,6 +56,8 @@ return [
 
             Mod\ModDownloader::class => AutoWireFactory::class,
             Mod\ModFileManager::class => AutoWireFactory::class,
+
+            Output\Console::class => AutoWireFactory::class,
 
             OutputProcessor\ConsoleOutputProcessor::class => AutoWireFactory::class,
             OutputProcessor\DumpOutputProcessor::class => AutoWireFactory::class,
