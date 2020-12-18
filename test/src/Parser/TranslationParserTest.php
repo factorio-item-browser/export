@@ -9,7 +9,7 @@ use BluePsyduck\FactorioTranslator\Translator;
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Service\ModFileService;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
 use FactorioItemBrowser\ExportData\Collection\DictionaryInterface;
 use FactorioItemBrowser\ExportData\ExportData;
@@ -28,14 +28,14 @@ class TranslationParserTest extends TestCase
 {
     use ReflectionTrait;
 
-    /** @var ModFileManager&MockObject */
-    private ModFileManager $modFileManager;
+    /** @var ModFileService&MockObject */
+    private ModFileService $modFileManager;
     /** @var Translator&MockObject */
     private Translator $translator;
 
     protected function setUp(): void
     {
-        $this->modFileManager = $this->createMock(ModFileManager::class);
+        $this->modFileManager = $this->createMock(ModFileService::class);
         $this->translator = $this->createMock(Translator::class);
     }
 

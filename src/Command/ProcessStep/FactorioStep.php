@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
-use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Factorio\Instance;
+use FactorioItemBrowser\Export\Output\Console;
+use FactorioItemBrowser\Export\Service\FactorioExecutionService;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 
 /**
@@ -17,50 +17,40 @@ use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
  */
 class FactorioStep implements ProcessStepInterface
 {
-    /**
-     * The Factorio instance.
-     * @var Instance
-     */
-    protected $instance;
+    private Console $console;
+    private FactorioExecutionService $factorioExecutionService;
 
-    /**
-     * Initializes the step.
-     * @param Instance $instance
-     */
-    public function __construct(Instance $instance)
-    {
-        $this->instance = $instance;
+    public function __construct(
+        Console $console,
+        FactorioExecutionService $factorioExecutionService
+    ) {
+        $this->console = $console;
+        $this->factorioExecutionService = $factorioExecutionService;
     }
 
-    /**
-     * Returns the label to identify the step.
-     * @return string
-     */
     public function getLabel(): string
     {
         return 'Running Factorio';
     }
 
-    /**
-     * Returns the status to set on the export job before running this step.
-     * @return string
-     */
     public function getExportJobStatus(): string
     {
         return JobStatus::PROCESSING;
     }
 
-    /**
-     * Runs the process step.
-     * @param ProcessStepData $processStepData
-     * @throws ExportException
-     */
     public function run(ProcessStepData $processStepData): void
     {
         $combinationId = $processStepData->exportJob->getCombinationId();
         $modNames = $processStepData->exportJob->getModNames();
 
-        $dump = $this->instance->run($combinationId, $modNames);
-        $processStepData->dump = $dump;
+        try {
+            $this->console->writeAction('Preparing factorio instance');
+            $this->factorioExecutionService->prepare($combinationId, $modNames);
+
+            $this->console->writeAction('Executing factorio');
+            $processStepData->dump = $this->factorioExecutionService->execute($combinationId);
+        } finally {
+            $this->factorioExecutionService->cleanup($combinationId);
+        }
     }
 }

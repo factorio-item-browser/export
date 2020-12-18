@@ -13,7 +13,7 @@ use FactorioItemBrowser\Export\Entity\ModList\Mod;
 use FactorioItemBrowser\Export\Entity\ModListJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Factorio\Instance;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Service\ModFileService;
 use FactorioItemBrowser\Export\Process\FactorioProcess;
 use FactorioItemBrowser\Export\Process\FactorioProcessFactory;
 use JMS\Serializer\SerializerInterface;
@@ -37,8 +37,8 @@ class InstanceTest extends TestCase
     private Console $console;
     /** @var FactorioProcessFactory&MockObject */
     private FactorioProcessFactory $factorioProcessFactory;
-    /** @var ModFileManager&MockObject */
-    private ModFileManager $modFileManager;
+    /** @var ModFileService&MockObject */
+    private ModFileService $modFileManager;
     /** @var SerializerInterface&MockObject */
     private SerializerInterface $serializer;
 
@@ -48,7 +48,7 @@ class InstanceTest extends TestCase
 
         $this->console = $this->createMock(Console::class);
         $this->factorioProcessFactory = $this->createMock(FactorioProcessFactory::class);
-        $this->modFileManager = $this->createMock(ModFileManager::class);
+        $this->modFileManager = $this->createMock(ModFileService::class);
         $this->serializer = $this->createMock(SerializerInterface::class);
     }
 

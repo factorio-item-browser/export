@@ -20,10 +20,10 @@ use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\DownloadFailedException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
-use FactorioItemBrowser\Export\Exception\MissingModException;
+use FactorioItemBrowser\Export\Exception\MissingModsException;
 use FactorioItemBrowser\Export\Exception\NoValidReleaseException;
-use FactorioItemBrowser\Export\Mod\ModDownloader;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Service\ModDownloadService;
+use FactorioItemBrowser\Export\Service\ModFileService;
 use FactorioItemBrowser\Export\Process\ModDownloadProcess;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -35,7 +35,7 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Mod\ModDownloader
+ * @coversDefaultClass \FactorioItemBrowser\Export\Service\ModDownloadService
  */
 class ModDownloaderTest extends TestCase
 {
@@ -49,7 +49,7 @@ class ModDownloaderTest extends TestCase
 
     /**
      * The mocked mod file manager.
-     * @var ModFileManager&MockObject
+     * @var ModFileService&MockObject
      */
     protected $modFileManager;
 
@@ -67,7 +67,7 @@ class ModDownloaderTest extends TestCase
         parent::setUp();
 
         $this->console = $this->createMock(Console::class);
-        $this->modFileManager = $this->createMock(ModFileManager::class);
+        $this->modFileManager = $this->createMock(ModFileService::class);
         $this->modPortalClientFacade = $this->createMock(Facade::class);
     }
 
@@ -81,7 +81,7 @@ class ModDownloaderTest extends TestCase
         $numberOfParallelDownloads = 42;
         $tempDirectory = 'abc';
 
-        $downloader = new ModDownloader(
+        $downloader = new ModDownloadService(
             $this->console,
             $this->modFileManager,
             $this->modPortalClientFacade,
@@ -142,8 +142,8 @@ class ModDownloaderTest extends TestCase
                       ->method('writeMessage')
                       ->with($this->identicalTo('Mod def is already up-to-date.'));
 
-        /* @var ModDownloader&MockObject $downloader */
-        $downloader = $this->getMockBuilder(ModDownloader::class)
+        /* @var ModDownloadService&MockObject $downloader */
+        $downloader = $this->getMockBuilder(ModDownloadService::class)
                            ->onlyMethods([
                                'fetchMetaData',
                                'verifyMods',
@@ -229,7 +229,7 @@ class ModDownloaderTest extends TestCase
                                     ->with($this->equalTo($expectedRequest))
                                     ->willReturn($response);
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $downloader = new ModDownloadService($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $result = $this->invokeMethod($downloader, 'fetchMetaData', $modNames);
 
         $this->assertEquals($expectedResult, $result);
@@ -261,7 +261,7 @@ class ModDownloaderTest extends TestCase
 
         $this->expectException(InternalException::class);
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $downloader = new ModDownloadService($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->invokeMethod($downloader, 'fetchMetaData', $modNames);
     }
 
@@ -294,12 +294,12 @@ class ModDownloaderTest extends TestCase
     public function testVerifyMods(array $modNames, array $mods, bool $expectException): void
     {
         if ($expectException) {
-            $this->expectException(MissingModException::class);
+            $this->expectException(MissingModsException::class);
         } else {
             $this->addToAssertionCount(1);
         }
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $downloader = new ModDownloadService($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->invokeMethod($downloader, 'verifyMods', $modNames, $mods);
     }
 
@@ -325,7 +325,7 @@ class ModDownloaderTest extends TestCase
      * @param Release $latestRelease
      * @param Release|null $expectedResult
      * @throws ReflectionException
-     * @covers ::getReleaseToDownload
+     * @covers ::getReleaseForMod
      * @dataProvider provideGetReleaseToDownload
      */
     public function testGetReleaseToDownload(
@@ -353,8 +353,8 @@ class ModDownloaderTest extends TestCase
                                  ->willReturn($info);
         }
 
-        /* @var ModDownloader&MockObject $downloader */
-        $downloader = $this->getMockBuilder(ModDownloader::class)
+        /* @var ModDownloadService&MockObject $downloader */
+        $downloader = $this->getMockBuilder(ModDownloadService::class)
                            ->onlyMethods(['findLatestRelease'])
                            ->setConstructorArgs([
                                $this->console,
@@ -389,7 +389,7 @@ class ModDownloaderTest extends TestCase
         $mod = new Mod();
         $mod->setReleases([$release]);
 
-        $downloader = $this->getMockBuilder(ModDownloader::class)
+        $downloader = $this->getMockBuilder(ModDownloadService::class)
                            ->onlyMethods(['getFactorioVersion'])
                            ->setConstructorArgs([
                                $this->console,
@@ -419,7 +419,7 @@ class ModDownloaderTest extends TestCase
 
         $this->expectException(NoValidReleaseException::class);
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $downloader = new ModDownloadService($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->invokeMethod($downloader, 'findLatestRelease', $mod);
     }
 
@@ -441,7 +441,7 @@ class ModDownloaderTest extends TestCase
                              ->with($this->identicalTo(Constant::MOD_NAME_BASE))
                              ->willReturn($baseInfo);
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $downloader = new ModDownloadService($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->injectProperty($downloader, 'factorioVersion', null);
 
         $result = $this->invokeMethod($downloader, 'getFactorioVersion');
@@ -461,7 +461,7 @@ class ModDownloaderTest extends TestCase
         $this->modFileManager->expects($this->never())
                              ->method('getInfo');
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $downloader = new ModDownloadService($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->injectProperty($downloader, 'factorioVersion', $factorioVersion);
 
         $result = $this->invokeMethod($downloader, 'getFactorioVersion');
@@ -481,8 +481,8 @@ class ModDownloaderTest extends TestCase
         /* @var ModDownloadProcess&MockObject $process */
         $process = $this->createMock(ModDownloadProcess::class);
 
-        /* @var ModDownloader&MockObject $downloader */
-        $downloader = $this->getMockBuilder(ModDownloader::class)
+        /* @var ModDownloadService&MockObject $downloader */
+        $downloader = $this->getMockBuilder(ModDownloadService::class)
                            ->onlyMethods(['handleProcessStart', 'handleProcessFinish'])
                            ->setConstructorArgs([
                                $this->console,
@@ -539,7 +539,7 @@ class ModDownloaderTest extends TestCase
                                     ->with($this->identicalTo($downloadUrl))
                                     ->willReturn($fullDownloadUrl);
 
-        $downloader = new ModDownloader(
+        $downloader = new ModDownloadService(
             $this->console,
             $this->modFileManager,
             $this->modPortalClientFacade,
@@ -580,7 +580,7 @@ class ModDownloaderTest extends TestCase
                       ->method('writeAction')
                       ->with($this->identicalTo('Downloading abc (1.2.3)'));
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $downloader = new ModDownloadService($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->invokeMethod($downloader, 'handleProcessStart', $process);
     }
 
@@ -622,12 +622,12 @@ class ModDownloaderTest extends TestCase
                       ->with($this->identicalTo('Extracting def'));
 
         $this->modFileManager->expects($this->once())
-                             ->method('extractModZip')
+                             ->method('addModArchive')
                              ->with($this->identicalTo($modName), $this->identicalTo($destinationFile));
 
         $this->assertTrue($directory->hasChild('test.zip'));
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $downloader = new ModDownloadService($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->invokeMethod($downloader, 'handleProcessFinish', $process);
 
         $this->assertFalse($directory->hasChild('test.zip'));
@@ -650,11 +650,11 @@ class ModDownloaderTest extends TestCase
                       ->method('writeAction');
 
         $this->modFileManager->expects($this->never())
-                             ->method('extractModZip');
+                             ->method('addModArchive');
 
         $this->expectException(DownloadFailedException::class);
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $downloader = new ModDownloadService($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->invokeMethod($downloader, 'handleProcessFinish', $process);
     }
 
@@ -695,12 +695,12 @@ class ModDownloaderTest extends TestCase
                       ->method('writeAction');
 
         $this->modFileManager->expects($this->never())
-                             ->method('extractModZip');
+                             ->method('addModArchive');
 
         $this->assertTrue($directory->hasChild('test.zip'));
         $this->expectException(DownloadFailedException::class);
 
-        $downloader = new ModDownloader($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
+        $downloader = new ModDownloadService($this->console, $this->modFileManager, $this->modPortalClientFacade, 42, 'foo');
         $this->invokeMethod($downloader, 'handleProcessFinish', $process);
 
         $this->assertFalse($directory->hasChild('test.zip'));

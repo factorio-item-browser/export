@@ -10,7 +10,7 @@ use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Service\ModFileService;
 use FactorioItemBrowser\Export\Parser\ModParser;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
 use FactorioItemBrowser\ExportData\Collection\ChunkedCollection;
@@ -35,15 +35,15 @@ class ModParserTest extends TestCase
 
     /** @var HashCalculator&MockObject */
     private HashCalculator $hashCalculator;
-    /** @var ModFileManager&MockObject */
-    private ModFileManager $modFileManager;
+    /** @var ModFileService&MockObject */
+    private ModFileService $modFileManager;
     /** @var TranslationParser&MockObject */
     private TranslationParser $translationParser;
 
     protected function setUp(): void
     {
         $this->hashCalculator = $this->createMock(HashCalculator::class);
-        $this->modFileManager = $this->createMock(ModFileManager::class);
+        $this->modFileManager = $this->createMock(ModFileService::class);
         $this->translationParser = $this->createMock(TranslationParser::class);
     }
 

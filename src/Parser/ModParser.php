@@ -7,8 +7,8 @@ namespace FactorioItemBrowser\Export\Parser;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
 use FactorioItemBrowser\Export\Output\Console;
+use FactorioItemBrowser\Export\Service\ModFileService;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -27,18 +27,18 @@ class ModParser implements ParserInterface
 
     protected Console $console;
     protected HashCalculator $hashCalculator;
-    protected ModFileManager $modFileManager;
+    protected ModFileService $modFileService;
     protected TranslationParser $translationParser;
 
     public function __construct(
         Console $console,
         HashCalculator $hashCalculator,
-        ModFileManager $modFileManager,
+        ModFileService $modFileService,
         TranslationParser $translationParser
     ) {
         $this->console = $console;
         $this->hashCalculator = $hashCalculator;
-        $this->modFileManager = $modFileManager;
+        $this->modFileService = $modFileService;
         $this->translationParser = $translationParser;
     }
 
@@ -66,7 +66,7 @@ class ModParser implements ParserInterface
      */
     protected function createMod(string $modName): Mod
     {
-        $info = $this->modFileManager->getInfo($modName);
+        $info = $this->modFileService->getInfo($modName);
 
         $mod = new Mod();
         $mod->name = $modName;
@@ -107,7 +107,7 @@ class ModParser implements ParserInterface
     protected function getThumbnailSize(Mod $mod): int
     {
         try {
-            $content = $this->modFileManager->readFile($mod->name, self::THUMBNAIL_FILENAME);
+            $content = $this->modFileService->readFile($mod->name, self::THUMBNAIL_FILENAME);
         } catch (ExportException $e) {
             return 0;
         }

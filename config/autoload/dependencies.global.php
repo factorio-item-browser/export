@@ -40,7 +40,6 @@ return [
             Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
 
             Factorio\FactorioDownloader::class => AutoWireFactory::class,
-            Factorio\Instance::class => AutoWireFactory::class,
 
             Helper\HashCalculator::class => AutoWireFactory::class,
             Helper\ZipArchiveExtractor::class => AutoWireFactory::class,
@@ -53,9 +52,6 @@ return [
             Mapper\RecipeIngredientMapper::class => AutoWireFactory::class,
             Mapper\RecipeMapper::class => AutoWireFactory::class,
             Mapper\RecipeProductMapper::class => AutoWireFactory::class,
-
-            Mod\ModDownloader::class => AutoWireFactory::class,
-            Mod\ModFileManager::class => AutoWireFactory::class,
 
             Output\Console::class => AutoWireFactory::class,
 
@@ -79,7 +75,12 @@ return [
 
             Process\FactorioProcessFactory::class => AutoWireFactory::class,
             Process\ModDownloadProcessFactory::class => AutoWireFactory::class,
+            Process\ModDownloadProcessManager::class => AutoWireFactory::class,
             Process\RenderIconProcessFactory::class => AutoWireFactory::class,
+
+            Service\FactorioExecutionService::class => AutoWireFactory::class,
+            Service\ModDownloadService::class => AutoWireFactory::class,
+            Service\ModFileService::class => AutoWireFactory::class,
 
             // 3rd-party services
             ConsoleOutputInterface::class => Output\ConsoleOutputFactory::class,

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Mod;
+namespace FactorioItemBrowser\Export\Service;
 
 use Exception;
 use FactorioItemBrowser\Export\Entity\InfoJson;
@@ -13,30 +13,23 @@ use FactorioItemBrowser\Export\Helper\ZipArchiveExtractor;
 use JMS\Serializer\SerializerInterface;
 
 /**
- * The manager of all the mod files.
+ * The service managing the files of the mods.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class ModFileManager
+class ModFileService
 {
-    /**
-     * The filename of the info file.
-     */
-    protected const FILENAME_INFO = 'info.json';
-
-    /**
-     * The default mods actually shipped with Factorio.
-     */
-    protected const DEFAULT_MODS = [
+    private const FILENAME_INFO = 'info.json';
+    private const DEFAULT_MODS = [
         'base',
         'core',
     ];
 
-    protected SerializerInterface $serializer;
-    protected ZipArchiveExtractor $zipArchiveExtractor;
-    protected string $factorioDirectory;
-    protected string $modsDirectory;
+    private SerializerInterface $exportSerializer;
+    private ZipArchiveExtractor $zipArchiveExtractor;
+    private string $factorioDirectory;
+    private string $modsDirectory;
 
     public function __construct(
         SerializerInterface $exportSerializer,
@@ -44,25 +37,25 @@ class ModFileManager
         string $factorioDirectory,
         string $modsDirectory
     ) {
-        $this->serializer = $exportSerializer;
+        $this->exportSerializer = $exportSerializer;
         $this->zipArchiveExtractor = $zipArchiveExtractor;
         $this->factorioDirectory = $factorioDirectory;
         $this->modsDirectory = $modsDirectory;
     }
 
     /**
-     * Extracts the zip file into the working directory of the mods.
+     * Adds the archive of a mod to the local files.
      * @param string $modName
-     * @param string $modZipPath
+     * @param string $archiveFilePath
      * @throws ExportException
      */
-    public function extractModZip(string $modName, string $modZipPath): void
+    public function addModArchive(string $modName, string $archiveFilePath): void
     {
-        $this->zipArchiveExtractor->extract($modZipPath, $this->getLocalDirectory($modName));
+        $this->zipArchiveExtractor->extract($archiveFilePath, $this->getLocalDirectory($modName));
     }
 
     /**
-     * Returns the info from the mod.
+     * Returns the meta info from the mod.
      * @param string $modName
      * @return InfoJson
      * @throws ExportException
@@ -72,7 +65,7 @@ class ModFileManager
         $contents = $this->readFile($modName, self::FILENAME_INFO);
 
         try {
-            return $this->serializer->deserialize($contents, InfoJson::class, 'json');
+            return $this->exportSerializer->deserialize($contents, InfoJson::class, 'json');
         } catch (Exception $e) {
             throw new InvalidInfoJsonFileException($modName);
         }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Exception;
 
 use Exception;
-use FactorioItemBrowser\Export\Exception\MissingModException;
+use FactorioItemBrowser\Export\Exception\MissingModsException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Exception\MissingModException
+ * @coversDefaultClass \FactorioItemBrowser\Export\Exception\MissingModsException
  */
 class MissingModExceptionTest extends TestCase
 {
@@ -30,7 +30,7 @@ class MissingModExceptionTest extends TestCase
         /* @var Exception&MockObject $previous */
         $previous = $this->createMock(Exception::class);
 
-        $exception = new MissingModException($modName, $previous);
+        $exception = new MissingModsException($modName, $previous);
 
         $this->assertSame($expectedMessage, $exception->getMessage());
         $this->assertSame($previous, $exception->getPrevious());

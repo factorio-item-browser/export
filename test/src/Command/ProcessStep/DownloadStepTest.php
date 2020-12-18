@@ -8,7 +8,7 @@ use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Command\ProcessStep\DownloadStep;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Mod\ModDownloader;
+use FactorioItemBrowser\Export\Service\ModDownloadService;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 use FactorioItemBrowser\ExportQueue\Client\Entity\Job;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -28,7 +28,7 @@ class DownloadStepTest extends TestCase
 
     /**
      * The mocked mod downloader.
-     * @var ModDownloader&MockObject
+     * @var ModDownloadService&MockObject
      */
     protected $modDownloader;
 
@@ -39,7 +39,7 @@ class DownloadStepTest extends TestCase
     {
         parent::setUp();
 
-        $this->modDownloader = $this->createMock(ModDownloader::class);
+        $this->modDownloader = $this->createMock(ModDownloadService::class);
     }
 
     /**

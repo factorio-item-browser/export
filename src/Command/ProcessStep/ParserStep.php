@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
-use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Parser\ParserInterface;
 use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 
@@ -18,7 +17,7 @@ use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 class ParserStep implements ProcessStepInterface
 {
     /** @var array<ParserInterface> */
-    protected array $parsers;
+    private array $parsers;
 
     /**
      * @param array<ParserInterface> $exportParsers
@@ -28,29 +27,16 @@ class ParserStep implements ProcessStepInterface
         $this->parsers = $exportParsers;
     }
 
-    /**
-     * Returns the label to identify the step.
-     * @return string
-     */
     public function getLabel(): string
     {
         return 'Parsing the dumped data';
     }
 
-    /**
-     * Returns the status to set on the export job before running this step.
-     * @return string
-     */
     public function getExportJobStatus(): string
     {
         return JobStatus::PROCESSING;
     }
 
-    /**
-     * Runs the process step.
-     * @param ProcessStepData $processStepData
-     * @throws ExportException
-     */
     public function run(ProcessStepData $processStepData): void
     {
         foreach ($this->parsers as $parser) {

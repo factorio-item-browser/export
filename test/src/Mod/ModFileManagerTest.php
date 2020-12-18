@@ -11,7 +11,7 @@ use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
 use FactorioItemBrowser\Export\Exception\InvalidInfoJsonFileException;
 use FactorioItemBrowser\Export\Exception\InvalidZipArchiveException;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Service\ModFileService;
 use JMS\Serializer\SerializerInterface;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -23,7 +23,7 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Mod\ModFileManager
+ * @coversDefaultClass \FactorioItemBrowser\Export\Service\ModFileService
  */
 class ModFileManagerTest extends TestCase
 {
@@ -54,7 +54,7 @@ class ModFileManagerTest extends TestCase
     {
         $factorioDirectory = 'abc';
         $modsDirectory = 'def';
-        $manager = new ModFileManager($this->serializer, $factorioDirectory, $modsDirectory);
+        $manager = new ModFileService($this->serializer, $factorioDirectory, $modsDirectory);
 
         $this->assertSame($this->serializer, $this->extractProperty($manager, 'serializer'));
         $this->assertSame($factorioDirectory, $this->extractProperty($manager, 'factorioDirectory'));
@@ -64,7 +64,7 @@ class ModFileManagerTest extends TestCase
     /**
      * Tests the extractModZip method.
      * @throws ExportException
-     * @covers ::extractModZip
+     * @covers ::addModArchive
      */
     public function testExtractModZip(): void
     {
@@ -73,8 +73,8 @@ class ModFileManagerTest extends TestCase
         vfsStream::setup('root');
         $targetDirectory = vfsStream::url('root/foo');
 
-        /* @var ModFileManager&MockObject $manager */
-        $manager = $this->getMockBuilder(ModFileManager::class)
+        /* @var ModFileService&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileService::class)
                         ->onlyMethods(['removeModDirectory', 'getLocalDirectory'])
                         ->setConstructorArgs([$this->serializer, 'baz', 'oof'])
                         ->getMock();
@@ -86,7 +86,7 @@ class ModFileManagerTest extends TestCase
                 ->with($this->identicalTo($expectedModName))
                 ->willReturn($targetDirectory);
 
-        $manager->extractModZip('foo', __DIR__ . '/../../asset/mod/valid.zip');
+        $manager->addModArchive('foo', __DIR__ . '/../../asset/mod/valid.zip');
 
         $this->assertSame('abc', file_get_contents(vfsStream::url('root/foo/abc')));
         $this->assertSame('def', file_get_contents(vfsStream::url('root/foo/def')));
@@ -98,27 +98,27 @@ class ModFileManagerTest extends TestCase
     /**
      * Tests the extractModZip method.
      * @throws ExportException
-     * @covers ::extractModZip
+     * @covers ::addModArchive
      */
     public function testExtractModZipWithInvalidZip(): void
     {
         $this->expectException(InvalidZipArchiveException::class);
 
-        $manager = new ModFileManager($this->serializer, 'foo', 'bar');
-        $manager->extractModZip('foo', __DIR__ . '/../../asset/mod/invalid.zip');
+        $manager = new ModFileService($this->serializer, 'foo', 'bar');
+        $manager->addModArchive('foo', __DIR__ . '/../../asset/mod/invalid.zip');
     }
 
     /**
      * Tests the extractModZip method.
      * @throws ExportException
-     * @covers ::extractModZip
+     * @covers ::addModArchive
      */
     public function testExtractModZipWithInvalidModDirectory(): void
     {
         $this->expectException(InvalidZipArchiveException::class);
 
-        $manager = new ModFileManager($this->serializer, 'foo', 'bar');
-        $manager->extractModZip('foo', __DIR__ . '/../../asset/mod/invalidDirectory.zip');
+        $manager = new ModFileService($this->serializer, 'foo', 'bar');
+        $manager->addModArchive('foo', __DIR__ . '/../../asset/mod/invalidDirectory.zip');
     }
 
     /**
@@ -143,8 +143,8 @@ class ModFileManagerTest extends TestCase
                          )
                          ->willReturn($infoJson);
 
-        /* @var ModFileManager&MockObject $manager */
-        $manager = $this->getMockBuilder(ModFileManager::class)
+        /* @var ModFileService&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileService::class)
                         ->onlyMethods(['readFile'])
                         ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
                         ->getMock();
@@ -179,8 +179,8 @@ class ModFileManagerTest extends TestCase
 
         $this->expectException(InvalidInfoJsonFileException::class);
 
-        /* @var ModFileManager&MockObject $manager */
-        $manager = $this->getMockBuilder(ModFileManager::class)
+        /* @var ModFileService&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileService::class)
                         ->onlyMethods(['readFile'])
                         ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
                         ->getMock();
@@ -206,8 +206,8 @@ class ModFileManagerTest extends TestCase
         vfsStream::setup('root');
         file_put_contents(vfsStream::url('root/def'), $contents);
 
-        /* @var ModFileManager&MockObject $manager */
-        $manager = $this->getMockBuilder(ModFileManager::class)
+        /* @var ModFileService&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileService::class)
                         ->onlyMethods(['getLocalDirectory'])
                         ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
                         ->getMock();
@@ -235,8 +235,8 @@ class ModFileManagerTest extends TestCase
 
         $this->expectException(FileNotFoundInModException::class);
 
-        /* @var ModFileManager&MockObject $manager */
-        $manager = $this->getMockBuilder(ModFileManager::class)
+        /* @var ModFileService&MockObject $manager */
+        $manager = $this->getMockBuilder(ModFileService::class)
                         ->onlyMethods(['getLocalDirectory'])
                         ->setConstructorArgs([$this->serializer, 'foo', 'bar'])
                         ->getMock();
@@ -258,7 +258,7 @@ class ModFileManagerTest extends TestCase
         $modName = 'def';
         $expectedResult = 'abc/def';
 
-        $manager = new ModFileManager($this->serializer, 'foo', $modsDirectory);
+        $manager = new ModFileService($this->serializer, 'foo', $modsDirectory);
         $result = $manager->getLocalDirectory($modName);
 
         $this->assertSame($expectedResult, $result);
@@ -274,7 +274,7 @@ class ModFileManagerTest extends TestCase
         $modName = 'base';
         $expectedResult = 'abc/data/base';
 
-        $manager = new ModFileManager($this->serializer, $factorioDirectory, 'foo');
+        $manager = new ModFileService($this->serializer, $factorioDirectory, 'foo');
         $result = $manager->getLocalDirectory($modName);
 
         $this->assertSame($expectedResult, $result);
