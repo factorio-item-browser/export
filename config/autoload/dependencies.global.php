@@ -13,6 +13,7 @@ namespace FactorioItemBrowser\Export;
 
 use BluePsyduck\FactorioModPortalClient\Constant\ConfigKey as ModConfigKey;
 use BluePsyduck\FactorioTranslator\Translator as FactorioTranslator;
+use BluePsyduck\JmsSerializerFactory\JmsSerializerFactory;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use JMS\Serializer\SerializerInterface;
@@ -78,6 +79,9 @@ return [
             Process\ModDownloadProcessManager::class => AutoWireFactory::class,
             Process\RenderIconProcessFactory::class => AutoWireFactory::class,
 
+            Serializer\Handler\ConstructorHandler::class => AutoWireFactory::class,
+            Serializer\Handler\RawHandler::class => AutoWireFactory::class,
+
             Service\FactorioExecutionService::class => AutoWireFactory::class,
             Service\ModDownloadService::class => AutoWireFactory::class,
             Service\ModFileService::class => AutoWireFactory::class,
@@ -86,7 +90,7 @@ return [
             ConsoleOutputInterface::class => Output\ConsoleOutputFactory::class,
             Filesystem::class => AutoWireFactory::class,
             LoggerInterface::class => Log\LoggerFactory::class,
-            SerializerInterface::class . ' $exportSerializer' => Serializer\SerializerFactory::class,
+            SerializerInterface::class . ' $exportSerializer' => new JmsSerializerFactory('jms-serializers', 'export'),
             FactorioTranslator::class => Translator\TranslatorFactory::class,
 
             // Auto-wire helpers

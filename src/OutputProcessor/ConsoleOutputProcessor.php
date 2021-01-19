@@ -19,7 +19,7 @@ class ConsoleOutputProcessor implements OutputProcessorInterface
     private const IGNORED_PREFIX = '>DUMP>';
 
     private Console $console;
-    private ?ProcessOutput $processOutput = null;
+    private ProcessOutput $processOutput;
 
     public function __construct(Console $console)
     {
@@ -29,7 +29,7 @@ class ConsoleOutputProcessor implements OutputProcessorInterface
     public function processLine(string $outputLine, Dump $dump): void
     {
         if (strpos($outputLine, self::IGNORED_PREFIX) === false) {
-            if ($this->processOutput === null) {
+            if (!isset($this->processOutput)) {
                 $this->processOutput = $this->console->createProcessOutput();
             }
 

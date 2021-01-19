@@ -32,8 +32,6 @@ class FactorioExecutionService
     protected string $instancesDirectory;
     protected string $version;
 
-    protected string $combinationInstanceDirectory = '';
-
     public function __construct(
         SerializerInterface $exportSerializer,
         FactorioProcessFactory $factorioProcessFactory,

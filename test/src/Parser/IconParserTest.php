@@ -10,6 +10,7 @@ use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Icon as DumpIcon;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use FactorioItemBrowser\ExportData\Collection\ChunkedCollection;
 use FactorioItemBrowser\ExportData\Entity\Icon as ExportIcon;
@@ -23,12 +24,14 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Parser\IconParser
+ * @covers \FactorioItemBrowser\Export\Parser\IconParser
  */
 class IconParserTest extends TestCase
 {
     use ReflectionTrait;
 
+    /** @var Console&MockObject */
+    private Console $console;
     /** @var HashCalculator&MockObject */
     private HashCalculator $hashCalculator;
     /** @var MapperManagerInterface&MockObject */
@@ -36,25 +39,44 @@ class IconParserTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->console = $this->createMock(Console::class);
         $this->hashCalculator = $this->createMock(HashCalculator::class);
         $this->mapperManager = $this->createMock(MapperManagerInterface::class);
     }
 
     /**
-     * @throws ReflectionException
-     * @covers ::__construct
+     * @param array<string> $methods
+     * @return IconParser&MockObject
      */
-    public function testConstruct(): void
+    private function createInstance(array $methods = []): IconParser
     {
-        $parser = new IconParser($this->hashCalculator, $this->mapperManager);
-
-        $this->assertSame($this->hashCalculator, $this->extractProperty($parser, 'hashCalculator'));
-        $this->assertSame($this->mapperManager, $this->extractProperty($parser, 'mapperManager'));
+        return $this->getMockBuilder(IconParser::class)
+                    ->disableProxyingToOriginalMethods()
+                    ->onlyMethods($methods)
+                    ->setConstructorArgs([
+                        $this->console,
+                        $this->hashCalculator,
+                        $this->mapperManager,
+                    ])
+                    ->getMock();
     }
 
     /**
      * @throws ExportException
-     * @covers ::prepare
+     */
+    public function testEmptyMethods(): void
+    {
+        $dump = $this->createMock(Dump::class);
+        $exportData = $this->createMock(ExportData::class);
+
+        $instance = $this->createInstance();
+        $instance->parse($dump, $exportData);
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * @throws ExportException
      */
     public function testPrepare(): void
     {
@@ -71,29 +93,31 @@ class IconParserTest extends TestCase
         $dump = new Dump();
         $dump->icons = [$dumpIcon1, $dumpIcon2];
 
-        $parser = $this->getMockBuilder(IconParser::class)
-                       ->onlyMethods(['isIconValid', 'createIcon', 'addParsedIcon'])
-                       ->setConstructorArgs([$this->hashCalculator, $this->mapperManager])
-                       ->getMock();
-        $parser->expects($this->exactly(2))
-               ->method('isIconValid')
-               ->withConsecutive(
-                   [$this->identicalTo($dumpIcon1)],
-                   [$this->identicalTo($dumpIcon2)]
-               )
-               ->willReturnOnConsecutiveCalls(
-                   true,
-                   false
-               );
-        $parser->expects($this->once())
-               ->method('createIcon')
-               ->with($this->identicalTo($dumpIcon1))
-               ->willReturn($mappedIcon);
-        $parser->expects($this->once())
-               ->method('addParsedIcon')
-               ->with($this->identicalTo('abc'), $this->identicalTo('def'), $this->identicalTo($mappedIcon));
+        $this->console->expects($this->once())
+                      ->method('iterateWithProgressbar')
+                      ->with($this->isType('string'), $this->identicalTo([$dumpIcon1, $dumpIcon2]))
+                      ->willReturnCallback(fn () => yield from [$dumpIcon1, $dumpIcon2]);
 
-        $parser->prepare($dump);
+        $instance = $this->createInstance(['isIconValid', 'createIcon', 'addParsedIcon']);
+        $instance->expects($this->exactly(2))
+                 ->method('isIconValid')
+                 ->withConsecutive(
+                     [$this->identicalTo($dumpIcon1)],
+                     [$this->identicalTo($dumpIcon2)]
+                 )
+                 ->willReturnOnConsecutiveCalls(
+                     true,
+                     false
+                 );
+        $instance->expects($this->once())
+                 ->method('createIcon')
+                 ->with($this->identicalTo($dumpIcon1))
+                 ->willReturn($mappedIcon);
+        $instance->expects($this->once())
+                 ->method('addParsedIcon')
+                 ->with($this->identicalTo('abc'), $this->identicalTo('def'), $this->identicalTo($mappedIcon));
+
+        $instance->prepare($dump);
     }
 
     /**
@@ -114,7 +138,6 @@ class IconParserTest extends TestCase
      * @param string $type
      * @param bool $expectedResult
      * @throws ReflectionException
-     * @covers ::isIconValid
      * @dataProvider provideIsIconValid
      */
     public function testIsIconValid(string $type, bool $expectedResult): void
@@ -122,15 +145,14 @@ class IconParserTest extends TestCase
         $dumpIcon = new DumpIcon();
         $dumpIcon->type = $type;
 
-        $parser = new IconParser($this->hashCalculator, $this->mapperManager);
-        $result = $this->invokeMethod($parser, 'isIconValid', $dumpIcon);
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'isIconValid', $dumpIcon);
 
         $this->assertSame($expectedResult, $result);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::createIcon
      */
     public function testCreateIcon(): void
     {
@@ -156,8 +178,8 @@ class IconParserTest extends TestCase
                             ->with($this->identicalTo($dumpIcon), $this->isInstanceOf(ExportIcon::class))
                             ->willReturn($exportIcon);
 
-        $parser = new IconParser($this->hashCalculator, $this->mapperManager);
-        $result = $this->invokeMethod($parser, 'createIcon', $dumpIcon);
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'createIcon', $dumpIcon);
 
         $this->assertEquals($expectedResult, $result);
     }
@@ -229,7 +251,6 @@ class IconParserTest extends TestCase
      * @param ExportIcon $icon
      * @param array<string, array<string, ExportIcon>> $expectedParsedIcons
      * @throws ReflectionException
-     * @covers ::addParsedIcon
      * @dataProvider provideAddParsedIcon
      */
     public function testAddParsedIcon(
@@ -239,33 +260,17 @@ class IconParserTest extends TestCase
         ExportIcon $icon,
         array $expectedParsedIcons
     ): void {
-        $parser = new IconParser($this->hashCalculator, $this->mapperManager);
-        $this->injectProperty($parser, 'parsedIcons', $parsedIcons);
+        $instance = $this->createInstance();
+        $this->injectProperty($instance, 'parsedIcons', $parsedIcons);
 
-        $this->invokeMethod($parser, 'addParsedIcon', $type, $name, $icon);
+        $this->invokeMethod($instance, 'addParsedIcon', $type, $name, $icon);
 
-        $this->assertSame($expectedParsedIcons, $this->extractProperty($parser, 'parsedIcons'));
-    }
-
-    /**
-     * @throws ExportException
-     * @covers ::parse
-     */
-    public function testParse(): void
-    {
-        $dump = $this->createMock(Dump::class);
-        $exportData = $this->createMock(ExportData::class);
-
-        $parser = new IconParser($this->hashCalculator, $this->mapperManager);
-        $parser->parse($dump, $exportData);
-
-        $this->addToAssertionCount(1);
+        $this->assertSame($expectedParsedIcons, $this->extractProperty($instance, 'parsedIcons'));
     }
 
     /**
      * @throws ExportException
      * @throws ReflectionException
-     * @covers ::validate
      */
     public function testValidate(): void
     {
@@ -287,15 +292,14 @@ class IconParserTest extends TestCase
                    ->method('getIcons')
                    ->willReturn($icons);
 
-        $parser = new IconParser($this->hashCalculator, $this->mapperManager);
-        $this->injectProperty($parser, 'usedIcons', $usedIcons);
+        $instance = $this->createInstance();
+        $this->injectProperty($instance, 'usedIcons', $usedIcons);
 
-        $parser->validate($exportData);
+        $instance->validate($exportData);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::getIconId
      */
     public function testGetIconId(): void
     {
@@ -315,19 +319,18 @@ class IconParserTest extends TestCase
         $usedIcons = ['foo' => $icon2];
         $expectedUsedIcons = ['foo' => $icon2, $iconId => $icon1];
 
-        $parser = new IconParser($this->hashCalculator, $this->mapperManager);
-        $this->injectProperty($parser, 'parsedIcons', $parsedIcons);
-        $this->injectProperty($parser, 'usedIcons', $usedIcons);
+        $instance = $this->createInstance();
+        $this->injectProperty($instance, 'parsedIcons', $parsedIcons);
+        $this->injectProperty($instance, 'usedIcons', $usedIcons);
 
-        $result = $parser->getIconId($type, $name);
+        $result = $instance->getIconId($type, $name);
 
         $this->assertSame($iconId, $result);
-        $this->assertSame($expectedUsedIcons, $this->extractProperty($parser, 'usedIcons'));
+        $this->assertSame($expectedUsedIcons, $this->extractProperty($instance, 'usedIcons'));
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::getIconId
      */
     public function testGetIconIdWithoutMatch(): void
     {
@@ -340,13 +343,13 @@ class IconParserTest extends TestCase
             $this->createMock(ExportIcon::class),
         ];
 
-        $parser = new IconParser($this->hashCalculator, $this->mapperManager);
-        $this->injectProperty($parser, 'parsedIcons', $parsedIcons);
-        $this->injectProperty($parser, 'usedIcons', $usedIcons);
+        $instance = $this->createInstance();
+        $this->injectProperty($instance, 'parsedIcons', $parsedIcons);
+        $this->injectProperty($instance, 'usedIcons', $usedIcons);
 
-        $result = $parser->getIconId($type, $name);
+        $result = $instance->getIconId($type, $name);
 
         $this->assertSame('', $result);
-        $this->assertSame($usedIcons, $this->extractProperty($parser, 'usedIcons'));
+        $this->assertSame($usedIcons, $this->extractProperty($instance, 'usedIcons'));
     }
 }

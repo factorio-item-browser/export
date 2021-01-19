@@ -21,7 +21,7 @@ use JMS\Serializer\SerializerInterface;
 class ModFileService
 {
     private const FILENAME_INFO = 'info.json';
-    private const DEFAULT_MODS = [
+    private const VANILLA_MODS = [
         'base',
         'core',
     ];
@@ -94,7 +94,7 @@ class ModFileService
      */
     public function getLocalDirectory(string $modName): string
     {
-        if (in_array($modName, self::DEFAULT_MODS, true)) {
+        if (in_array($modName, self::VANILLA_MODS, true)) {
             return $this->factorioDirectory . '/data/' . $modName;
         }
         return $this->modsDirectory . '/' . $modName;

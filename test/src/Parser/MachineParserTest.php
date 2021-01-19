@@ -10,6 +10,7 @@ use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Machine as DumpMachine;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Parser\IconParser;
 use FactorioItemBrowser\Export\Parser\MachineParser;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
@@ -25,12 +26,14 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Parser\MachineParser
+ * @covers \FactorioItemBrowser\Export\Parser\MachineParser
  */
 class MachineParserTest extends TestCase
 {
     use ReflectionTrait;
 
+    /** @var Console&MockObject */
+    private Console $console;
     /** @var IconParser&MockObject */
     private IconParser $iconParser;
     /** @var MapperManagerInterface&MockObject */
@@ -40,41 +43,47 @@ class MachineParserTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->console = $this->createMock(Console::class);
         $this->iconParser = $this->createMock(IconParser::class);
         $this->mapperManager = $this->createMock(MapperManagerInterface::class);
         $this->translationParser = $this->createMock(TranslationParser::class);
     }
 
     /**
-     * @throws ReflectionException
-     * @covers ::__construct
+     * @param array<string> $methods
+     * @return MachineParser&MockObject
      */
-    public function testConstruct(): void
+    private function createInstance(array $methods = []): MachineParser
     {
-        $parser = new MachineParser($this->iconParser, $this->mapperManager, $this->translationParser);
-
-        $this->assertSame($this->iconParser, $this->extractProperty($parser, 'iconParser'));
-        $this->assertSame($this->mapperManager, $this->extractProperty($parser, 'mapperManager'));
-        $this->assertSame($this->translationParser, $this->extractProperty($parser, 'translationParser'));
+        return $this->getMockBuilder(MachineParser::class)
+                    ->disableProxyingToOriginalMethods()
+                    ->onlyMethods($methods)
+                    ->setConstructorArgs([
+                        $this->console,
+                        $this->iconParser,
+                        $this->mapperManager,
+                        $this->translationParser,
+                    ])
+                    ->getMock();
     }
 
     /**
      * @throws ExportException
-     * @covers ::prepare
      */
-    public function testPrepare(): void
+    public function testEmptyMethods(): void
     {
         $dump = $this->createMock(Dump::class);
+        $exportData = $this->createMock(ExportData::class);
 
-        $parser = new MachineParser($this->iconParser, $this->mapperManager, $this->translationParser);
-        $parser->prepare($dump);
+        $instance = $this->createInstance();
+        $instance->prepare($dump);
+        $instance->validate($exportData);
 
         $this->addToAssertionCount(1);
     }
 
     /**
      * @throws ExportException
-     * @covers ::parse
      */
     public function testParse(): void
     {
@@ -99,27 +108,28 @@ class MachineParserTest extends TestCase
                    ->method('getMachines')
                    ->willReturn($machines);
 
-        $parser = $this->getMockBuilder(MachineParser::class)
-                       ->onlyMethods(['createMachine'])
-                       ->setConstructorArgs([$this->iconParser, $this->mapperManager, $this->translationParser])
-                       ->getMock();
-        $parser->expects($this->exactly(2))
-               ->method('createMachine')
-               ->withConsecutive(
-                   [$this->identicalTo($dumpMachine1)],
-                   [$this->identicalTo($dumpMachine2)]
-               )
-               ->willReturnOnConsecutiveCalls(
-                   $exportMachine1,
-                   $exportMachine2
-               );
+        $this->console->expects($this->once())
+                      ->method('iterateWithProgressbar')
+                      ->with($this->isType('string'), $this->identicalTo([$dumpMachine1, $dumpMachine2]))
+                      ->willReturnCallback(fn () => yield from [$dumpMachine1, $dumpMachine2]);
 
-        $parser->parse($dump, $exportData);
+        $instance = $this->createInstance(['createMachine']);
+        $instance->expects($this->exactly(2))
+                 ->method('createMachine')
+                 ->withConsecutive(
+                     [$this->identicalTo($dumpMachine1)],
+                     [$this->identicalTo($dumpMachine2)]
+                 )
+                 ->willReturnOnConsecutiveCalls(
+                     $exportMachine1,
+                     $exportMachine2
+                 );
+
+        $instance->parse($dump, $exportData);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::createMachine
      */
     public function testCreateMachine(): void
     {
@@ -165,23 +175,9 @@ class MachineParserTest extends TestCase
                                     ],
                                 );
 
-        $parser = new MachineParser($this->iconParser, $this->mapperManager, $this->translationParser);
-        $result = $this->invokeMethod($parser, 'createMachine', $dumpMachine);
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'createMachine', $dumpMachine);
 
         $this->assertEquals($expectedResult, $result);
-    }
-
-    /**
-     * @throws ExportException
-     * @covers ::validate
-     */
-    public function testValidate(): void
-    {
-        $exportData = $this->createMock(ExportData::class);
-
-        $parser = new MachineParser($this->iconParser, $this->mapperManager, $this->translationParser);
-        $parser->validate($exportData);
-
-        $this->addToAssertionCount(1);
     }
 }

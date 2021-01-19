@@ -20,7 +20,8 @@
     "ext-zip": "*",
     "bluepsyduck/factorio-mod-portal-client": "^1.2",
     "bluepsyduck/factorio-translator": "^1.0",
-    "bluepsyduck/mapper-manager": "dev-feature/generics",
+    "bluepsyduck/jms-serializer-factory": "^1.0",
+    "bluepsyduck/mapper-manager": "1.2",
     "bluepsyduck/symfony-process-manager": "^1.0",
     "bluepsyduck/laminas-autowire-factory": "^1.0",
     "doctrine/cache": "^1.8",
@@ -38,12 +39,12 @@
     "symfony/process": "^5.0"
   },
   "require-dev": {
-    "bluepsyduck/test-helper": "^1.0",
+    "bluepsyduck/test-helper": "^2.0",
     "mikey179/vfsstream": "^1.6",
     "phpstan/phpstan": "^0.12",
     "phpstan/phpstan-phpunit": "^0.12",
     "phpstan/phpstan-strict-rules": "^0.12",
-    "phpunit/phpunit": "^8.0",
+    "phpunit/phpunit": "^9.0",
     "rregeer/phpunit-coverage-check": "^0.3",
     "squizlabs/php_codesniffer": "^3.3"
   },

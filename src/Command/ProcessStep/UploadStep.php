@@ -21,12 +21,14 @@ use Psr\Log\LoggerInterface;
  */
 class UploadStep implements ProcessStepInterface
 {
-    protected Console $console;
-    protected ExportDataService $exportDataService;
-    protected LoggerInterface $logger;
-    protected string $ftpHost;
-    protected string $ftpUsername;
-    protected string $ftpPassword;
+    private Console $console;
+    private ExportDataService $exportDataService;
+    private LoggerInterface $logger;
+    private string $ftpHost;
+    private string $ftpUsername;
+    private string $ftpPassword;
+
+    private FtpClient $ftpClient;
 
     public function __construct(
         Console $console,
@@ -42,6 +44,8 @@ class UploadStep implements ProcessStepInterface
         $this->ftpHost = $uploadFtpHost;
         $this->ftpUsername = $uploadFtpUsername;
         $this->ftpPassword = $uploadFtpPassword;
+
+        $this->ftpClient = new FtpClient();
     }
 
     public function getLabel(): string
@@ -61,12 +65,11 @@ class UploadStep implements ProcessStepInterface
         $this->console->writeAction(sprintf('Uploading file %s', basename($fileName)));
 
         try {
-            $ftp = $this->createFtpClient();
-            $ftp->connect($this->ftpHost);
-            $ftp->login($this->ftpUsername, $this->ftpPassword);
-            $ftp->pasv(true);
+            $this->ftpClient->connect($this->ftpHost);
+            $this->ftpClient->login($this->ftpUsername, $this->ftpPassword);
+            $this->ftpClient->pasv(true);
 
-            $ftp->putFromPath($fileName);
+            $this->ftpClient->putFromPath($fileName);
 
             $this->logger->info('Export file uploaded', [
                 'combination' => $processStepData->exportData->getCombinationId(),
@@ -75,10 +78,5 @@ class UploadStep implements ProcessStepInterface
         } catch (FtpException $e) {
             throw new UploadFailedException($e->getMessage(), $e);
         }
-    }
-
-    protected function createFtpClient(): FtpClient
-    {
-        return new FtpClient();
     }
 }

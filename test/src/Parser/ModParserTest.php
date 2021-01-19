@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Parser;
 
+use BluePsyduck\FactorioModPortalClient\Entity\Version;
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Service\ModFileService;
 use FactorioItemBrowser\Export\Parser\ModParser;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
@@ -27,12 +29,14 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Parser\ModParser
+ * @covers \FactorioItemBrowser\Export\Parser\ModParser
  */
 class ModParserTest extends TestCase
 {
     use ReflectionTrait;
 
+    /** @var Console&MockObject */
+    private Console $console;
     /** @var HashCalculator&MockObject */
     private HashCalculator $hashCalculator;
     /** @var ModFileService&MockObject */
@@ -42,43 +46,47 @@ class ModParserTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->console = $this->createMock(Console::class);
         $this->hashCalculator = $this->createMock(HashCalculator::class);
         $this->modFileManager = $this->createMock(ModFileService::class);
         $this->translationParser = $this->createMock(TranslationParser::class);
     }
 
     /**
-     * @throws ReflectionException
-     * @covers ::__construct
+     * @param array<string> $methods
+     * @return ModParser&MockObject
      */
-    public function testConstruct(): void
+    private function createInstance(array $methods = []): ModParser
     {
-        $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
-
-        $this->assertSame($this->hashCalculator, $this->extractProperty($parser, 'hashCalculator'));
-        $this->assertSame($this->modFileManager, $this->extractProperty($parser, 'modFileManager'));
-        $this->assertSame($this->translationParser, $this->extractProperty($parser, 'translationParser'));
+        return $this->getMockBuilder(ModParser::class)
+                    ->disableProxyingToOriginalMethods()
+                    ->onlyMethods($methods)
+                    ->setConstructorArgs([
+                        $this->console,
+                        $this->hashCalculator,
+                        $this->modFileManager,
+                        $this->translationParser,
+                    ])
+                    ->getMock();
     }
 
     /**
      * @throws ExportException
-     * @covers ::prepare
      */
-    public function testPrepare(): void
+    public function testEmptyMethods(): void
     {
-        /* @var Dump&MockObject $dump */
         $dump = $this->createMock(Dump::class);
+        $exportData = $this->createMock(ExportData::class);
 
-        $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
-        $parser->prepare($dump);
+        $instance = $this->createInstance();
+        $instance->prepare($dump);
+        $instance->validate($exportData);
 
         $this->addToAssertionCount(1);
     }
 
     /**
-     * Tests the parse method.
      * @throws ExportException
-     * @covers ::parse
      */
     public function testParse(): void
     {
@@ -123,37 +131,38 @@ class ModParserTest extends TestCase
                    ->method('getIcons')
                    ->willReturn($icons);
 
-        $parser = $this->getMockBuilder(ModParser::class)
-                       ->onlyMethods(['createMod', 'createThumbnail'])
-                       ->setConstructorArgs([$this->hashCalculator, $this->modFileManager, $this->translationParser])
-                       ->getMock();
-        $parser->expects($this->exactly(2))
-               ->method('createMod')
-               ->withConsecutive(
-                   [$this->identicalTo('abc')],
-                   [$this->identicalTo('def')]
-               )
-               ->willReturnOnConsecutiveCalls(
-                   $mod1,
-                   $mod2
-               );
-        $parser->expects($this->exactly(2))
-               ->method('createThumbnail')
-               ->withConsecutive(
-                   [$this->identicalTo($mod1)],
-                   [$this->identicalTo($mod2)]
-               )
-               ->willReturnOnConsecutiveCalls(
-                   $thumbnail,
-                   null
-               );
+        $this->console->expects($this->once())
+                      ->method('iterateWithProgressbar')
+                      ->with($this->isType('string'), $this->identicalTo($modNames))
+                      ->willReturnCallback(fn () => yield from $modNames);
 
-        $parser->parse($dump, $exportData);
+        $instance = $this->createInstance(['createMod', 'createThumbnail']);
+        $instance->expects($this->exactly(2))
+                 ->method('createMod')
+                 ->withConsecutive(
+                     [$this->identicalTo('abc')],
+                     [$this->identicalTo('def')]
+                 )
+                 ->willReturnOnConsecutiveCalls(
+                     $mod1,
+                     $mod2
+                 );
+        $instance->expects($this->exactly(2))
+                 ->method('createThumbnail')
+                 ->withConsecutive(
+                     [$this->identicalTo($mod1)],
+                     [$this->identicalTo($mod2)]
+                 )
+                 ->willReturnOnConsecutiveCalls(
+                     $thumbnail,
+                     null
+                 );
+
+        $instance->parse($dump, $exportData);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::createMod
      */
     public function testCreateMod(): void
     {
@@ -162,10 +171,10 @@ class ModParserTest extends TestCase
         $expectedDescriptionTranslation = ['mod-description.abc'];
 
         $infoJson = new InfoJson();
-        $infoJson->setVersion('1.2.3')
-                 ->setAuthor('def')
-                 ->setTitle('ghi')
-                 ->setDescription('jkl');
+        $infoJson->version = new Version('1.2.3');
+        $infoJson->author = 'def';
+        $infoJson->title = 'ghi';
+        $infoJson->description = 'jkl';
 
         $expectedMod = new Mod();
         $expectedMod->name = 'abc';
@@ -192,15 +201,14 @@ class ModParserTest extends TestCase
                                     ],
                                 );
 
-        $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
-        $result = $this->invokeMethod($parser, 'createMod', $modName);
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'createMod', $modName);
 
         $this->assertEquals($expectedMod, $result);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::createThumbnail
      */
     public function testCreateThumbnail(): void
     {
@@ -229,23 +237,19 @@ class ModParserTest extends TestCase
                              ->with($this->equalTo($expectedThumbnail))
                              ->willReturn($thumbnailId);
 
-        $parser = $this->getMockBuilder(ModParser::class)
-                       ->onlyMethods(['getThumbnailSize'])
-                       ->setConstructorArgs([$this->hashCalculator, $this->modFileManager, $this->translationParser])
-                       ->getMock();
-        $parser->expects($this->once())
-               ->method('getThumbnailSize')
-               ->with($this->identicalTo($mod))
-               ->willReturn($size);
+        $instance = $this->createInstance(['getThumbnailSize']);
+        $instance->expects($this->once())
+                 ->method('getThumbnailSize')
+                 ->with($this->identicalTo($mod))
+                 ->willReturn($size);
 
-        $result = $this->invokeMethod($parser, 'createThumbnail', $mod);
+        $result = $this->invokeMethod($instance, 'createThumbnail', $mod);
 
         $this->assertEquals($expectedResult, $result);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::createThumbnail
      */
     public function testCreateThumbnailWithoutSize(): void
     {
@@ -257,23 +261,19 @@ class ModParserTest extends TestCase
         $this->hashCalculator->expects($this->never())
                              ->method('hashIcon');
 
-        $parser = $this->getMockBuilder(ModParser::class)
-                       ->onlyMethods(['getThumbnailSize'])
-                       ->setConstructorArgs([$this->hashCalculator, $this->modFileManager, $this->translationParser])
-                       ->getMock();
-        $parser->expects($this->once())
-               ->method('getThumbnailSize')
-               ->with($this->identicalTo($mod))
-               ->willReturn(0);
+        $instance = $this->createInstance(['getThumbnailSize']);
+        $instance->expects($this->once())
+                 ->method('getThumbnailSize')
+                 ->with($this->identicalTo($mod))
+                 ->willReturn(0);
 
-        $result = $this->invokeMethod($parser, 'createThumbnail', $mod);
+        $result = $this->invokeMethod($instance, 'createThumbnail', $mod);
 
         $this->assertNull($result);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::getThumbnailSize
      */
     public function testGetThumbnailSize(): void
     {
@@ -289,15 +289,14 @@ class ModParserTest extends TestCase
                              ->with($this->identicalTo($modName), $this->identicalTo('thumbnail.png'))
                              ->willReturn($content);
 
-        $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
-        $result = $this->invokeMethod($parser, 'getThumbnailSize', $mod);
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'getThumbnailSize', $mod);
 
         $this->assertSame($expectedResult, $result);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::getThumbnailSize
      */
     public function testGetThumbnailSizeWithoutThumbnail(): void
     {
@@ -312,15 +311,14 @@ class ModParserTest extends TestCase
                              ->with($this->identicalTo($modName), $this->identicalTo('thumbnail.png'))
                              ->willThrowException($this->createMock(FileNotFoundInModException::class));
 
-        $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
-        $result = $this->invokeMethod($parser, 'getThumbnailSize', $mod);
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'getThumbnailSize', $mod);
 
         $this->assertSame($expectedResult, $result);
     }
 
     /**
      * @throws ReflectionException
-     * @covers ::getThumbnailSize
      */
     public function testGetThumbnailSizeWithInvalidContent(): void
     {
@@ -336,23 +334,9 @@ class ModParserTest extends TestCase
                              ->with($this->identicalTo($modName), $this->identicalTo('thumbnail.png'))
                              ->willReturn($content);
 
-        $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
-        $result = $this->invokeMethod($parser, 'getThumbnailSize', $mod);
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'getThumbnailSize', $mod);
 
         $this->assertSame($expectedResult, $result);
-    }
-
-    /**
-     * @throws ExportException
-     * @covers ::validate
-     */
-    public function testValidate(): void
-    {
-        $exportData = $this->createMock(ExportData::class);
-
-        $parser = new ModParser($this->hashCalculator, $this->modFileManager, $this->translationParser);
-        $parser->validate($exportData);
-
-        $this->addToAssertionCount(1);
     }
 }

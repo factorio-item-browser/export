@@ -18,7 +18,6 @@ class RenderIconProcess extends Process
     private Icon $icon;
 
     /**
-     * Initializes the process.
      * @param Icon $icon
      * @param array<string> $command
      * @param array<string, string> $env
