@@ -50,7 +50,7 @@ class ProgressBar
     public function start(string $key, string $label): self
     {
         $this->lines[$key] = ' ' . $label;
-        $this->statusOutput->overwrite($this->lines);
+        $this->statusOutput->overwrite(array_values($this->lines));
         return $this;
     }
 
@@ -74,7 +74,7 @@ class ProgressBar
     {
         unset($this->lines[$key]);
         $this->progressBar->advance();
-        $this->statusOutput->overwrite($this->lines);
+        $this->statusOutput->overwrite(array_values($this->lines));
         return $this;
     }
 }

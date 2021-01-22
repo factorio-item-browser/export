@@ -134,28 +134,19 @@ class ModDownloadService
     {
         $releases = [];
         foreach ($mods as $mod) {
-            $releases[$mod->getName()] = $this->getReleaseForMod($mod, $currentVersions[$mod->getName()] ?? null);
+            $release = ModUtils::selectLatestRelease($mod, $this->factorioVersion);
+            if ($release === null) {
+                throw new NoValidReleaseException($mod->getName());
+            }
+
+            $currentVersion = $currentVersions[$mod->getName()] ?? null;
+            if ($currentVersion === null || $release->getVersion()->compareTo($currentVersion) > 0) {
+                $releases[$mod->getName()] = $release;
+            } else {
+                $releases[$mod->getName()] = null;
+            }
         }
         return $releases;
-    }
-
-    /**
-     * @param Mod $mod
-     * @param Version|null $currentVersion
-     * @return Release|null
-     * @throws ExportException
-     */
-    protected function getReleaseForMod(Mod $mod, ?Version $currentVersion): ?Release
-    {
-        $release = ModUtils::selectLatestRelease($mod, $this->factorioVersion);
-        if ($release === null) {
-            throw new NoValidReleaseException($mod->getName());
-        }
-
-        if ($currentVersion === null || $release->getVersion()->compareTo($currentVersion) > 0) {
-            return $release;
-        }
-        return null;
     }
 
     /**

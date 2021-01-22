@@ -162,6 +162,10 @@ class Console
         }
     }
 
+    /**
+     * Creates a section in the console for additional output.
+     * @return ConsoleSectionOutput
+     */
     public function createSection(): ConsoleSectionOutput
     {
         return $this->output->section();

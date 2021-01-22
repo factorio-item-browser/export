@@ -21,7 +21,7 @@
     "bluepsyduck/factorio-mod-portal-client": "^1.2",
     "bluepsyduck/factorio-translator": "^1.0",
     "bluepsyduck/jms-serializer-factory": "^1.0",
-    "bluepsyduck/mapper-manager": "1.2",
+    "bluepsyduck/mapper-manager": "^1.2",
     "bluepsyduck/symfony-process-manager": "^1.0",
     "bluepsyduck/laminas-autowire-factory": "^1.0",
     "doctrine/cache": "^1.8",

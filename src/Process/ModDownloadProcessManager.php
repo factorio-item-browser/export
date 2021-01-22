@@ -46,7 +46,7 @@ class ModDownloadProcessManager
         $this->numberOfParallelDownloads = $numberOfParallelDownloads;
     }
 
-    private function initialize(): void
+    protected function getProcessManager(): ProcessManagerInterface
     {
         if (!isset($this->processManager)) {
             $this->processManager = new ProcessManager($this->numberOfParallelDownloads);
@@ -57,23 +57,26 @@ class ModDownloadProcessManager
                 $this->handleProcessFinish($process);
             });
         }
+        return $this->processManager;
+    }
 
+    protected function getProgressBar(): ProgressBar
+    {
         if (!isset($this->progressBar)) {
             $this->progressBar = $this->console->createProgressBar('Downloading mods');
         }
+        return $this->progressBar;
     }
 
     public function add(Mod $mod, Release $release): void
     {
-        $this->initialize();
-        $this->progressBar->setNumberOfSteps($this->progressBar->getNumberOfSteps() + 1);
-        $this->processManager->addProcess($this->modDownloadProcessFactory->create($mod, $release));
+        $this->getProgressBar()->setNumberOfSteps($this->getProgressBar()->getNumberOfSteps() + 1);
+        $this->getProcessManager()->addProcess($this->modDownloadProcessFactory->create($mod, $release));
     }
 
     public function wait(): void
     {
-        $this->initialize();
-        $this->processManager->waitForAllProcesses();
+        $this->getProcessManager()->waitForAllProcesses();
     }
 
     /**
@@ -86,7 +89,7 @@ class ModDownloadProcessManager
             'mod' => $modName,
             'version' => (string) $process->getRelease()->getVersion(),
         ]);
-        $this->progressBar->start($modName, "<fg=yellow>Downloading</> {$modName}");
+        $this->getProgressBar()->start($modName, "<fg=yellow>Downloading</> {$modName}");
     }
 
     /**
@@ -109,9 +112,9 @@ class ModDownloadProcessManager
             'mod' => $modName,
             'version' =>  (string) $process->getRelease()->getVersion(),
         ]);
-        $this->progressBar->update($modName, "<fg=blue>Extracting</> {$modName}");
+        $this->getProgressBar()->update($modName, "<fg=blue>Extracting</> {$modName}");
         $this->modFileService->addModArchive($modName, $process->getDestinationFile());
         unlink($process->getDestinationFile());
-        $this->progressBar->finish($modName);
+        $this->getProgressBar()->finish($modName);
     }
 }

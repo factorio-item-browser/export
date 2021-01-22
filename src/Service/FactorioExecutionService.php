@@ -101,7 +101,7 @@ class FactorioExecutionService
         }
 
         $this->fileSystem->dumpFile(
-            "{$this->instancesDirectory}/{$combinationId}/mods-list.json",
+            "{$this->instancesDirectory}/{$combinationId}/mods/mod-list.json",
             $this->exportSerializer->serialize($this->createModListJson($modNames), 'json'),
         );
     }

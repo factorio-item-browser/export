@@ -17,10 +17,10 @@ use PHPUnit\Framework\TestCase;
  */
 class MissingModExceptionTest extends TestCase
 {
-    public function testConstruct(): void
+    public function test(): void
     {
         $modNames = ['abc', 'def'];
-        $expectedMessage = 'Mod abc, def cannot be found on the Mod Portal.';
+        $expectedMessage = 'Mods abc, def cannot be found on the Mod Portal.';
 
         $previous = $this->createMock(Exception::class);
 

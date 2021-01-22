@@ -201,7 +201,6 @@ class RenderIconsStepTest extends TestCase
 
     /**
      * @throws ReflectionException
-     * @covers ::handleProcessFinish
      */
     public function testHandleProcessFinish(): void
     {
@@ -244,12 +243,10 @@ class RenderIconsStepTest extends TestCase
 
     /**
      * @throws ReflectionException
-     * @covers ::handleProcessFinish
      */
     public function testHandleProcessFinishWithError(): void
     {
-        $output = 'abc';
-        $errorOutput = 'cba';
+        $errorOutput = 'abc';
         $iconId = 'def';
         $icon = new Icon();
         $icon->id = $iconId;
@@ -262,21 +259,12 @@ class RenderIconsStepTest extends TestCase
                 ->method('getIcon')
                 ->willReturn($icon);
         $process->expects($this->once())
-                ->method('getOutput')
-                ->willReturn($output);
-        $process->expects($this->once())
                 ->method('getErrorOutput')
                 ->willReturn($errorOutput);
 
-        $renderedIcons = $this->createMock(DictionaryInterface::class);
-        $renderedIcons->expects($this->once())
-                      ->method('set')
-                      ->with($this->identicalTo($iconId), $this->identicalTo($output));
-
         $exportData = $this->createMock(ExportData::class);
-        $exportData->expects($this->once())
-                   ->method('getRenderedIcons')
-                   ->willReturn($renderedIcons);
+        $exportData->expects($this->never())
+                   ->method('getRenderedIcons');
 
         $this->progressBar->expects($this->once())
                           ->method('finish')

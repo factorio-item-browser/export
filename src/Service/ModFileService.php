@@ -67,7 +67,7 @@ class ModFileService
         try {
             return $this->exportSerializer->deserialize($contents, InfoJson::class, 'json');
         } catch (Exception $e) {
-            throw new InvalidInfoJsonFileException($modName);
+            throw new InvalidInfoJsonFileException($modName, $e);
         }
     }
 

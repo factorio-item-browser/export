@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTestSerializer\Export;
 
-use FactorioItemBrowser\Export\Serializer\SerializerFactory;
+use BluePsyduck\JmsSerializerFactory\JmsSerializerFactory;
+use FactorioItemBrowser\Export\Serializer\Handler\ConstructorHandler;
+use FactorioItemBrowser\Export\Serializer\Handler\RawHandler;
 use Interop\Container\ContainerInterface;
 use JMS\Serializer\SerializerInterface;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,10 +25,18 @@ abstract class SerializerTestCase extends TestCase
      */
     protected function createSerializer(): SerializerInterface
     {
-        /* @var ContainerInterface&MockObject $container */
-        $container = $this->createMock(ContainerInterface::class);
+        $config = require(__DIR__ . '/../../config/autoload/jms-serializers.global.php');
 
-        $serializerFactory = new SerializerFactory();
+        $container = $this->createMock(ContainerInterface::class);
+        $container->expects($this->any())
+                  ->method('get')
+                  ->willReturnMap([
+                      ['config', $config],
+                      [ConstructorHandler::class, new ConstructorHandler()],
+                      [RawHandler::class, new RawHandler()],
+                  ]);
+
+        $serializerFactory = new JmsSerializerFactory('jms-serializers', 'export');
         return $serializerFactory($container, SerializerInterface::class);
     }
 
