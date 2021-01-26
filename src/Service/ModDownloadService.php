@@ -158,7 +158,7 @@ class ModDownloadService
     {
         $modListOutput = $this->console->createModListOutput();
         foreach ($mods as $mod) {
-            $release = $releases[$mod->getName()];
+            $release = $releases[$mod->getName()] ?? null;
             $modListOutput->add(
                 $mod->getName(),
                 $currentVersions[$mod->getName()] ?? null,
