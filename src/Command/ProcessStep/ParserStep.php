@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Parser\ParserInterface;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 
 /**
  * The step for parsing the dumped data.

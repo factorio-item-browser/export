@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "40fca59619cd92da34eb966b56ae3465",
+    "content-hash": "0eea44ddb1dba4c3d650b8dd640e72d1",
     "packages": [
         {
             "name": "bluepsyduck/factorio-mod-portal-client",
@@ -760,6 +760,69 @@
             "time": "2020-05-25T17:44:05+00:00"
         },
         {
+            "name": "factorio-item-browser/combination-api-client",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/factorio-item-browser/combination-api-client.git",
+                "reference": "fc86f93ced31c42f358cf7e12e3136c8c617e6f7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/factorio-item-browser/combination-api-client/zipball/fc86f93ced31c42f358cf7e12e3136c8c617e6f7",
+                "reference": "fc86f93ced31c42f358cf7e12e3136c8c617e6f7",
+                "shasum": ""
+            },
+            "require": {
+                "bluepsyduck/jms-serializer-factory": "^1.0",
+                "bluepsyduck/laminas-autowire-factory": "^1.0",
+                "ext-json": "*",
+                "guzzlehttp/guzzle": "^6.0",
+                "jms/serializer": "^3.0",
+                "php": "^7.4 | ^8.0",
+                "symfony/yaml": "^5.0"
+            },
+            "require-dev": {
+                "bluepsyduck/test-helper": "^2.0",
+                "phpstan/phpstan": "^0.12",
+                "phpstan/phpstan-phpunit": "^0.12",
+                "phpstan/phpstan-strict-rules": "^0.12",
+                "phpunit/phpunit": "^9.5",
+                "rregeer/phpunit-coverage-check": "^0.3",
+                "squizlabs/php_codesniffer": "^3.5"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FactorioItemBrowser\\CombinationApi\\Client\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "BluePsyduck",
+                    "email": "bluepsyduck@gmx.com"
+                }
+            ],
+            "description": "A PHP client library to access the Combination API of the Factorio Item Browser.",
+            "homepage": "https://github.com/factorio-item-browser/combination-api-client",
+            "keywords": [
+                "FIB",
+                "Factorio Item Browser",
+                "api",
+                "client",
+                "combination"
+            ],
+            "support": {
+                "source": "https://github.com/factorio-item-browser/combination-api-client/tree/master"
+            },
+            "time": "2021-01-26T10:06:04+00:00"
+        },
+        {
             "name": "factorio-item-browser/common",
             "version": "1.3.0",
             "source": {
@@ -871,69 +934,6 @@
                 "source": "https://github.com/factorio-item-browser/export-data/tree/feature/chunked-data"
             },
             "time": "2020-11-20T11:15:52+00:00"
-        },
-        {
-            "name": "factorio-item-browser/export-queue-client",
-            "version": "1.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/factorio-item-browser/export-queue-client.git",
-                "reference": "6c16ccd9e47851c796f432138aa60f6ff5845701"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-queue-client/zipball/6c16ccd9e47851c796f432138aa60f6ff5845701",
-                "reference": "6c16ccd9e47851c796f432138aa60f6ff5845701",
-                "shasum": ""
-            },
-            "require": {
-                "bluepsyduck/laminas-autowire-factory": "^1.0",
-                "ext-json": "*",
-                "guzzlehttp/guzzle": "^6.3",
-                "jms/serializer": "^3.2",
-                "laminas/laminas-servicemanager": "^3.0",
-                "php": "^7.3",
-                "symfony/yaml": "^4.2 | ^5.0"
-            },
-            "require-dev": {
-                "bluepsyduck/test-helper": "^1.0",
-                "phpstan/phpstan": "^0.12",
-                "phpstan/phpstan-phpunit": "^0.12",
-                "phpstan/phpstan-strict-rules": "^0.12",
-                "phpunit/phpunit": "^8.0",
-                "rregeer/phpunit-coverage-check": "^0.3",
-                "squizlabs/php_codesniffer": "^3.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "FactorioItemBrowser\\ExportQueue\\Client\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-3.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "BluePsyduck",
-                    "email": "bluepsyduck@gmx.com"
-                }
-            ],
-            "description": "A client to access the export queue of the Factorio Item Browser.",
-            "homepage": "https://github.com/BluePsyduck/factorio-mod-portal-client",
-            "keywords": [
-                "FIB",
-                "Factorio Item Browser",
-                "client",
-                "export",
-                "queue"
-            ],
-            "support": {
-                "issues": "https://github.com/factorio-item-browser/export-queue-client/issues",
-                "source": "https://github.com/factorio-item-browser/export-queue-client/tree/master"
-            },
-            "time": "2020-05-27T08:14:54+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -1361,16 +1361,16 @@
         },
         {
             "name": "laminas/laminas-servicemanager",
-            "version": "3.6.2",
+            "version": "3.6.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laminas/laminas-servicemanager.git",
-                "reference": "69a33802574e34357da6937602622a8a8db69883"
+                "reference": "04a0118731d9f3ee865c7ceb5342551491adebc1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laminas/laminas-servicemanager/zipball/69a33802574e34357da6937602622a8a8db69883",
-                "reference": "69a33802574e34357da6937602622a8a8db69883",
+                "url": "https://api.github.com/repos/laminas/laminas-servicemanager/zipball/04a0118731d9f3ee865c7ceb5342551491adebc1",
+                "reference": "04a0118731d9f3ee865c7ceb5342551491adebc1",
                 "shasum": ""
             },
             "require": {
@@ -1444,7 +1444,7 @@
                     "type": "community_bridge"
                 }
             ],
-            "time": "2021-01-17T17:08:19+00:00"
+            "time": "2021-01-25T00:14:52+00:00"
         },
         {
             "name": "laminas/laminas-stdlib",
@@ -3895,16 +3895,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "0.12.68",
+            "version": "0.12.69",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "ddbe01af0706ee094c3f1ce9730b35aebb508d3d"
+                "reference": "8f436ea35241da33487fd0d38b4bc3e6dfe30ea8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/ddbe01af0706ee094c3f1ce9730b35aebb508d3d",
-                "reference": "ddbe01af0706ee094c3f1ce9730b35aebb508d3d",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/8f436ea35241da33487fd0d38b4bc3e6dfe30ea8",
+                "reference": "8f436ea35241da33487fd0d38b4bc3e6dfe30ea8",
                 "shasum": ""
             },
             "require": {
@@ -3935,7 +3935,7 @@
             "description": "PHPStan - PHP Static Analysis Tool",
             "support": {
                 "issues": "https://github.com/phpstan/phpstan/issues",
-                "source": "https://github.com/phpstan/phpstan/tree/0.12.68"
+                "source": "https://github.com/phpstan/phpstan/tree/0.12.69"
             },
             "funding": [
                 {
@@ -3951,7 +3951,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-01-18T12:29:17+00:00"
+            "time": "2021-01-24T14:55:37+00:00"
         },
         {
             "name": "phpstan/phpstan-phpunit",
@@ -5653,6 +5653,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "factorio-item-browser/combination-api-client": 20,
         "factorio-item-browser/export-data": 20
     },
     "prefer-stable": false,

@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Command\ProcessStep;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
 use FactorioItemBrowser\Export\Command\ProcessStep\ParserStep;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Parser\ParserInterface;
 use FactorioItemBrowser\ExportData\ExportData;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 use PHPUnit\Framework\TestCase;
 
 /**

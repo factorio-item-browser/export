@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Entity;
 
+use FactorioItemBrowser\CombinationApi\Client\Transfer\Combination;
+use FactorioItemBrowser\CombinationApi\Client\Transfer\Job;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\ExportData\ExportData;
-use FactorioItemBrowser\ExportQueue\Client\Entity\Job;
 
 /**
  * The data used for the steps of processing.
@@ -17,6 +18,7 @@ use FactorioItemBrowser\ExportQueue\Client\Entity\Job;
 class ProcessStepData
 {
     public Job $exportJob;
+    public Combination $combination;
     public ExportData $exportData;
     public Dump $dump;
 }

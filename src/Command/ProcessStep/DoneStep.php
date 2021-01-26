@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 
 /**
  * The final step when everything is done.

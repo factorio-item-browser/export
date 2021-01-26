@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Command\ProcessStep;
 
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
 use FactorioItemBrowser\Export\Command\ProcessStep\DoneStep;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 use PHPUnit\Framework\TestCase;
 
 /**

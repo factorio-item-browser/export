@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Command\ProcessStep;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
+use FactorioItemBrowser\CombinationApi\Client\Transfer\Combination;
 use FactorioItemBrowser\Export\Command\ProcessStep\FactorioStep;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Service\FactorioExecutionService;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
-use FactorioItemBrowser\ExportQueue\Client\Entity\Job;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -58,12 +58,12 @@ class FactorioStepTest extends TestCase
         $combinationId = 'abc';
         $modNames = ['def', 'ghi'];
 
-        $exportJob = new Job();
-        $exportJob->setCombinationId($combinationId)
-                  ->setModNames($modNames);
+        $combination = new Combination();
+        $combination->id = $combinationId;
+        $combination->modNames = $modNames;
 
         $processStepData = new ProcessStepData();
-        $processStepData->exportJob = $exportJob;
+        $processStepData->combination = $combination;
 
         $this->factorioExecutionService->expects($this->once())
                                        ->method('prepare')

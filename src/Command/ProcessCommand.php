@@ -5,20 +5,24 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command;
 
 use Exception;
+use FactorioItemBrowser\CombinationApi\Client\ClientInterface;
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
+use FactorioItemBrowser\CombinationApi\Client\Constant\ListOrder;
+use FactorioItemBrowser\CombinationApi\Client\Exception\ClientException;
+use FactorioItemBrowser\CombinationApi\Client\Request\Combination\StatusRequest;
+use FactorioItemBrowser\CombinationApi\Client\Request\Job\ListRequest;
+use FactorioItemBrowser\CombinationApi\Client\Request\Job\UpdateRequest;
+use FactorioItemBrowser\CombinationApi\Client\Response\Job\ListResponse;
+use FactorioItemBrowser\CombinationApi\Client\Transfer\Combination;
+use FactorioItemBrowser\CombinationApi\Client\Transfer\Job;
 use FactorioItemBrowser\Export\Command\ProcessStep\ProcessStepInterface;
+use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\ExportData\ExportDataService;
-use FactorioItemBrowser\ExportQueue\Client\Client\Facade;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
-use FactorioItemBrowser\ExportQueue\Client\Constant\ListOrder;
-use FactorioItemBrowser\ExportQueue\Client\Entity\Job;
-use FactorioItemBrowser\ExportQueue\Client\Exception\ClientException;
-use FactorioItemBrowser\ExportQueue\Client\Request\Job\ListRequest;
-use FactorioItemBrowser\ExportQueue\Client\Request\Job\UpdateRequest;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -32,32 +36,32 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ProcessCommand extends Command
 {
+    protected ClientInterface $combinationApiClient;
     protected Console $console;
     protected ExportDataService $exportDataService;
-    protected Facade $exportQueueFacade;
     protected LoggerInterface $logger;
     /** @var array<ProcessStepInterface>  */
     protected array $processSteps;
 
     /**
+     * @param ClientInterface $combinationApiClient
      * @param Console $console
      * @param ExportDataService $exportDataService
-     * @param Facade $exportQueueFacade
      * @param LoggerInterface $logger
      * @param array<ProcessStepInterface> $exportProcessSteps
      */
     public function __construct(
+        ClientInterface $combinationApiClient,
         Console $console,
         ExportDataService $exportDataService,
-        Facade $exportQueueFacade,
         LoggerInterface $logger,
         array $exportProcessSteps
     ) {
         parent::__construct();
 
+        $this->combinationApiClient = $combinationApiClient;
         $this->console = $console;
         $this->exportDataService = $exportDataService;
-        $this->exportQueueFacade = $exportQueueFacade;
         $this->logger = $logger;
         $this->processSteps = $exportProcessSteps;
     }
@@ -107,15 +111,19 @@ class ProcessCommand extends Command
         $this->console->writeAction('Fetching export job from queue');
 
         $request = new ListRequest();
-        $request->setStatus(JobStatus::QUEUED)
-                ->setOrder(ListOrder::PRIORITY)
-                ->setLimit(1);
+        $request->status = JobStatus::QUEUED;
+        $request->order = ListOrder::PRIORITY;
+        $request->limit = 1;
 
         try {
-            $response = $this->exportQueueFacade->getJobList($request);
-            return $response->getJobs()[0] ?? null;
+            /* @var ListResponse $response */
+            $response = $this->combinationApiClient->sendRequest($request)->wait();
+            return $response->jobs[0] ?? null;
         } catch (ClientException $e) {
-            throw new InternalException(sprintf('Failed to fetch export job from queue: %s', $e->getMessage()), $e);
+            throw new InternalException(
+                sprintf('Failed to fetch export job from the Combination API: %s', $e->getMessage()),
+                $e,
+            );
         }
     }
 
@@ -126,8 +134,8 @@ class ProcessCommand extends Command
      */
     protected function runExportJob(Job $exportJob): void
     {
-        $this->logger->info('Processing export job', ['combination' => $exportJob->getCombinationId()]);
-        $this->console->writeHeadline(sprintf('Processing combination %s', $exportJob->getCombinationId()));
+        $this->logger->info('Processing export job', ['combination' => $exportJob->combinationId]);
+        $this->console->writeHeadline(sprintf('Processing combination %s', $exportJob->combinationId));
         $processStepData = $this->createProcessStepData($exportJob);
 
         foreach ($this->processSteps as $processStep) {
@@ -139,16 +147,34 @@ class ProcessCommand extends Command
      * Creates the instance of the process step data.
      * @param Job $exportJob
      * @return ProcessStepData
+     * @throws ExportException
      */
     protected function createProcessStepData(Job $exportJob): ProcessStepData
     {
-        $exportData = $this->exportDataService->createExport($exportJob->getCombinationId());
-
         $result = new ProcessStepData();
         $result->exportJob = $exportJob;
-        $result->exportData = $exportData;
+        $result->combination = $this->fetchCombination($exportJob->combinationId);
+        $result->exportData = $this->exportDataService->createExport($exportJob->combinationId);
         $result->dump = new Dump();
         return $result;
+    }
+
+    /**
+     * Fetches the details of the combination.
+     * @param string $combinationId
+     * @return Combination
+     * @throws ExportException
+     */
+    protected function fetchCombination(string $combinationId): Combination
+    {
+        $request = new StatusRequest();
+        $request->combinationId = $combinationId;
+
+        try {
+            return $this->combinationApiClient->sendRequest($request)->wait();
+        } catch (ClientException $e) {
+            throw new InternalException('Failed to fetch combination details.', $e);
+        }
     }
 
     /**
@@ -170,7 +196,7 @@ class ProcessCommand extends Command
 
             $this->logger->error($exceptionMessage, [
                 'class' => $exceptionClass,
-                'combination' => $data->exportJob->getCombinationId(),
+                'combination' => $data->combination->id,
             ]);
             $this->updateExportJob(
                 $data->exportJob,
@@ -191,16 +217,16 @@ class ProcessCommand extends Command
      */
     protected function updateExportJob(Job $exportJob, string $status, string $errorMessage = ''): Job
     {
-        if ($exportJob->getStatus() === $status) {
+        if ($exportJob->status === $status) {
             // We do not have to change the status at all.
             return $exportJob;
         }
 
         $request = new UpdateRequest();
-        $request->setJobId($exportJob->getId())
-                ->setStatus($status)
-                ->setErrorMessage($errorMessage);
+        $request->id = $exportJob->id;
+        $request->status = $status;
+        $request->errorMessage = $errorMessage;
 
-        return $this->exportQueueFacade->updateJob($request);
+        return $this->combinationApiClient->sendRequest($request)->wait();
     }
 }

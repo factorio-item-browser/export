@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Service\ModDownloadService;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 
 /**
  * The step for downloading all the required mods.
@@ -35,6 +35,6 @@ class DownloadStep implements ProcessStepInterface
 
     public function run(ProcessStepData $processStepData): void
     {
-        $this->modDownloadService->download($processStepData->exportJob->getModNames());
+        $this->modDownloadService->download($processStepData->combination->modNames);
     }
 }

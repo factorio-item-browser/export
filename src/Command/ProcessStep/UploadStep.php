@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\UploadFailedException;
 use FactorioItemBrowser\ExportData\ExportDataService;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 use FtpClient\FtpClient;
 use FtpClient\FtpException;
 use Psr\Log\LoggerInterface;

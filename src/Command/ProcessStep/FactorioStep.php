@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Service\FactorioExecutionService;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 
 /**
  * The step actually executing Factorio to get the dumped data.
@@ -40,8 +40,8 @@ class FactorioStep implements ProcessStepInterface
 
     public function run(ProcessStepData $processStepData): void
     {
-        $combinationId = $processStepData->exportJob->getCombinationId();
-        $modNames = $processStepData->exportJob->getModNames();
+        $combinationId = $processStepData->combination->id;
+        $modNames = $processStepData->combination->modNames;
 
         try {
             $this->console->writeAction('Preparing factorio instance');

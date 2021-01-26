@@ -6,6 +6,18 @@ namespace FactorioItemBrowserTest\Export\Command;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
 use Exception;
+use FactorioItemBrowser\CombinationApi\Client\ClientInterface;
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
+use FactorioItemBrowser\CombinationApi\Client\Constant\ListOrder;
+use FactorioItemBrowser\CombinationApi\Client\Exception\ClientException;
+use FactorioItemBrowser\CombinationApi\Client\Request\Combination\StatusRequest;
+use FactorioItemBrowser\CombinationApi\Client\Request\Job\ListRequest;
+use FactorioItemBrowser\CombinationApi\Client\Request\Job\UpdateRequest;
+use FactorioItemBrowser\CombinationApi\Client\Response\Combination\StatusResponse;
+use FactorioItemBrowser\CombinationApi\Client\Response\Job\DetailsResponse;
+use FactorioItemBrowser\CombinationApi\Client\Response\Job\ListResponse;
+use FactorioItemBrowser\CombinationApi\Client\Transfer\Combination;
+use FactorioItemBrowser\CombinationApi\Client\Transfer\Job;
 use FactorioItemBrowser\Export\Command\ProcessCommand;
 use FactorioItemBrowser\Export\Command\ProcessStep\ProcessStepInterface;
 use FactorioItemBrowser\Export\Output\Console;
@@ -16,15 +28,8 @@ use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\ExportData\ExportData;
 use FactorioItemBrowser\ExportData\ExportDataService;
-use FactorioItemBrowser\ExportQueue\Client\Client\Facade;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
-use FactorioItemBrowser\ExportQueue\Client\Constant\ListOrder;
-use FactorioItemBrowser\ExportQueue\Client\Entity\Job;
-use FactorioItemBrowser\ExportQueue\Client\Exception\ClientException;
-use FactorioItemBrowser\ExportQueue\Client\Request\Job\ListRequest;
-use FactorioItemBrowser\ExportQueue\Client\Request\Job\UpdateRequest;
-use FactorioItemBrowser\ExportQueue\Client\Response\Job\DetailsResponse;
-use FactorioItemBrowser\ExportQueue\Client\Response\Job\ListResponse;
+use GuzzleHttp\Promise\FulfilledPromise;
+use GuzzleHttp\Promise\RejectedPromise;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -43,39 +48,40 @@ class ProcessCommandTest extends TestCase
 {
     use ReflectionTrait;
 
+    /** @var ClientInterface&MockObject */
+    private ClientInterface $combinationApiClient;
     /** @var Console&MockObject */
     private Console $console;
     /** @var ExportDataService&MockObject */
     private ExportDataService $exportDataService;
-    /** @var Facade&MockObject */
-    private Facade $exportQueueFacade;
     /** @var LoggerInterface&MockObject */
     private LoggerInterface $logger;
+    /** @var array<ProcessStepInterface> */
+    private array $processSteps = [];
 
     protected function setUp(): void
     {
+        $this->combinationApiClient = $this->createMock(ClientInterface::class);
         $this->console = $this->createMock(Console::class);
         $this->exportDataService = $this->createMock(ExportDataService::class);
-        $this->exportQueueFacade = $this->createMock(Facade::class);
         $this->logger = $this->createMock(LoggerInterface::class);
     }
 
     /**
-     * @param array<ProcessStepInterface> $processSteps
      * @param array<string> $mockedMethods
      * @return ProcessCommand&MockObject
      */
-    private function createInstance(array $processSteps, array $mockedMethods = []): ProcessCommand
+    private function createInstance(array $mockedMethods = []): ProcessCommand
     {
         return $this->getMockBuilder(ProcessCommand::class)
                     ->disableProxyingToOriginalMethods()
                     ->onlyMethods($mockedMethods)
                     ->setConstructorArgs([
+                        $this->combinationApiClient,
                         $this->console,
                         $this->exportDataService,
-                        $this->exportQueueFacade,
                         $this->logger,
-                        $processSteps,
+                        $this->processSteps,
                     ])
                     ->getMock();
     }
@@ -85,7 +91,7 @@ class ProcessCommandTest extends TestCase
      */
     public function testConfigure(): void
     {
-        $instance = $this->createInstance([], ['setName', 'setDescription']);
+        $instance = $this->createInstance(['setName', 'setDescription']);
         $instance->expects($this->once())
                  ->method('setName')
                  ->with($this->identicalTo(CommandName::PROCESS));
@@ -105,7 +111,7 @@ class ProcessCommandTest extends TestCase
         $input = $this->createMock(InputInterface::class);
         $output = $this->createMock(OutputInterface::class);
 
-        $instance = $this->createInstance([], ['fetchExportJob', 'runExportJob']);
+        $instance = $this->createInstance(['fetchExportJob', 'runExportJob']);
         $instance->expects($this->once())
                  ->method('fetchExportJob')
                  ->willReturn($exportJob);
@@ -126,7 +132,7 @@ class ProcessCommandTest extends TestCase
         $input = $this->createMock(InputInterface::class);
         $output = $this->createMock(OutputInterface::class);
 
-        $instance = $this->createInstance([], ['fetchExportJob', 'runExportJob']);
+        $instance = $this->createInstance(['fetchExportJob', 'runExportJob']);
         $instance->expects($this->once())
                  ->method('fetchExportJob')
                  ->willReturn(null);
@@ -152,7 +158,7 @@ class ProcessCommandTest extends TestCase
                       ->method('writeException')
                       ->with($this->identicalTo($exception));
 
-        $instance = $this->createInstance([], ['fetchExportJob', 'runExportJob']);
+        $instance = $this->createInstance(['fetchExportJob', 'runExportJob']);
         $instance->expects($this->once())
                 ->method('fetchExportJob')
                 ->willReturn($exportJob);
@@ -173,26 +179,24 @@ class ProcessCommandTest extends TestCase
     {
         $job = $this->createMock(Job::class);
 
-        $response = $this->createMock(ListResponse::class);
-        $response->expects($this->once())
-                 ->method('getJobs')
-                 ->willReturn([$job]);
+        $response = new ListResponse();
+        $response->jobs = [$job];
 
         $expectedRequest = new ListRequest();
-        $expectedRequest->setStatus(JobStatus::QUEUED)
-                        ->setOrder(ListOrder::PRIORITY)
-                        ->setLimit(1);
+        $expectedRequest->status = JobStatus::QUEUED;
+        $expectedRequest->order = ListOrder::PRIORITY;
+        $expectedRequest->limit = 1;
+
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willReturn(new FulfilledPromise($response));
 
         $this->console->expects($this->once())
                       ->method('writeAction')
                       ->with($this->identicalTo('Fetching export job from queue'));
 
-        $this->exportQueueFacade->expects($this->once())
-                                ->method('getJobList')
-                                ->with($this->equalTo($expectedRequest))
-                                ->willReturn($response);
-
-        $instance = $this->createInstance([]);
+        $instance = $this->createInstance();
         $result = $this->invokeMethod($instance, 'fetchExportJob');
 
         $this->assertSame($job, $result);
@@ -203,26 +207,23 @@ class ProcessCommandTest extends TestCase
      */
     public function testFetchExportJobWithoutJob(): void
     {
-        $response = $this->createMock(ListResponse::class);
-        $response->expects($this->once())
-                 ->method('getJobs')
-                 ->willReturn([]);
+        $response = new ListResponse();
 
         $expectedRequest = new ListRequest();
-        $expectedRequest->setStatus(JobStatus::QUEUED)
-                        ->setOrder(ListOrder::PRIORITY)
-                        ->setLimit(1);
+        $expectedRequest->status = JobStatus::QUEUED;
+        $expectedRequest->order = ListOrder::PRIORITY;
+        $expectedRequest->limit = 1;
+
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willReturn(new FulfilledPromise($response));
 
         $this->console->expects($this->once())
                       ->method('writeAction')
                       ->with($this->identicalTo('Fetching export job from queue'));
 
-        $this->exportQueueFacade->expects($this->once())
-                                ->method('getJobList')
-                                ->with($this->equalTo($expectedRequest))
-                                ->willReturn($response);
-
-        $instance = $this->createInstance([]);
+        $instance = $this->createInstance();
         $result = $this->invokeMethod($instance, 'fetchExportJob');
 
         $this->assertNull($result);
@@ -234,18 +235,18 @@ class ProcessCommandTest extends TestCase
     public function testFetchExportJobWithException(): void
     {
         $expectedRequest = new ListRequest();
-        $expectedRequest->setStatus(JobStatus::QUEUED)
-                        ->setOrder(ListOrder::PRIORITY)
-                        ->setLimit(1);
+        $expectedRequest->status = JobStatus::QUEUED;
+        $expectedRequest->order = ListOrder::PRIORITY;
+        $expectedRequest->limit = 1;
+
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willReturn(new RejectedPromise($this->createMock(ClientException::class)));
 
         $this->console->expects($this->once())
                       ->method('writeAction')
                       ->with($this->identicalTo('Fetching export job from queue'));
-
-        $this->exportQueueFacade->expects($this->once())
-                                ->method('getJobList')
-                                ->with($this->equalTo($expectedRequest))
-                                ->willThrowException($this->createMock(ClientException::class));
 
         $this->expectException(InternalException::class);
 
@@ -265,13 +266,15 @@ class ProcessCommandTest extends TestCase
         $processStepData = $this->createMock(ProcessStepData::class);
 
         $exportJob = new Job();
-        $exportJob->setCombinationId($combinationId);
+        $exportJob->combinationId = $combinationId;
 
         $this->console->expects($this->once())
                       ->method('writeHeadline')
                       ->with($this->identicalTo('Processing combination abc'));
 
-        $instance = $this->createInstance([$processStep1, $processStep2], ['createProcessStepData', 'runProcessStep']);
+        $this->processSteps = [$processStep1, $processStep2];
+
+        $instance = $this->createInstance(['createProcessStepData', 'runProcessStep']);
         $instance->expects($this->once())
                  ->method('createProcessStepData')
                  ->with($this->identicalTo($exportJob))
@@ -295,9 +298,12 @@ class ProcessCommandTest extends TestCase
         $exportData = $this->createMock(ExportData::class);
 
         $exportJob = new Job();
-        $exportJob->setCombinationId($combinationId);
+        $exportJob->combinationId = $combinationId;
+
+        $combination = $this->createMock(Combination::class);
 
         $expectedResult = new ProcessStepData();
+        $expectedResult->combination = $combination;
         $expectedResult->exportJob = $exportJob;
         $expectedResult->exportData = $exportData;
         $expectedResult->dump = new Dump();
@@ -307,10 +313,58 @@ class ProcessCommandTest extends TestCase
                                 ->with($this->identicalTo($combinationId))
                                 ->willReturn($exportData);
 
-        $instance = $this->createInstance([]);
+        $instance = $this->createInstance(['fetchCombination']);
+        $instance->expects($this->once())
+                 ->method('fetchCombination')
+                 ->with($this->identicalTo($combinationId))
+                 ->willReturn($combination);
+
         $result = $this->invokeMethod($instance, 'createProcessStepData', $exportJob);
 
         $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    public function testFetchCombination(): void
+    {
+        $combinationId = 'abc';
+        $response = $this->createMock(StatusResponse::class);
+
+        $expectedRequest = new StatusRequest();
+        $expectedRequest->combinationId = $combinationId;
+
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willReturn(new FulfilledPromise($response));
+
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'fetchCombination', $combinationId);
+
+        $this->assertSame($response, $result);
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    public function testFetchCombinationWithException(): void
+    {
+        $combinationId = 'abc';
+
+        $expectedRequest = new StatusRequest();
+        $expectedRequest->combinationId = $combinationId;
+
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willThrowException($this->createMock(ClientException::class));
+
+        $this->expectException(InternalException::class);
+
+        $instance = $this->createInstance();
+        $this->invokeMethod($instance, 'fetchCombination', $combinationId);
     }
 
     /**
@@ -325,6 +379,7 @@ class ProcessCommandTest extends TestCase
         $exportJob2 = $this->createMock(Job::class);
 
         $processStepData = new ProcessStepData();
+        $processStepData->combination = new Combination();
         $processStepData->exportJob = $exportJob1;
 
         $processStep = $this->createMock(ProcessStepInterface::class);
@@ -342,7 +397,7 @@ class ProcessCommandTest extends TestCase
                       ->method('writeStep')
                       ->with($this->identicalTo($label));
 
-        $instance = $this->createInstance([], ['updateExportJob']);
+        $instance = $this->createInstance(['updateExportJob']);
         $instance->expects($this->once())
                  ->method('updateExportJob')
                  ->with($this->identicalTo($exportJob1), $this->identicalTo($status))
@@ -368,6 +423,7 @@ class ProcessCommandTest extends TestCase
         $exportJob2 = $this->createMock(Job::class);
 
         $processStepData = new ProcessStepData();
+        $processStepData->combination = new Combination();
         $processStepData->exportJob = $exportJob1;
 
         $processStep = $this->createMock(ProcessStepInterface::class);
@@ -388,7 +444,7 @@ class ProcessCommandTest extends TestCase
 
         $this->expectExceptionObject($exception);
 
-        $instance = $this->createInstance([], ['updateExportJob']);
+        $instance = $this->createInstance(['updateExportJob']);
         $instance->expects($this->exactly(2))
                  ->method('updateExportJob')
                  ->withConsecutive(
@@ -413,22 +469,22 @@ class ProcessCommandTest extends TestCase
         $errorMessage = 'def';
 
         $exportJob = new Job();
-        $exportJob->setId('ghi')
-                  ->setStatus('jkl');
+        $exportJob->id = 'ghi';
+        $exportJob->status = 'jkl';
 
         $expectedRequest = new UpdateRequest();
-        $expectedRequest->setJobId('ghi')
-                        ->setStatus('abc')
-                        ->setErrorMessage('def');
+        $expectedRequest->id = 'ghi';
+        $expectedRequest->status = 'abc';
+        $expectedRequest->errorMessage = 'def';
 
         $response = $this->createMock(DetailsResponse::class);
 
-        $this->exportQueueFacade->expects($this->once())
-                                ->method('updateJob')
-                                ->with($this->equalTo($expectedRequest))
-                                ->willReturn($response);
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willReturn(new FulfilledPromise($response));
 
-        $instance = $this->createInstance([]);
+        $instance = $this->createInstance();
         $result = $this->invokeMethod($instance, 'updateExportJob', $exportJob, $status, $errorMessage);
 
         $this->assertSame($response, $result);
@@ -443,13 +499,13 @@ class ProcessCommandTest extends TestCase
         $errorMessage = 'def';
 
         $exportJob = new Job();
-        $exportJob->setId('ghi')
-                  ->setStatus('abc');
+        $exportJob->id = 'ghi';
+        $exportJob->status = 'abc';
 
-        $this->exportQueueFacade->expects($this->never())
-                                ->method('updateJob');
+        $this->combinationApiClient->expects($this->never())
+                                   ->method('sendRequest');
 
-        $instance = $this->createInstance([]);
+        $instance = $this->createInstance();
         $result = $this->invokeMethod($instance, 'updateExportJob', $exportJob, $status, $errorMessage);
 
         $this->assertSame($exportJob, $result);
