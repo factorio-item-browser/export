@@ -24,11 +24,9 @@ class LoggerFactoryTest extends TestCase
     public function test(): void
     {
         $config = [
-            ConfigKey::PROJECT => [
-                ConfigKey::EXPORT => [
-                    ConfigKey::DIRECTORIES => [
-                        ConfigKey::DIRECTORY_LOGS => 'abc',
-                    ],
+            ConfigKey::MAIN => [
+                ConfigKey::DIRECTORIES => [
+                    ConfigKey::DIRECTORY_LOGS => 'abc',
                 ],
             ],
         ];

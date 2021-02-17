@@ -1,15 +1,15 @@
 <?php
 
-declare(strict_types=1);
-
-namespace FactorioItemBrowser\Export;
-
 /**
  * The configuration of the dependencies.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
+
+declare(strict_types=1);
+
+namespace FactorioItemBrowser\Export;
 
 use BluePsyduck\FactorioModPortalClient\Constant\ConfigKey as ModConfigKey;
 use BluePsyduck\FactorioTranslator\Translator as FactorioTranslator;
@@ -90,30 +90,30 @@ return [
             ConsoleOutputInterface::class => Output\ConsoleOutputFactory::class,
             Filesystem::class => AutoWireFactory::class,
             LoggerInterface::class => Log\LoggerFactory::class,
-            SerializerInterface::class . ' $exportSerializer' => new JmsSerializerFactory('jms-serializers', 'export'),
+            SerializerInterface::class . ' $exportSerializer' => new JmsSerializerFactory(ConfigKey::MAIN, ConfigKey::SERIALIZER),
             FactorioTranslator::class => Translator\TranslatorFactory::class,
 
             // Auto-wire helpers
-            'array $exportOutputProcessors' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::OUTPUT_PROCESSORS),
-            'array $exportOutputDumpProcessors' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::OUTPUT_DUMP_PROCESSORS),
-            'array $exportParsers' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARSERS),
-            'array $exportProcessSteps' => injectAliasArray(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PROCESS_STEPS),
+            'array $exportOutputProcessors' => injectAliasArray(ConfigKey::MAIN, ConfigKey::OUTPUT_PROCESSORS),
+            'array $exportOutputDumpProcessors' => injectAliasArray(ConfigKey::MAIN, ConfigKey::OUTPUT_DUMP_PROCESSORS),
+            'array $exportParsers' => injectAliasArray(ConfigKey::MAIN, ConfigKey::PARSERS),
+            'array $exportProcessSteps' => injectAliasArray(ConfigKey::MAIN, ConfigKey::PROCESS_STEPS),
 
             'bool $isDebug' => readConfig('debug'),
 
-            'int $numberOfParallelDownloads' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_DOWNLOADS),
-            'int $numberOfParallelRenderProcesses' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::PARALLEL_RENDERS),
+            'int $numberOfParallelDownloads' => readConfig(ConfigKey::MAIN, ConfigKey::PARALLEL_DOWNLOADS),
+            'int $numberOfParallelRenderProcesses' => readConfig(ConfigKey::MAIN, ConfigKey::PARALLEL_RENDERS),
 
-            'string $factorioDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO),
+            'string $factorioDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO),
             'string $factorioDownloadToken' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_TOKEN),
             'string $factorioDownloadUsername' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_USERNAME),
-            'string $instancesDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
-            'string $modsDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
-            'string $renderIconBinary' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::RENDER_ICON_BINARY),
-            'string $tempDirectory' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),
-            'string $uploadFtpHost' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_HOST),
-            'string $uploadFtpUsername' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_USERNAME),
-            'string $uploadFtpPassword' => readConfig(ConfigKey::PROJECT, ConfigKey::EXPORT, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_PASSWORD),
+            'string $instancesDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
+            'string $modsDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
+            'string $renderIconBinary' => readConfig(ConfigKey::MAIN, ConfigKey::RENDER_ICON_BINARY),
+            'string $tempDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),
+            'string $uploadFtpHost' => readConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_HOST),
+            'string $uploadFtpUsername' => readConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_USERNAME),
+            'string $uploadFtpPassword' => readConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_PASSWORD),
             'string $version' => readConfig('version'),
         ],
     ],

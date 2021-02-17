@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * The base configuration file when developing.
  *
@@ -9,7 +7,9 @@ declare(strict_types=1);
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
 
-namespace FactorioItemBrowser\Api\Server;
+declare(strict_types=1);
+
+namespace FactorioItemBrowser\Export;
 
 use Laminas\ConfigAggregator\ConfigAggregator;
 

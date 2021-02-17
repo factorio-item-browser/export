@@ -13,14 +13,9 @@ namespace FactorioItemBrowser\Export\Constant;
 interface ConfigKey
 {
     /**
-     * The key holding the name of the project.
+     * The main key of the config.
      */
-    public const PROJECT = 'factorio-item-browser';
-
-    /**
-     * The key holding the name of the export project itself.
-     */
-    public const EXPORT = 'export';
+    public const MAIN = 'export';
 
     /**
      * The key holding the directories of the project.
@@ -84,6 +79,11 @@ interface ConfigKey
      * The key holding the path to the render-icon binary.
      */
     public const RENDER_ICON_BINARY = 'render-icon-binary';
+
+    /**
+     * The key holding the configuration of the serializer.
+     */
+    public const SERIALIZER = 'serializer';
 
     /**
      * The key holding the configuration for the upload FTP server.

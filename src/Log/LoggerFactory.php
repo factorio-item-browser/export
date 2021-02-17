@@ -29,8 +29,7 @@ class LoggerFactory implements FactoryInterface
     {
         /** @var array<mixed> $config */
         $config = $container->get('config');
-        $logDirectory
-            = $config[ConfigKey::PROJECT][ConfigKey::EXPORT][ConfigKey::DIRECTORIES][ConfigKey::DIRECTORY_LOGS];
+        $logDirectory = $config[ConfigKey::MAIN][ConfigKey::DIRECTORIES][ConfigKey::DIRECTORY_LOGS];
 
         $logger = new Logger('cli');
         $logger->pushHandler(new StreamHandler(sprintf("%s/cli_%s.log", $logDirectory, date('Y-m-d'))));

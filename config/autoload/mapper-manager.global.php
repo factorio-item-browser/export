@@ -1,17 +1,17 @@
 <?php
 
-declare(strict_types=1);
-
-namespace FactorioItemBrowser\Export;
-
-use BluePsyduck\MapperManager\Constant\ConfigKey;
-
 /**
  * The configuration of the mapper manager.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
+
+declare(strict_types=1);
+
+namespace FactorioItemBrowser\Export;
+
+use BluePsyduck\MapperManager\Constant\ConfigKey;
 
 return [
     ConfigKey::MAIN => [
