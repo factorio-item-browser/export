@@ -9,6 +9,7 @@ use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Icon as DumpIcon;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\ExportData\Entity\Icon as ExportIcon;
 use FactorioItemBrowser\ExportData\ExportData;
 
@@ -25,6 +26,7 @@ class IconParser implements ParserInterface
         'tutorial',
     ];
 
+    protected Console $console;
     protected HashCalculator $hashCalculator;
     protected MapperManagerInterface $mapperManager;
 
@@ -33,8 +35,9 @@ class IconParser implements ParserInterface
     /** @var array<string,ExportIcon> */
     protected array $usedIcons = [];
 
-    public function __construct(HashCalculator $hashCalculator, MapperManagerInterface $mapperManager)
+    public function __construct(Console $console, HashCalculator $hashCalculator, MapperManagerInterface $mapperManager)
     {
+        $this->console = $console;
         $this->hashCalculator = $hashCalculator;
         $this->mapperManager = $mapperManager;
     }
@@ -44,7 +47,7 @@ class IconParser implements ParserInterface
         $this->parsedIcons = [];
         $this->usedIcons = [];
 
-        foreach ($dump->icons as $dumpIcon) {
+        foreach ($this->console->iterateWithProgressbar('Preparing icons', $dump->icons) as $dumpIcon) {
             if ($this->isIconValid($dumpIcon)) {
                 $this->addParsedIcon($dumpIcon->type, $dumpIcon->name, $this->createIcon($dumpIcon));
             }

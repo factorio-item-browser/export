@@ -7,7 +7,8 @@ namespace FactorioItemBrowser\Export\Parser;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Output\Console;
+use FactorioItemBrowser\Export\Service\ModFileService;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Icon\Layer;
 use FactorioItemBrowser\ExportData\Entity\Mod;
@@ -24,17 +25,20 @@ class ModParser implements ParserInterface
     protected const RENDERED_THUMBNAIL_SIZE = 144;
     protected const THUMBNAIL_FILENAME = 'thumbnail.png';
 
+    protected Console $console;
     protected HashCalculator $hashCalculator;
-    protected ModFileManager $modFileManager;
+    protected ModFileService $modFileService;
     protected TranslationParser $translationParser;
 
     public function __construct(
+        Console $console,
         HashCalculator $hashCalculator,
-        ModFileManager $modFileManager,
+        ModFileService $modFileService,
         TranslationParser $translationParser
     ) {
+        $this->console = $console;
         $this->hashCalculator = $hashCalculator;
-        $this->modFileManager = $modFileManager;
+        $this->modFileService = $modFileService;
         $this->translationParser = $translationParser;
     }
 
@@ -44,7 +48,7 @@ class ModParser implements ParserInterface
 
     public function parse(Dump $dump, ExportData $exportData): void
     {
-        foreach ($dump->modNames as $modName) {
+        foreach ($this->console->iterateWithProgressbar('Parsing mods', $dump->modNames) as $modName) {
             $mod = $this->createMod($modName);
             $thumbnail = $this->createThumbnail($mod);
             if ($thumbnail !== null) {
@@ -62,15 +66,15 @@ class ModParser implements ParserInterface
      */
     protected function createMod(string $modName): Mod
     {
-        $info = $this->modFileManager->getInfo($modName);
+        $info = $this->modFileService->getInfo($modName);
 
         $mod = new Mod();
         $mod->name = $modName;
-        $mod->version = $info->getVersion();
-        $mod->author = $info->getAuthor();
+        $mod->version = (string) $info->version;
+        $mod->author = $info->author;
 
-        $mod->titles->set('en', $info->getTitle());
-        $mod->descriptions->set('en', $info->getDescription());
+        $mod->titles->set('en', $info->title);
+        $mod->descriptions->set('en', $info->description);
 
         $this->translationParser->translate($mod->titles, ["mod-name.${modName}"]);
         $this->translationParser->translate($mod->descriptions, ["mod-description.${modName}"]);
@@ -103,7 +107,7 @@ class ModParser implements ParserInterface
     protected function getThumbnailSize(Mod $mod): int
     {
         try {
-            $content = $this->modFileManager->readFile($mod->name, self::THUMBNAIL_FILENAME);
+            $content = $this->modFileService->readFile($mod->name, self::THUMBNAIL_FILENAME);
         } catch (ExportException $e) {
             return 0;
         }

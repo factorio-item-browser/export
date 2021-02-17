@@ -19,16 +19,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class DownloadFactorioCommand extends Command
 {
-    /**
-     * The factorio downloader.
-     * @var FactorioDownloader
-     */
-    protected $factorioDownloader;
+    protected FactorioDownloader $factorioDownloader;
 
-    /**
-     * DownloadFactorioCommand constructor.
-     * @param FactorioDownloader $factorioDownloader
-     */
     public function __construct(FactorioDownloader $factorioDownloader)
     {
         parent::__construct();
@@ -36,9 +28,6 @@ class DownloadFactorioCommand extends Command
         $this->factorioDownloader = $factorioDownloader;
     }
 
-    /**
-     * Configures the command.
-     */
     protected function configure(): void
     {
         parent::configure();
@@ -49,12 +38,6 @@ class DownloadFactorioCommand extends Command
         $this->addArgument('version', InputArgument::REQUIRED, 'The version of Factorio to download.');
     }
 
-    /**
-     * Executes the command.
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $version = strval($input->getArgument('version'));

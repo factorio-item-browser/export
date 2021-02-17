@@ -10,6 +10,7 @@ use FactorioItemBrowser\Common\Constant\RecipeMode;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Recipe as DumpRecipe;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\ExportData\Entity\Recipe as ExportRecipe;
 use FactorioItemBrowser\ExportData\ExportData;
 
@@ -21,17 +22,20 @@ use FactorioItemBrowser\ExportData\ExportData;
  */
 class RecipeParser implements ParserInterface
 {
+    protected Console $console;
     protected HashCalculator $hashCalculator;
     protected IconParser $iconParser;
     protected MapperManagerInterface $mapperManager;
     protected TranslationParser $translationParser;
 
     public function __construct(
+        Console $console,
         HashCalculator $hashCalculator,
         IconParser $iconParser,
         MapperManagerInterface $mapperManager,
         TranslationParser $translationParser
     ) {
+        $this->console = $console;
         $this->hashCalculator = $hashCalculator;
         $this->iconParser = $iconParser;
         $this->mapperManager = $mapperManager;
@@ -45,12 +49,16 @@ class RecipeParser implements ParserInterface
     public function parse(Dump $dump, ExportData $exportData): void
     {
         $recipes = [];
-        foreach ($dump->normalRecipes as $dumpRecipe) {
+        foreach (
+            $this->console->iterateWithProgressbar('Parsing normal recipes', $dump->normalRecipes) as $dumpRecipe
+        ) {
             $normalRecipe = $this->createRecipe($dumpRecipe, RecipeMode::NORMAL);
             $recipes[$this->hashCalculator->hashRecipe($normalRecipe)] = $normalRecipe;
         }
 
-        foreach ($dump->expensiveRecipes as $dumpRecipe) {
+        foreach (
+            $this->console->iterateWithProgressbar('Parsing expensive recipes', $dump->expensiveRecipes) as $dumpRecipe
+        ) {
             $expensiveRecipe = $this->createRecipe($dumpRecipe, RecipeMode::EXPENSIVE);
             $hash = $this->hashCalculator->hashRecipe($expensiveRecipe);
 

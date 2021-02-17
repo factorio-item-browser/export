@@ -20,48 +20,25 @@ use Symfony\Component\Console\Output\OutputInterface;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Command\DownloadFactorioCommand
+ * @covers \FactorioItemBrowser\Export\Command\DownloadFactorioCommand
  */
 class DownloadFactorioCommandTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked factorio downloader.
-     * @var FactorioDownloader&MockObject
-     */
-    protected $factorioDownloader;
+    /** @var FactorioDownloader&MockObject */
+    private FactorioDownloader $factorioDownloader;
 
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->factorioDownloader = $this->createMock(FactorioDownloader::class);
     }
 
     /**
-     * Tests the constructing.
      * @throws ReflectionException
-     * @covers ::__construct
-     */
-    public function testConstruct(): void
-    {
-        $command = new DownloadFactorioCommand($this->factorioDownloader);
-
-        $this->assertSame($this->factorioDownloader, $this->extractProperty($command, 'factorioDownloader'));
-    }
-
-    /**
-     * Tests the configure method.
-     * @throws ReflectionException
-     * @covers ::configure
      */
     public function testConfigure(): void
     {
-        /* @var DownloadFactorioCommand&MockObject $command */
         $command = $this->getMockBuilder(DownloadFactorioCommand::class)
                         ->onlyMethods(['setName', 'setDescription', 'addArgument'])
                         ->setConstructorArgs([$this->factorioDownloader])
@@ -84,18 +61,13 @@ class DownloadFactorioCommandTest extends TestCase
     }
 
     /**
-     * Tests the execute method.
      * @throws ReflectionException
-     * @covers ::execute
      */
     public function testExecute(): void
     {
         $version = '1.2.3';
-
-        /* @var OutputInterface&MockObject $output */
         $output = $this->createMock(OutputInterface::class);
 
-        /* @var InputInterface&MockObject $input */
         $input = $this->createMock(InputInterface::class);
         $input->expects($this->once())
               ->method('getArgument')

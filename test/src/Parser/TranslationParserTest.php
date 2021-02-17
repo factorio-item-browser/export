@@ -9,63 +9,82 @@ use BluePsyduck\FactorioTranslator\Translator;
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
+use FactorioItemBrowser\Export\Output\Console;
+use FactorioItemBrowser\Export\Service\ModFileService;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
 use FactorioItemBrowser\ExportData\Collection\DictionaryInterface;
 use FactorioItemBrowser\ExportData\ExportData;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use ReflectionException;
 
 /**
  * The PHPUnit test of the TranslationParser class.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Parser\TranslationParser
+ * @covers \FactorioItemBrowser\Export\Parser\TranslationParser
  */
 class TranslationParserTest extends TestCase
 {
     use ReflectionTrait;
 
-    /** @var ModFileManager&MockObject */
-    private ModFileManager $modFileManager;
+    /** @var Console&MockObject */
+    private Console $console;
+    /** @var ModFileService&MockObject */
+    private ModFileService $modFileManager;
     /** @var Translator&MockObject */
     private Translator $translator;
 
     protected function setUp(): void
     {
-        $this->modFileManager = $this->createMock(ModFileManager::class);
+        $this->console = $this->createMock(Console::class);
+        $this->modFileManager = $this->createMock(ModFileService::class);
         $this->translator = $this->createMock(Translator::class);
     }
 
-    /**
-     * @throws ReflectionException
-     * @covers ::__construct
-     */
-    public function testConstruct(): void
+    private function createInstance(): TranslationParser
     {
-        $parser = new TranslationParser($this->modFileManager, $this->translator);
+        return new TranslationParser(
+            $this->console,
+            $this->modFileManager,
+            $this->translator,
+        );
+    }
 
-        $this->assertSame($this->modFileManager, $this->extractProperty($parser, 'modFileManager'));
-        $this->assertSame($this->translator, $this->extractProperty($parser, 'translator'));
+    /**
+     * @throws ExportException
+     */
+    public function testEmptyMethods(): void
+    {
+        $dump = $this->createMock(Dump::class);
+        $exportData = $this->createMock(ExportData::class);
+
+        $instance = $this->createInstance();
+        $instance->parse($dump, $exportData);
+        $instance->validate($exportData);
+
+        $this->addToAssertionCount(1);
     }
 
     /**
      * @throws NoSupportedLoaderException
-     * @covers ::prepare
      */
     public function testPrepare(): void
     {
         $dump = new Dump();
         $dump->modNames = ['abc', 'def'];
 
+        $this->console->expects($this->once())
+                      ->method('iterateWithProgressbar')
+                      ->with($this->isType('string'), $this->identicalTo(['abc', 'def']))
+                      ->willReturnCallback(fn() => yield from ['cba', 'fed']);
+
         $this->modFileManager->expects($this->exactly(3))
                              ->method('getLocalDirectory')
                              ->withConsecutive(
                                  [$this->identicalTo('core')],
-                                 [$this->identicalTo('abc')],
-                                 [$this->identicalTo('def')],
+                                 [$this->identicalTo('cba')],
+                                 [$this->identicalTo('fed')],
                              )
                              ->willReturnOnConsecutiveCalls(
                                  'ghi',
@@ -82,44 +101,10 @@ class TranslationParserTest extends TestCase
                          )
                          ->willReturnSelf();
 
-        $parser = new TranslationParser($this->modFileManager, $this->translator);
-        $parser->prepare($dump);
+        $instance = $this->createInstance();
+        $instance->prepare($dump);
     }
 
-    /**
-     * @throws ExportException
-     * @covers ::parse
-     */
-    public function testParse(): void
-    {
-        $dump = $this->createMock(Dump::class);
-        $exportData = $this->createMock(ExportData::class);
-
-        $parser = new TranslationParser($this->modFileManager, $this->translator);
-        $parser->parse($dump, $exportData);
-
-        $this->addToAssertionCount(1);
-    }
-
-    /**
-     * Tests the validate method.
-     * @throws ExportException
-     * @covers ::validate
-     */
-    public function testValidate(): void
-    {
-        $exportData = $this->createMock(ExportData::class);
-
-        $parser = new TranslationParser($this->modFileManager, $this->translator);
-        $parser->validate($exportData);
-
-        $this->addToAssertionCount(1);
-    }
-
-    /**
-     * Tests the translate method.
-     * @covers ::translate
-     */
     public function testTranslate(): void
     {
         $locales = ['abc', 'def', 'ghi'];
@@ -154,7 +139,7 @@ class TranslationParserTest extends TestCase
                              '',
                          );
 
-        $parser = new TranslationParser($this->modFileManager, $this->translator);
-        $parser->translate($translations, $localisedString, $fallbackLocalisedString);
+        $instance = $this->createInstance();
+        $instance->translate($translations, $localisedString, $fallbackLocalisedString);
     }
 }

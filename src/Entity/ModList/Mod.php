@@ -12,55 +12,6 @@ namespace FactorioItemBrowser\Export\Entity\ModList;
  */
 class Mod
 {
-    /**
-     * The name of the mod.
-     * @var string
-     */
-    protected string $name = '';
-
-    /**
-     * Whether the mod is enabled.
-     * @var bool
-     */
-    protected bool $enabled = false;
-
-    /**
-     * Sets the name of the mod.
-     * @param string $name
-     * @return $this
-     */
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * Returns the name of the mod.
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    /**
-     * Sets whether the mod is enabled.
-     * @param bool $enabled
-     * @return $this
-     */
-    public function setEnabled(bool $enabled): self
-    {
-        $this->enabled = $enabled;
-        return $this;
-    }
-
-    /**
-     * Returns whether the mod is enabled.
-     * @return bool
-     */
-    public function getEnabled(): bool
-    {
-        return $this->enabled;
-    }
+    public string $name = '';
+    public bool $isEnabled = false;
 }

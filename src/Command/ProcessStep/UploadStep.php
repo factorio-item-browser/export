@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
-use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
-use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\UploadFailedException;
 use FactorioItemBrowser\ExportData\ExportDataService;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
 use FtpClient\FtpClient;
 use FtpClient\FtpException;
+use Psr\Log\LoggerInterface;
 
 /**
  * The step for uploading the export file to the importer.
@@ -21,87 +21,62 @@ use FtpClient\FtpException;
  */
 class UploadStep implements ProcessStepInterface
 {
-    protected Console $console;
-    protected ExportDataService $exportDataService;
+    private Console $console;
+    private ExportDataService $exportDataService;
+    private LoggerInterface $logger;
+    private string $ftpHost;
+    private string $ftpUsername;
+    private string $ftpPassword;
 
-    /**
-     * The host of the FTP server to upload to.
-     * @var string
-     */
-    protected $ftpHost;
-
-    /**
-     * The username to use for logging into the FTP server.
-     * @var string
-     */
-    protected $ftpUsername;
-
-    /**
-     * The password to use for logging into the FTP server.
-     * @var string
-     */
-    protected $ftpPassword;
+    private FtpClient $ftpClient;
 
     public function __construct(
         Console $console,
         ExportDataService $exportDataService,
+        LoggerInterface $logger,
         string $uploadFtpHost,
         string $uploadFtpUsername,
         string $uploadFtpPassword
     ) {
         $this->console = $console;
         $this->exportDataService = $exportDataService;
+        $this->logger = $logger;
         $this->ftpHost = $uploadFtpHost;
         $this->ftpUsername = $uploadFtpUsername;
         $this->ftpPassword = $uploadFtpPassword;
+
+        $this->ftpClient = new FtpClient();
     }
 
-    /**
-     * Returns the label to identify the step.
-     * @return string
-     */
     public function getLabel(): string
     {
         return 'Uploading export file to importer';
     }
 
-    /**
-     * Returns the status to set on the export job before running this step.
-     * @return string
-     */
     public function getExportJobStatus(): string
     {
         return JobStatus::UPLOADING;
     }
 
-    /**
-     * Runs the process step.
-     * @param ProcessStepData $processStepData
-     * @throws ExportException
-     */
     public function run(ProcessStepData $processStepData): void
     {
-        $fileName = $this->exportDataService->persistExport($processStepData->getExportData());
+        $this->console->writeAction('Persisting export data');
+        $fileName = $this->exportDataService->persistExport($processStepData->exportData);
         $this->console->writeAction(sprintf('Uploading file %s', basename($fileName)));
 
         try {
-            $ftp = $this->createFtpClient();
-            $ftp->connect($this->ftpHost);
-            $ftp->login($this->ftpUsername, $this->ftpPassword);
-            $ftp->pasv(true);
+            $this->ftpClient->connect($this->ftpHost);
+            $this->ftpClient->login($this->ftpUsername, $this->ftpPassword);
+            $this->ftpClient->pasv(true);
 
-            $ftp->putFromPath($fileName);
+            $this->ftpClient->putFromPath($fileName);
+
+            $this->logger->info('Export file uploaded', [
+                'combination' => $processStepData->exportData->getCombinationId(),
+                'file' => $fileName,
+            ]);
         } catch (FtpException $e) {
             throw new UploadFailedException($e->getMessage(), $e);
         }
-    }
-
-    /**
-     * Creates the FTP client instance.
-     * @return FtpClient
-     */
-    protected function createFtpClient(): FtpClient
-    {
-        return new FtpClient();
     }
 }

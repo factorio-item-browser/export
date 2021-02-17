@@ -8,6 +8,7 @@ use BluePsyduck\MapperManager\MapperManagerInterface;
 use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Machine as DumpMachine;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\ExportData\Entity\Machine as ExportMachine;
 use FactorioItemBrowser\ExportData\ExportData;
 
@@ -19,15 +20,18 @@ use FactorioItemBrowser\ExportData\ExportData;
  */
 class MachineParser implements ParserInterface
 {
+    protected Console $console;
     protected IconParser $iconParser;
     protected MapperManagerInterface $mapperManager;
     protected TranslationParser $translationParser;
 
     public function __construct(
+        Console $console,
         IconParser $iconParser,
         MapperManagerInterface $mapperManager,
         TranslationParser $translationParser
     ) {
+        $this->console = $console;
         $this->iconParser = $iconParser;
         $this->mapperManager = $mapperManager;
         $this->translationParser = $translationParser;
@@ -39,7 +43,7 @@ class MachineParser implements ParserInterface
 
     public function parse(Dump $dump, ExportData $exportData): void
     {
-        foreach ($dump->machines as $dumpMachine) {
+        foreach ($this->console->iterateWithProgressbar('Parsing machines', $dump->machines) as $dumpMachine) {
             $exportData->getMachines()->add($this->createMachine($dumpMachine));
         }
     }

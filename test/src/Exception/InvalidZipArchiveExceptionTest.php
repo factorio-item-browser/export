@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Exception;
 
 use Exception;
-use FactorioItemBrowser\Export\Exception\InvalidModFileException;
-use PHPUnit\Framework\MockObject\MockObject;
+use FactorioItemBrowser\Export\Exception\InvalidZipArchiveException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -14,24 +13,21 @@ use PHPUnit\Framework\TestCase;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Exception\InvalidModFileException
+ * @coversDefaultClass \FactorioItemBrowser\Export\Exception\InvalidZipArchiveException
  */
-class InvalidModFileExceptionTest extends TestCase
+class InvalidZipArchiveExceptionTest extends TestCase
 {
     /**
-     * Tests the constructing.
      * @covers ::__construct
      */
     public function testConstruct(): void
     {
         $fileName = 'abc';
         $message = 'def';
-        $expectedMessage = 'The downloaded file abc could not be processed: def';
-
-        /* @var Exception&MockObject $previous */
         $previous = $this->createMock(Exception::class);
+        $expectedMessage = 'The zip archive abc could not be processed: def';
 
-        $exception = new InvalidModFileException($fileName, $message, $previous);
+        $exception = new InvalidZipArchiveException($fileName, $message, $previous);
 
         $this->assertSame($expectedMessage, $exception->getMessage());
         $this->assertSame($previous, $exception->getPrevious());

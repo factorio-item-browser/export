@@ -9,6 +9,7 @@ use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Fluid as DumpFluid;
 use FactorioItemBrowser\Export\Entity\Dump\Item as DumpItem;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\ExportData\Entity\Item as ExportItem;
 use FactorioItemBrowser\ExportData\ExportData;
 
@@ -20,15 +21,18 @@ use FactorioItemBrowser\ExportData\ExportData;
  */
 class ItemParser implements ParserInterface
 {
+    protected Console $console;
     protected IconParser $iconParser;
     protected MapperManagerInterface $mapperManager;
     protected TranslationParser $translationParser;
 
     public function __construct(
+        Console $console,
         IconParser $iconParser,
         MapperManagerInterface $mapperManager,
         TranslationParser $translationParser
     ) {
+        $this->console = $console;
         $this->iconParser = $iconParser;
         $this->mapperManager = $mapperManager;
         $this->translationParser = $translationParser;
@@ -40,10 +44,10 @@ class ItemParser implements ParserInterface
 
     public function parse(Dump $dump, ExportData $exportData): void
     {
-        foreach ($dump->items as $dumpItem) {
+        foreach ($this->console->iterateWithProgressbar('Parsing items', $dump->items) as $dumpItem) {
             $exportData->getItems()->add($this->createItem($dumpItem));
         }
-        foreach ($dump->fluids as $dumpFluid) {
+        foreach ($this->console->iterateWithProgressbar('Parsing fluids', $dump->fluids) as $dumpFluid) {
             $exportData->getItems()->add($this->createFluid($dumpFluid));
         }
     }
