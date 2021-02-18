@@ -23,9 +23,9 @@ class IngredientTest extends SerializerTestCase
     protected function getObject(): object
     {
         $result = new Ingredient();
-        $result->setType('ghi')
-               ->setName('jkl')
-               ->setAmount(13.37);
+        $result->type = 'ghi';
+        $result->name = 'jkl';
+        $result->amount = 13.37;
         return $result;
     }
 

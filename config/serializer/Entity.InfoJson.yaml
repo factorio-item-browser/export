@@ -1,5 +1,4 @@
 FactorioItemBrowser\Export\Entity\InfoJson:
-  access_type: public_method
   exclusion_policy: all
   properties:
     name:
@@ -9,9 +8,9 @@ FactorioItemBrowser\Export\Entity\InfoJson:
     description:
       type: string
     version:
-      type: string
+      type: constructor<BluePsyduck\FactorioModPortalClient\Entity\Version>
     factorioVersion:
-      type: string
+      type: constructor<BluePsyduck\FactorioModPortalClient\Entity\Version>
     author:
       type: string
     contact:
@@ -19,4 +18,4 @@ FactorioItemBrowser\Export\Entity\InfoJson:
     homepage:
       type: string
     dependencies:
-      type: array<string>
+      type: array<constructor<BluePsyduck\FactorioModPortalClient\Entity\Dependency>>

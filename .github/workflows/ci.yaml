@@ -3,7 +3,7 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: "0 0 * * 0"
 
 jobs:
   composer-validation:
@@ -16,7 +16,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 7.4
+          php-version: "7.4"
           extensions: ftp, gd, json, zip
           coverage: none
 
@@ -29,7 +29,7 @@ jobs:
       fail-fast: false
       matrix:
         php-version:
-          - 7.4
+          - "7.4"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -95,7 +95,7 @@ jobs:
       fail-fast: false
       matrix:
         php-version:
-          - 7.4
+          - "7.4"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -135,7 +135,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 7.4
+          php-version: "7.4"
           extensions: ftp, gd, json, zip
           tools: cs2pr
           coverage: none
@@ -167,7 +167,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 7.4
+          php-version: "7.4"
           extensions: ftp, gd, json, zip
           coverage: none
 

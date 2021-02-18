@@ -40,7 +40,7 @@ class HashCalculator
     public function hashIcon(Icon $icon): string
     {
         $icon = clone($icon);
-        $icon->setId('');
+        $icon->id = '';
 
         return $this->hashEntity($icon);
     }
@@ -53,9 +53,9 @@ class HashCalculator
     public function hashRecipe(Recipe $recipe): string
     {
         $recipe = clone($recipe);
-        $recipe->setName('')
-               ->setMode('')
-               ->setIconId('');
+        $recipe->name = '';
+        $recipe->mode = '';
+        $recipe->iconId = '';
 
         return $this->hashEntity($recipe);
     }

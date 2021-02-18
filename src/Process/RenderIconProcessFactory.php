@@ -15,37 +15,11 @@ use JMS\Serializer\SerializerInterface;
  */
 class RenderIconProcessFactory
 {
-    /**
-     * The serializer.
-     * @var SerializerInterface
-     */
-    protected $serializer;
+    private SerializerInterface $serializer;
+    private string $factorioDirectory;
+    private string $modsDirectory;
+    private string $renderIconBinary;
 
-    /**
-     * The path to the factorio directory.
-     * @var string
-     */
-    protected $factorioDirectory;
-
-    /**
-     * The path to the mods directory.
-     * @var string
-     */
-    protected $modsDirectory;
-
-    /**
-     * The path to the render-icon binary.
-     * @var string
-     */
-    protected $renderIconBinary;
-
-    /**
-     * Initializes the factory.
-     * @param SerializerInterface $exportDataSerializer
-     * @param string $factorioDirectory
-     * @param string $modsDirectory
-     * @param string $renderIconBinary
-     */
     public function __construct(
         SerializerInterface $exportDataSerializer,
         string $factorioDirectory,

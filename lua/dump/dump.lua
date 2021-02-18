@@ -1,12 +1,19 @@
 local json = require("json")
-
 local dump = {}
 
---- Write a dump to the console.
--- @param name string: The name of the dump.
--- @param data table: The data to write into the dump.
-function dump.write(name, data)
-    print(string.format(">>>%s>>>%s<<<%s<<<", name, json.encode(data), name))
+--- Adds data to the dump.
+-- @param name string: The name of the data.
+-- @param data table: The data to add.
+function dump.add(name, data)
+    if not data then
+        return
+    end
+
+    print(string.format(">DUMP>%s>%s<", name, json.encode(data)))
+end
+
+--- Flushes the dump. This will write any data not yet written to the output.
+function dump.flush()
 end
 
 return dump

@@ -6,9 +6,21 @@ namespace FactorioItemBrowserTest\Export\Command;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
 use Exception;
+use FactorioItemBrowser\CombinationApi\Client\ClientInterface;
+use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
+use FactorioItemBrowser\CombinationApi\Client\Constant\ListOrder;
+use FactorioItemBrowser\CombinationApi\Client\Exception\ClientException;
+use FactorioItemBrowser\CombinationApi\Client\Request\Combination\StatusRequest;
+use FactorioItemBrowser\CombinationApi\Client\Request\Job\ListRequest;
+use FactorioItemBrowser\CombinationApi\Client\Request\Job\UpdateRequest;
+use FactorioItemBrowser\CombinationApi\Client\Response\Combination\StatusResponse;
+use FactorioItemBrowser\CombinationApi\Client\Response\Job\DetailsResponse;
+use FactorioItemBrowser\CombinationApi\Client\Response\Job\ListResponse;
+use FactorioItemBrowser\CombinationApi\Client\Transfer\Combination;
+use FactorioItemBrowser\CombinationApi\Client\Transfer\Job;
 use FactorioItemBrowser\Export\Command\ProcessCommand;
 use FactorioItemBrowser\Export\Command\ProcessStep\ProcessStepInterface;
-use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
@@ -16,17 +28,11 @@ use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\ExportData\ExportData;
 use FactorioItemBrowser\ExportData\ExportDataService;
-use FactorioItemBrowser\ExportQueue\Client\Client\Facade;
-use FactorioItemBrowser\ExportQueue\Client\Constant\JobStatus;
-use FactorioItemBrowser\ExportQueue\Client\Constant\ListOrder;
-use FactorioItemBrowser\ExportQueue\Client\Entity\Job;
-use FactorioItemBrowser\ExportQueue\Client\Exception\ClientException;
-use FactorioItemBrowser\ExportQueue\Client\Request\Job\ListRequest;
-use FactorioItemBrowser\ExportQueue\Client\Request\Job\UpdateRequest;
-use FactorioItemBrowser\ExportQueue\Client\Response\Job\DetailsResponse;
-use FactorioItemBrowser\ExportQueue\Client\Response\Job\ListResponse;
+use GuzzleHttp\Promise\FulfilledPromise;
+use GuzzleHttp\Promise\RejectedPromise;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use ReflectionException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -42,394 +48,340 @@ class ProcessCommandTest extends TestCase
 {
     use ReflectionTrait;
 
-    /**
-     * The mocked console.
-     * @var Console&MockObject
-     */
-    protected $console;
+    /** @var ClientInterface&MockObject */
+    private ClientInterface $combinationApiClient;
+    /** @var Console&MockObject */
+    private Console $console;
+    /** @var ExportDataService&MockObject */
+    private ExportDataService $exportDataService;
+    /** @var LoggerInterface&MockObject */
+    private LoggerInterface $logger;
+    /** @var array<ProcessStepInterface> */
+    private array $processSteps = [];
 
-    /**
-     * The mocked export data service.
-     * @var ExportDataService&MockObject
-     */
-    protected $exportDataService;
-
-    /**
-     * The mocked export queue facade.
-     * @var Facade&MockObject
-     */
-    protected $exportQueueFacade;
-
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
-        parent::setUp();
-
+        $this->combinationApiClient = $this->createMock(ClientInterface::class);
         $this->console = $this->createMock(Console::class);
         $this->exportDataService = $this->createMock(ExportDataService::class);
-        $this->exportQueueFacade = $this->createMock(Facade::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
     }
 
     /**
-     * Tests the constructing.
-     * @throws ReflectionException
-     * @covers ::__construct
+     * @param array<string> $mockedMethods
+     * @return ProcessCommand&MockObject
      */
-    public function testConstruct(): void
+    private function createInstance(array $mockedMethods = []): ProcessCommand
     {
-        $processSteps = [
-            $this->createMock(ProcessStepInterface::class),
-            $this->createMock(ProcessStepInterface::class),
-        ];
-
-        $command = new ProcessCommand(
-            $this->console,
-            $this->exportDataService,
-            $this->exportQueueFacade,
-            $processSteps
-        );
-
-        $this->assertSame($this->console, $this->extractProperty($command, 'console'));
-        $this->assertSame($this->exportDataService, $this->extractProperty($command, 'exportDataService'));
-        $this->assertSame($this->exportQueueFacade, $this->extractProperty($command, 'exportQueueFacade'));
-        $this->assertSame($processSteps, $this->extractProperty($command, 'processSteps'));
+        return $this->getMockBuilder(ProcessCommand::class)
+                    ->disableProxyingToOriginalMethods()
+                    ->onlyMethods($mockedMethods)
+                    ->setConstructorArgs([
+                        $this->combinationApiClient,
+                        $this->console,
+                        $this->exportDataService,
+                        $this->logger,
+                        $this->processSteps,
+                    ])
+                    ->getMock();
     }
 
     /**
-     * Tests the configure method.
      * @throws ReflectionException
-     * @covers ::configure
      */
     public function testConfigure(): void
     {
-        /* @var ProcessCommand&MockObject $command */
-        $command = $this->getMockBuilder(ProcessCommand::class)
-                        ->onlyMethods(['setName', 'setDescription'])
-                        ->setConstructorArgs([
-                            $this->console,
-                            $this->exportDataService,
-                            $this->exportQueueFacade,
-                            []
-                        ])
-                        ->getMock();
-        $command->expects($this->once())
-                ->method('setName')
-                ->with($this->identicalTo(CommandName::PROCESS));
-        $command->expects($this->once())
-                ->method('setDescription')
-                ->with($this->isType('string'));
+        $instance = $this->createInstance(['setName', 'setDescription']);
+        $instance->expects($this->once())
+                 ->method('setName')
+                 ->with($this->identicalTo(CommandName::PROCESS));
+        $instance->expects($this->once())
+                 ->method('setDescription')
+                 ->with($this->isType('string'));
 
-        $this->invokeMethod($command, 'configure');
+        $this->invokeMethod($instance, 'configure');
     }
 
     /**
-     * Tests the execute method.
      * @throws ReflectionException
-     * @covers ::execute
      */
     public function testExecute(): void
     {
-        /* @var Job&MockObject $exportJob */
         $exportJob = $this->createMock(Job::class);
-        /* @var InputInterface&MockObject $input */
         $input = $this->createMock(InputInterface::class);
-        /* @var OutputInterface&MockObject $output */
         $output = $this->createMock(OutputInterface::class);
 
-        /* @var ProcessCommand&MockObject $command */
-        $command = $this->getMockBuilder(ProcessCommand::class)
-                        ->onlyMethods(['fetchExportJob', 'runExportJob'])
-                        ->setConstructorArgs([$this->console, $this->exportDataService, $this->exportQueueFacade, []])
-                        ->getMock();
-        $command->expects($this->once())
-                ->method('fetchExportJob')
-                ->willReturn($exportJob);
-        $command->expects($this->once())
-                ->method('ruNExportJob')
-                ->with($this->identicalTo($exportJob));
+        $instance = $this->createInstance(['fetchExportJob', 'runExportJob']);
+        $instance->expects($this->once())
+                 ->method('fetchExportJob')
+                 ->willReturn($exportJob);
+        $instance->expects($this->once())
+                 ->method('ruNExportJob')
+                 ->with($this->identicalTo($exportJob));
 
-        $result = $this->invokeMethod($command, 'execute', $input, $output);
+        $result = $this->invokeMethod($instance, 'execute', $input, $output);
 
         $this->assertSame(0, $result);
     }
 
     /**
-     * Tests the execute method.
      * @throws ReflectionException
-     * @covers ::execute
      */
     public function testExecuteWithoutJob(): void
     {
-        /* @var InputInterface&MockObject $input */
         $input = $this->createMock(InputInterface::class);
-        /* @var OutputInterface&MockObject $output */
         $output = $this->createMock(OutputInterface::class);
 
-        /* @var ProcessCommand&MockObject $command */
-        $command = $this->getMockBuilder(ProcessCommand::class)
-                        ->onlyMethods(['fetchExportJob', 'runExportJob'])
-                        ->setConstructorArgs([$this->console, $this->exportDataService, $this->exportQueueFacade, []])
-                        ->getMock();
-        $command->expects($this->once())
-                ->method('fetchExportJob')
-                ->willReturn(null);
-        $command->expects($this->never())
-                ->method('ruNExportJob');
+        $instance = $this->createInstance(['fetchExportJob', 'runExportJob']);
+        $instance->expects($this->once())
+                 ->method('fetchExportJob')
+                 ->willReturn(null);
+        $instance->expects($this->never())
+                 ->method('ruNExportJob');
 
-        $this->console->expects($this->once())
-                      ->method('writeMessage')
-                      ->with($this->identicalTo('No export job to process. Done.'));
-
-        $result = $this->invokeMethod($command, 'execute', $input, $output);
+        $result = $this->invokeMethod($instance, 'execute', $input, $output);
 
         $this->assertSame(0, $result);
     }
 
     /**
-     * Tests the execute method.
      * @throws ReflectionException
-     * @covers ::execute
      */
     public function testExecuteWithException(): void
     {
-        /* @var Job&MockObject $exportJob */
         $exportJob = $this->createMock(Job::class);
-        /* @var InputInterface&MockObject $input */
         $input = $this->createMock(InputInterface::class);
-        /* @var OutputInterface&MockObject $output */
         $output = $this->createMock(OutputInterface::class);
-        /* @var Exception&MockObject $exception */
         $exception = $this->createMock(Exception::class);
-
-        /* @var ProcessCommand&MockObject $command */
-        $command = $this->getMockBuilder(ProcessCommand::class)
-                        ->onlyMethods(['fetchExportJob', 'runExportJob'])
-                        ->setConstructorArgs([$this->console, $this->exportDataService, $this->exportQueueFacade, []])
-                        ->getMock();
-        $command->expects($this->once())
-                ->method('fetchExportJob')
-                ->willReturn($exportJob);
-        $command->expects($this->once())
-                ->method('ruNExportJob')
-                ->with($this->identicalTo($exportJob))
-                ->willThrowException($exception);
 
         $this->console->expects($this->once())
                       ->method('writeException')
                       ->with($this->identicalTo($exception));
 
-        $result = $this->invokeMethod($command, 'execute', $input, $output);
+        $instance = $this->createInstance(['fetchExportJob', 'runExportJob']);
+        $instance->expects($this->once())
+                ->method('fetchExportJob')
+                ->willReturn($exportJob);
+        $instance->expects($this->once())
+                ->method('ruNExportJob')
+                ->with($this->identicalTo($exportJob))
+                ->willThrowException($exception);
+
+        $result = $this->invokeMethod($instance, 'execute', $input, $output);
 
         $this->assertSame(1, $result);
     }
 
     /**
-     * Tests the fetchExportJob method.
      * @throws ReflectionException
-     * @covers ::fetchExportJob
      */
     public function testFetchExportJob(): void
     {
-        /* @var Job&MockObject $job */
         $job = $this->createMock(Job::class);
 
-        /* @var ListResponse&MockObject $response */
-        $response = $this->createMock(ListResponse::class);
-        $response->expects($this->once())
-                 ->method('getJobs')
-                 ->willReturn([$job]);
+        $response = new ListResponse();
+        $response->jobs = [$job];
 
         $expectedRequest = new ListRequest();
-        $expectedRequest->setStatus(JobStatus::QUEUED)
-                        ->setOrder(ListOrder::PRIORITY)
-                        ->setLimit(1);
+        $expectedRequest->status = JobStatus::QUEUED;
+        $expectedRequest->order = ListOrder::PRIORITY;
+        $expectedRequest->limit = 1;
+
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willReturn(new FulfilledPromise($response));
 
         $this->console->expects($this->once())
                       ->method('writeAction')
                       ->with($this->identicalTo('Fetching export job from queue'));
 
-        $this->exportQueueFacade->expects($this->once())
-                                ->method('getJobList')
-                                ->with($this->equalTo($expectedRequest))
-                                ->willReturn($response);
-
-        $command = new ProcessCommand($this->console, $this->exportDataService, $this->exportQueueFacade, []);
-        $result = $this->invokeMethod($command, 'fetchExportJob');
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'fetchExportJob');
 
         $this->assertSame($job, $result);
     }
 
     /**
-     * Tests the fetchExportJob method.
      * @throws ReflectionException
-     * @covers ::fetchExportJob
      */
     public function testFetchExportJobWithoutJob(): void
     {
-        /* @var ListResponse&MockObject $response */
-        $response = $this->createMock(ListResponse::class);
-        $response->expects($this->once())
-                 ->method('getJobs')
-                 ->willReturn([]);
+        $response = new ListResponse();
 
         $expectedRequest = new ListRequest();
-        $expectedRequest->setStatus(JobStatus::QUEUED)
-                        ->setOrder(ListOrder::PRIORITY)
-                        ->setLimit(1);
+        $expectedRequest->status = JobStatus::QUEUED;
+        $expectedRequest->order = ListOrder::PRIORITY;
+        $expectedRequest->limit = 1;
+
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willReturn(new FulfilledPromise($response));
 
         $this->console->expects($this->once())
                       ->method('writeAction')
                       ->with($this->identicalTo('Fetching export job from queue'));
 
-        $this->exportQueueFacade->expects($this->once())
-                                ->method('getJobList')
-                                ->with($this->equalTo($expectedRequest))
-                                ->willReturn($response);
-
-        $command = new ProcessCommand($this->console, $this->exportDataService, $this->exportQueueFacade, []);
-        $result = $this->invokeMethod($command, 'fetchExportJob');
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'fetchExportJob');
 
         $this->assertNull($result);
     }
 
     /**
-     * Tests the fetchExportJob method.
      * @throws ReflectionException
-     * @covers ::fetchExportJob
      */
     public function testFetchExportJobWithException(): void
     {
         $expectedRequest = new ListRequest();
-        $expectedRequest->setStatus(JobStatus::QUEUED)
-                        ->setOrder(ListOrder::PRIORITY)
-                        ->setLimit(1);
+        $expectedRequest->status = JobStatus::QUEUED;
+        $expectedRequest->order = ListOrder::PRIORITY;
+        $expectedRequest->limit = 1;
+
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willReturn(new RejectedPromise($this->createMock(ClientException::class)));
 
         $this->console->expects($this->once())
                       ->method('writeAction')
                       ->with($this->identicalTo('Fetching export job from queue'));
 
-        $this->exportQueueFacade->expects($this->once())
-                                ->method('getJobList')
-                                ->with($this->equalTo($expectedRequest))
-                                ->willThrowException($this->createMock(ClientException::class));
-
         $this->expectException(InternalException::class);
 
-        $command = new ProcessCommand($this->console, $this->exportDataService, $this->exportQueueFacade, []);
-        $this->invokeMethod($command, 'fetchExportJob');
+        $instance = $this->createInstance([]);
+        $this->invokeMethod($instance, 'fetchExportJob');
     }
 
     /**
-     * Tests the runExportJob method.
      * @throws ReflectionException
-     * @covers ::runExportJob
      */
     public function testRunExportJob(): void
     {
         $combinationId = 'abc';
 
-        /* @var ProcessStepInterface&MockObject $processStep1 */
         $processStep1 = $this->createMock(ProcessStepInterface::class);
-        /* @var ProcessStepInterface&MockObject $processStep2 */
         $processStep2 = $this->createMock(ProcessStepInterface::class);
-        /* @var ProcessStepData&MockObject $processStepData */
         $processStepData = $this->createMock(ProcessStepData::class);
 
-        /* @var Job&MockObject $exportJob */
-        $exportJob = $this->createMock(Job::class);
-        $exportJob->expects($this->once())
-                  ->method('getCombinationId')
-                  ->willReturn($combinationId);
+        $exportJob = new Job();
+        $exportJob->combinationId = $combinationId;
 
         $this->console->expects($this->once())
                       ->method('writeHeadline')
                       ->with($this->identicalTo('Processing combination abc'));
 
-        /* @var ProcessCommand&MockObject $command */
-        $command = $this->getMockBuilder(ProcessCommand::class)
-                        ->onlyMethods(['createProcessStepData', 'runProcessStep'])
-                        ->setConstructorArgs([
-                            $this->console,
-                            $this->exportDataService,
-                            $this->exportQueueFacade,
-                            [$processStep1, $processStep2],
-                        ])
-                        ->getMock();
-        $command->expects($this->once())
-                ->method('createProcessStepData')
-                ->with($this->identicalTo($exportJob))
-                ->willReturn($processStepData);
-        $command->expects($this->exactly(2))
-                ->method('runProcessStep')
-                ->withConsecutive(
-                    [$this->identicalTo($processStep1), $this->identicalTo($processStepData)],
-                    [$this->identicalTo($processStep2), $this->identicalTo($processStepData)]
-                );
+        $this->processSteps = [$processStep1, $processStep2];
 
-        $this->invokeMethod($command, 'runExportJob', $exportJob);
+        $instance = $this->createInstance(['createProcessStepData', 'runProcessStep']);
+        $instance->expects($this->once())
+                 ->method('createProcessStepData')
+                 ->with($this->identicalTo($exportJob))
+                 ->willReturn($processStepData);
+        $instance->expects($this->exactly(2))
+                 ->method('runProcessStep')
+                 ->withConsecutive(
+                     [$this->identicalTo($processStep1), $this->identicalTo($processStepData)],
+                     [$this->identicalTo($processStep2), $this->identicalTo($processStepData)]
+                 );
+
+        $this->invokeMethod($instance, 'runExportJob', $exportJob);
     }
 
     /**
-     * Tests the createProcessStepData method.
      * @throws ReflectionException
-     * @covers ::createProcessStepData
      */
     public function testCreateProcessStepData(): void
     {
         $combinationId = 'abc';
-
-        /* @var ExportData&MockObject $exportData */
         $exportData = $this->createMock(ExportData::class);
 
-        /* @var Job&MockObject $exportJob */
-        $exportJob = $this->createMock(Job::class);
-        $exportJob->expects($this->once())
-                  ->method('getCombinationId')
-                  ->willReturn($combinationId);
+        $exportJob = new Job();
+        $exportJob->combinationId = $combinationId;
+
+        $combination = $this->createMock(Combination::class);
 
         $expectedResult = new ProcessStepData();
-        $expectedResult->setExportJob($exportJob)
-                       ->setExportData($exportData)
-                       ->setDump(new Dump());
+        $expectedResult->combination = $combination;
+        $expectedResult->exportJob = $exportJob;
+        $expectedResult->exportData = $exportData;
+        $expectedResult->dump = new Dump();
 
         $this->exportDataService->expects($this->once())
                                 ->method('createExport')
                                 ->with($this->identicalTo($combinationId))
                                 ->willReturn($exportData);
 
-        $command = new ProcessCommand($this->console, $this->exportDataService, $this->exportQueueFacade, []);
-        $result = $this->invokeMethod($command, 'createProcessStepData', $exportJob);
+        $instance = $this->createInstance(['fetchCombination']);
+        $instance->expects($this->once())
+                 ->method('fetchCombination')
+                 ->with($this->identicalTo($combinationId))
+                 ->willReturn($combination);
+
+        $result = $this->invokeMethod($instance, 'createProcessStepData', $exportJob);
 
         $this->assertEquals($expectedResult, $result);
     }
 
     /**
-     * Tests the runProcessStep method.
      * @throws ReflectionException
-     * @covers ::runProcessStep
+     */
+    public function testFetchCombination(): void
+    {
+        $combinationId = 'abc';
+        $response = $this->createMock(StatusResponse::class);
+
+        $expectedRequest = new StatusRequest();
+        $expectedRequest->combinationId = $combinationId;
+
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willReturn(new FulfilledPromise($response));
+
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'fetchCombination', $combinationId);
+
+        $this->assertSame($response, $result);
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    public function testFetchCombinationWithException(): void
+    {
+        $combinationId = 'abc';
+
+        $expectedRequest = new StatusRequest();
+        $expectedRequest->combinationId = $combinationId;
+
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willThrowException($this->createMock(ClientException::class));
+
+        $this->expectException(InternalException::class);
+
+        $instance = $this->createInstance();
+        $this->invokeMethod($instance, 'fetchCombination', $combinationId);
+    }
+
+    /**
+     * @throws ReflectionException
      */
     public function testRunProcessStep(): void
     {
         $label = 'abc';
         $status = 'def';
 
-        /* @var Job&MockObject $exportJob1 */
         $exportJob1 = $this->createMock(Job::class);
-        /* @var Job&MockObject $exportJob2 */
         $exportJob2 = $this->createMock(Job::class);
 
-        /* @var ProcessStepData&MockObject $processStepData */
-        $processStepData = $this->createMock(ProcessStepData::class);
-        $processStepData->expects($this->once())
-                        ->method('getExportJob')
-                        ->willReturn($exportJob1);
-        $processStepData->expects($this->once())
-                        ->method('setExportJob')
-                        ->with($this->identicalTo($exportJob2));
+        $processStepData = new ProcessStepData();
+        $processStepData->combination = new Combination();
+        $processStepData->exportJob = $exportJob1;
 
-        /* @var ProcessStepInterface&MockObject $processStep */
         $processStep = $this->createMock(ProcessStepInterface::class);
         $processStep->expects($this->once())
                     ->method('getLabel')
@@ -445,23 +397,19 @@ class ProcessCommandTest extends TestCase
                       ->method('writeStep')
                       ->with($this->identicalTo($label));
 
-        /* @var ProcessCommand&MockObject $command */
-        $command = $this->getMockBuilder(ProcessCommand::class)
-                        ->onlyMethods(['updateExportJob'])
-                        ->setConstructorArgs([$this->console, $this->exportDataService, $this->exportQueueFacade, []])
-                        ->getMock();
-        $command->expects($this->once())
-                ->method('updateExportJob')
-                ->with($this->identicalTo($exportJob1), $this->identicalTo($status))
-                ->willReturn($exportJob2);
+        $instance = $this->createInstance(['updateExportJob']);
+        $instance->expects($this->once())
+                 ->method('updateExportJob')
+                 ->with($this->identicalTo($exportJob1), $this->identicalTo($status))
+                 ->willReturn($exportJob2);
 
-        $this->invokeMethod($command, 'runProcessStep', $processStep, $processStepData);
+        $this->invokeMethod($instance, 'runProcessStep', $processStep, $processStepData);
+
+        $this->assertSame($exportJob2, $processStepData->exportJob);
     }
 
     /**
-     * Tests the runProcessStep method.
      * @throws ReflectionException
-     * @covers ::runProcessStep
      */
     public function testRunProcessStepWithException(): void
     {
@@ -471,24 +419,13 @@ class ProcessCommandTest extends TestCase
         $exception = new ExportException('ghi');
         $expectedErrorMessage = 'ExportException: ghi';
 
-        /* @var Job&MockObject $exportJob1 */
         $exportJob1 = $this->createMock(Job::class);
-        /* @var Job&MockObject $exportJob2 */
         $exportJob2 = $this->createMock(Job::class);
 
-        /* @var ProcessStepData&MockObject $processStepData */
-        $processStepData = $this->createMock(ProcessStepData::class);
-        $processStepData->expects($this->exactly(2))
-                        ->method('getExportJob')
-                        ->willReturnOnConsecutiveCalls(
-                            $exportJob1,
-                            $exportJob2
-                        );
-        $processStepData->expects($this->once())
-                        ->method('setExportJob')
-                        ->with($this->identicalTo($exportJob2));
+        $processStepData = new ProcessStepData();
+        $processStepData->combination = new Combination();
+        $processStepData->exportJob = $exportJob1;
 
-        /* @var ProcessStepInterface&MockObject $processStep */
         $processStep = $this->createMock(ProcessStepInterface::class);
         $processStep->expects($this->once())
                     ->method('getLabel')
@@ -507,30 +444,24 @@ class ProcessCommandTest extends TestCase
 
         $this->expectExceptionObject($exception);
 
-        /* @var ProcessCommand&MockObject $command */
-        $command = $this->getMockBuilder(ProcessCommand::class)
-                        ->onlyMethods(['updateExportJob'])
-                        ->setConstructorArgs([$this->console, $this->exportDataService, $this->exportQueueFacade, []])
-                        ->getMock();
-        $command->expects($this->exactly(2))
-                ->method('updateExportJob')
-                ->withConsecutive(
-                    [$this->identicalTo($exportJob1), $this->identicalTo($status)],
-                    [
-                        $this->identicalTo($exportJob2),
-                        $this->identicalTo(JobStatus::ERROR),
-                        $this->identicalTo($expectedErrorMessage),
-                    ]
-                )
-                ->willReturn($exportJob2);
+        $instance = $this->createInstance(['updateExportJob']);
+        $instance->expects($this->exactly(2))
+                 ->method('updateExportJob')
+                 ->withConsecutive(
+                     [$this->identicalTo($exportJob1), $this->identicalTo($status)],
+                     [
+                         $this->identicalTo($exportJob2),
+                         $this->identicalTo(JobStatus::ERROR),
+                         $this->identicalTo($expectedErrorMessage),
+                     ]
+                 )
+                 ->willReturn($exportJob2);
 
-        $this->invokeMethod($command, 'runProcessStep', $processStep, $processStepData);
+        $this->invokeMethod($instance, 'runProcessStep', $processStep, $processStepData);
     }
 
     /**
-     * Tests the updateExportJob method.
      * @throws ReflectionException
-     * @covers ::updateExportJob
      */
     public function testUpdateExportJob(): void
     {
@@ -538,32 +469,29 @@ class ProcessCommandTest extends TestCase
         $errorMessage = 'def';
 
         $exportJob = new Job();
-        $exportJob->setId('ghi')
-                  ->setStatus('jkl');
+        $exportJob->id = 'ghi';
+        $exportJob->status = 'jkl';
 
         $expectedRequest = new UpdateRequest();
-        $expectedRequest->setJobId('ghi')
-                        ->setStatus('abc')
-                        ->setErrorMessage('def');
+        $expectedRequest->id = 'ghi';
+        $expectedRequest->status = 'abc';
+        $expectedRequest->errorMessage = 'def';
 
-        /* @var DetailsResponse&MockObject $response */
         $response = $this->createMock(DetailsResponse::class);
 
-        $this->exportQueueFacade->expects($this->once())
-                                ->method('updateJob')
-                                ->with($this->equalTo($expectedRequest))
-                                ->willReturn($response);
+        $this->combinationApiClient->expects($this->once())
+                                   ->method('sendRequest')
+                                   ->with($this->equalTo($expectedRequest))
+                                   ->willReturn(new FulfilledPromise($response));
 
-        $command = new ProcessCommand($this->console, $this->exportDataService, $this->exportQueueFacade, []);
-        $result = $this->invokeMethod($command, 'updateExportJob', $exportJob, $status, $errorMessage);
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'updateExportJob', $exportJob, $status, $errorMessage);
 
         $this->assertSame($response, $result);
     }
 
     /**
-     * Tests the updateExportJob method.
      * @throws ReflectionException
-     * @covers ::updateExportJob
      */
     public function testUpdateExportJobWithSameStatus(): void
     {
@@ -571,14 +499,14 @@ class ProcessCommandTest extends TestCase
         $errorMessage = 'def';
 
         $exportJob = new Job();
-        $exportJob->setId('ghi')
-                  ->setStatus('abc');
+        $exportJob->id = 'ghi';
+        $exportJob->status = 'abc';
 
-        $this->exportQueueFacade->expects($this->never())
-                                ->method('updateJob');
+        $this->combinationApiClient->expects($this->never())
+                                   ->method('sendRequest');
 
-        $command = new ProcessCommand($this->console, $this->exportDataService, $this->exportQueueFacade, []);
-        $result = $this->invokeMethod($command, 'updateExportJob', $exportJob, $status, $errorMessage);
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'updateExportJob', $exportJob, $status, $errorMessage);
 
         $this->assertSame($exportJob, $result);
     }

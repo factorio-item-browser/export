@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Factorio;
 
-use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Process\DownloadProcess;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;

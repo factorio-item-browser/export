@@ -24,14 +24,14 @@ class IconTest extends SerializerTestCase
     protected function getObject(): object
     {
         $layer1 = new Layer();
-        $layer1->setFile('abc');
+        $layer1->file = 'abc';
         $layer2 = new Layer();
-        $layer2->setFile('def');
+        $layer2->file = 'def';
 
         $result = new Icon();
-        $result->setType('ghi')
-               ->setName('jkl')
-               ->setLayers([$layer1, $layer2]);
+        $result->type = 'ghi';
+        $result->name = 'jkl';
+        $result->layers = [$layer1, $layer2];
         return $result;
     }
 

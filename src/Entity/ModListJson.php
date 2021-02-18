@@ -14,40 +14,6 @@ use FactorioItemBrowser\Export\Entity\ModList\Mod;
  */
 class ModListJson
 {
-    /**
-     * The mod list.
-     * @var array<Mod>|Mod[]
-     */
-    protected array $mods;
-
-    /**
-     * Sets the mods list.
-     * @param array<Mod>|Mod[] $mods
-     * @return $this
-     */
-    public function setMods(array $mods): self
-    {
-        $this->mods = $mods;
-        return $this;
-    }
-
-    /**
-     * Adds a mod to the list.
-     * @param Mod $mod
-     * @return $this
-     */
-    public function addMod(Mod $mod): self
-    {
-        $this->mods[] = $mod;
-        return $this;
-    }
-
-    /**
-     * Returns the mod list.
-     * @return array<Mod>|Mod[]
-     */
-    public function getMods(): array
-    {
-        return $this->mods;
-    }
+    /** @var array<Mod> */
+    public array $mods;
 }

@@ -7,9 +7,10 @@ namespace FactorioItemBrowser\Export\Parser;
 use BluePsyduck\FactorioTranslator\Exception\NoSupportedLoaderException;
 use BluePsyduck\FactorioTranslator\Translator;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
-use FactorioItemBrowser\Export\Mod\ModFileManager;
-use FactorioItemBrowser\ExportData\Entity\Combination;
-use FactorioItemBrowser\ExportData\Entity\LocalisedString;
+use FactorioItemBrowser\Export\Output\Console;
+use FactorioItemBrowser\Export\Service\ModFileService;
+use FactorioItemBrowser\ExportData\Collection\DictionaryInterface;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The parser of the translations.
@@ -19,74 +20,54 @@ use FactorioItemBrowser\ExportData\Entity\LocalisedString;
  */
 class TranslationParser implements ParserInterface
 {
-    /**
-     * The mod file manager.
-     * @var ModFileManager
-     */
-    protected $modFileManager;
+    protected Console $console;
+    protected ModFileService $modFileService;
+    protected Translator $translator;
 
-    /**
-     * The translator.
-     * @var Translator
-     */
-    protected $translator;
-
-    /**
-     * Initializes the parser.
-     * @param ModFileManager $modFileManager
-     * @param Translator $translator
-     */
-    public function __construct(ModFileManager $modFileManager, Translator $translator)
+    public function __construct(Console $console, ModFileService $modFileService, Translator $translator)
     {
-        $this->modFileManager = $modFileManager;
+        $this->console = $console;
+        $this->modFileService = $modFileService;
         $this->translator = $translator;
     }
 
     /**
-     * Prepares the parser to be able to later parse the dump.
      * @param Dump $dump
      * @throws NoSupportedLoaderException
      */
     public function prepare(Dump $dump): void
     {
-        $this->translator->loadMod($this->modFileManager->getLocalDirectory('core'));
-        foreach ($dump->getModNames() as $modName) {
-            $this->translator->loadMod($this->modFileManager->getLocalDirectory($modName));
+        $this->translator->loadMod($this->modFileService->getLocalDirectory('core'));
+        foreach ($this->console->iterateWithProgressbar('Preparing translations', $dump->modNames) as $modName) {
+            $this->translator->loadMod($this->modFileService->getLocalDirectory($modName));
         }
     }
 
-    /**
-     * Parses the data from the dump into the combination.
-     * @param Dump $dump
-     * @param Combination $combination
-     */
-    public function parse(Dump $dump, Combination $combination): void
+    public function parse(Dump $dump, ExportData $exportData): void
+    {
+    }
+
+    public function validate(ExportData $exportData): void
     {
     }
 
     /**
-     * Validates the data in the combination as a second parsing step.
-     * @param Combination $combination
+     * @param DictionaryInterface $translations
+     * @param mixed $localisedString
+     * @param mixed|null $fallbackLocalisedString
      */
-    public function validate(Combination $combination): void
-    {
-    }
-
-    /**
-     * Translates the localised string into all the languages.
-     * @param LocalisedString $entity
-     * @param mixed $translation
-     * @param mixed|null $secondaryTranslation
-     */
-    public function translate(LocalisedString $entity, $translation, $secondaryTranslation = null): void
-    {
+    public function translate(
+        DictionaryInterface $translations,
+        $localisedString,
+        $fallbackLocalisedString = null
+    ): void {
         foreach ($this->translator->getAllLocales() as $locale) {
-            $value = $this->translator->translate($locale, $translation);
-            if ($value === '' && $secondaryTranslation !== null) {
-                $value = $this->translator->translate($locale, $secondaryTranslation);
+            $value = $this->translator->translate($locale, $localisedString);
+            if ($value === '' && $fallbackLocalisedString !== null) {
+                $value = $this->translator->translate($locale, $fallbackLocalisedString);
             }
             if ($value !== '') {
-                $entity->addTranslation($locale, $value);
+                $translations->set($locale, $value);
             }
         }
     }

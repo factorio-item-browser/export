@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Factorio;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
-use FactorioItemBrowser\Export\Console\Console;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Factorio\FactorioDownloader;
 use FactorioItemBrowser\Export\Process\DownloadProcess;
 use PHPUnit\Framework\MockObject\MockObject;

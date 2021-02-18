@@ -17,7 +17,7 @@ use Symfony\Component\Console\CommandLoader\ContainerCommandLoader;
 chdir(dirname(__DIR__));
 require(__DIR__ . '/../vendor/autoload.php');
 
-(function () {
+(function (): void {
     /* @var ContainerInterface $container */
     $container = require(__DIR__ . '/../config/container.php');
     $config = $container->get('config');
@@ -26,5 +26,5 @@ require(__DIR__ . '/../vendor/autoload.php');
     $application->setCommandLoader(new ContainerCommandLoader($container, $config['commands']));
 
     $exit = $application->run();
-    exit ($exit);
+    exit($exit);
 })();

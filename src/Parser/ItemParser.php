@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
+use BluePsyduck\MapperManager\MapperManagerInterface;
 use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Fluid as DumpFluid;
 use FactorioItemBrowser\Export\Entity\Dump\Item as DumpItem;
-use FactorioItemBrowser\ExportData\Entity\Combination;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\ExportData\Entity\Item as ExportItem;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The parser of the items and fluids.
@@ -19,101 +21,68 @@ use FactorioItemBrowser\ExportData\Entity\Item as ExportItem;
  */
 class ItemParser implements ParserInterface
 {
-    /**
-     * The icon parser.
-     * @var IconParser
-     */
-    protected $iconParser;
+    protected Console $console;
+    protected IconParser $iconParser;
+    protected MapperManagerInterface $mapperManager;
+    protected TranslationParser $translationParser;
 
-    /**
-     * The translation parser.
-     * @var TranslationParser
-     */
-    protected $translationParser;
-
-    /**
-     * Initializes the parser.
-     * @param IconParser $iconParser
-     * @param TranslationParser $translationParser
-     */
-    public function __construct(IconParser $iconParser, TranslationParser $translationParser)
-    {
+    public function __construct(
+        Console $console,
+        IconParser $iconParser,
+        MapperManagerInterface $mapperManager,
+        TranslationParser $translationParser
+    ) {
+        $this->console = $console;
         $this->iconParser = $iconParser;
+        $this->mapperManager = $mapperManager;
         $this->translationParser = $translationParser;
     }
 
-    /**
-     * Prepares the parser to be able to later parse the dump.
-     * @param Dump $dump
-     */
     public function prepare(Dump $dump): void
     {
     }
 
-    /**
-     * Parses the data from the dump into the combination.
-     * @param Dump $dump
-     * @param Combination $combination
-     */
-    public function parse(Dump $dump, Combination $combination): void
+    public function parse(Dump $dump, ExportData $exportData): void
     {
-        foreach ($dump->getControlStage()->getItems() as $dumpItem) {
-            $combination->addItem($this->mapItem($dumpItem));
+        foreach ($this->console->iterateWithProgressbar('Parsing items', $dump->items) as $dumpItem) {
+            $exportData->getItems()->add($this->createItem($dumpItem));
         }
-        foreach ($dump->getControlStage()->getFluids() as $dumpFluid) {
-            $combination->addItem($this->mapFluid($dumpFluid));
+        foreach ($this->console->iterateWithProgressbar('Parsing fluids', $dump->fluids) as $dumpFluid) {
+            $exportData->getItems()->add($this->createFluid($dumpFluid));
         }
     }
 
-    /**
-     * Maps the dump item to an export one.
-     * @param DumpItem $dumpItem
-     * @return ExportItem
-     */
-    protected function mapItem(DumpItem $dumpItem): ExportItem
+    protected function createItem(DumpItem $dumpItem): ExportItem
     {
-        $exportItem = new ExportItem();
-        $exportItem->setType(EntityType::ITEM)
-                   ->setName($dumpItem->getName())
-                   ->setIconId($this->iconParser->getIconId(EntityType::ITEM, $dumpItem->getName()));
+        $exportItem = $this->mapperManager->map($dumpItem, new ExportItem());
+        $exportItem->iconId = $this->iconParser->getIconId(EntityType::ITEM, $dumpItem->name);
 
         $this->translationParser->translate(
-            $exportItem->getLabels(),
-            $dumpItem->getLocalisedName(),
-            $dumpItem->getLocalisedEntityName()
+            $exportItem->labels,
+            $dumpItem->localisedName,
+            $dumpItem->localisedEntityName,
         );
         $this->translationParser->translate(
-            $exportItem->getDescriptions(),
-            $dumpItem->getLocalisedDescription(),
-            $dumpItem->getLocalisedEntityDescription()
+            $exportItem->descriptions,
+            $dumpItem->localisedDescription,
+            $dumpItem->localisedEntityDescription,
         );
 
         return $exportItem;
     }
 
-    /**
-     * Maps the dump fluid to an export item.
-     * @param DumpFluid $dumpFluid
-     * @return ExportItem
-     */
-    protected function mapFluid(DumpFluid $dumpFluid): ExportItem
+    protected function createFluid(DumpFluid $dumpFluid): ExportItem
     {
-        $exportItem = new ExportItem();
-        $exportItem->setType(EntityType::FLUID)
-                   ->setName($dumpFluid->getName())
-                   ->setIconId($this->iconParser->getIconId(EntityType::FLUID, $dumpFluid->getName()));
+        $exportItem = $this->mapperManager->map($dumpFluid, new ExportItem());
+        $exportItem->iconId = $this->iconParser->getIconId(EntityType::FLUID, $dumpFluid->name);
 
-        $this->translationParser->translate($exportItem->getLabels(), $dumpFluid->getLocalisedName());
-        $this->translationParser->translate($exportItem->getDescriptions(), $dumpFluid->getLocalisedDescription());
+        $this->translationParser->translate($exportItem->labels, $dumpFluid->localisedName);
+        $this->translationParser->translate($exportItem->descriptions, $dumpFluid->localisedDescription);
 
         return $exportItem;
     }
 
-    /**
-     * Validates the data in the combination as a second parsing step.
-     * @param Combination $combination
-     */
-    public function validate(Combination $combination): void
+    public function validate(ExportData $exportData): void
     {
     }
 }

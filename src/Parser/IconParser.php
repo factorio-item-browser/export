@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Parser;
 
+use BluePsyduck\MapperManager\MapperManagerInterface;
 use FactorioItemBrowser\Common\Constant\EntityType;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Icon as DumpIcon;
-use FactorioItemBrowser\Export\Entity\Dump\Layer as DumpLayer;
 use FactorioItemBrowser\Export\Helper\HashCalculator;
-use FactorioItemBrowser\ExportData\Entity\Combination;
+use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\ExportData\Entity\Icon as ExportIcon;
-use FactorioItemBrowser\ExportData\Entity\Icon\Layer as ExportLayer;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The parser of the icons.
@@ -21,126 +21,51 @@ use FactorioItemBrowser\ExportData\Entity\Icon\Layer as ExportLayer;
  */
 class IconParser implements ParserInterface
 {
-    /**
-     * The size to render the icons to.
-     */
-    protected const RENDERED_ICON_SIZE = 64;
-
-    /**
-     * The types which are blacklisted from the parser.
-     */
     protected const BLACKLISTED_TYPES = [
         'technology',
         'tutorial',
     ];
 
-    /**
-     * The hash calculator.
-     * @var HashCalculator
-     */
-    protected $hashCalculator;
+    protected Console $console;
+    protected HashCalculator $hashCalculator;
+    protected MapperManagerInterface $mapperManager;
 
-    /**
-     * The parsed icons.
-     * @var array|ExportIcon[][]
-     */
-    protected $parsedIcons = [];
+    /** @var array<string,array<string,ExportIcon>> */
+    protected array $parsedIcons = [];
+    /** @var array<string,ExportIcon> */
+    protected array $usedIcons = [];
 
-    /**
-     * The icons which are used by any entity.
-     * @var array|ExportIcon[]
-     */
-    protected $usedIcons = [];
-
-    /**
-     * Initializes the parser.
-     * @param HashCalculator $hashCalculator
-     */
-    public function __construct(HashCalculator $hashCalculator)
+    public function __construct(Console $console, HashCalculator $hashCalculator, MapperManagerInterface $mapperManager)
     {
+        $this->console = $console;
         $this->hashCalculator = $hashCalculator;
+        $this->mapperManager = $mapperManager;
     }
 
-    /**
-     * Prepares the parser to be able to later parse the dump.
-     * @param Dump $dump
-     */
     public function prepare(Dump $dump): void
     {
         $this->parsedIcons = [];
         $this->usedIcons = [];
 
-        foreach ($dump->getDataStage()->getIcons() as $dumpIcon) {
+        foreach ($this->console->iterateWithProgressbar('Preparing icons', $dump->icons) as $dumpIcon) {
             if ($this->isIconValid($dumpIcon)) {
-                $this->addParsedIcon($dumpIcon->getType(), $dumpIcon->getName(), $this->mapIcon($dumpIcon));
+                $this->addParsedIcon($dumpIcon->type, $dumpIcon->name, $this->createIcon($dumpIcon));
             }
         }
     }
 
-    /**
-     * Returns whether the icon is valid and can be processed further.
-     * @param DumpIcon $dumpIcon
-     * @return bool
-     */
     protected function isIconValid(DumpIcon $dumpIcon): bool
     {
-        return !in_array($dumpIcon->getType(), self::BLACKLISTED_TYPES, true);
+        return !in_array($dumpIcon->type, self::BLACKLISTED_TYPES, true);
     }
 
-    /**
-     * Maps the dump icon to an export one.
-     * @param DumpIcon $dumpIcon
-     * @return ExportIcon
-     */
-    protected function mapIcon(DumpIcon $dumpIcon): ExportIcon
+    protected function createIcon(DumpIcon $dumpIcon): ExportIcon
     {
-        $exportIcon = new ExportIcon();
-        $exportIcon->setSize(self::RENDERED_ICON_SIZE);
-
-        foreach ($dumpIcon->getLayers() as $dumpLayer) {
-            $exportIcon->addLayer($this->mapLayer($dumpLayer));
-        }
-
-        $exportIcon->setId($this->hashCalculator->hashIcon($exportIcon));
+        $exportIcon = $this->mapperManager->map($dumpIcon, new ExportIcon());
+        $exportIcon->id = $this->hashCalculator->hashIcon($exportIcon);
         return $exportIcon;
     }
 
-    /**
-     * Maps the dump layer to an export one.
-     * @param DumpLayer $dumpLayer
-     * @return ExportLayer
-     */
-    protected function mapLayer(DumpLayer $dumpLayer): ExportLayer
-    {
-        $exportLayer = new ExportLayer();
-        $exportLayer->setFileName($dumpLayer->getFile())
-                    ->setScale($dumpLayer->getScale())
-                    ->setSize($dumpLayer->getSize());
-        $exportLayer->getOffset()->setX($dumpLayer->getShiftX())
-                                 ->setY($dumpLayer->getShiftY());
-        $exportLayer->getTint()->setRed($this->convertColorValue($dumpLayer->getTintRed()))
-                               ->setGreen($this->convertColorValue($dumpLayer->getTintGreen()))
-                               ->setBlue($this->convertColorValue($dumpLayer->getTintBlue()))
-                               ->setAlpha($this->convertColorValue($dumpLayer->getTintAlpha()));
-        return $exportLayer;
-    }
-
-    /**
-     * Converts the specified color value to the range between 0 and 1.
-     * @param float $value
-     * @return float
-     */
-    protected function convertColorValue(float $value): float
-    {
-        return ($value > 1) ? ($value / 255.) : $value;
-    }
-
-    /**
-     * Adds a parsed icon to the property array.
-     * @param string $type
-     * @param string $name
-     * @param ExportIcon $icon
-     */
     protected function addParsedIcon(string $type, string $name, ExportIcon $icon): void
     {
         switch ($type) {
@@ -161,37 +86,24 @@ class IconParser implements ParserInterface
         }
     }
 
-    /**
-     * Parses the data from the dump into the combination.
-     * @param Dump $dump
-     * @param Combination $combination
-     */
-    public function parse(Dump $dump, Combination $combination): void
+    public function parse(Dump $dump, ExportData $exportData): void
     {
     }
 
-    /**
-     * Validates the data in the combination as a second parsing step.
-     * @param Combination $combination
-     */
-    public function validate(Combination $combination): void
+    public function validate(ExportData $exportData): void
     {
-        $combination->setIcons(array_merge($combination->getIcons(), array_values($this->usedIcons)));
+        foreach ($this->usedIcons as $icon) {
+            $exportData->getIcons()->add($icon);
+        }
     }
 
-    /**
-     * Returns the icon id for the specified type and name, if available.
-     * @param string $type
-     * @param string $name
-     * @return string
-     */
     public function getIconId(string $type, string $name): string
     {
         $result = '';
         $icon = $this->parsedIcons[$type][$name] ?? null;
         if ($icon !== null) {
-            $this->usedIcons[$icon->getId()] = $icon;
-            $result = $icon->getId();
+            $this->usedIcons[$icon->id] = $icon;
+            $result = $icon->id;
         }
         return $result;
     }
