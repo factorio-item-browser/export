@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.0 - 2021-02-18
+
+### Changed
+
+- Dump mod writing items, recipes etc. one at a time to the output instead of all at once at the end for performance
+  increase.
+- Updated to the latest version of `factorio-item-browser/export-data`.
+- Output to use a nicer format (i.e. more readable when viewing in console).
+- Deprecated Export-Queue to new Combination-API.
+
 ## 2.0.11 - 2020-09-28
 
 ### Fixed
