@@ -45,8 +45,8 @@ class FactorioExecutionService
         $this->factorioProcessFactory = $factorioProcessFactory;
         $this->fileSystem = $fileSystem;
         $this->modFileService = $modFileService;
-        $this->factorioDirectory = $factorioDirectory;
-        $this->instancesDirectory = $instancesDirectory;
+        $this->factorioDirectory = (string) realpath($factorioDirectory);
+        $this->instancesDirectory = (string) realpath($instancesDirectory);
         $this->version = $version;
     }
 

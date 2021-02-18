@@ -17,6 +17,7 @@ use FactorioItemBrowser\Export\Process\FactorioProcessFactory;
 use FactorioItemBrowser\Export\Service\FactorioExecutionService;
 use FactorioItemBrowser\Export\Service\ModFileService;
 use JMS\Serializer\SerializerInterface;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -41,9 +42,9 @@ class FactorioExecutionServiceTest extends TestCase
     private Filesystem $fileSystem;
     /** @var ModFileService&MockObject */
     private ModFileService $modFileService;
-    private string $factorioDirectory;
-    private string $instancesDirectory;
-    private string $version;
+    private string $factorioDirectory = 'foo';
+    private string $instancesDirectory = 'bar';
+    private string $version = '1.2.3';
 
     protected function setUp(): void
     {
@@ -51,9 +52,6 @@ class FactorioExecutionServiceTest extends TestCase
         $this->factorioProcessFactory = $this->createMock(FactorioProcessFactory::class);
         $this->fileSystem = $this->createMock(Filesystem::class);
         $this->modFileService = $this->createMock(ModFileService::class);
-        $this->factorioDirectory = 'foo';
-        $this->instancesDirectory = 'bar';
-        $this->version = '1.2.3';
     }
 
     /**
@@ -62,18 +60,25 @@ class FactorioExecutionServiceTest extends TestCase
      */
     private function createInstance(array $mockedMethods = []): FactorioExecutionService
     {
-        return $this->getMockBuilder(FactorioExecutionService::class)
-                    ->onlyMethods($mockedMethods)
-                    ->setConstructorArgs([
-                        $this->exportSerializer,
-                        $this->factorioProcessFactory,
-                        $this->fileSystem,
-                        $this->modFileService,
-                        $this->factorioDirectory,
-                        $this->instancesDirectory,
-                        $this->version,
-                    ])
-                    ->getMock();
+        $instance = $this->getMockBuilder(FactorioExecutionService::class)
+                         ->onlyMethods($mockedMethods)
+                         ->setConstructorArgs([
+                             $this->exportSerializer,
+                             $this->factorioProcessFactory,
+                             $this->fileSystem,
+                             $this->modFileService,
+                             'src',
+                             'test',
+                             $this->version,
+                         ])
+                         ->getMock();
+
+        $this->assertSame(realpath('src'), $this->extractProperty($instance, 'factorioDirectory'));
+        $this->assertSame(realpath('test'), $this->extractProperty($instance, 'instancesDirectory'));
+        $this->injectProperty($instance, 'factorioDirectory', $this->factorioDirectory);
+        $this->injectProperty($instance, 'instancesDirectory', $this->instancesDirectory);
+
+        return $instance;
     }
 
     /**
@@ -116,7 +121,7 @@ class FactorioExecutionServiceTest extends TestCase
                          ->method('copy')
                          ->withConsecutive(
                              [
-                                 $this->identicalTo('foo/bin/x64/factorio'),
+                                 $this->identicalTo("foo/bin/x64/factorio"),
                                  $this->identicalTo('bar/abc/bin/x64/factorio'),
                                  $this->isTrue(),
                              ],
