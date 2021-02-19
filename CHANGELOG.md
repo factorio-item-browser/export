@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.1 - 2021-02-19
+
+### Fixed
+
+- Generating a cyclic symlink within the Factorio instance when using a relative path in the config.
+
 ## 2.1.0 - 2021-02-18
 
 ### Changed
