@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.2 - 2021-02-20
+
+### Fixed
+
+- Invalid symlinks for real this time.
+
 ## 2.1.1 - 2021-02-19
 
 ### Fixed
