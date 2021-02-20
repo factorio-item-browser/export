@@ -39,8 +39,8 @@ class ModFileService
     ) {
         $this->exportSerializer = $exportSerializer;
         $this->zipArchiveExtractor = $zipArchiveExtractor;
-        $this->factorioDirectory = $factorioDirectory;
-        $this->modsDirectory = $modsDirectory;
+        $this->factorioDirectory = (string) realpath($factorioDirectory);
+        $this->modsDirectory = (string) realpath($modsDirectory);
     }
 
     /**

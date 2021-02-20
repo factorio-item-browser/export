@@ -29,8 +29,8 @@ class ModFileServiceTest extends TestCase
     private SerializerInterface $exportSerializer;
     /** @var ZipArchiveExtractor&MockObject */
     private ZipArchiveExtractor $zipArchiveExtractor;
-    private string $factorioDirectory = 'foo';
-    private string $modsDirectory = 'bar';
+    private string $factorioDirectory = 'data/factorio';
+    private string $modsDirectory = 'data/mods';
 
     protected function setUp(): void
     {
@@ -187,9 +187,9 @@ class ModFileServiceTest extends TestCase
     public function provideGetLocalDirectory(): array
     {
         return [
-            ['base', 'foo/data/base'],
-            ['core', 'foo/data/core'],
-            ['abc', 'bar/abc'],
+            ['base', realpath(__DIR__ . '/../../../data/factorio') . '/data/base'],
+            ['core', realpath(__DIR__ . '/../../../data/factorio') . '/data/core'],
+            ['abc', realpath(__DIR__ . '/../../../data/mods') . '/abc'],
         ];
     }
 

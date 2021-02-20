@@ -22,7 +22,8 @@ class ModDownloadProcessFactoryTest extends TestCase
 {
     public function test(): void
     {
-        $tempDirectory = 'foo';
+        $tempDirectory = 'data/temp';
+        $expectedDestinationFile = realpath(__DIR__ . '/../../../data/temp') . '/ghi';
 
         $mod = new Mod();
         $mod->setName('abc');
@@ -36,7 +37,7 @@ class ModDownloadProcessFactoryTest extends TestCase
                               ->with($this->identicalTo('def'))
                               ->willReturn('jkl');
 
-        $expectedResult = new ModDownloadProcess($mod, $release, 'jkl', 'foo/ghi');
+        $expectedResult = new ModDownloadProcess($mod, $release, 'jkl', $expectedDestinationFile);
 
         $instance = new ModDownloadProcessFactory($modPortalClientFacade, $tempDirectory);
         $result = $instance->create($mod, $release);

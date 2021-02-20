@@ -22,7 +22,7 @@ class ModDownloadProcessFactory
     public function __construct(Facade $modPortalClientFacade, string $tempDirectory)
     {
         $this->modPortalClientFacade = $modPortalClientFacade;
-        $this->tempDirectory = $tempDirectory;
+        $this->tempDirectory = (string) realpath($tempDirectory);
     }
 
     /**

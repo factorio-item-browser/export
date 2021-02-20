@@ -16,12 +16,12 @@ use FactorioItemBrowser\Export\Constant\ConfigKey;
 return [
     ConfigKey::MAIN => [
         ConfigKey::DIRECTORIES => [
-//            ConfigKey::DIRECTORY_CACHE => __DIR__ . '/../../../data/cache',
-            ConfigKey::DIRECTORY_FACTORIO => __DIR__ . '/../../../data/factorio',
-            ConfigKey::DIRECTORY_INSTANCES => __DIR__ . '/../../../data/instances',
-            ConfigKey::DIRECTORY_LOGS => __DIR__ . '/../../../data/log',
-            ConfigKey::DIRECTORY_MODS => __DIR__ . '/../../../data/mods',
-            ConfigKey::DIRECTORY_TEMP => __DIR__ . '/../../../data/temp',
+//            ConfigKey::DIRECTORY_CACHE => 'data/cache',
+            ConfigKey::DIRECTORY_FACTORIO => 'data/factorio',
+            ConfigKey::DIRECTORY_INSTANCES => 'data/instances',
+            ConfigKey::DIRECTORY_LOGS => 'data/log',
+            ConfigKey::DIRECTORY_MODS => 'data/mods',
+            ConfigKey::DIRECTORY_TEMP => 'data/temp',
         ],
         ConfigKey::PARALLEL_DOWNLOADS => 4,
         ConfigKey::PARALLEL_RENDERS => 8,

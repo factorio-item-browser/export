@@ -27,9 +27,9 @@ class RenderIconProcessFactory
         string $renderIconBinary
     ) {
         $this->serializer = $exportDataSerializer;
-        $this->factorioDirectory = $factorioDirectory;
-        $this->modsDirectory = $modsDirectory;
-        $this->renderIconBinary = $renderIconBinary;
+        $this->factorioDirectory = (string) realpath($factorioDirectory);
+        $this->modsDirectory = (string) realpath($modsDirectory);
+        $this->renderIconBinary = (string) realpath($renderIconBinary);
     }
 
     /**
@@ -40,12 +40,12 @@ class RenderIconProcessFactory
     public function create(Icon $icon): RenderIconProcess
     {
         $command = [
-            (string) realpath($this->renderIconBinary),
+            $this->renderIconBinary,
             $this->serializer->serialize($icon, 'json'),
         ];
         $env = [
-            'FACTORIO_DATA_DIRECTORY' => (string) realpath($this->factorioDirectory . '/data'),
-            'FACTORIO_MODS_DIRECTORY' => (string) realpath($this->modsDirectory),
+            'FACTORIO_DATA_DIRECTORY' => $this->factorioDirectory . '/data',
+            'FACTORIO_MODS_DIRECTORY' => $this->modsDirectory,
         ];
 
         return new RenderIconProcess($icon, $command, $env);

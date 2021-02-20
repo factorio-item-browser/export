@@ -96,10 +96,10 @@ class FactorioDownloader
     ) {
         $this->console = $console;
         $this->fileSystem = $fileSystem;
-        $this->factorioDirectory = $factorioDirectory;
+        $this->factorioDirectory = (string) realpath($factorioDirectory);
         $this->factorioDownloadUsername = $factorioDownloadUsername;
         $this->factorioDownloadToken = $factorioDownloadToken;
-        $this->tempDirectory = $tempDirectory;
+        $this->tempDirectory = (string) realpath($tempDirectory);
     }
 
     /**

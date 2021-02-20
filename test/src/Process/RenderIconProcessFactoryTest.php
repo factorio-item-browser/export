@@ -4,84 +4,58 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\Process;
 
-use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Process\RenderIconProcessFactory;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use JMS\Serializer\SerializerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use ReflectionException;
 
 /**
  * The PHPUnit test of the RenderIconProcessFactory class.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Process\RenderIconProcessFactory
+ * @covers \FactorioItemBrowser\Export\Process\RenderIconProcessFactory
  */
 class RenderIconProcessFactoryTest extends TestCase
 {
-    use ReflectionTrait;
+    /** @var SerializerInterface&MockObject */
+    private SerializerInterface $serializer;
+    private string $factorioDirectory = 'data/factorio';
+    private string $modsDirectory = 'data/mods';
+    private string $renderIconBinary = 'bin/render-icon';
 
-    /**
-     * The mocked serializer.
-     * @var SerializerInterface&MockObject
-     */
-    protected $serializer;
-
-    /**
-     * Sets up the test case.
-     */
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->serializer = $this->createMock(SerializerInterface::class);
     }
 
     /**
-     * Tests the constructing.
-     * @throws ReflectionException
-     * @covers ::__construct
+     * @param array<string> $mockedMethods
+     * @return RenderIconProcessFactory&MockObject
      */
-    public function testConstruct(): void
+    private function createInstance(array $mockedMethods = []): RenderIconProcessFactory
     {
-        $factorioDirectory = 'abc';
-        $modsDirectory = 'def';
-        $renderIconBinary = 'ghi';
-
-        $factory = new RenderIconProcessFactory(
-            $this->serializer,
-            $factorioDirectory,
-            $modsDirectory,
-            $renderIconBinary
-        );
-
-        $this->assertSame($this->serializer, $this->extractProperty($factory, 'serializer'));
-        $this->assertSame($factorioDirectory, $this->extractProperty($factory, 'factorioDirectory'));
-        $this->assertSame($modsDirectory, $this->extractProperty($factory, 'modsDirectory'));
-        $this->assertSame($renderIconBinary, $this->extractProperty($factory, 'renderIconBinary'));
+        return $this->getMockBuilder(RenderIconProcessFactory::class)
+                    ->disableProxyingToOriginalMethods()
+                    ->onlyMethods($mockedMethods)
+                    ->setConstructorArgs([
+                        $this->serializer,
+                        $this->factorioDirectory,
+                        $this->modsDirectory,
+                        $this->renderIconBinary
+                    ])
+                    ->getMock();
     }
 
-    /**
-     * Tests the create method.
-     * @covers ::create
-     */
     public function testCreate(): void
     {
         $serializedIcon = 'abc';
-
-        /* @var Icon&MockObject $icon */
         $icon = $this->createMock(Icon::class);
-
-        $factorioDirectory = '.';
-        $modsDirectory = 'test';
-        $renderIconBinary = 'bin/render-icon';
-
-        $expectedCommandLine = sprintf("'%s' 'abc'", realpath($renderIconBinary));
+        $expectedCommandLine = sprintf("'%s' 'abc'", realpath('bin/render-icon'));
         $expectedEnv = [
-            'FACTORIO_DATA_DIRECTORY' => realpath('data'),
-            'FACTORIO_MODS_DIRECTORY' => realpath('test'),
+            'FACTORIO_DATA_DIRECTORY' => realpath('data/factorio') . '/data',
+            'FACTORIO_MODS_DIRECTORY' => realpath('data/mods'),
         ];
 
         $this->serializer->expects($this->once())
@@ -89,14 +63,9 @@ class RenderIconProcessFactoryTest extends TestCase
                          ->with($this->identicalTo($icon), $this->identicalTo('json'))
                          ->willReturn($serializedIcon);
 
-        $factory = new RenderIconProcessFactory(
-            $this->serializer,
-            $factorioDirectory,
-            $modsDirectory,
-            $renderIconBinary
-        );
+        $instance = $this->createInstance();
+        $result = $instance->create($icon);
 
-        $result = $factory->create($icon);
         $this->assertSame($expectedCommandLine, $result->getCommandLine());
         $this->assertSame($expectedEnv, $result->getEnv());
         $this->assertSame($icon, $result->getIcon());

@@ -55,10 +55,12 @@ class FactorioDownloaderTest extends TestCase
      */
     public function testConstruct(): void
     {
-        $factorioDirectory = 'abc';
-        $factorioDownloadUsername = 'def';
-        $factorioDownloadToken = 'ghi';
-        $tempDirectory = 'jkl';
+        $factorioDirectory = 'data/factorio';
+        $expectedFactorioDirectory = realpath(__DIR__ . '/../../../data/factorio');
+        $factorioDownloadUsername = 'abc';
+        $factorioDownloadToken = 'def';
+        $tempDirectory = 'data/temp';
+        $expectedTempDirectory = realpath(__DIR__ . '/../../../data/temp');
 
         $downloader = new FactorioDownloader(
             $this->console,
@@ -71,10 +73,10 @@ class FactorioDownloaderTest extends TestCase
 
         $this->assertSame($this->console, $this->extractProperty($downloader, 'console'));
         $this->assertSame($this->fileSystem, $this->extractProperty($downloader, 'fileSystem'));
-        $this->assertSame($factorioDirectory, $this->extractProperty($downloader, 'factorioDirectory'));
+        $this->assertSame($expectedFactorioDirectory, $this->extractProperty($downloader, 'factorioDirectory'));
         $this->assertSame($factorioDownloadUsername, $this->extractProperty($downloader, 'factorioDownloadUsername'));
         $this->assertSame($factorioDownloadToken, $this->extractProperty($downloader, 'factorioDownloadToken'));
-        $this->assertSame($tempDirectory, $this->extractProperty($downloader, 'tempDirectory'));
+        $this->assertSame($expectedTempDirectory, $this->extractProperty($downloader, 'tempDirectory'));
     }
 
     /**
@@ -83,13 +85,13 @@ class FactorioDownloaderTest extends TestCase
      */
     public function testDownload(): void
     {
-        $tempDirectory = 'abc';
+        $tempDirectory = 'data/temp';
         $version = '1.2.3';
 
-        $expectedHeadlessArchive = 'abc/headless.tar.xz';
-        $expectedHeadlessDirectory = 'abc/headless';
-        $expectedFullArchive = 'abc/full.tar.xz';
-        $expectedFullDirectory = 'abc/full';
+        $expectedHeadlessArchive = realpath(__DIR__ . '/../../../data/temp') . '/headless.tar.xz';
+        $expectedHeadlessDirectory = realpath(__DIR__ . '/../../../data/temp') . '/headless';
+        $expectedFullArchive = realpath(__DIR__ . '/../../../data/temp') . '/full.tar.xz';
+        $expectedFullDirectory = realpath(__DIR__ . '/../../../data/temp') . '/full';
 
         /* @var DownloadProcess&MockObject $headlessProcess */
         $headlessProcess = $this->createMock(DownloadProcess::class);
@@ -278,23 +280,29 @@ class FactorioDownloaderTest extends TestCase
     public function testReplaceOldVersion(): void
     {
         $headlessDirectory = 'abc';
-        $factorioDirectory = 'def';
+        $factorioDirectory = 'data/factorio';
 
         $this->fileSystem->expects($this->exactly(3))
                          ->method('remove')
                          ->withConsecutive(
-                             [$this->identicalTo('def/bin')],
-                             [$this->identicalTo('def/data')],
-                             [$this->identicalTo('def/config-path.cfg')]
+                             [$this->identicalTo(realpath(__DIR__ . '/../../../data/factorio') . '/bin')],
+                             [$this->identicalTo(realpath(__DIR__ . '/../../../data/factorio') . '/data')],
+                             [$this->identicalTo(realpath(__DIR__ . '/../../../data/factorio') . '/config-path.cfg')]
                          );
         $this->fileSystem->expects($this->exactly(3))
                          ->method('rename')
                          ->withConsecutive(
-                             [$this->identicalTo('abc/factorio/bin'), $this->identicalTo('def/bin')],
-                             [$this->identicalTo('abc/factorio/data'), $this->identicalTo('def/data')],
+                             [
+                                 $this->identicalTo('abc/factorio/bin'),
+                                 $this->identicalTo(realpath(__DIR__ . '/../../../data/factorio') . '/bin'),
+                             ],
+                             [
+                                 $this->identicalTo('abc/factorio/data'),
+                                 $this->identicalTo(realpath(__DIR__ . '/../../../data/factorio') . '/data'),
+                             ],
                              [
                                  $this->identicalTo('abc/factorio/config-path.cfg'),
-                                 $this->identicalTo('def/config-path.cfg'),
+                                 $this->identicalTo(realpath(__DIR__ . '/../../../data/factorio') . '/config-path.cfg'),
                              ],
                          );
 
