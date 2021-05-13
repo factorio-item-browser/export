@@ -6,6 +6,7 @@ namespace FactorioItemBrowser\Export\Parser;
 
 use BluePsyduck\FactorioTranslator\Exception\NoSupportedLoaderException;
 use BluePsyduck\FactorioTranslator\Translator;
+use FactorioItemBrowser\Common\Constant\Defaults;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Service\ModFileService;
@@ -68,6 +69,18 @@ class TranslationParser implements ParserInterface
             }
             if ($value !== '') {
                 $translations->set($locale, $value);
+            }
+        }
+
+        $this->filterDuplicates($translations);
+    }
+
+    protected function filterDuplicates(DictionaryInterface $translations): void
+    {
+        $defaultTranslation = $translations->get(Defaults::LOCALE);
+        foreach ($translations as $locale => $translation) {
+            if ($locale !== Defaults::LOCALE && $translation === $defaultTranslation) {
+                $translations->set($locale, '');
             }
         }
     }
