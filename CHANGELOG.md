@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.3 - 2021-05-14
+
+### Fixed
+
+- Duplicated translations between English and non-English locales.
+
 ## 2.1.2 - 2021-02-20
 
 ### Fixed
