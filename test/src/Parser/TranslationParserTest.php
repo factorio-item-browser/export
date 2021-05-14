@@ -13,9 +13,11 @@ use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Service\ModFileService;
 use FactorioItemBrowser\Export\Parser\TranslationParser;
 use FactorioItemBrowser\ExportData\Collection\DictionaryInterface;
+use FactorioItemBrowser\ExportData\Collection\TranslationDictionary;
 use FactorioItemBrowser\ExportData\ExportData;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 
 /**
  * The PHPUnit test of the TranslationParser class.
@@ -42,13 +44,21 @@ class TranslationParserTest extends TestCase
         $this->translator = $this->createMock(Translator::class);
     }
 
-    private function createInstance(): TranslationParser
+    /**
+     * @param array<string> $mockedMethods
+     * @return TranslationParser&MockObject
+     */
+    private function createInstance(array $mockedMethods = []): TranslationParser
     {
-        return new TranslationParser(
-            $this->console,
-            $this->modFileManager,
-            $this->translator,
-        );
+        return $this->getMockBuilder(TranslationParser::class)
+                    ->disableProxyingToOriginalMethods()
+                    ->onlyMethods($mockedMethods)
+                    ->setConstructorArgs([
+                        $this->console,
+                        $this->modFileManager,
+                        $this->translator,
+                    ])
+                    ->getMock();
     }
 
     /**
@@ -139,7 +149,66 @@ class TranslationParserTest extends TestCase
                              '',
                          );
 
-        $instance = $this->createInstance();
+        $instance = $this->createInstance(['filterDuplicates']);
+        $instance->expects($this->once())
+                 ->method('filterDuplicates')
+                 ->with($this->identicalTo($translations));
+
         $instance->translate($translations, $localisedString, $fallbackLocalisedString);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function provideFilterDuplicates(): array
+    {
+        // Translations with duplication
+        $translations1 = new TranslationDictionary();
+        $translations1->set('en', 'abc');
+        $translations1->set('de', 'abc');
+        $translations1->set('fr', 'def');
+        $translations1->set('ja', 'def');
+        $expectedTranslations1 = new TranslationDictionary();
+        $expectedTranslations1->set('en', 'abc');
+        $expectedTranslations1->set('fr', 'def');
+        $expectedTranslations1->set('ja', 'def');
+
+        // Translations without duplication
+        $translations2 = new TranslationDictionary();
+        $translations2->set('en', 'abc');
+        $translations2->set('de', 'def');
+        $translations2->set('fr', 'ghi');
+        $expectedTranslations2 = new TranslationDictionary();
+        $expectedTranslations2->set('en', 'abc');
+        $expectedTranslations2->set('de', 'def');
+        $expectedTranslations2->set('fr', 'ghi');
+
+        // Translations without English will never filter
+        $translations3 = new TranslationDictionary();
+        $translations3->set('de', 'abc');
+        $translations3->set('fr', 'abc');
+        $translations3->set('ja', 'ghi');
+        $expectedTranslations3 = new TranslationDictionary();
+        $expectedTranslations3->set('de', 'abc');
+        $expectedTranslations3->set('fr', 'abc');
+        $expectedTranslations3->set('ja', 'ghi');
+
+        return [
+            [$translations1, $expectedTranslations1],
+        ];
+    }
+
+    /**
+     * @throws ReflectionException
+     * @dataProvider provideFilterDuplicates
+     */
+    public function testFilterDuplicates(
+        DictionaryInterface $translations,
+        DictionaryInterface $expectedTranslations
+    ): void {
+        $instance = $this->createInstance();
+        $this->invokeMethod($instance, 'filterDuplicates', $translations);
+
+        $this->assertEquals($expectedTranslations, $translations);
     }
 }
