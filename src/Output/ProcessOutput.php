@@ -34,17 +34,13 @@ class ProcessOutput
         $height = min($this->terminal->getHeight() - 6, self::NUMBER_OF_LINES);
         $width = $this->terminal->getWidth();
 
-        $lines = str_split($line, $width);
-        if ($lines !== false) {
-            $this->lines = array_slice(array_merge($this->lines, $lines), -$height);
-
-            $this->output->overwrite([
-                ' Process output:',
-                str_pad('', $width, '-'),
-                ...$this->lines,
-                str_pad('', $width, '-'),
-            ]);
-        }
+        $this->lines = array_slice(array_merge($this->lines, str_split($line, $width)), -$height);
+        $this->output->overwrite([
+            ' Process output:',
+            str_pad('', $width, '-'),
+            ...$this->lines,
+            str_pad('', $width, '-'),
+        ]);
         return $this;
     }
 }
