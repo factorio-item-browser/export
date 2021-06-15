@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.5 - 2021-06-15
+
+### Fixed
+
+- Accidental download of a mod named "base" from the Factorio Mod Portal, overwriting the local (vanilla) one.
+
 ## 2.1.4 - 2021-05-24
 
 ### Changed
