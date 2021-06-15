@@ -62,6 +62,8 @@ class ModDownloadService
      */
     public function download(array $modNames): void
     {
+        $modNames = $this->filterModNames($modNames);
+
         $currentVersions = $this->getCurrentVersions($modNames);
         $mods = $this->fetchMetaData($modNames);
         $releases = $this->getReleases($mods, $currentVersions);
@@ -73,6 +75,16 @@ class ModDownloadService
             $this->modDownloadProcessManager->add($mods[$modName], $release);
         }
         $this->modDownloadProcessManager->wait();
+    }
+
+    /**
+     * Filters unwanted mod names.
+     * @param array<string> $modNames
+     * @return array<string>
+     */
+    protected function filterModNames(array $modNames): array
+    {
+        return array_values(array_filter($modNames, fn ($modName) => !$this->modFileService->isVanillaMod($modName)));
     }
 
     /**

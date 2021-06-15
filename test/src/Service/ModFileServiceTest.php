@@ -8,6 +8,7 @@ use Exception;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
+use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Exception\InvalidInfoJsonFileException;
 use FactorioItemBrowser\Export\Helper\ZipArchiveExtractor;
 use FactorioItemBrowser\Export\Service\ModFileService;
@@ -73,6 +74,26 @@ class ModFileServiceTest extends TestCase
                  ->method('getLocalDirectory')
                  ->with($this->identicalTo($modName))
                  ->willReturn('bar/abc');
+
+        $instance->addModArchive($modName, $archiveFilePath);
+    }
+
+    /**
+     * @throws ExportException
+     */
+    public function testAddModArchiveWithException(): void
+    {
+        $modName = 'base';
+        $archiveFilePath = 'def';
+
+        $this->zipArchiveExtractor->expects($this->never())
+                                  ->method('extract');
+
+        $instance = $this->createInstance(['getLocalDirectory']);
+        $instance->expects($this->never())
+                 ->method('getLocalDirectory');
+
+        $this->expectException(InternalException::class);
 
         $instance->addModArchive($modName, $archiveFilePath);
     }
@@ -202,6 +223,29 @@ class ModFileServiceTest extends TestCase
     {
         $instance = $this->createInstance();
         $result = $instance->getLocalDirectory($modName);
+
+        $this->assertSame($expectedResult, $result);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function provideIsVanillaMod(): array
+    {
+        return [
+            ['base', true],
+            ['core', true],
+            ['foo', false],
+        ];
+    }
+
+    /**
+     * @dataProvider provideIsVanillaMod
+     */
+    public function testIsVanillaMod(string $modName, bool $expectedResult): void
+    {
+        $instance = $this->createInstance();
+        $result = $instance->isVanillaMod($modName);
 
         $this->assertSame($expectedResult, $result);
     }

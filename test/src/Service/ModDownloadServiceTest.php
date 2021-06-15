@@ -92,7 +92,8 @@ class ModDownloadServiceTest extends TestCase
      */
     public function testDownload(): void
     {
-        $modNames = ['abc', 'def'];
+        $modNames = ['abc', 'def', 'foo'];
+        $filteredModNames = ['abc', 'def'];
         $mod1 = $this->createMock(Mod::class);
         $mod2 = $this->createMock(Mod::class);
         $mods = [
@@ -119,14 +120,24 @@ class ModDownloadServiceTest extends TestCase
         $this->modDownloadProcessManager->expects($this->once())
                                         ->method('wait');
 
-        $instance = $this->createInstance(['getCurrentVersions', 'fetchMetaData', 'getReleases', 'printModList']);
+        $instance = $this->createInstance([
+            'filterModNames',
+            'getCurrentVersions',
+            'fetchMetaData',
+            'getReleases',
+            'printModList',
+        ]);
+        $instance->expects($this->once())
+                 ->method('filterModNames')
+                 ->with($this->identicalTo($modNames))
+                 ->willReturn($filteredModNames);
         $instance->expects($this->once())
                  ->method('getCurrentVersions')
-                 ->with($this->identicalTo($modNames))
+                 ->with($this->identicalTo($filteredModNames))
                  ->willReturn($currentVersions);
         $instance->expects($this->once())
                  ->method('fetchMetaData')
-                 ->with($this->identicalTo($modNames))
+                 ->with($this->identicalTo($filteredModNames))
                  ->willReturn($mods);
         $instance->expects($this->once())
                  ->method('getReleases')
@@ -137,6 +148,33 @@ class ModDownloadServiceTest extends TestCase
                  ->with($this->identicalTo($mods), $this->identicalTo($currentVersions), $this->identicalTo($releases));
 
         $instance->download($modNames);
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    public function testFilterModNames(): void
+    {
+        $modNames = ['abc', 'foo', 'def'];
+        $expectedResult = ['abc', 'def'];
+
+        $this->modFileService->expects($this->exactly(3))
+            ->method('isVanillaMod')
+            ->withConsecutive(
+                [$this->identicalTo('abc')],
+                [$this->identicalTo('foo')],
+                [$this->identicalTo('def')],
+            )
+            ->willReturnOnConsecutiveCalls(
+                false,
+                true,
+                false,
+            );
+
+        $instance = $this->createInstance();
+        $result = $this->invokeMethod($instance, 'filterModNames', $modNames);
+
+        $this->assertSame($expectedResult, $result);
     }
 
     /**

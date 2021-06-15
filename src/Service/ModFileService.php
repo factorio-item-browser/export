@@ -8,6 +8,7 @@ use Exception;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
+use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\Export\Exception\InvalidInfoJsonFileException;
 use FactorioItemBrowser\Export\Helper\ZipArchiveExtractor;
 use JMS\Serializer\SerializerInterface;
@@ -51,6 +52,10 @@ class ModFileService
      */
     public function addModArchive(string $modName, string $archiveFilePath): void
     {
+        if ($this->isVanillaMod($modName)) {
+            throw new InternalException(sprintf('Trying to overwrite vanilla mod "%s"', $modName));
+        }
+
         $this->zipArchiveExtractor->extract($archiveFilePath, $this->getLocalDirectory($modName));
     }
 
@@ -94,9 +99,19 @@ class ModFileService
      */
     public function getLocalDirectory(string $modName): string
     {
-        if (in_array($modName, self::VANILLA_MODS, true)) {
+        if ($this->isVanillaMod($modName)) {
             return $this->factorioDirectory . '/data/' . $modName;
         }
         return $this->modsDirectory . '/' . $modName;
+    }
+
+    /**
+     * Checks whether the specified mod name is from the vanilla game.
+     * @param string $modName
+     * @return bool
+     */
+    public function isVanillaMod(string $modName): bool
+    {
+        return in_array($modName, self::VANILLA_MODS, true);
     }
 }
