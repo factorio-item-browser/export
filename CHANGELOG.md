@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.6 - 2021-06-21
+
+### Fixed
+
+- Failing export of the base combination without additional mods.
+
 ## 2.1.5 - 2021-06-15
 
 ### Fixed
