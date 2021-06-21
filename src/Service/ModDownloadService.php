@@ -63,6 +63,9 @@ class ModDownloadService
     public function download(array $modNames): void
     {
         $modNames = $this->filterModNames($modNames);
+        if (count($modNames) === 0) {
+            return;
+        }
 
         $currentVersions = $this->getCurrentVersions($modNames);
         $mods = $this->fetchMetaData($modNames);

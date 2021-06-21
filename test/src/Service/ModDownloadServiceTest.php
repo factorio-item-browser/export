@@ -151,6 +151,42 @@ class ModDownloadServiceTest extends TestCase
     }
 
     /**
+     * @throws ExportException
+     */
+    public function testDownloadWithoutMods(): void
+    {
+        $modNames = ['foo'];
+        $filteredModNames = [];
+
+        $this->modDownloadProcessManager->expects($this->never())
+                                        ->method('add');
+        $this->modDownloadProcessManager->expects($this->never())
+                                        ->method('wait');
+
+        $instance = $this->createInstance([
+            'filterModNames',
+            'getCurrentVersions',
+            'fetchMetaData',
+            'getReleases',
+            'printModList',
+        ]);
+        $instance->expects($this->once())
+                 ->method('filterModNames')
+                 ->with($this->identicalTo($modNames))
+                 ->willReturn($filteredModNames);
+        $instance->expects($this->never())
+                 ->method('getCurrentVersions');
+        $instance->expects($this->never())
+                 ->method('fetchMetaData');
+        $instance->expects($this->never())
+                 ->method('getReleases');
+        $instance->expects($this->never())
+                 ->method('printModList');
+
+        $instance->download($modNames);
+    }
+
+    /**
      * @throws ReflectionException
      */
     public function testFilterModNames(): void
