@@ -15,7 +15,7 @@ use FactorioItemBrowser\Export\Exception\DumpModNotLoadedException;
  */
 class ModNameOutputProcessor implements OutputProcessorInterface
 {
-    private const REGEX_CHECKSUM = '#^\s+[0-9.]+ Checksum of (.*): \d+$#m';
+    private const REGEX_CHECKSUM = '#^\s*[0-9.]+ Checksum of (.*): \d+$#m';
     private const MOD_NAME_DUMP = 'Dump';
 
     public function processLine(string $outputLine, Dump $dump): void

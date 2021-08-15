@@ -108,6 +108,7 @@ return [
             'string $factorioDownloadToken' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_TOKEN),
             'string $factorioDownloadUsername' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_USERNAME),
             'string $instancesDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
+            'string $logsDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_LOGS),
             'string $modsDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
             'string $renderIconBinary' => readConfig(ConfigKey::MAIN, ConfigKey::RENDER_ICON_BINARY),
             'string $tempDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),

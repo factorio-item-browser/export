@@ -30,6 +30,7 @@ class FactorioExecutionService
     protected ModFileService $modFileService;
     protected string $factorioDirectory;
     protected string $instancesDirectory;
+    protected string $logsDirectory;
     protected string $version;
 
     public function __construct(
@@ -39,6 +40,7 @@ class FactorioExecutionService
         ModFileService $modFileService,
         string $factorioDirectory,
         string $instancesDirectory,
+        string $logsDirectory,
         string $version
     ) {
         $this->exportSerializer = $exportSerializer;
@@ -47,6 +49,7 @@ class FactorioExecutionService
         $this->modFileService = $modFileService;
         $this->factorioDirectory = (string) realpath($factorioDirectory);
         $this->instancesDirectory = (string) realpath($instancesDirectory);
+        $this->logsDirectory = (string) realpath($logsDirectory);
         $this->version = $version;
     }
 
@@ -199,6 +202,10 @@ class FactorioExecutionService
      */
     public function cleanup(string $combinationId): self
     {
+        $this->fileSystem->copy(
+            "{$this->instancesDirectory}/{$combinationId}/factorio-current.log",
+            "{$this->logsDirectory}/factorio_{$combinationId}.log",
+        );
         $this->fileSystem->remove("{$this->instancesDirectory}/{$combinationId}");
         return $this;
     }
