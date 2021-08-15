@@ -27,6 +27,7 @@ class ModNameOutputProcessorTest extends TestCase
         return [
             ['  69.420 Checksum of abc: 1337', ['def'], ['def', 'abc']],
             ['   0.061 Loading mod base 0.18.21 (data.lua)', ['def'], ['def']],
+            ['1103.226 Checksum of Dump: 1832971175', ['foo'], ['foo', 'Dump']],
         ];
     }
 

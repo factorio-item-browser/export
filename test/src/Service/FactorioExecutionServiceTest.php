@@ -44,6 +44,7 @@ class FactorioExecutionServiceTest extends TestCase
     private ModFileService $modFileService;
     private string $factorioDirectory = 'foo';
     private string $instancesDirectory = 'bar';
+    private string $logsDirectory = 'baz';
     private string $version = '1.2.3';
 
     protected function setUp(): void
@@ -69,14 +70,17 @@ class FactorioExecutionServiceTest extends TestCase
                              $this->modFileService,
                              'src',
                              'test',
+                             'test/asset',
                              $this->version,
                          ])
                          ->getMock();
 
         $this->assertSame(realpath('src'), $this->extractProperty($instance, 'factorioDirectory'));
         $this->assertSame(realpath('test'), $this->extractProperty($instance, 'instancesDirectory'));
+        $this->assertSame(realpath('test/asset'), $this->extractProperty($instance, 'logsDirectory'));
         $this->injectProperty($instance, 'factorioDirectory', $this->factorioDirectory);
         $this->injectProperty($instance, 'instancesDirectory', $this->instancesDirectory);
+        $this->injectProperty($instance, 'logsDirectory', $this->logsDirectory);
 
         return $instance;
     }
@@ -340,6 +344,13 @@ class FactorioExecutionServiceTest extends TestCase
     public function testCleanup(): void
     {
         $combinationId = 'abc';
+
+        $this->fileSystem->expects($this->once())
+                         ->method('copy')
+                         ->with(
+                             $this->identicalTo('bar/abc/factorio-current.log'),
+                             $this->identicalTo('baz/factorio_abc.log'),
+                         );
 
         $this->fileSystem->expects($this->once())
                          ->method('remove')
