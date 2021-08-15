@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.7 - 2021-08-15
+
+### Added
+
+- Keeping the Factorio log file in the log directory.
+
+### Fixed
+
+- Detecting the mod names when execution time of Factorio becomes bigger than 1000 seconds.
+
 ## 2.1.6 - 2021-06-21
 
 ### Fixed
