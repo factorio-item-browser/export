@@ -42,7 +42,7 @@ class FactorioExecutionServiceTest extends TestCase
     private Filesystem $fileSystem;
     /** @var ModFileService&MockObject */
     private ModFileService $modFileService;
-    private string $factorioDirectory = 'foo';
+    private string $headlessFactorioDirectory = 'foo';
     private string $instancesDirectory = 'bar';
     private string $logsDirectory = 'baz';
     private string $version = '1.2.3';
@@ -75,10 +75,10 @@ class FactorioExecutionServiceTest extends TestCase
                          ])
                          ->getMock();
 
-        $this->assertSame(realpath('src'), $this->extractProperty($instance, 'factorioDirectory'));
+        $this->assertSame(realpath('src'), $this->extractProperty($instance, 'headlessFactorioDirectory'));
         $this->assertSame(realpath('test'), $this->extractProperty($instance, 'instancesDirectory'));
         $this->assertSame(realpath('test/asset'), $this->extractProperty($instance, 'logsDirectory'));
-        $this->injectProperty($instance, 'factorioDirectory', $this->factorioDirectory);
+        $this->injectProperty($instance, 'headlessFactorioDirectory', $this->headlessFactorioDirectory);
         $this->injectProperty($instance, 'instancesDirectory', $this->instancesDirectory);
         $this->injectProperty($instance, 'logsDirectory', $this->logsDirectory);
 

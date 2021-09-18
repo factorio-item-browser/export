@@ -33,6 +33,16 @@ interface ConfigKey
     public const DIRECTORY_FACTORIO = 'factorio';
 
     /**
+     * The key holding the directory of the installed full Factorio game.
+     */
+    public const DIRECTORY_FACTORIO_FULL = 'factorio-full';
+
+    /**
+     * The key holding the directory of the installed headless Factorio game.
+     */
+    public const DIRECTORY_FACTORIO_HEADLESS = 'factorio-headless';
+
+    /**
      * The key holding the instances directory.
      */
     public const DIRECTORY_INSTANCES = 'instances';

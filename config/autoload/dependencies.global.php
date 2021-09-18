@@ -40,8 +40,6 @@ return [
             Command\ProcessStep\RenderIconsStep::class => AutoWireFactory::class,
             Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
 
-            Factorio\FactorioDownloader::class => AutoWireFactory::class,
-
             Helper\HashCalculator::class => AutoWireFactory::class,
             Helper\ZipArchiveExtractor::class => AutoWireFactory::class,
 
@@ -82,6 +80,7 @@ return [
             Serializer\Handler\ConstructorHandler::class => AutoWireFactory::class,
             Serializer\Handler\RawHandler::class => AutoWireFactory::class,
 
+            Service\FactorioDownloadService::class => AutoWireFactory::class,
             Service\FactorioExecutionService::class => AutoWireFactory::class,
             Service\ModDownloadService::class => AutoWireFactory::class,
             Service\ModFileService::class => AutoWireFactory::class,
@@ -104,9 +103,11 @@ return [
             'int $numberOfParallelDownloads' => readConfig(ConfigKey::MAIN, ConfigKey::PARALLEL_DOWNLOADS),
             'int $numberOfParallelRenderProcesses' => readConfig(ConfigKey::MAIN, ConfigKey::PARALLEL_RENDERS),
 
+            'string $factorioApiToken' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_TOKEN),
+            'string $factorioApiUsername' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_USERNAME),
+            'string $fullFactorioDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_FULL),
             'string $factorioDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO),
-            'string $factorioDownloadToken' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_TOKEN),
-            'string $factorioDownloadUsername' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_USERNAME),
+            'string $headlessFactorioDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_HEADLESS),
             'string $instancesDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
             'string $logsDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_LOGS),
             'string $modsDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),

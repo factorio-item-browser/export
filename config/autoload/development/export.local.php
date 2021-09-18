@@ -17,7 +17,8 @@ return [
     ConfigKey::MAIN => [
         ConfigKey::DIRECTORIES => [
 //            ConfigKey::DIRECTORY_CACHE => 'data/cache',
-            ConfigKey::DIRECTORY_FACTORIO => 'data/factorio',
+            ConfigKey::DIRECTORY_FACTORIO_FULL => 'data/factorio/full',
+            ConfigKey::DIRECTORY_FACTORIO_HEADLESS => 'data/factorio/headless',
             ConfigKey::DIRECTORY_INSTANCES => 'data/instances',
             ConfigKey::DIRECTORY_LOGS => 'data/log',
             ConfigKey::DIRECTORY_MODS => 'data/mods',

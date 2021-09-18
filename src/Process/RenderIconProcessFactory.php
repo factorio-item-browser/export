@@ -16,18 +16,18 @@ use JMS\Serializer\SerializerInterface;
 class RenderIconProcessFactory
 {
     private SerializerInterface $serializer;
-    private string $factorioDirectory;
+    private string $fullFactorioDirectory;
     private string $modsDirectory;
     private string $renderIconBinary;
 
     public function __construct(
         SerializerInterface $exportDataSerializer,
-        string $factorioDirectory,
+        string $fullFactorioDirectory,
         string $modsDirectory,
         string $renderIconBinary
     ) {
         $this->serializer = $exportDataSerializer;
-        $this->factorioDirectory = (string) realpath($factorioDirectory);
+        $this->fullFactorioDirectory = (string) realpath($fullFactorioDirectory);
         $this->modsDirectory = (string) realpath($modsDirectory);
         $this->renderIconBinary = (string) realpath($renderIconBinary);
     }
@@ -44,7 +44,7 @@ class RenderIconProcessFactory
             $this->serializer->serialize($icon, 'json'),
         ];
         $env = [
-            'FACTORIO_DATA_DIRECTORY' => $this->factorioDirectory . '/data',
+            'FACTORIO_DATA_DIRECTORY' => $this->fullFactorioDirectory . '/data',
             'FACTORIO_MODS_DIRECTORY' => $this->modsDirectory,
         ];
 
