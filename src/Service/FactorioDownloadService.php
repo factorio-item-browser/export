@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Service;
 
+use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Process\DownloadProcess;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Process;
@@ -23,6 +24,7 @@ class FactorioDownloadService
         self::VARIANT_FULL => 'https://www.factorio.com/get-download/%s/alpha/linux64',
         self::VARIANT_HEADLESS => 'https://www.factorio.com/get-download/%s/headless/linux64',
     ];
+    private const LATEST_VERSION_URL = 'https://factorio.com/api/latest-releases';
 
     private Filesystem $fileSystem;
     private string $factorioApiUsername;
@@ -88,6 +90,31 @@ class FactorioDownloadService
         $process = new Process(['tar', '-xf', $archiveFile, '-C', $destinationDirectory, '--strip', '1']);
         $process->setTimeout(null);
         return $process;
+    }
+
+    /**
+     * Fetches and returns the latest version of Factorio.
+     * @return string
+     * @throws CommandException
+     */
+    public function getLatestVersion(): string
+    {
+        $response = @file_get_contents($this->buildUrl(self::LATEST_VERSION_URL));
+        if ($response === false) {
+            throw new CommandException('Failed to fetch latest version of Factorio.');
+        }
+
+        $data = json_decode($response, true);
+        if (!is_array($data)) {
+            throw new CommandException(sprintf('Invalid response: %s', json_last_error()));
+        }
+
+        $version = $data['stable']['alpha'] ?? null;
+        if (!$version) {
+            throw new CommandException('Unable to read latest version from response.');
+        }
+
+        return $version;
     }
 
     /**

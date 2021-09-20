@@ -39,6 +39,7 @@ return [
             Command\ProcessStep\ParserStep::class => AutoWireFactory::class,
             Command\ProcessStep\RenderIconsStep::class => AutoWireFactory::class,
             Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
+            Command\UpdateFactorioCommand::class => AutoWireFactory::class,
 
             Helper\HashCalculator::class => AutoWireFactory::class,
             Helper\ZipArchiveExtractor::class => AutoWireFactory::class,

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Service;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
+use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Process\DownloadProcess;
 use FactorioItemBrowser\Export\Service\FactorioDownloadService;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -139,6 +141,51 @@ class FactorioDownloadServiceTest extends TestCase
         $result = $this->invokeMethod($instance, 'createExtractArchiveProcess', $archiveFile, $destinationDirectory);
 
         $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function provideGetLatestVersion(): array
+    {
+        $exampleResponse = '{"experimental":{},"stable":{"alpha":"1.2.3","demo":"1.2.3","headless":"1.2.3"}}';
+
+        return [
+            [$exampleResponse, false, '1.2.3'],
+            ['{"foo":"bar"}', true, ''],
+            ['{invalid', true, ''],
+            [null, true, ''],
+        ];
+    }
+
+    /**
+     * @dataProvider provideGetLatestVersion
+     */
+    public function testGetLatestVersion(
+        ?string $fileContent,
+        bool $expectException,
+        string $expectedResult,
+    ): void {
+        $root = vfsStream::setup();
+        if ($fileContent !== null) {
+            $file = vfsStream::newFile('file');
+            $file->write($fileContent);
+            $root->addChild($file);
+        }
+
+        $instance = $this->createInstance(['buildUrl']);
+        $instance->expects($this->once())
+                 ->method('buildUrl')
+                 ->with($this->identicalTo('https://factorio.com/api/latest-releases'))
+                 ->willReturn(vfsStream::url('root/file'));
+
+        if ($expectException) {
+            $this->expectException(CommandException::class);
+        }
+
+        $result = $instance->getLatestVersion();
+
+        $this->assertSame($expectedResult, $result);
     }
 
     /**
