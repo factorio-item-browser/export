@@ -30,7 +30,6 @@ class FactorioDownloadServiceTest extends TestCase
     private Filesystem $fileSystem;
     private string $factorioApiUsername = 'foo';
     private string $factorioApiToken = 'bar';
-    private string $tempDirectory = '/tmp';
 
     protected function setUp(): void
     {
@@ -50,7 +49,6 @@ class FactorioDownloadServiceTest extends TestCase
                         $this->fileSystem,
                         $this->factorioApiUsername,
                         $this->factorioApiToken,
-                        $this->tempDirectory,
                     ])
                     ->getMock();
     }
@@ -94,36 +92,10 @@ class FactorioDownloadServiceTest extends TestCase
         $this->assertEquals($expectedResult, $result);
     }
 
-    public function testExtractFactorio(): void
-    {
-        $destinationDirectory = 'abc';
-        $archiveFile = 'def';
-        $expectedTempDirectory = '/tmp/factorio_temp';
-
-        $process = $this->createMock(Process::class);
-        $process->expects($this->once())
-                ->method('run');
-
-        $this->fileSystem->expects($this->once())
-                         ->method('remove')
-                         ->with($this->identicalTo($destinationDirectory));
-        $this->fileSystem->expects($this->once())
-                         ->method('rename')
-                         ->with($this->identicalTo($expectedTempDirectory), $this->identicalTo($destinationDirectory));
-
-        $instance = $this->createInstance(['createExtractArchiveProcess']);
-        $instance->expects($this->once())
-                 ->method('createExtractArchiveProcess')
-                 ->with($this->identicalTo($archiveFile), $this->identicalTo($expectedTempDirectory))
-                 ->willReturn($process);
-
-        $instance->extractFactorio($archiveFile, $destinationDirectory);
-    }
-
     /**
      * @throws ReflectionException
      */
-    public function testCreateExtractArchiveProcess(): void
+    public function testCreateFactorioExtractProcess(): void
     {
         $archiveFile = 'abc';
         $destinationDirectory = 'def';
@@ -138,7 +110,7 @@ class FactorioDownloadServiceTest extends TestCase
                          ->with($this->identicalTo($destinationDirectory));
 
         $instance = $this->createInstance();
-        $result = $this->invokeMethod($instance, 'createExtractArchiveProcess', $archiveFile, $destinationDirectory);
+        $result = $this->invokeMethod($instance, 'createFactorioExtractProcess', $archiveFile, $destinationDirectory);
 
         $this->assertEquals($expectedResult, $result);
     }

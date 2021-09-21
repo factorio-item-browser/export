@@ -29,18 +29,15 @@ class FactorioDownloadService
     private Filesystem $fileSystem;
     private string $factorioApiUsername;
     private string $factorioApiToken;
-    private string $tempDirectory;
 
     public function __construct(
         Filesystem $filesystem,
         string $factorioApiUsername,
         string $factorioApiToken,
-        string $tempDirectory
     ) {
         $this->fileSystem = $filesystem;
         $this->factorioApiUsername = $factorioApiUsername;
         $this->factorioApiToken = $factorioApiToken;
-        $this->tempDirectory = (string) realpath($tempDirectory);
     }
 
     /**
@@ -62,27 +59,11 @@ class FactorioDownloadService
     }
 
     /**
-     * Extracts the specified archive file and replaces the current Factorio instance with its contents.
-     * @param string $archiveFile
-     * @param string $destinationDirectory
-     */
-    public function extractFactorio(string $archiveFile, string $destinationDirectory): void
-    {
-        $tempDirectory = $this->tempDirectory . '/factorio_temp';
-
-        $process = $this->createExtractArchiveProcess($archiveFile, $tempDirectory);
-        $process->run();
-
-        $this->fileSystem->remove($destinationDirectory);
-        $this->fileSystem->rename($tempDirectory, $destinationDirectory);
-    }
-
-    /**
      * @param string $archiveFile
      * @param string $destinationDirectory
      * @return Process<string>
      */
-    protected function createExtractArchiveProcess(string $archiveFile, string $destinationDirectory): Process
+    public function createFactorioExtractProcess(string $archiveFile, string $destinationDirectory): Process
     {
         $this->fileSystem->remove($destinationDirectory);
         $this->fileSystem->mkdir($destinationDirectory);
