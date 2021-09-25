@@ -32,6 +32,7 @@ class ProcessOutput
     public function addLine(string $line): self
     {
         $height = min($this->terminal->getHeight() - 6, self::NUMBER_OF_LINES);
+        /** @var positive-int $width */
         $width = $this->terminal->getWidth();
 
         $this->lines = array_slice(array_merge($this->lines, str_split($line, $width)), -$height);

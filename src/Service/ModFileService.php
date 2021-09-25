@@ -29,18 +29,18 @@ class ModFileService
 
     private SerializerInterface $exportSerializer;
     private ZipArchiveExtractor $zipArchiveExtractor;
-    private string $factorioDirectory;
+    private string $fullFactorioDirectory;
     private string $modsDirectory;
 
     public function __construct(
         SerializerInterface $exportSerializer,
         ZipArchiveExtractor $zipArchiveExtractor,
-        string $factorioDirectory,
+        string $fullFactorioDirectory,
         string $modsDirectory
     ) {
         $this->exportSerializer = $exportSerializer;
         $this->zipArchiveExtractor = $zipArchiveExtractor;
-        $this->factorioDirectory = (string) realpath($factorioDirectory);
+        $this->fullFactorioDirectory = (string) realpath($fullFactorioDirectory);
         $this->modsDirectory = (string) realpath($modsDirectory);
     }
 
@@ -100,7 +100,7 @@ class ModFileService
     public function getLocalDirectory(string $modName): string
     {
         if ($this->isVanillaMod($modName)) {
-            return $this->factorioDirectory . '/data/' . $modName;
+            return $this->fullFactorioDirectory . '/data/' . $modName;
         }
         return $this->modsDirectory . '/' . $modName;
     }

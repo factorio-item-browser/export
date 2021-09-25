@@ -21,7 +21,7 @@ class RenderIconProcessFactoryTest extends TestCase
 {
     /** @var SerializerInterface&MockObject */
     private SerializerInterface $serializer;
-    private string $factorioDirectory = 'data/factorio';
+    private string $fullFactorioDirectory = 'data/factorio-full';
     private string $modsDirectory = 'data/mods';
     private string $renderIconBinary = 'bin/render-icon';
 
@@ -41,7 +41,7 @@ class RenderIconProcessFactoryTest extends TestCase
                     ->onlyMethods($mockedMethods)
                     ->setConstructorArgs([
                         $this->serializer,
-                        $this->factorioDirectory,
+                        $this->fullFactorioDirectory,
                         $this->modsDirectory,
                         $this->renderIconBinary
                     ])
@@ -54,7 +54,7 @@ class RenderIconProcessFactoryTest extends TestCase
         $icon = $this->createMock(Icon::class);
         $expectedCommandLine = sprintf("'%s' 'abc'", realpath('bin/render-icon'));
         $expectedEnv = [
-            'FACTORIO_DATA_DIRECTORY' => realpath('data/factorio') . '/data',
+            'FACTORIO_DATA_DIRECTORY' => realpath('data/factorio-full') . '/data',
             'FACTORIO_MODS_DIRECTORY' => realpath('data/mods'),
         ];
 

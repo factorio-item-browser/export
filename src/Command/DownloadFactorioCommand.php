@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Command;
 
 use FactorioItemBrowser\Export\Constant\CommandName;
-use FactorioItemBrowser\Export\Factorio\FactorioDownloader;
+use FactorioItemBrowser\Export\Output\Console;
+use FactorioItemBrowser\Export\Service\FactorioDownloadService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * The process for downloading the Factorio game itself.
@@ -19,13 +21,31 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class DownloadFactorioCommand extends Command
 {
-    protected FactorioDownloader $factorioDownloader;
+    protected Console $console;
+    protected FactorioDownloadService $factorioDownloadService;
+    protected Filesystem $fileSystem;
 
-    public function __construct(FactorioDownloader $factorioDownloader)
-    {
+    protected string $fullFactorioDirectory;
+    protected string $headlessFactorioDirectory;
+    protected string $tempDirectory;
+
+    public function __construct(
+        Console $console,
+        FactorioDownloadService $factorioDownloadService,
+        Filesystem $fileSystem,
+        string $fullFactorioDirectory,
+        string $headlessFactorioDirectory,
+        string $tempDirectory,
+    ) {
         parent::__construct();
 
-        $this->factorioDownloader = $factorioDownloader;
+        $this->console = $console;
+        $this->factorioDownloadService = $factorioDownloadService;
+        $this->fileSystem = $fileSystem;
+
+        $this->fullFactorioDirectory = (string) realpath($fullFactorioDirectory);
+        $this->headlessFactorioDirectory = (string) realpath($headlessFactorioDirectory);
+        $this->tempDirectory = (string) realpath($tempDirectory);
     }
 
     protected function configure(): void
@@ -41,8 +61,71 @@ class DownloadFactorioCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $version = strval($input->getArgument('version'));
+        $archiveFileFull = $this->tempDirectory . "/factorio_${version}_full.tar.xz";
+        $archiveFileHeadless = $this->tempDirectory . "/factorio_${version}_headless.tar.xz";
+        $tempDirectoryFull = $this->tempDirectory . "/factorio_${version}_full";
+        $tempDirectoryHeadless = $this->tempDirectory . "/factorio_${version}_headless";
 
-        $this->factorioDownloader->download($version);
+        $this->console->writeHeadline("Downloading and installing Factorio version {$version}");
+
+        $this->console->writeAction('Downloading full variant of Factorio');
+        $downloadFullProcess = $this->factorioDownloadService->createFactorioDownloadProcess(
+            FactorioDownloadService::VARIANT_FULL,
+            $version,
+            $archiveFileFull,
+        );
+        $downloadFullProcess->start();
+
+        $this->console->writeAction('Downloading headless variant of Factorio');
+        $downloadHeadlessProcess = $this->factorioDownloadService->createFactorioDownloadProcess(
+            FactorioDownloadService::VARIANT_HEADLESS,
+            $version,
+            $archiveFileHeadless,
+        );
+        $downloadHeadlessProcess->run();
+        if ($downloadHeadlessProcess->getExitCode() !== 0) {
+            $this->console->writeMessage('<fg=red>Download of headless version failed!</>');
+            return 1;
+        }
+        $this->console->writeAction('Extracting headless variant of Factorio');
+        $extractHeadlessProcess = $this->factorioDownloadService->createFactorioExtractProcess(
+            $archiveFileHeadless,
+            $tempDirectoryHeadless,
+        );
+        $extractHeadlessProcess->run();
+        if ($extractHeadlessProcess->getExitCode() !== 0) {
+            $this->console->writeMessage('<fg=red>Extracting headless version failed!</>');
+            return 1;
+        }
+
+        $downloadFullProcess->wait();
+        if ($downloadFullProcess->getExitCode() !== 0) {
+            $this->console->writeMessage('<fg=red>Download of full version failed!</>');
+            return 1;
+        }
+
+        $this->console->writeAction('Extracting full variant of Factorio');
+        $extractFullProcess = $this->factorioDownloadService->createFactorioExtractProcess(
+            $archiveFileFull,
+            $tempDirectoryFull,
+        );
+        $extractFullProcess->run();
+        if ($extractFullProcess->getExitCode() !== 0) {
+            $this->console->writeMessage('<fg=red>Extracting full version failed!</>');
+            return 1;
+        }
+
+        $this->console->writeAction('Switching Factorio releases');
+        $this->fileSystem->remove($this->headlessFactorioDirectory);
+        $this->fileSystem->rename($tempDirectoryHeadless, $this->headlessFactorioDirectory);
+        $this->fileSystem->remove($this->fullFactorioDirectory);
+        $this->fileSystem->rename($tempDirectoryFull, $this->fullFactorioDirectory);
+
+        $this->console->writeAction('Cleaning up');
+        $this->fileSystem->remove($archiveFileHeadless);
+        $this->fileSystem->remove($archiveFileFull);
+
+        $this->console->writeMessage('Done.');
         return 0;
     }
 }

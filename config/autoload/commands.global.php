@@ -17,5 +17,6 @@ return [
     'commands' => [
         CommandName::DOWNLOAD_FACTORIO => Command\DownloadFactorioCommand::class,
         CommandName::PROCESS => Command\ProcessCommand::class,
+        CommandName::UPDATE_FACTORIO => Command\UpdateFactorioCommand::class,
     ],
 ];

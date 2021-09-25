@@ -21,4 +21,9 @@ interface CommandName
      * The name of the processing command.
      */
     public const PROCESS = 'process';
+
+    /**
+     * The name of the command for updating Factorio to its latest version.
+     */
+    public const UPDATE_FACTORIO = 'update-factorio';
 }

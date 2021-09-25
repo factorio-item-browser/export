@@ -28,7 +28,7 @@ class FactorioExecutionService
     protected FactorioProcessFactory $factorioProcessFactory;
     protected Filesystem $fileSystem;
     protected ModFileService $modFileService;
-    protected string $factorioDirectory;
+    protected string $headlessFactorioDirectory;
     protected string $instancesDirectory;
     protected string $logsDirectory;
     protected string $version;
@@ -38,7 +38,7 @@ class FactorioExecutionService
         FactorioProcessFactory $factorioProcessFactory,
         Filesystem $fileSystem,
         ModFileService $modFileService,
-        string $factorioDirectory,
+        string $headlessFactorioDirectory,
         string $instancesDirectory,
         string $logsDirectory,
         string $version
@@ -47,7 +47,7 @@ class FactorioExecutionService
         $this->factorioProcessFactory = $factorioProcessFactory;
         $this->fileSystem = $fileSystem;
         $this->modFileService = $modFileService;
-        $this->factorioDirectory = (string) realpath($factorioDirectory);
+        $this->headlessFactorioDirectory = (string) realpath($headlessFactorioDirectory);
         $this->instancesDirectory = (string) realpath($instancesDirectory);
         $this->logsDirectory = (string) realpath($logsDirectory);
         $this->version = $version;
@@ -76,16 +76,16 @@ class FactorioExecutionService
         $this->fileSystem->remove($instanceDirectory);
         $this->fileSystem->mkdir("{$instanceDirectory}/mods");
         $this->fileSystem->copy(
-            "{$this->factorioDirectory}/bin/x64/factorio",
+            "{$this->headlessFactorioDirectory}/bin/x64/factorio",
             "{$instanceDirectory}/bin/x64/factorio",
             true,
         );
         $this->fileSystem->copy(
-            "{$this->factorioDirectory}/config-path.cfg",
+            "{$this->headlessFactorioDirectory}/config-path.cfg",
             "{$instanceDirectory}/config-path.cfg",
             true,
         );
-        $this->fileSystem->symlink("{$this->factorioDirectory}/data", "{$instanceDirectory}/data");
+        $this->fileSystem->symlink("{$this->headlessFactorioDirectory}/data", "{$instanceDirectory}/data");
     }
 
     /**
