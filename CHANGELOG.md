@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.8 - 2021-09-25
+
+### Added
+
+- Command for checking the version against the API and automatically updating the Factorio game if required.
+
 ## 2.1.7 - 2021-08-15
 
 ### Added
