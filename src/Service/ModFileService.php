@@ -69,6 +69,9 @@ class ModFileService
     {
         $contents = $this->readFile($modName, self::FILENAME_INFO);
 
+        $encoding = (string) mb_detect_encoding($contents, 'UTF-8, ISO-8859-1', true);
+        $contents = mb_convert_encoding($contents, 'UTF-8', $encoding);
+
         try {
             return $this->exportSerializer->deserialize($contents, InfoJson::class, 'json');
         } catch (Exception $e) {
