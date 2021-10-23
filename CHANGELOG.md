@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.9 - 2021-10-23
+
+### Fixed
+
+- Issue loading non-UTF8 encoded info.json files.
+
 ## 2.1.8 - 2021-09-25
 
 ### Added
