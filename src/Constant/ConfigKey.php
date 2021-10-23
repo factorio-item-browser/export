@@ -28,11 +28,6 @@ interface ConfigKey
     public const DIRECTORY_CACHE = 'cache';
 
     /**
-     * The key holding the directory of the installed Factorio game.
-     */
-    public const DIRECTORY_FACTORIO = 'factorio';
-
-    /**
      * The key holding the directory of the installed full Factorio game.
      */
     public const DIRECTORY_FACTORIO_FULL = 'factorio-full';
