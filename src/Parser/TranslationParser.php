@@ -21,15 +21,11 @@ use FactorioItemBrowser\ExportData\ExportData;
  */
 class TranslationParser implements ParserInterface
 {
-    protected Console $console;
-    protected ModFileService $modFileService;
-    protected Translator $translator;
-
-    public function __construct(Console $console, ModFileService $modFileService, Translator $translator)
-    {
-        $this->console = $console;
-        $this->modFileService = $modFileService;
-        $this->translator = $translator;
+    public function __construct(
+        protected readonly Console $console,
+        protected readonly ModFileService $modFileService,
+        protected readonly Translator $translator,
+    ) {
     }
 
     /**
@@ -59,8 +55,8 @@ class TranslationParser implements ParserInterface
      */
     public function translate(
         DictionaryInterface $translations,
-        $localisedString,
-        $fallbackLocalisedString = null
+        mixed $localisedString,
+        mixed $fallbackLocalisedString = null
     ): void {
         foreach ($this->translator->getAllLocales() as $locale) {
             $value = $this->translator->translate($locale, $localisedString);

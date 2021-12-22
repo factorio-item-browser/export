@@ -25,21 +25,12 @@ class ModParser implements ParserInterface
     protected const RENDERED_THUMBNAIL_SIZE = 144;
     protected const THUMBNAIL_FILENAME = 'thumbnail.png';
 
-    protected Console $console;
-    protected HashCalculator $hashCalculator;
-    protected ModFileService $modFileService;
-    protected TranslationParser $translationParser;
-
     public function __construct(
-        Console $console,
-        HashCalculator $hashCalculator,
-        ModFileService $modFileService,
-        TranslationParser $translationParser
+        protected readonly Console $console,
+        protected readonly HashCalculator $hashCalculator,
+        protected readonly ModFileService $modFileService,
+        protected readonly TranslationParser $translationParser,
     ) {
-        $this->console = $console;
-        $this->hashCalculator = $hashCalculator;
-        $this->modFileService = $modFileService;
-        $this->translationParser = $translationParser;
     }
 
     public function prepare(Dump $dump): void

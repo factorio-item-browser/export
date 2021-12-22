@@ -26,20 +26,16 @@ class IconParser implements ParserInterface
         'tutorial',
     ];
 
-    protected Console $console;
-    protected HashCalculator $hashCalculator;
-    protected MapperManagerInterface $mapperManager;
-
     /** @var array<string,array<string,ExportIcon>> */
     protected array $parsedIcons = [];
     /** @var array<string,ExportIcon> */
     protected array $usedIcons = [];
 
-    public function __construct(Console $console, HashCalculator $hashCalculator, MapperManagerInterface $mapperManager)
-    {
-        $this->console = $console;
-        $this->hashCalculator = $hashCalculator;
-        $this->mapperManager = $mapperManager;
+    public function __construct(
+        protected readonly Console $console,
+        protected readonly HashCalculator $hashCalculator,
+        protected readonly MapperManagerInterface $mapperManager,
+    ) {
     }
 
     public function prepare(Dump $dump): void

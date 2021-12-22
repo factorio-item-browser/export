@@ -44,7 +44,7 @@ class ConstructorHandler implements SubscribingHandlerInterface
      * @param mixed $value
      * @return string
      */
-    public function serialize(SerializationVisitorInterface $visitor, $value): string
+    public function serialize(SerializationVisitorInterface $visitor, mixed $value): string
     {
         return (string) $value;
     }

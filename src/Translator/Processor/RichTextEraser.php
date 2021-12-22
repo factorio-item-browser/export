@@ -14,8 +14,10 @@ use BluePsyduck\FactorioTranslator\Processor\ProcessorInterface;
  */
 class RichTextEraser implements ProcessorInterface
 {
-    protected const PATTERN_ERASE = '#\[([a-z-]+=.+|[./][a-z-]+)\]#U';
-    protected const PATTERN_FIX = '#[ ]+([ .:,;])#';
+    private const PATTERNS = [
+        '#\[([a-z-]+=.+|[./][a-z-]+)\]#U' => '', // Erase rich-text tags
+        '#[ ]+([ .:,;])#' => '\\1', // Fix additional spaces
+    ];
 
     /**
      * Processes the passed string.
@@ -26,8 +28,9 @@ class RichTextEraser implements ProcessorInterface
      */
     public function process(string $locale, string $string, array $parameters): string
     {
-        $string = (string) preg_replace(self::PATTERN_ERASE, '', $string);
-        $string = (string) preg_replace(self::PATTERN_FIX, '\\1', $string);
+        foreach (self::PATTERNS as $pattern => $replacement) {
+            $string = (string) preg_replace($pattern, $replacement, $string);
+        }
         return $string;
     }
 }

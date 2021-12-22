@@ -22,24 +22,13 @@ use FactorioItemBrowser\ExportData\ExportData;
  */
 class RecipeParser implements ParserInterface
 {
-    protected Console $console;
-    protected HashCalculator $hashCalculator;
-    protected IconParser $iconParser;
-    protected MapperManagerInterface $mapperManager;
-    protected TranslationParser $translationParser;
-
     public function __construct(
-        Console $console,
-        HashCalculator $hashCalculator,
-        IconParser $iconParser,
-        MapperManagerInterface $mapperManager,
-        TranslationParser $translationParser
+        protected readonly Console $console,
+        protected readonly HashCalculator $hashCalculator,
+        protected readonly IconParser $iconParser,
+        protected readonly MapperManagerInterface $mapperManager,
+        protected readonly TranslationParser $translationParser,
     ) {
-        $this->console = $console;
-        $this->hashCalculator = $hashCalculator;
-        $this->iconParser = $iconParser;
-        $this->mapperManager = $mapperManager;
-        $this->translationParser = $translationParser;
     }
 
     public function prepare(Dump $dump): void
