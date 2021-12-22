@@ -16,6 +16,7 @@ use BluePsyduck\FactorioTranslator\Translator as FactorioTranslator;
 use BluePsyduck\JmsSerializerFactory\JmsSerializerFactory;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
+use FactorioItemBrowser\Export\Constant\ServiceName;
 use JMS\Serializer\SerializerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
@@ -83,29 +84,14 @@ return [
             Service\ModDownloadService::class => AutoWireFactory::class,
             Service\ModFileService::class => AutoWireFactory::class,
 
+            ServiceName::SERIALIZER => new JmsSerializerFactory(ConfigKey::MAIN, ConfigKey::SERIALIZER),
+
             // 3rd-party services
             ConsoleOutputInterface::class => Output\ConsoleOutputFactory::class,
             Filesystem::class => AutoWireFactory::class,
             LoggerInterface::class => Log\LoggerFactory::class,
             SerializerInterface::class . ' $exportSerializer' => new JmsSerializerFactory(ConfigKey::MAIN, ConfigKey::SERIALIZER),
             FactorioTranslator::class => Translator\TranslatorFactory::class,
-
-            // Auto-wire helpers
-            'array $exportOutputDumpProcessors' => injectAliasArray(ConfigKey::MAIN, ConfigKey::OUTPUT_DUMP_PROCESSORS),
-            'array $exportParsers' => injectAliasArray(ConfigKey::MAIN, ConfigKey::PARSERS),
-            'array $exportProcessSteps' => injectAliasArray(ConfigKey::MAIN, ConfigKey::PROCESS_STEPS),
-
-            'bool $isDebug' => readConfig('debug'),
-
-            'int $numberOfParallelRenderProcesses' => readConfig(ConfigKey::MAIN, ConfigKey::PARALLEL_RENDERS),
-
-            'string $fullFactorioDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_FULL),
-            'string $headlessFactorioDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_HEADLESS),
-            'string $instancesDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
-            'string $logsDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_LOGS),
-            'string $modsDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
-            'string $tempDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),
-            'string $version' => readConfig('version'),
         ],
     ],
 ];

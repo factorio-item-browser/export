@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Service;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\Alias;
 use Exception;
-use FactorioItemBrowser\Export\AutoWire\Attribute\ReadDirectoryFromConfig;
+use FactorioItemBrowser\Export\AutoWire\Attribute\ReadPathFromConfig;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
+use FactorioItemBrowser\Export\Constant\ServiceName;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
@@ -30,11 +32,12 @@ class ModFileService
     ];
 
     public function __construct(
-        private readonly SerializerInterface $exportSerializer,
+        #[Alias(ServiceName::SERIALIZER)]
+        private readonly SerializerInterface $serializer,
         private readonly ZipArchiveExtractor $zipArchiveExtractor,
-        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_FACTORIO_FULL)]
+        #[ReadPathFromConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_FULL)]
         private readonly string $fullFactorioDirectory,
-        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_MODS)]
+        #[ReadPathFromConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS)]
         private readonly string $modsDirectory
     ) {
     }
@@ -68,7 +71,7 @@ class ModFileService
         $contents = mb_convert_encoding($contents, 'UTF-8', $encoding);
 
         try {
-            return $this->exportSerializer->deserialize($contents, InfoJson::class, 'json');
+            return $this->serializer->deserialize($contents, InfoJson::class, 'json');
         } catch (Exception $e) {
             throw new InvalidInfoJsonFileException($modName, $e);
         }

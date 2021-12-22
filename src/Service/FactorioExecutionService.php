@@ -6,10 +6,12 @@ namespace FactorioItemBrowser\Export\Service;
 
 use BluePsyduck\FactorioModPortalClient\Entity\Dependency;
 use BluePsyduck\FactorioModPortalClient\Entity\Version;
+use BluePsyduck\LaminasAutoWireFactory\Attribute\Alias;
 use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
 use FactorioItemBrowser\Common\Constant\Constant;
-use FactorioItemBrowser\Export\AutoWire\Attribute\ReadDirectoryFromConfig;
+use FactorioItemBrowser\Export\AutoWire\Attribute\ReadPathFromConfig;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
+use FactorioItemBrowser\Export\Constant\ServiceName;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Entity\ModList\Mod;
@@ -28,15 +30,16 @@ use Symfony\Component\Filesystem\Filesystem;
 class FactorioExecutionService
 {
     public function __construct(
-        protected readonly SerializerInterface $exportSerializer,
+        #[Alias(ServiceName::SERIALIZER)]
+        protected readonly SerializerInterface $serializer,
         protected readonly FactorioProcessFactory $factorioProcessFactory,
         protected readonly Filesystem $fileSystem,
         protected readonly ModFileService $modFileService,
-        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_FACTORIO_HEADLESS)]
+        #[ReadPathFromConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_HEADLESS)]
         protected readonly string $headlessFactorioDirectory,
-        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_INSTANCES)]
+        #[ReadPathFromConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES)]
         protected readonly string $instancesDirectory,
-        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_LOGS)]
+        #[ReadPathFromConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_LOGS)]
         protected readonly string $logsDirectory,
         #[ReadConfig('version')]
         protected readonly string $version,
@@ -95,7 +98,7 @@ class FactorioExecutionService
 
         $this->fileSystem->dumpFile(
             "{$this->instancesDirectory}/{$combinationId}/mods/mod-list.json",
-            $this->exportSerializer->serialize($this->createModListJson($modNames), 'json'),
+            $this->serializer->serialize($this->createModListJson($modNames), 'json'),
         );
     }
 
@@ -112,7 +115,7 @@ class FactorioExecutionService
         );
         $this->fileSystem->dumpFile(
             "{$this->instancesDirectory}/{$combinationId}/mods/Dump/info.json",
-            $this->exportSerializer->serialize($this->createDumpInfoJson($modNames), 'json'),
+            $this->serializer->serialize($this->createDumpInfoJson($modNames), 'json'),
         );
     }
 

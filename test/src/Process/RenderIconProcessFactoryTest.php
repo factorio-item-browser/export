@@ -52,10 +52,10 @@ class RenderIconProcessFactoryTest extends TestCase
     {
         $serializedIcon = 'abc';
         $icon = $this->createMock(Icon::class);
-        $expectedCommandLine = sprintf("'%s' 'abc'", realpath('bin/render-icon'));
+        $expectedCommandLine = sprintf("'%s' 'abc'", 'bin/render-icon');
         $expectedEnv = [
-            'FACTORIO_DATA_DIRECTORY' => realpath('data/factorio-full') . '/data',
-            'FACTORIO_MODS_DIRECTORY' => realpath('data/mods'),
+            'FACTORIO_DATA_DIRECTORY' => 'data/factorio-full/data',
+            'FACTORIO_MODS_DIRECTORY' => 'data/mods',
         ];
 
         $this->serializer->expects($this->once())

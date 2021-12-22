@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
-use FactorioItemBrowser\Export\AutoWire\Attribute\ReadDirectoryFromConfig;
+use FactorioItemBrowser\Export\AutoWire\Attribute\ReadPathFromConfig;
 use FactorioItemBrowser\Export\Constant\CommandName;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Output\Console;
@@ -27,11 +27,11 @@ class DownloadFactorioCommand extends Command
         protected readonly Console $console,
         protected readonly FactorioDownloadService $factorioDownloadService,
         protected readonly Filesystem $fileSystem,
-        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_FACTORIO_FULL)]
+        #[ReadPathFromConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_FULL)]
         protected readonly string $fullFactorioDirectory,
-        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_FACTORIO_HEADLESS)]
+        #[ReadPathFromConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_HEADLESS)]
         protected readonly string $headlessFactorioDirectory,
-        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_TEMP)]
+        #[ReadPathFromConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP)]
         protected readonly string $tempDirectory,
     ) {
         parent::__construct();

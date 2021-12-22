@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\AutoWire\Resolver;
 
-use FactorioItemBrowser\Export\AutoWire\Resolver\ConfigDirectoryResolver;
+use FactorioItemBrowser\Export\AutoWire\Resolver\ConfigPathResolver;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 
 /**
- * The PHPUnit test of the ClientFactory class.
+ * The PHPUnit test of the ConfigPathResolver class.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @covers \FactorioItemBrowser\Export\AutoWire\Resolver\ConfigDirectoryResolver
+ * @covers \FactorioItemBrowser\Export\AutoWire\Resolver\ConfigPathResolver
  */
-class ConfigDirectoryResolverTest extends TestCase
+class ConfigPathResolverTest extends TestCase
 {
     /**
      * @throws ContainerExceptionInterface
@@ -25,10 +25,8 @@ class ConfigDirectoryResolverTest extends TestCase
     public function testResolve(): void
     {
         $config = [
-            ConfigKey::MAIN => [
-                ConfigKey::DIRECTORIES => [
-                    'abc' => 'test/asset',
-                ]
+            'abc' => [
+                'def' => 'test/asset',
             ],
         ];
         $expectedResult = realpath('test/asset');
@@ -39,7 +37,7 @@ class ConfigDirectoryResolverTest extends TestCase
                   ->with($this->identicalTo('config'))
                   ->willReturn($config);
 
-        $instance = new ConfigDirectoryResolver('abc');
+        $instance = new ConfigPathResolver(['abc', 'def']);
 
         $result = $instance->resolve($container);
         $this->assertEquals($expectedResult, $result);
@@ -47,7 +45,7 @@ class ConfigDirectoryResolverTest extends TestCase
 
     public function testSerialize(): void
     {
-        $instance = new ConfigDirectoryResolver('abc');
+        $instance = new ConfigPathResolver(['abc', 'def']);
 
         $result = unserialize(serialize($instance));
         $this->assertEquals($instance, $result);
