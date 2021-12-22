@@ -16,8 +16,8 @@ use Symfony\Component\Console\Output\ConsoleSectionOutput;
  */
 class ProgressBar
 {
-    private SymfonyProgressBar $progressBar;
-    private ConsoleSectionOutput $statusOutput;
+    private readonly SymfonyProgressBar $progressBar;
+    private readonly ConsoleSectionOutput $statusOutput;
 
     /** @var array<string, string> */
     private array $lines = [];

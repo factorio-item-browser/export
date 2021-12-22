@@ -53,27 +53,18 @@ class DownloadFactorioCommandTest extends TestCase
      */
     private function createInstance(array $mockedMethods = []): DownloadFactorioCommand
     {
-        $instance = $this->getMockBuilder(DownloadFactorioCommand::class)
-                         ->disableProxyingToOriginalMethods()
-                         ->onlyMethods($mockedMethods)
-                         ->setConstructorArgs([
-                             $this->console,
-                             $this->factorioDownloadService,
-                             $this->fileSystem,
-                             'src',
-                             'test',
-                             '/tmp',
-                         ])
-                         ->getMock();
-
-        $this->assertSame(realpath('src'), $this->extractProperty($instance, 'fullFactorioDirectory'));
-        $this->assertSame(realpath('test'), $this->extractProperty($instance, 'headlessFactorioDirectory'));
-        $this->assertSame(realpath('/tmp'), $this->extractProperty($instance, 'tempDirectory'));
-        $this->injectProperty($instance, 'fullFactorioDirectory', $this->fullFactorioDirectory);
-        $this->injectProperty($instance, 'headlessFactorioDirectory', $this->headlessFactorioDirectory);
-        $this->injectProperty($instance, 'tempDirectory', $this->tempDirectory);
-
-        return $instance;
+        return $this->getMockBuilder(DownloadFactorioCommand::class)
+                    ->disableProxyingToOriginalMethods()
+                    ->onlyMethods($mockedMethods)
+                    ->setConstructorArgs([
+                        $this->console,
+                        $this->factorioDownloadService,
+                        $this->fileSystem,
+                        $this->fullFactorioDirectory,
+                        $this->headlessFactorioDirectory,
+                        $this->tempDirectory,
+                    ])
+                    ->getMock();
     }
 
     /**

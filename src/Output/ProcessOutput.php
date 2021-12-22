@@ -17,15 +17,13 @@ class ProcessOutput
 {
     private const NUMBER_OF_LINES = 32;
 
-    private ConsoleSectionOutput $output;
-    private Terminal $terminal;
-
+    private readonly Terminal $terminal;
     /** @var array<string> */
     private array $lines = [];
 
-    public function __construct(ConsoleSectionOutput $output)
-    {
-        $this->output = $output;
+    public function __construct(
+        private readonly ConsoleSectionOutput $output
+    ) {
         $this->terminal = new Terminal();
     }
 

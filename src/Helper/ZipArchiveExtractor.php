@@ -19,11 +19,9 @@ use ZipArchive;
  */
 class ZipArchiveExtractor
 {
-    private Filesystem $fileSystem;
-
-    public function __construct(Filesystem $fileSystem)
-    {
-        $this->fileSystem = $fileSystem;
+    public function __construct(
+        private readonly Filesystem $fileSystem
+    ) {
     }
 
     /**
@@ -49,10 +47,10 @@ class ZipArchiveExtractor
                 ['name' => $fileName] = $zipArchive->statIndex($index);
                 if (
                     is_string($fileName)
-                    && substr($fileName, -1) !== '/' // Ignore directories
-                    && strpos($fileName, '/') !== false // Ignore top-level directory
+                    && !str_ends_with($fileName, '/') // Ignore directories
+                    && str_contains($fileName, '/') // Ignore top-level directory
                 ) {
-                    $targetFile = $targetDirectory . substr($fileName, strpos($fileName, '/'));
+                    $targetFile = $targetDirectory . substr($fileName, intval(strpos($fileName, '/')));
                     $stream = $zipArchive->getStream($fileName);
                     if ($stream !== false) {
                         $this->fileSystem->dumpFile($targetFile, $stream);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Helper;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\Alias;
+use FactorioItemBrowser\Export\Constant\ServiceName;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use JMS\Serializer\SerializerInterface;
@@ -17,19 +19,10 @@ use Ramsey\Uuid\Uuid;
  */
 class HashCalculator
 {
-    /**
-     * The serializer.
-     * @var SerializerInterface
-     */
-    protected $serializer;
-
-    /**
-     * Initializes the helper.
-     * @param SerializerInterface $exportDataSerializer
-     */
-    public function __construct(SerializerInterface $exportDataSerializer)
-    {
-        $this->serializer = $exportDataSerializer;
+    public function __construct(
+        #[Alias(ServiceName::SERIALIZER)]
+        private readonly SerializerInterface $serializer,
+    ) {
     }
 
     /**
@@ -65,7 +58,7 @@ class HashCalculator
      * @param object $entity
      * @return string
      */
-    protected function hashEntity(object $entity): string
+    private function hashEntity(object $entity): string
     {
         return Uuid::fromString(hash('md5', $this->serializer->serialize($entity, 'json')))->toString();
     }

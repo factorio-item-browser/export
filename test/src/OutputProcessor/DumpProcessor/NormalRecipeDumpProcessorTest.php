@@ -18,38 +18,35 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\OutputProcessor\DumpProcessor\NormalRecipeDumpProcessor
+ * @covers \FactorioItemBrowser\Export\OutputProcessor\DumpProcessor\NormalRecipeDumpProcessor
  */
 class NormalRecipeDumpProcessorTest extends TestCase
 {
-    use ReflectionTrait;
-
     /** @var SerializerInterface&MockObject */
-    private SerializerInterface $exportSerializer;
+    private SerializerInterface $serializer;
 
     protected function setUp(): void
     {
-        parent::setUp();
-
-        $this->exportSerializer = $this->createMock(SerializerInterface::class);
+        $this->serializer = $this->createMock(SerializerInterface::class);
     }
 
-    /**
-     * @throws ReflectionException
-     * @covers ::__construct
-     * @covers ::getType
-     */
-    public function testConstruct(): void
+    private function createInstance(): NormalRecipeDumpProcessor
     {
-        $instance = new NormalRecipeDumpProcessor($this->exportSerializer);
-
-        $this->assertSame($this->exportSerializer, $this->extractProperty($instance, 'exportSerializer'));
-        $this->assertSame('normal-recipe', $instance->getType());
+        return new NormalRecipeDumpProcessor(
+            $this->serializer,
+        );
     }
 
-    /**
-     * @covers ::process
-     */
+    public function testGetType(): void
+    {
+        $expectedResult = 'normal-recipe';
+
+        $instance = $this->createInstance();
+        $result = $instance->getType();
+
+        $this->assertSame($expectedResult, $result);
+    }
+
     public function testProcess(): void
     {
         $serializedDump = 'abc';
@@ -59,16 +56,16 @@ class NormalRecipeDumpProcessorTest extends TestCase
         $dump = new Dump();
         $dump->normalRecipes = [$recipe1];
 
-        $this->exportSerializer->expects($this->once())
-                               ->method('deserialize')
-                               ->with(
-                                   $this->identicalTo($serializedDump),
-                                   $this->identicalTo(Recipe::class),
-                                   $this->identicalTo('json'),
-                               )
-                               ->willReturn($recipe2);
+        $this->serializer->expects($this->once())
+                         ->method('deserialize')
+                         ->with(
+                             $this->identicalTo($serializedDump),
+                             $this->identicalTo(Recipe::class),
+                             $this->identicalTo('json'),
+                         )
+                         ->willReturn($recipe2);
 
-        $instance = new NormalRecipeDumpProcessor($this->exportSerializer);
+        $instance = $this->createInstance();
         $instance->process($serializedDump, $dump);
 
         $this->assertContains($recipe1, $dump->normalRecipes);

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
 use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\UploadFailedException;
@@ -21,30 +23,19 @@ use Psr\Log\LoggerInterface;
  */
 class UploadStep implements ProcessStepInterface
 {
-    private Console $console;
-    private ExportDataService $exportDataService;
-    private LoggerInterface $logger;
-    private string $ftpHost;
-    private string $ftpUsername;
-    private string $ftpPassword;
-
     private FtpClient $ftpClient;
 
     public function __construct(
-        Console $console,
-        ExportDataService $exportDataService,
-        LoggerInterface $logger,
-        string $uploadFtpHost,
-        string $uploadFtpUsername,
-        string $uploadFtpPassword
+        private readonly Console $console,
+        private readonly ExportDataService $exportDataService,
+        private readonly LoggerInterface $logger,
+        #[ReadConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_HOST)]
+        private readonly string $ftpHost,
+        #[ReadConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_USERNAME)]
+        private readonly string $ftpUsername,
+        #[ReadConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_PASSWORD)]
+        private readonly string $ftpPassword
     ) {
-        $this->console = $console;
-        $this->exportDataService = $exportDataService;
-        $this->logger = $logger;
-        $this->ftpHost = $uploadFtpHost;
-        $this->ftpUsername = $uploadFtpUsername;
-        $this->ftpPassword = $uploadFtpPassword;
-
         $this->ftpClient = new FtpClient();
     }
 

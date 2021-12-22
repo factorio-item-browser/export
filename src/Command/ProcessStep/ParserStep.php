@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\InjectAliasArray;
 use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Parser\ParserInterface;
 
@@ -16,15 +18,13 @@ use FactorioItemBrowser\Export\Parser\ParserInterface;
  */
 class ParserStep implements ProcessStepInterface
 {
-    /** @var array<ParserInterface> */
-    private array $parsers;
-
     /**
-     * @param array<ParserInterface> $exportParsers
+     * @param array<ParserInterface> $parsers
      */
-    public function __construct(array $exportParsers)
-    {
-        $this->parsers = $exportParsers;
+    public function __construct(
+        #[InjectAliasArray(ConfigKey::MAIN, ConfigKey::PARSERS)]
+        private readonly array $parsers,
+    ) {
     }
 
     public function getLabel(): string

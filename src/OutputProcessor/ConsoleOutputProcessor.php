@@ -18,17 +18,16 @@ class ConsoleOutputProcessor implements OutputProcessorInterface
 {
     private const IGNORED_PREFIX = '>DUMP>';
 
-    private Console $console;
     private ProcessOutput $processOutput;
 
-    public function __construct(Console $console)
-    {
-        $this->console = $console;
+    public function __construct(
+        private readonly Console $console
+    ) {
     }
 
     public function processLine(string $outputLine, Dump $dump): void
     {
-        if (strpos($outputLine, self::IGNORED_PREFIX) === false) {
+        if (!str_contains($outputLine, self::IGNORED_PREFIX)) {
             if (!isset($this->processOutput)) {
                 $this->processOutput = $this->console->createProcessOutput();
             }

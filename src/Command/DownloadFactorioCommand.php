@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
+use FactorioItemBrowser\Export\AutoWire\Attribute\ReadDirectoryFromConfig;
 use FactorioItemBrowser\Export\Constant\CommandName;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Service\FactorioDownloadService;
 use Symfony\Component\Console\Command\Command;
@@ -21,31 +23,18 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class DownloadFactorioCommand extends Command
 {
-    protected Console $console;
-    protected FactorioDownloadService $factorioDownloadService;
-    protected Filesystem $fileSystem;
-
-    protected string $fullFactorioDirectory;
-    protected string $headlessFactorioDirectory;
-    protected string $tempDirectory;
-
     public function __construct(
-        Console $console,
-        FactorioDownloadService $factorioDownloadService,
-        Filesystem $fileSystem,
-        string $fullFactorioDirectory,
-        string $headlessFactorioDirectory,
-        string $tempDirectory,
+        protected readonly Console $console,
+        protected readonly FactorioDownloadService $factorioDownloadService,
+        protected readonly Filesystem $fileSystem,
+        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_FACTORIO_FULL)]
+        protected readonly string $fullFactorioDirectory,
+        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_FACTORIO_HEADLESS)]
+        protected readonly string $headlessFactorioDirectory,
+        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_TEMP)]
+        protected readonly string $tempDirectory,
     ) {
         parent::__construct();
-
-        $this->console = $console;
-        $this->factorioDownloadService = $factorioDownloadService;
-        $this->fileSystem = $fileSystem;
-
-        $this->fullFactorioDirectory = (string) realpath($fullFactorioDirectory);
-        $this->headlessFactorioDirectory = (string) realpath($headlessFactorioDirectory);
-        $this->tempDirectory = (string) realpath($tempDirectory);
     }
 
     protected function configure(): void

@@ -4,52 +4,47 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\OutputProcessor\DumpProcessor;
 
-use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Recipe;
 use FactorioItemBrowser\Export\OutputProcessor\DumpProcessor\ExpensiveRecipeDumpProcessor;
 use JMS\Serializer\SerializerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use ReflectionException;
 
 /**
  * The PHPUnit test of the ExpensiveRecipeDumpProcessor class.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\OutputProcessor\DumpProcessor\ExpensiveRecipeDumpProcessor
+ * @covers \FactorioItemBrowser\Export\OutputProcessor\DumpProcessor\ExpensiveRecipeDumpProcessor
  */
 class ExpensiveRecipeDumpProcessorTest extends TestCase
 {
-    use ReflectionTrait;
-
     /** @var SerializerInterface&MockObject */
-    private SerializerInterface $exportSerializer;
+    private SerializerInterface $serializer;
 
     protected function setUp(): void
     {
-        parent::setUp();
-
-        $this->exportSerializer = $this->createMock(SerializerInterface::class);
+        $this->serializer = $this->createMock(SerializerInterface::class);
     }
 
-    /**
-     * @throws ReflectionException
-     * @covers ::__construct
-     * @covers ::getType
-     */
-    public function testConstruct(): void
+    private function createInstance(): ExpensiveRecipeDumpProcessor
     {
-        $instance = new ExpensiveRecipeDumpProcessor($this->exportSerializer);
-
-        $this->assertSame($this->exportSerializer, $this->extractProperty($instance, 'exportSerializer'));
-        $this->assertSame('expensive-recipe', $instance->getType());
+        return new ExpensiveRecipeDumpProcessor(
+            $this->serializer,
+        );
     }
 
-    /**
-     * @covers ::process
-     */
+    public function testGetType(): void
+    {
+        $expectedResult = 'expensive-recipe';
+
+        $instance = $this->createInstance();
+        $result = $instance->getType();
+
+        $this->assertSame($expectedResult, $result);
+    }
+
     public function testProcess(): void
     {
         $serializedDump = 'abc';
@@ -59,16 +54,16 @@ class ExpensiveRecipeDumpProcessorTest extends TestCase
         $dump = new Dump();
         $dump->expensiveRecipes = [$recipe1];
 
-        $this->exportSerializer->expects($this->once())
-                               ->method('deserialize')
-                               ->with(
-                                   $this->identicalTo($serializedDump),
-                                   $this->identicalTo(Recipe::class),
-                                   $this->identicalTo('json'),
-                               )
-                               ->willReturn($recipe2);
+        $this->serializer->expects($this->once())
+                         ->method('deserialize')
+                         ->with(
+                             $this->identicalTo($serializedDump),
+                             $this->identicalTo(Recipe::class),
+                             $this->identicalTo('json'),
+                         )
+                         ->willReturn($recipe2);
 
-        $instance = new ExpensiveRecipeDumpProcessor($this->exportSerializer);
+        $instance = $this->createInstance();
         $instance->process($serializedDump, $dump);
 
         $this->assertContains($recipe1, $dump->expensiveRecipes);

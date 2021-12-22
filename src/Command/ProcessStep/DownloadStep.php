@@ -16,11 +16,9 @@ use FactorioItemBrowser\Export\Service\ModDownloadService;
  */
 class DownloadStep implements ProcessStepInterface
 {
-    private ModDownloadService $modDownloadService;
-
-    public function __construct(ModDownloadService $modDownloader)
-    {
-        $this->modDownloadService = $modDownloader;
+    public function __construct(
+        private readonly ModDownloadService $modDownloadService
+    ) {
     }
 
     public function getLabel(): string

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\InjectAliasArray;
 use Exception;
 use FactorioItemBrowser\CombinationApi\Client\ClientInterface;
 use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
@@ -16,6 +17,7 @@ use FactorioItemBrowser\CombinationApi\Client\Response\Job\ListResponse;
 use FactorioItemBrowser\CombinationApi\Client\Transfer\Combination;
 use FactorioItemBrowser\CombinationApi\Client\Transfer\Job;
 use FactorioItemBrowser\Export\Command\ProcessStep\ProcessStepInterface;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Constant\CommandName;
@@ -36,39 +38,20 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ProcessCommand extends Command
 {
-    protected ClientInterface $combinationApiClient;
-    protected Console $console;
-    protected ExportDataService $exportDataService;
-    protected LoggerInterface $logger;
-    /** @var array<ProcessStepInterface>  */
-    protected array $processSteps;
-
     /**
-     * @param ClientInterface $combinationApiClient
-     * @param Console $console
-     * @param ExportDataService $exportDataService
-     * @param LoggerInterface $logger
-     * @param array<ProcessStepInterface> $exportProcessSteps
+     * @param array<ProcessStepInterface> $processSteps
      */
     public function __construct(
-        ClientInterface $combinationApiClient,
-        Console $console,
-        ExportDataService $exportDataService,
-        LoggerInterface $logger,
-        array $exportProcessSteps
+        protected readonly ClientInterface $combinationApiClient,
+        protected readonly Console $console,
+        protected readonly ExportDataService $exportDataService,
+        protected readonly LoggerInterface $logger,
+        #[InjectAliasArray(ConfigKey::MAIN, ConfigKey::PROCESS_STEPS)]
+        protected readonly array $processSteps
     ) {
         parent::__construct();
-
-        $this->combinationApiClient = $combinationApiClient;
-        $this->console = $console;
-        $this->exportDataService = $exportDataService;
-        $this->logger = $logger;
-        $this->processSteps = $exportProcessSteps;
     }
 
-    /**
-     * Configures the command.
-     */
     protected function configure(): void
     {
         parent::configure();

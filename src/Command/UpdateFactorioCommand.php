@@ -30,23 +30,13 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class UpdateFactorioCommand extends Command
 {
-    protected ClientInterface $combinationApiClient;
-    protected Console $console;
-    protected FactorioDownloadService $factorioDownloadService;
-    protected ModFileService $modFileService;
-
     public function __construct(
-        ClientInterface $combinationApiClient,
-        Console $console,
-        FactorioDownloadService $factorioDownloadService,
-        ModFileService $modFileService,
+        protected readonly ClientInterface $combinationApiClient,
+        protected readonly Console $console,
+        protected readonly FactorioDownloadService $factorioDownloadService,
+        protected readonly ModFileService $modFileService,
     ) {
         parent::__construct();
-
-        $this->combinationApiClient = $combinationApiClient;
-        $this->console = $console;
-        $this->factorioDownloadService = $factorioDownloadService;
-        $this->modFileService = $modFileService;
     }
 
     protected function configure(): void

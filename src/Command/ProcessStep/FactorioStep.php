@@ -17,15 +17,10 @@ use FactorioItemBrowser\Export\Service\FactorioExecutionService;
  */
 class FactorioStep implements ProcessStepInterface
 {
-    private Console $console;
-    private FactorioExecutionService $factorioExecutionService;
-
     public function __construct(
-        Console $console,
-        FactorioExecutionService $factorioExecutionService
+        private readonly Console $console,
+        private readonly FactorioExecutionService $factorioExecutionService,
     ) {
-        $this->console = $console;
-        $this->factorioExecutionService = $factorioExecutionService;
     }
 
     public function getLabel(): string

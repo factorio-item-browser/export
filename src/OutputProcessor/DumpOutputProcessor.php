@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\OutputProcessor;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\InjectAliasArray;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\OutputProcessor\DumpProcessor\DumpProcessorInterface;
 
@@ -21,11 +23,13 @@ class DumpOutputProcessor implements OutputProcessorInterface
     private array $dumpProcessors = [];
 
     /**
-     * @param array<DumpProcessorInterface> $exportOutputDumpProcessors
+     * @param array<DumpProcessorInterface> $dumpProcessors
      */
-    public function __construct(array $exportOutputDumpProcessors)
-    {
-        foreach ($exportOutputDumpProcessors as $dumpProcessor) {
+    public function __construct(
+        #[InjectAliasArray(ConfigKey::MAIN, ConfigKey::OUTPUT_DUMP_PROCESSORS)]
+        array $dumpProcessors,
+    ) {
+        foreach ($dumpProcessors as $dumpProcessor) {
             $this->dumpProcessors[$dumpProcessor->getType()] = $dumpProcessor;
         }
     }

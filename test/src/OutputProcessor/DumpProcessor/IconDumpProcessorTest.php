@@ -18,38 +18,35 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\OutputProcessor\DumpProcessor\IconDumpProcessor
+ * @covers \FactorioItemBrowser\Export\OutputProcessor\DumpProcessor\IconDumpProcessor
  */
 class IconDumpProcessorTest extends TestCase
 {
-    use ReflectionTrait;
-
     /** @var SerializerInterface&MockObject */
-    private SerializerInterface $exportSerializer;
+    private SerializerInterface $serializer;
 
     protected function setUp(): void
     {
-        parent::setUp();
-
-        $this->exportSerializer = $this->createMock(SerializerInterface::class);
+        $this->serializer = $this->createMock(SerializerInterface::class);
     }
 
-    /**
-     * @throws ReflectionException
-     * @covers ::__construct
-     * @covers ::getType
-     */
-    public function testConstruct(): void
+    private function createInstance(): IconDumpProcessor
     {
-        $instance = new IconDumpProcessor($this->exportSerializer);
-
-        $this->assertSame($this->exportSerializer, $this->extractProperty($instance, 'exportSerializer'));
-        $this->assertSame('icon', $instance->getType());
+        return new IconDumpProcessor(
+            $this->serializer,
+        );
     }
 
-    /**
-     * @covers ::process
-     */
+    public function testGetType(): void
+    {
+        $expectedResult = 'icon';
+
+        $instance = $this->createInstance();
+        $result = $instance->getType();
+
+        $this->assertSame($expectedResult, $result);
+    }
+
     public function testProcess(): void
     {
         $serializedDump = 'abc';
@@ -59,16 +56,16 @@ class IconDumpProcessorTest extends TestCase
         $dump = new Dump();
         $dump->icons = [$icon1];
 
-        $this->exportSerializer->expects($this->once())
-                               ->method('deserialize')
-                               ->with(
-                                   $this->identicalTo($serializedDump),
-                                   $this->identicalTo(Icon::class),
-                                   $this->identicalTo('json'),
-                               )
-                               ->willReturn($icon2);
+        $this->serializer->expects($this->once())
+                         ->method('deserialize')
+                         ->with(
+                             $this->identicalTo($serializedDump),
+                             $this->identicalTo(Icon::class),
+                             $this->identicalTo('json'),
+                         )
+                         ->willReturn($icon2);
 
-        $instance = new IconDumpProcessor($this->exportSerializer);
+        $instance = $this->createInstance();
         $instance->process($serializedDump, $dump);
 
         $this->assertContains($icon1, $dump->icons);

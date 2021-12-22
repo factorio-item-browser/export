@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Output;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
 use Exception;
 use Generator;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
@@ -18,14 +19,13 @@ use Symfony\Component\Console\Terminal;
  */
 class Console
 {
-    private ConsoleOutputInterface $output;
-    private bool $isDebug;
-    private Terminal $terminal;
+    private readonly Terminal $terminal;
 
-    public function __construct(ConsoleOutputInterface $output, bool $isDebug)
-    {
-        $this->output = $output;
-        $this->isDebug = $isDebug;
+    public function __construct(
+        private readonly ConsoleOutputInterface $output,
+        #[ReadConfig('debug')]
+        private readonly bool $isDebug
+    ) {
         $this->terminal = new Terminal();
     }
 

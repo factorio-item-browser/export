@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\OutputProcessor\DumpProcessor;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\Alias;
+use FactorioItemBrowser\Export\Constant\ServiceName;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\Dump\Fluid;
 use JMS\Serializer\SerializerInterface;
@@ -16,11 +18,10 @@ use JMS\Serializer\SerializerInterface;
  */
 class FluidDumpProcessor implements DumpProcessorInterface
 {
-    private SerializerInterface $exportSerializer;
-
-    public function __construct(SerializerInterface $exportSerializer)
-    {
-        $this->exportSerializer = $exportSerializer;
+    public function __construct(
+        #[Alias(ServiceName::SERIALIZER)]
+        private readonly SerializerInterface $serializer
+    ) {
     }
 
     public function getType(): string
@@ -30,6 +31,6 @@ class FluidDumpProcessor implements DumpProcessorInterface
 
     public function process(string $serializedDump, Dump $dump): void
     {
-        $dump->fluids[] = $this->exportSerializer->deserialize($serializedDump, Fluid::class, 'json');
+        $dump->fluids[] = $this->serializer->deserialize($serializedDump, Fluid::class, 'json');
     }
 }

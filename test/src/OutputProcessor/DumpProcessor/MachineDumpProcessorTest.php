@@ -18,38 +18,35 @@ use ReflectionException;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\OutputProcessor\DumpProcessor\MachineDumpProcessor
+ * @covers \FactorioItemBrowser\Export\OutputProcessor\DumpProcessor\MachineDumpProcessor
  */
 class MachineDumpProcessorTest extends TestCase
 {
-    use ReflectionTrait;
-
     /** @var SerializerInterface&MockObject */
-    private SerializerInterface $exportSerializer;
+    private SerializerInterface $serializer;
 
     protected function setUp(): void
     {
-        parent::setUp();
-
-        $this->exportSerializer = $this->createMock(SerializerInterface::class);
+        $this->serializer = $this->createMock(SerializerInterface::class);
     }
 
-    /**
-     * @throws ReflectionException
-     * @covers ::__construct
-     * @covers ::getType
-     */
-    public function testConstruct(): void
+    private function createInstance(): MachineDumpProcessor
     {
-        $instance = new MachineDumpProcessor($this->exportSerializer);
-
-        $this->assertSame($this->exportSerializer, $this->extractProperty($instance, 'exportSerializer'));
-        $this->assertSame('machine', $instance->getType());
+        return new MachineDumpProcessor(
+            $this->serializer,
+        );
     }
 
-    /**
-     * @covers ::process
-     */
+    public function testGetType(): void
+    {
+        $expectedResult = 'machine';
+
+        $instance = $this->createInstance();
+        $result = $instance->getType();
+
+        $this->assertSame($expectedResult, $result);
+    }
+
     public function testProcess(): void
     {
         $serializedDump = 'abc';
@@ -59,16 +56,16 @@ class MachineDumpProcessorTest extends TestCase
         $dump = new Dump();
         $dump->machines = [$machine1];
 
-        $this->exportSerializer->expects($this->once())
-                               ->method('deserialize')
-                               ->with(
-                                   $this->identicalTo($serializedDump),
-                                   $this->identicalTo(Machine::class),
-                                   $this->identicalTo('json'),
-                               )
-                               ->willReturn($machine2);
+        $this->serializer->expects($this->once())
+                         ->method('deserialize')
+                         ->with(
+                             $this->identicalTo($serializedDump),
+                             $this->identicalTo(Machine::class),
+                             $this->identicalTo('json'),
+                         )
+                         ->willReturn($machine2);
 
-        $instance = new MachineDumpProcessor($this->exportSerializer);
+        $instance = $this->createInstance();
         $instance->process($serializedDump, $dump);
 
         $this->assertContains($machine1, $dump->machines);

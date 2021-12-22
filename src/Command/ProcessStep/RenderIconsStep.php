@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Output\ProgressBar;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
@@ -14,7 +16,6 @@ use FactorioItemBrowser\Export\Process\RenderIconProcess;
 use FactorioItemBrowser\Export\Process\RenderIconProcessFactory;
 use FactorioItemBrowser\ExportData\ExportData;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -25,24 +26,16 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class RenderIconsStep implements ProcessStepInterface
 {
-    protected Console $console;
-    protected LoggerInterface $logger;
-    protected RenderIconProcessFactory $renderIconProcessFactory;
-    protected int $numberOfParallelRenderProcesses;
-
     protected OutputInterface $errorOutput;
     protected ProgressBar $progressBar;
 
     public function __construct(
-        Console $console,
-        LoggerInterface $logger,
-        RenderIconProcessFactory $renderIconProcessFactory,
-        int $numberOfParallelRenderProcesses
+        protected readonly Console $console,
+        protected readonly LoggerInterface $logger,
+        protected readonly RenderIconProcessFactory $renderIconProcessFactory,
+        #[ReadConfig(ConfigKey::MAIN, ConfigKey::PARALLEL_RENDERS)]
+        protected readonly int $numberOfParallelRenderProcesses
     ) {
-        $this->console = $console;
-        $this->logger = $logger;
-        $this->renderIconProcessFactory = $renderIconProcessFactory;
-        $this->numberOfParallelRenderProcesses = $numberOfParallelRenderProcesses;
     }
 
     public function getLabel(): string
@@ -109,7 +102,7 @@ class RenderIconsStep implements ProcessStepInterface
             $errorOutput = trim($process->getErrorOutput());
 
             $this->logger->error($errorOutput, ['combination' => $exportData->getCombinationId()]);
-            $this->errorOutput->write($errorOutput, false, ConsoleOutput::OUTPUT_RAW);
+            $this->errorOutput->write($errorOutput, false, OutputInterface::OUTPUT_RAW);
         }
     }
 }

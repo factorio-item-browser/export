@@ -16,14 +16,12 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ModListOutput
 {
-    private OutputInterface $output;
-
     /** @var array<string, array<string>> */
     private array $mods = [];
 
-    public function __construct(OutputInterface $output)
-    {
-        $this->output = $output;
+    public function __construct(
+        private readonly OutputInterface $output
+    ) {
     }
 
     public function add(string $modName, ?Version $currentVersion = null, ?Version $requestedVersion = null): self

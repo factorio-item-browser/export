@@ -20,14 +20,14 @@ use stdClass;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @coversDefaultClass \FactorioItemBrowser\Export\Helper\HashCalculator
+ * @covers \FactorioItemBrowser\Export\Helper\HashCalculator
  */
 class HashCalculatorTest extends TestCase
 {
     use ReflectionTrait;
 
     /** @var SerializerInterface&MockObject */
-    private $serializer;
+    private SerializerInterface $serializer;
 
     protected function setUp(): void
     {
@@ -35,23 +35,24 @@ class HashCalculatorTest extends TestCase
     }
 
     /**
-     * @throws ReflectionException
-     * @covers ::__construct
+     * @param array<string> $methods
+     * @return HashCalculator&MockObject
      */
-    public function testConstruct(): void
+    private function createInstance(array $methods = []): HashCalculator
     {
-        $helper = new HashCalculator($this->serializer);
-
-        $this->assertSame($this->serializer, $this->extractProperty($helper, 'serializer'));
+        return $this->getMockBuilder(HashCalculator::class)
+                    ->disableProxyingToOriginalMethods()
+                    ->onlyMethods($methods)
+                    ->setConstructorArgs([
+                        $this->serializer,
+                    ])
+                    ->getMock();
     }
 
-    /**
-     * @covers ::hashIcon
-     */
     public function testHashIcon(): void
     {
-        $hash = 'foo';
-
+        $serializedEntity = 'abc';
+        $expectedResult = '90015098-3cd2-4fb0-d696-3f7d28e17f72';
         $layer = $this->createMock(Layer::class);
 
         $icon = new Icon();
@@ -63,26 +64,21 @@ class HashCalculatorTest extends TestCase
         $expectedIcon->size = 42;
         $expectedIcon->layers[] = $layer;
 
-        $helper = $this->getMockBuilder(HashCalculator::class)
-                       ->onlyMethods(['hashEntity'])
-                       ->setConstructorArgs([$this->serializer])
-                       ->getMock();
-        $helper->expects($this->once())
-               ->method('hashEntity')
-               ->with($this->equalTo($expectedIcon))
-               ->willReturn($hash);
+        $this->serializer->expects($this->once())
+                         ->method('serialize')
+                         ->with($this->equalTo($expectedIcon), $this->identicalTo('json'))
+                         ->willReturn($serializedEntity);
 
-        $result = $helper->hashIcon($icon);
+        $instance = $this->createInstance();
+        $result = $instance->hashIcon($icon);
 
-        $this->assertSame($hash, $result);
+        $this->assertSame($expectedResult, $result);
     }
 
-    /**
-     * @covers ::hashRecipe
-     */
     public function testHashRecipe(): void
     {
-        $hash = 'foo';
+        $serializedEntity = 'abc';
+        $expectedResult = '90015098-3cd2-4fb0-d696-3f7d28e17f72';
 
         $recipe = new Recipe();
         $recipe->name = 'abc';
@@ -95,38 +91,13 @@ class HashCalculatorTest extends TestCase
         $expectedRecipe->craftingCategory = 'ghi';
         $expectedRecipe->craftingTime = 13.37;
 
-        $helper = $this->getMockBuilder(HashCalculator::class)
-                       ->onlyMethods(['hashEntity'])
-                       ->setConstructorArgs([$this->serializer])
-                       ->getMock();
-        $helper->expects($this->once())
-               ->method('hashEntity')
-               ->with($this->equalTo($expectedRecipe))
-               ->willReturn($hash);
-
-        $result = $helper->hashRecipe($recipe);
-
-        $this->assertSame($hash, $result);
-    }
-
-    /**
-     * @throws ReflectionException
-     * @covers ::hashEntity
-     */
-    public function testHashEntity(): void
-    {
-        $serializedEntity = 'abc';
-        $expectedResult = '90015098-3cd2-4fb0-d696-3f7d28e17f72';
-
-        $entity = $this->createMock(stdClass::class);
-
         $this->serializer->expects($this->once())
                          ->method('serialize')
-                         ->with($this->identicalTo($entity), $this->identicalTo('json'))
+                         ->with($this->equalTo($expectedRecipe), $this->identicalTo('json'))
                          ->willReturn($serializedEntity);
 
-        $helper = new HashCalculator($this->serializer);
-        $result = $this->invokeMethod($helper, 'hashEntity', $entity);
+        $instance = $this->createInstance();
+        $result = $instance->hashRecipe($recipe);
 
         $this->assertSame($expectedResult, $result);
     }

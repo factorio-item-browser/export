@@ -7,6 +7,7 @@ namespace FactorioItemBrowser\Export\Output;
 use Interop\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * The factory for the console output instance.
@@ -24,6 +25,6 @@ class ConsoleOutputFactory implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null): ConsoleOutput
     {
-        return new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, true);
+        return new ConsoleOutput(OutputInterface::VERBOSITY_NORMAL, true);
     }
 }
