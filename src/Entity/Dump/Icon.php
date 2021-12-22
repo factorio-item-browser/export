@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Entity\Dump;
 
+use JMS\Serializer\Annotation\Type;
+
 /**
  * The icon written to the dumped data.
  *
@@ -14,6 +16,8 @@ class Icon
 {
     public string $type = '';
     public string $name = '';
+
     /** @var array<Layer> */
+    #[Type('array<' . Layer::class . '>')]
     public array $layers = [];
 }

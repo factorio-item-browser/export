@@ -1,9 +1,0 @@
-FactorioItemBrowser\Export\Entity\Dump\Icon:
-  exclusion_policy: all
-  properties:
-    type:
-      type: string
-    name:
-      type: string
-    layers:
-      type: array<FactorioItemBrowser\Export\Entity\Dump\Layer>

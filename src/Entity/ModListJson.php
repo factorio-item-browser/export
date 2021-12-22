@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Entity;
 
 use FactorioItemBrowser\Export\Entity\ModList\Mod;
+use JMS\Serializer\Annotation\Type;
 
 /**
  * The entity representing the mod-list.json file.
@@ -15,5 +16,6 @@ use FactorioItemBrowser\Export\Entity\ModList\Mod;
 class ModListJson
 {
     /** @var array<Mod> */
+    #[Type('array<' . Mod::class . '>')]
     public array $mods;
 }

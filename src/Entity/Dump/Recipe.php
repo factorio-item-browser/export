@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Entity\Dump;
 
+use JMS\Serializer\Annotation\Type;
+
 /**
  * The recipe written to the dumped data.
  *
@@ -13,14 +15,21 @@ namespace FactorioItemBrowser\Export\Entity\Dump;
 class Recipe
 {
     public string $name = '';
-    /** @var mixed */
-    public $localisedName;
-    /** @var mixed */
-    public $localisedDescription;
+
+    #[Type('raw')]
+    public mixed $localisedName;
+
+    #[Type('raw')]
+    public mixed $localisedDescription;
+
     public float $craftingTime = 0.;
     public string $craftingCategory = '';
+
     /** @var array<Ingredient> */
+    #[Type('array<' . Ingredient::class . '>')]
     public array $ingredients = [];
+
     /** @var array<Product> */
+    #[Type('array<' . Product::class . '>')]
     public $products = [];
 }

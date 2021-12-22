@@ -1,9 +1,0 @@
-FactorioItemBrowser\Export\Entity\ModList\Mod:
-  exclusion_policy: all
-  properties:
-    name:
-      type: string
-    isEnabled:
-      type: boolean
-      serialized_name: enabled
-

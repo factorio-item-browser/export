@@ -1,5 +1,0 @@
-FactorioItemBrowser\Export\Entity\ModListJson:
-  exclusion_policy: all
-  properties:
-    mods:
-      type: array<FactorioItemBrowser\Export\Entity\ModList\Mod>

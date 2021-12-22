@@ -48,9 +48,6 @@ return [
         ],
         ConfigKey::RENDER_ICON_BINARY => 'bin/render-icon',
         ConfigKey::SERIALIZER => [
-            JmsConfigKey::METADATA_DIRS => [
-                'FactorioItemBrowser\Export' => __DIR__ . '/../serializer',
-            ],
             JmsConfigKey::ADD_DEFAULT_HANDLERS => true,
             JmsConfigKey::HANDLERS => [
                 Serializer\Handler\ConstructorHandler::class,

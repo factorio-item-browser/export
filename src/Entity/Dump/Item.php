@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Entity\Dump;
 
+use JMS\Serializer\Annotation\Type;
+
 /**
  * The item written to the dumped data.
  *
@@ -13,12 +15,16 @@ namespace FactorioItemBrowser\Export\Entity\Dump;
 class Item
 {
     public string $name = '';
-    /** @var mixed */
-    public $localisedName;
-    /** @var mixed */
-    public $localisedDescription;
-    /** @var mixed */
-    public $localisedEntityName;
-    /** @var mixed */
-    public $localisedEntityDescription;
+
+    #[Type('raw')]
+    public mixed $localisedName;
+
+    #[Type('raw')]
+    public mixed $localisedDescription;
+
+    #[Type('raw')]
+    public mixed $localisedEntityName;
+
+    #[Type('raw')]
+    public mixed $localisedEntityDescription;
 }
