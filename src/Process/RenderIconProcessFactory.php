@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Process;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\Alias;
+use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
+use FactorioItemBrowser\Export\Constant\ServiceName;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use JMS\Serializer\SerializerInterface;
 
@@ -15,18 +19,20 @@ use JMS\Serializer\SerializerInterface;
  */
 class RenderIconProcessFactory
 {
-    private SerializerInterface $serializer;
-    private string $fullFactorioDirectory;
-    private string $modsDirectory;
-    private string $renderIconBinary;
+    private readonly string $fullFactorioDirectory;
+    private readonly string $modsDirectory;
+    private readonly string $renderIconBinary;
 
     public function __construct(
-        SerializerInterface $exportDataSerializer,
+        #[Alias(ServiceName::SERIALIZER)]
+        private readonly SerializerInterface $serializer,
+        #[ReadConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_FULL)]
         string $fullFactorioDirectory,
+        #[ReadConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS)]
         string $modsDirectory,
+        #[ReadConfig(ConfigKey::MAIN, ConfigKey::RENDER_ICON_BINARY)]
         string $renderIconBinary
     ) {
-        $this->serializer = $exportDataSerializer;
         $this->fullFactorioDirectory = (string) realpath($fullFactorioDirectory);
         $this->modsDirectory = (string) realpath($modsDirectory);
         $this->renderIconBinary = (string) realpath($renderIconBinary);

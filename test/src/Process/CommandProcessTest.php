@@ -22,8 +22,7 @@ class CommandProcessTest extends TestCase
         $arguments = ['def', 'ghi'];
 
         $command = $_SERVER['_'] ?? 'php';
-        $expectedCommandLine
-            = "'{$command}' '{$_SERVER['SCRIPT_FILENAME']}' 'abc' 'def' 'ghi'";
+        $expectedCommandLine = "'{$command}' '{$_SERVER['SCRIPT_FILENAME']}' 'abc' 'def' 'ghi'";
 
         $process = new CommandProcess($commandName, $arguments);
 

@@ -62,29 +62,28 @@ class ModDownloadServiceTest extends TestCase
      * @param array<string> $mockedMethods
      * @return ModDownloadService&MockObject
      */
-    private function createInstance(array $mockedMethods = []): ModDownloadService
+    private function createInstance(array $mockedMethods = [], bool $mockBaseInfo = true): ModDownloadService
     {
-        $info = new InfoJson();
-        $info->version = $this->factorioVersion;
+        if ($mockBaseInfo) {
+            $info = new InfoJson();
+            $info->version = $this->factorioVersion;
 
-        $modFileService = $this->createMock(ModFileService::class);
-        $modFileService->expects($this->once())
-                       ->method('getInfo')
-                       ->with($this->identicalTo('base'))
-                       ->willReturn($info);
+            $this->modFileService->expects($this->once())
+                                 ->method('getInfo')
+                                 ->with($this->identicalTo('base'))
+                                 ->willReturn($info);
+        }
 
-        $instance = $this->getMockBuilder(ModDownloadService::class)
-                         ->disableProxyingToOriginalMethods()
-                         ->onlyMethods($mockedMethods)
-                         ->setConstructorArgs([
-                             $this->console,
-                             $this->modDownloadProcessManager,
-                             $modFileService,
-                             $this->modPortalClientFacade,
-                         ])
-                         ->getMock();
-        $this->injectProperty($instance, 'modFileService', $this->modFileService);
-        return $instance;
+        return $this->getMockBuilder(ModDownloadService::class)
+                    ->disableProxyingToOriginalMethods()
+                    ->onlyMethods($mockedMethods)
+                    ->setConstructorArgs([
+                        $this->console,
+                        $this->modDownloadProcessManager,
+                        $this->modFileService,
+                        $this->modPortalClientFacade,
+                    ])
+                    ->getMock();
     }
 
     /**
@@ -225,25 +224,29 @@ class ModDownloadServiceTest extends TestCase
             'ghi' => new Version('3.4.5'),
         ];
 
+        $infoBase = new InfoJson();
+        $infoBase->version = $this->factorioVersion;
         $info1 = new InfoJson();
         $info1->version = new Version('2.3.4');
         $info2 = new InfoJson();
         $info2->version = new Version('3.4.5');
 
-        $this->modFileService->expects($this->exactly(3))
+        $this->modFileService->expects($this->exactly(4))
                              ->method('getInfo')
                              ->withConsecutive(
+                                 [$this->identicalTo('base')],
                                  [$this->identicalTo('abc')],
                                  [$this->identicalTo('def')],
                                  [$this->identicalTo('ghi')],
                              )
                              ->willReturnOnConsecutiveCalls(
+                                 $infoBase,
                                  $info1,
                                  $this->throwException(new FileNotFoundInModException('foo', 'bar')),
                                  $info2,
                              );
 
-        $instance = $this->createInstance();
+        $instance = $this->createInstance([], false);
         $result = $this->invokeMethod($instance, 'getCurrentVersions', $modNames);
 
         $this->assertEquals($expectedResult, $result);

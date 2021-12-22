@@ -15,15 +15,13 @@ use BluePsyduck\FactorioModPortalClient\Entity\Release;
  */
 class ModDownloadProcess extends DownloadProcess
 {
-    private Mod $mod;
-    private Release $release;
-
-    public function __construct(Mod $mod, Release $release, string $downloadUrl, string $destinationFile)
-    {
+    public function __construct(
+        private readonly Mod $mod,
+        private readonly Release $release,
+        string $downloadUrl,
+        string $destinationFile,
+    ) {
         parent::__construct($downloadUrl, $destinationFile);
-
-        $this->mod = $mod;
-        $this->release = $release;
     }
 
     public function getMod(): Mod

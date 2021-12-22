@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Process;
 
+use BluePsyduck\LaminasAutoWireFactory\Attribute\InjectAliasArray;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\OutputProcessor\OutputProcessorInterface;
 
 /**
@@ -14,15 +16,13 @@ use FactorioItemBrowser\Export\OutputProcessor\OutputProcessorInterface;
  */
 class FactorioProcessFactory
 {
-    /** @var array<OutputProcessorInterface> */
-    private array $outputProcessors;
-
     /**
-     * @param array<OutputProcessorInterface> $exportOutputProcessors
+     * @param array<OutputProcessorInterface> $outputProcessors
      */
-    public function __construct(array $exportOutputProcessors)
-    {
-        $this->outputProcessors = $exportOutputProcessors;
+    public function __construct(
+        #[InjectAliasArray(ConfigKey::MAIN, ConfigKey::OUTPUT_PROCESSORS)]
+        private readonly array $outputProcessors,
+    ) {
     }
 
     public function create(string $instanceDirectory): FactorioProcess

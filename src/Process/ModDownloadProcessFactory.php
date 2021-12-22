@@ -7,6 +7,9 @@ namespace FactorioItemBrowser\Export\Process;
 use BluePsyduck\FactorioModPortalClient\Client\Facade;
 use BluePsyduck\FactorioModPortalClient\Entity\Mod;
 use BluePsyduck\FactorioModPortalClient\Entity\Release;
+use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
+use FactorioItemBrowser\Export\AutoWire\Attribute\ReadDirectoryFromConfig;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 
 /**
  * The factory for the mod download processes.
@@ -16,13 +19,11 @@ use BluePsyduck\FactorioModPortalClient\Entity\Release;
  */
 class ModDownloadProcessFactory
 {
-    private Facade $modPortalClientFacade;
-    private string $tempDirectory;
-
-    public function __construct(Facade $modPortalClientFacade, string $tempDirectory)
-    {
-        $this->modPortalClientFacade = $modPortalClientFacade;
-        $this->tempDirectory = (string) realpath($tempDirectory);
+    public function __construct(
+        private readonly Facade $modPortalClientFacade,
+        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_TEMP)]
+        private readonly string $tempDirectory,
+    ) {
     }
 
     /**

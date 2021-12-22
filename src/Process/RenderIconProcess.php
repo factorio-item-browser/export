@@ -15,18 +15,16 @@ use Symfony\Component\Process\Process;
  */
 class RenderIconProcess extends Process
 {
-    private Icon $icon;
-
     /**
-     * @param Icon $icon
      * @param array<string> $command
      * @param array<string, string> $env
      */
-    public function __construct(Icon $icon, array $command, array $env)
-    {
+    public function __construct(
+        private readonly Icon $icon,
+        array $command,
+        array $env,
+    ) {
         parent::__construct($command, null, $env, null, null);
-
-        $this->icon = $icon;
     }
 
     public function getIcon(): Icon

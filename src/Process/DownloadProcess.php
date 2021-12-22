@@ -14,11 +14,10 @@ use Symfony\Component\Process\Process;
  */
 class DownloadProcess extends Process
 {
-    private string $downloadUrl;
-    private string $destinationFile;
-
-    public function __construct(string $downloadUrl, string $destinationFile)
-    {
+    public function __construct(
+        private readonly string $downloadUrl,
+        private readonly string $destinationFile,
+    ) {
         parent::__construct([
             'wget',
             '-o',
@@ -27,9 +26,6 @@ class DownloadProcess extends Process
             $destinationFile,
             $downloadUrl,
         ]);
-
-        $this->downloadUrl = $downloadUrl;
-        $this->destinationFile = $destinationFile;
 
         $this->setTimeout(null);
     }

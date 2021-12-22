@@ -208,9 +208,9 @@ class ModFileServiceTest extends TestCase
     public function provideGetLocalDirectory(): array
     {
         return [
-            ['base', realpath(__DIR__ . '/../../../data/factorio-full') . '/data/base'],
-            ['core', realpath(__DIR__ . '/../../../data/factorio-full') . '/data/core'],
-            ['abc', realpath(__DIR__ . '/../../../data/mods') . '/abc'],
+            ['base', 'data/factorio-full/data/base'],
+            ['core', 'data/factorio-full/data/core'],
+            ['abc', 'data/mods/abc'],
         ];
     }
 

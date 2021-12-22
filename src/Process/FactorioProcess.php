@@ -17,21 +17,18 @@ use Symfony\Component\Process\Process;
  */
 class FactorioProcess
 {
-    /** @var array<OutputProcessorInterface> */
-    private array $outputProcessors;
-
-    private Dump $dump;
+    private readonly Dump $dump;
     /** @var Process<string>  */
     private Process $process;
 
     /**
      * @param array<OutputProcessorInterface> $outputProcessors
-     * @param string $instanceDirectory
      */
-    public function __construct(array $outputProcessors, string $instanceDirectory)
-    {
+    public function __construct(
+        private readonly array $outputProcessors,
+        string $instanceDirectory,
+    ) {
         $this->dump = new Dump();
-        $this->outputProcessors = $outputProcessors;
 
         $this->process = new Process([
             $instanceDirectory . '/bin/x64/factorio',

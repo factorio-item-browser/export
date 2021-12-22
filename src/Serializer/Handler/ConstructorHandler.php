@@ -55,7 +55,7 @@ class ConstructorHandler implements SubscribingHandlerInterface
      * @param array<mixed> $type
      * @return mixed
      */
-    public function deserialize(DeserializationVisitorInterface $visitor, $data, array $type)
+    public function deserialize(DeserializationVisitorInterface $visitor, mixed $data, array $type): mixed
     {
         $class = $type['params'][0]['name'] ?? '';
         return new $class((string) $data);

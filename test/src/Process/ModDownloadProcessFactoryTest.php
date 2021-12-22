@@ -23,7 +23,7 @@ class ModDownloadProcessFactoryTest extends TestCase
     public function test(): void
     {
         $tempDirectory = 'data/temp';
-        $expectedDestinationFile = realpath(__DIR__ . '/../../../data/temp') . '/ghi';
+        $expectedDestinationFile = 'data/temp/ghi';
 
         $mod = new Mod();
         $mod->setName('abc');

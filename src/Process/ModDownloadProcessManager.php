@@ -6,8 +6,10 @@ namespace FactorioItemBrowser\Export\Process;
 
 use BluePsyduck\FactorioModPortalClient\Entity\Mod;
 use BluePsyduck\FactorioModPortalClient\Entity\Release;
+use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Exception\DownloadFailedException;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Output\Console;
@@ -23,27 +25,17 @@ use Psr\Log\LoggerInterface;
  */
 class ModDownloadProcessManager
 {
-    private Console $console;
-    private LoggerInterface $logger;
-    private ModDownloadProcessFactory $modDownloadProcessFactory;
-    private ModFileService $modFileService;
-    private int $numberOfParallelDownloads;
-
     private ProcessManagerInterface $processManager;
     private ProgressBar $progressBar;
 
     public function __construct(
-        Console $console,
-        LoggerInterface $logger,
-        ModDownloadProcessFactory $modDownloadProcessFactory,
-        ModFileService $modFileService,
-        int $numberOfParallelDownloads
+        private readonly Console $console,
+        private readonly LoggerInterface $logger,
+        private readonly ModDownloadProcessFactory $modDownloadProcessFactory,
+        private readonly ModFileService $modFileService,
+        #[ReadConfig(ConfigKey::MAIN, ConfigKey::PARALLEL_DOWNLOADS)]
+        private readonly int $numberOfParallelDownloads,
     ) {
-        $this->console = $console;
-        $this->logger = $logger;
-        $this->modDownloadProcessFactory = $modDownloadProcessFactory;
-        $this->modFileService = $modFileService;
-        $this->numberOfParallelDownloads = $numberOfParallelDownloads;
     }
 
     protected function getProcessManager(): ProcessManagerInterface

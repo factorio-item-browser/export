@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Service;
 
+use BluePsyduck\FactorioModPortalClient\Constant\ConfigKey;
+use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
 use FactorioItemBrowser\Export\Exception\CommandException;
 use FactorioItemBrowser\Export\Process\DownloadProcess;
 use Symfony\Component\Filesystem\Filesystem;
@@ -26,18 +28,13 @@ class FactorioDownloadService
     ];
     private const LATEST_VERSION_URL = 'https://factorio.com/api/latest-releases';
 
-    private Filesystem $fileSystem;
-    private string $factorioApiUsername;
-    private string $factorioApiToken;
-
     public function __construct(
-        Filesystem $filesystem,
-        string $factorioApiUsername,
-        string $factorioApiToken,
+        private readonly Filesystem $fileSystem,
+        #[ReadConfig(ConfigKey::MAIN, ConfigKey::OPTIONS, ConfigKey::OPTION_USERNAME)]
+        private readonly string $factorioApiUsername,
+        #[ReadConfig(ConfigKey::MAIN, ConfigKey::OPTIONS, ConfigKey::OPTION_TOKEN)]
+        private readonly string $factorioApiToken,
     ) {
-        $this->fileSystem = $filesystem;
-        $this->factorioApiUsername = $factorioApiUsername;
-        $this->factorioApiToken = $factorioApiToken;
     }
 
     /**

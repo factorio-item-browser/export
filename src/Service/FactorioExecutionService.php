@@ -6,7 +6,10 @@ namespace FactorioItemBrowser\Export\Service;
 
 use BluePsyduck\FactorioModPortalClient\Entity\Dependency;
 use BluePsyduck\FactorioModPortalClient\Entity\Version;
+use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
 use FactorioItemBrowser\Common\Constant\Constant;
+use FactorioItemBrowser\Export\AutoWire\Attribute\ReadDirectoryFromConfig;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Entity\ModList\Mod;
@@ -24,33 +27,20 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class FactorioExecutionService
 {
-    protected SerializerInterface $exportSerializer;
-    protected FactorioProcessFactory $factorioProcessFactory;
-    protected Filesystem $fileSystem;
-    protected ModFileService $modFileService;
-    protected string $headlessFactorioDirectory;
-    protected string $instancesDirectory;
-    protected string $logsDirectory;
-    protected string $version;
-
     public function __construct(
-        SerializerInterface $exportSerializer,
-        FactorioProcessFactory $factorioProcessFactory,
-        Filesystem $fileSystem,
-        ModFileService $modFileService,
-        string $headlessFactorioDirectory,
-        string $instancesDirectory,
-        string $logsDirectory,
-        string $version
+        protected readonly SerializerInterface $exportSerializer,
+        protected readonly FactorioProcessFactory $factorioProcessFactory,
+        protected readonly Filesystem $fileSystem,
+        protected readonly ModFileService $modFileService,
+        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_FACTORIO_HEADLESS)]
+        protected readonly string $headlessFactorioDirectory,
+        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_INSTANCES)]
+        protected readonly string $instancesDirectory,
+        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_LOGS)]
+        protected readonly string $logsDirectory,
+        #[ReadConfig('version')]
+        protected readonly string $version,
     ) {
-        $this->exportSerializer = $exportSerializer;
-        $this->factorioProcessFactory = $factorioProcessFactory;
-        $this->fileSystem = $fileSystem;
-        $this->modFileService = $modFileService;
-        $this->headlessFactorioDirectory = (string) realpath($headlessFactorioDirectory);
-        $this->instancesDirectory = (string) realpath($instancesDirectory);
-        $this->logsDirectory = (string) realpath($logsDirectory);
-        $this->version = $version;
     }
 
     /**

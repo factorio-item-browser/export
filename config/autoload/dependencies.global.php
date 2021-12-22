@@ -22,9 +22,6 @@ use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
-use function BluePsyduck\LaminasAutoWireFactory\injectAliasArray;
-use function BluePsyduck\LaminasAutoWireFactory\readConfig;
-
 return [
     'dependencies' => [
         'aliases' => [
@@ -94,24 +91,19 @@ return [
             FactorioTranslator::class => Translator\TranslatorFactory::class,
 
             // Auto-wire helpers
-            'array $exportOutputProcessors' => injectAliasArray(ConfigKey::MAIN, ConfigKey::OUTPUT_PROCESSORS),
             'array $exportOutputDumpProcessors' => injectAliasArray(ConfigKey::MAIN, ConfigKey::OUTPUT_DUMP_PROCESSORS),
             'array $exportParsers' => injectAliasArray(ConfigKey::MAIN, ConfigKey::PARSERS),
             'array $exportProcessSteps' => injectAliasArray(ConfigKey::MAIN, ConfigKey::PROCESS_STEPS),
 
             'bool $isDebug' => readConfig('debug'),
 
-            'int $numberOfParallelDownloads' => readConfig(ConfigKey::MAIN, ConfigKey::PARALLEL_DOWNLOADS),
             'int $numberOfParallelRenderProcesses' => readConfig(ConfigKey::MAIN, ConfigKey::PARALLEL_RENDERS),
 
-            'string $factorioApiToken' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_TOKEN),
-            'string $factorioApiUsername' => readConfig(ModConfigKey::MAIN, ModConfigKey::OPTIONS, ModConfigKey::OPTION_USERNAME),
             'string $fullFactorioDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_FULL),
             'string $headlessFactorioDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_FACTORIO_HEADLESS),
             'string $instancesDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_INSTANCES),
             'string $logsDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_LOGS),
             'string $modsDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_MODS),
-            'string $renderIconBinary' => readConfig(ConfigKey::MAIN, ConfigKey::RENDER_ICON_BINARY),
             'string $tempDirectory' => readConfig(ConfigKey::MAIN, ConfigKey::DIRECTORIES, ConfigKey::DIRECTORY_TEMP),
             'string $uploadFtpHost' => readConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_HOST),
             'string $uploadFtpUsername' => readConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_USERNAME),

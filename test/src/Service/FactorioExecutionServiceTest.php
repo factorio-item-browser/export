@@ -61,28 +61,19 @@ class FactorioExecutionServiceTest extends TestCase
      */
     private function createInstance(array $mockedMethods = []): FactorioExecutionService
     {
-        $instance = $this->getMockBuilder(FactorioExecutionService::class)
-                         ->onlyMethods($mockedMethods)
-                         ->setConstructorArgs([
-                             $this->exportSerializer,
-                             $this->factorioProcessFactory,
-                             $this->fileSystem,
-                             $this->modFileService,
-                             'src',
-                             'test',
-                             'test/asset',
-                             $this->version,
-                         ])
-                         ->getMock();
-
-        $this->assertSame(realpath('src'), $this->extractProperty($instance, 'headlessFactorioDirectory'));
-        $this->assertSame(realpath('test'), $this->extractProperty($instance, 'instancesDirectory'));
-        $this->assertSame(realpath('test/asset'), $this->extractProperty($instance, 'logsDirectory'));
-        $this->injectProperty($instance, 'headlessFactorioDirectory', $this->headlessFactorioDirectory);
-        $this->injectProperty($instance, 'instancesDirectory', $this->instancesDirectory);
-        $this->injectProperty($instance, 'logsDirectory', $this->logsDirectory);
-
-        return $instance;
+        return $this->getMockBuilder(FactorioExecutionService::class)
+                    ->onlyMethods($mockedMethods)
+                    ->setConstructorArgs([
+                        $this->exportSerializer,
+                        $this->factorioProcessFactory,
+                        $this->fileSystem,
+                        $this->modFileService,
+                        $this->headlessFactorioDirectory,
+                        $this->instancesDirectory,
+                        $this->logsDirectory,
+                        $this->version,
+                    ])
+                    ->getMock();
     }
 
     /**

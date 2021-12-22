@@ -27,31 +27,17 @@ use FactorioItemBrowser\Export\Process\ModDownloadProcessManager;
  */
 class ModDownloadService
 {
-    protected Console $console;
-    protected ModDownloadProcessManager $modDownloadProcessManager;
-    protected ModFileService $modFileService;
-    protected Facade $modPortalClientFacade;
-
-    protected ?Version $factorioVersion = null;
+    protected readonly Version $factorioVersion;
 
     /**
-     * @param Console $console
-     * @param ModDownloadProcessManager $modDownloadProcessManager
-     * @param ModFileService $modFileService
-     * @param Facade $modPortalClientFacade
      * @throws ExportException
      */
     public function __construct(
-        Console $console,
-        ModDownloadProcessManager $modDownloadProcessManager,
-        ModFileService $modFileService,
-        Facade $modPortalClientFacade
+        protected readonly Console $console,
+        protected readonly ModDownloadProcessManager $modDownloadProcessManager,
+        protected readonly ModFileService $modFileService,
+        protected readonly Facade $modPortalClientFacade
     ) {
-        $this->console = $console;
-        $this->modDownloadProcessManager = $modDownloadProcessManager;
-        $this->modFileService = $modFileService;
-        $this->modPortalClientFacade = $modPortalClientFacade;
-
         $this->factorioVersion = $this->modFileService->getInfo(Constant::MOD_NAME_BASE)->version;
     }
 

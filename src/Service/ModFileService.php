@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Service;
 
 use Exception;
+use FactorioItemBrowser\Export\AutoWire\Attribute\ReadDirectoryFromConfig;
+use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FileNotFoundInModException;
@@ -27,21 +29,14 @@ class ModFileService
         'core',
     ];
 
-    private SerializerInterface $exportSerializer;
-    private ZipArchiveExtractor $zipArchiveExtractor;
-    private string $fullFactorioDirectory;
-    private string $modsDirectory;
-
     public function __construct(
-        SerializerInterface $exportSerializer,
-        ZipArchiveExtractor $zipArchiveExtractor,
-        string $fullFactorioDirectory,
-        string $modsDirectory
+        private readonly SerializerInterface $exportSerializer,
+        private readonly ZipArchiveExtractor $zipArchiveExtractor,
+        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_FACTORIO_FULL)]
+        private readonly string $fullFactorioDirectory,
+        #[ReadDirectoryFromConfig(ConfigKey::DIRECTORY_MODS)]
+        private readonly string $modsDirectory
     ) {
-        $this->exportSerializer = $exportSerializer;
-        $this->zipArchiveExtractor = $zipArchiveExtractor;
-        $this->fullFactorioDirectory = (string) realpath($fullFactorioDirectory);
-        $this->modsDirectory = (string) realpath($modsDirectory);
     }
 
     /**
