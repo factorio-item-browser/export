@@ -12,5 +12,4 @@ namespace FactorioItemBrowser\Export\Exception;
  */
 class CommandException extends ExportException
 {
-
 }

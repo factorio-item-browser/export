@@ -19,7 +19,6 @@ use PHPUnit\Framework\TestCase;
  */
 class DumpOutputProcessorTest extends TestCase
 {
-
     /**
      * @throws ExportException
      * @covers ::__construct
