@@ -1,5 +1,5 @@
 parameters:
-  level: max
+  level: 8
   paths:
     - src
     - test/serializer
@@ -7,6 +7,7 @@ parameters:
 
   ignoreErrors:
     - '#Dynamic call to static method PHPUnit\\Framework\\.*#'
+    - '#Cannot use array destructuring on array\|false\.#'
 
 includes:
   - vendor/phpstan/phpstan-phpunit/extension.neon
