@@ -10,10 +10,10 @@ jobs:
     name: General
     uses: factorio-item-browser/github-workflows/.github/workflows/ci-php-general.yaml@v1
     with:
-      extensions: pdo
+      extensions: ftp, gd, zip
 
   call-workflow-ci-php-tests:
     name: Tests
     uses: factorio-item-browser/github-workflows/.github/workflows/ci-php-tests.yaml@v1
     with:
-      extensions: pdo
+      extensions: ftp, gd, zip
