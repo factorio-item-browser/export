@@ -1054,12 +1054,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-data.git",
-                "reference": "95aed62d36888c7988eddadb4d8f58e95718b962"
+                "reference": "f2687a12df66cde157a02b4b01c9e7a0fbad70a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/95aed62d36888c7988eddadb4d8f58e95718b962",
-                "reference": "95aed62d36888c7988eddadb4d8f58e95718b962",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/f2687a12df66cde157a02b4b01c9e7a0fbad70a2",
+                "reference": "f2687a12df66cde157a02b4b01c9e7a0fbad70a2",
                 "shasum": ""
             },
             "require": {
@@ -1108,7 +1108,7 @@
             "support": {
                 "source": "https://github.com/factorio-item-browser/export-data/tree/feature/php81-refactor"
             },
-            "time": "2021-12-22T16:43:31+00:00"
+            "time": "2021-12-23T21:25:20+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
