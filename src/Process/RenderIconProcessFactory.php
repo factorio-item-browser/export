@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Process;
 
 use BluePsyduck\LaminasAutoWireFactory\Attribute\Alias;
-use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
 use FactorioItemBrowser\Export\AutoWire\Attribute\ReadPathFromConfig;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
-use FactorioItemBrowser\Export\Constant\ServiceName;
+use FactorioItemBrowser\ExportData\Constant\ServiceName;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use JMS\Serializer\SerializerInterface;
 

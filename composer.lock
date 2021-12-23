@@ -818,12 +818,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/combination-api-client.git",
-                "reference": "5fd091eac513e10b3a9f3edbe2717c5206cb5e97"
+                "reference": "9b04175722c1666036af395ad7bef4b4e7601231"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/combination-api-client/zipball/5fd091eac513e10b3a9f3edbe2717c5206cb5e97",
-                "reference": "5fd091eac513e10b3a9f3edbe2717c5206cb5e97",
+                "url": "https://api.github.com/repos/factorio-item-browser/combination-api-client/zipball/9b04175722c1666036af395ad7bef4b4e7601231",
+                "reference": "9b04175722c1666036af395ad7bef4b4e7601231",
                 "shasum": ""
             },
             "require": {
@@ -870,7 +870,7 @@
             "support": {
                 "source": "https://github.com/factorio-item-browser/combination-api-client/tree/feature/php-81"
             },
-            "time": "2021-12-14T17:47:54+00:00"
+            "time": "2021-12-22T21:43:12+00:00"
         },
         {
             "name": "factorio-item-browser/common",

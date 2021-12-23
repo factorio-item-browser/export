@@ -15,17 +15,13 @@ use JMS\Serializer\Annotation\Type;
 class Machine
 {
     public string $name = '';
-
     #[Type('raw')]
-    public mixed $localisedName;
-
+    public mixed $localisedName = null;
     #[Type('raw')]
-    public mixed $localisedDescription;
-
+    public mixed $localisedDescription = null;
     /** @var array<string> */
     #[Type('array<string>')]
     public array $craftingCategories = [];
-
     public float $craftingSpeed = 1.;
     public int $itemSlots = 0;
     public int $fluidInputSlots = 0;

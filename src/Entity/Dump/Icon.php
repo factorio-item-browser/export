@@ -16,7 +16,6 @@ class Icon
 {
     public string $type = '';
     public string $name = '';
-
     /** @var array<Layer> */
     #[Type('array<' . Layer::class . '>')]
     public array $layers = [];

@@ -11,13 +11,11 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export;
 
-use BluePsyduck\FactorioModPortalClient\Constant\ConfigKey as ModConfigKey;
 use BluePsyduck\FactorioTranslator\Translator as FactorioTranslator;
 use BluePsyduck\JmsSerializerFactory\JmsSerializerFactory;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Constant\ServiceName;
-use JMS\Serializer\SerializerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -90,7 +88,6 @@ return [
             ConsoleOutputInterface::class => Output\ConsoleOutputFactory::class,
             Filesystem::class => AutoWireFactory::class,
             LoggerInterface::class => Log\LoggerFactory::class,
-            SerializerInterface::class . ' $exportSerializer' => new JmsSerializerFactory(ConfigKey::MAIN, ConfigKey::SERIALIZER),
             FactorioTranslator::class => Translator\TranslatorFactory::class,
         ],
     ],

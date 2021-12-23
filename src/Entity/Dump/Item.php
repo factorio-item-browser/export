@@ -15,16 +15,12 @@ use JMS\Serializer\Annotation\Type;
 class Item
 {
     public string $name = '';
-
     #[Type('raw')]
-    public mixed $localisedName;
-
+    public mixed $localisedName = null;
     #[Type('raw')]
-    public mixed $localisedDescription;
-
+    public mixed $localisedDescription = null;
     #[Type('raw')]
-    public mixed $localisedEntityName;
-
+    public mixed $localisedEntityName = null;
     #[Type('raw')]
-    public mixed $localisedEntityDescription;
+    public mixed $localisedEntityDescription = null;
 }

@@ -31,7 +31,7 @@ class InfoJson
     public string $homepage = '';
 
     /** @var array<Dependency> */
-    #[Type('array<' . Dependency::class . '>')]
+    #[Type('array<constructor<' . Dependency::class . '>>')]
     public array $dependencies = [];
 
     public function __construct()

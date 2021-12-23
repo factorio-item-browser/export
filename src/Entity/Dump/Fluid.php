@@ -15,10 +15,8 @@ use JMS\Serializer\Annotation\Type;
 class Fluid
 {
     public string $name = '';
-
     #[Type('raw')]
-    public mixed $localisedName;
-
+    public mixed $localisedName = null;
     #[Type('raw')]
-    public mixed $localisedDescription;
+    public mixed $localisedDescription = null;
 }

@@ -15,20 +15,15 @@ use JMS\Serializer\Annotation\Type;
 class Recipe
 {
     public string $name = '';
-
     #[Type('raw')]
-    public mixed $localisedName;
-
+    public mixed $localisedName = null;
     #[Type('raw')]
-    public mixed $localisedDescription;
-
+    public mixed $localisedDescription = null;
     public float $craftingTime = 0.;
     public string $craftingCategory = '';
-
     /** @var array<Ingredient> */
     #[Type('array<' . Ingredient::class . '>')]
     public array $ingredients = [];
-
     /** @var array<Product> */
     #[Type('array<' . Product::class . '>')]
     public $products = [];
