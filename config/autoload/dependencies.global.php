@@ -16,6 +16,7 @@ use BluePsyduck\JmsSerializerFactory\JmsSerializerFactory;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Constant\ServiceName;
+use MonologFactory\DiContainerLoggerFactory;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -87,7 +88,7 @@ return [
             // 3rd-party services
             ConsoleOutputInterface::class => Output\ConsoleOutputFactory::class,
             Filesystem::class => AutoWireFactory::class,
-            LoggerInterface::class => Log\LoggerFactory::class,
+            LoggerInterface::class => [DiContainerLoggerFactory::class, 'app'],
             FactorioTranslator::class => Translator\TranslatorFactory::class,
         ],
     ],

@@ -32,6 +32,7 @@
     "laminas/laminas-stdlib": "^3.2",
     "monolog/monolog": "^2.1",
     "nicolab/php-ftp-client": "^1.5",
+    "nikolaposa/monolog-factory": "^3.1",
     "ramsey/uuid": "^4.0",
     "symfony/console": "^6.0",
     "symfony/filesystem": "^6.0",
@@ -72,7 +73,7 @@
     "test-unit": "phpunit --testsuite unit-test --colors=always --coverage-html=test/coverage --coverage-clover=test/coverage/clover.xml",
     "test-serialize": "phpunit --testsuite serializer-test --colors=always",
     "post-autoload-dump": [
-      "mkdir -m a=rwx -p data/cache data/factorio data/factorio/full data/factorio/headless data/log data/mods data/temp data/instances"
+      "mkdir -m a=rwx -p data/cache data/factorio data/factorio/full data/factorio/headless data/logs data/mods data/temp data/instances"
     ],
     "test": [
       "@composer validate --strict",

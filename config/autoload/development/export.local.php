@@ -20,7 +20,7 @@ return [
             ConfigKey::DIRECTORY_FACTORIO_FULL => 'data/factorio/full',
             ConfigKey::DIRECTORY_FACTORIO_HEADLESS => 'data/factorio/headless',
             ConfigKey::DIRECTORY_INSTANCES => 'data/instances',
-            ConfigKey::DIRECTORY_LOGS => 'data/log',
+            ConfigKey::DIRECTORY_LOGS => 'data/logs',
             ConfigKey::DIRECTORY_MODS => 'data/mods',
             ConfigKey::DIRECTORY_TEMP => 'data/temp',
         ],
