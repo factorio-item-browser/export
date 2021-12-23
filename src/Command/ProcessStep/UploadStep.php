@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Command\ProcessStep;
 
+use Blazon\PSR11FlySystem\FlySystemFactory;
+use BluePsyduck\LaminasAutoWireFactory\Attribute\Alias;
 use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
 use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
+use FactorioItemBrowser\Export\Constant\ServiceName;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\UploadFailedException;
 use FactorioItemBrowser\ExportData\ExportDataService;
-use FtpClient\FtpClient;
-use FtpClient\FtpException;
+use League\Flysystem\Filesystem;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
+use League\Flysystem\Ftp\FtpAdapter;
+use League\Flysystem\Ftp\FtpConnectionOptions;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -23,20 +29,13 @@ use Psr\Log\LoggerInterface;
  */
 class UploadStep implements ProcessStepInterface
 {
-    private FtpClient $ftpClient;
-
     public function __construct(
         private readonly Console $console,
         private readonly ExportDataService $exportDataService,
         private readonly LoggerInterface $logger,
-        #[ReadConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_HOST)]
-        private readonly string $ftpHost,
-        #[ReadConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_USERNAME)]
-        private readonly string $ftpUsername,
-        #[ReadConfig(ConfigKey::MAIN, ConfigKey::UPLOAD_FTP, ConfigKey::UPLOAD_FTP_PASSWORD)]
-        private readonly string $ftpPassword
+        #[Alias(ServiceName::FLYSYSTEM_UPLOAD)]
+        private readonly FilesystemOperator $uploadFileSystem,
     ) {
-        $this->ftpClient = new FtpClient();
     }
 
     public function getLabel(): string
@@ -56,17 +55,13 @@ class UploadStep implements ProcessStepInterface
         $this->console->writeAction(sprintf('Uploading file %s', basename($fileName)));
 
         try {
-            $this->ftpClient->connect($this->ftpHost);
-            $this->ftpClient->login($this->ftpUsername, $this->ftpPassword);
-            $this->ftpClient->pasv(true);
-
-            $this->ftpClient->putFromPath($fileName);
+            $this->uploadFileSystem->write(basename($fileName), (string) file_get_contents($fileName));
 
             $this->logger->info('Export file uploaded', [
                 'combination' => $processStepData->exportData->getCombinationId(),
                 'file' => $fileName,
             ]);
-        } catch (FtpException $e) {
+        } catch (FilesystemException $e) {
             throw new UploadFailedException($e->getMessage(), $e);
         }
     }

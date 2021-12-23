@@ -89,24 +89,4 @@ interface ConfigKey
      * The key holding the configuration of the serializer.
      */
     public const SERIALIZER = 'serializer';
-
-    /**
-     * The key holding the configuration for the upload FTP server.
-     */
-    public const UPLOAD_FTP = 'upload-ftp';
-
-    /**
-     * The key holding the host of the upload FTP.
-     */
-    public const UPLOAD_FTP_HOST = 'host';
-
-    /**
-     * The key holding the username of the upload FTP.
-     */
-    public const UPLOAD_FTP_USERNAME = 'username';
-
-    /**
-     * The key holding the password pf the upload FTP.
-     */
-    public const UPLOAD_FTP_PASSWORD = 'password';
 }

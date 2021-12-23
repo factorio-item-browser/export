@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export;
 
+use Blazon\PSR11FlySystem\FlySystemFactory;
 use BluePsyduck\FactorioTranslator\Translator as FactorioTranslator;
 use BluePsyduck\JmsSerializerFactory\JmsSerializerFactory;
 use BluePsyduck\LaminasAutoWireFactory\AutoWireFactory;
@@ -83,6 +84,7 @@ return [
             Service\ModDownloadService::class => AutoWireFactory::class,
             Service\ModFileService::class => AutoWireFactory::class,
 
+            ServiceName::FLYSYSTEM_UPLOAD => [FlySystemFactory::class, 'upload'],
             ServiceName::SERIALIZER => new JmsSerializerFactory(ConfigKey::MAIN, ConfigKey::SERIALIZER),
 
             // 3rd-party services

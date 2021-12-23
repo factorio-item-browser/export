@@ -12,5 +12,6 @@ namespace FactorioItemBrowser\Export\Constant;
  */
 interface ServiceName
 {
+    public const FLYSYSTEM_UPLOAD = 'factorio-item-browser.export.flysystem.upload';
     public const SERIALIZER = 'factorio-item-browser.export.serializer';
 }

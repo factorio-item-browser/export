@@ -13,8 +13,9 @@ use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\UploadFailedException;
 use FactorioItemBrowser\ExportData\ExportData;
 use FactorioItemBrowser\ExportData\ExportDataService;
-use FtpClient\FtpClient;
-use FtpClient\FtpException;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -34,78 +35,63 @@ class UploadStepTest extends TestCase
     private Console $console;
     /** @var ExportDataService&MockObject */
     private ExportDataService $exportDataService;
-    /** @var FtpClient&MockObject */
-    private FtpClient $ftpClient;
     /** @var LoggerInterface&MockObject */
     private LoggerInterface $logger;
+    /** @var FilesystemOperator&MockObject $uploadFileSystem */
+    private FilesystemOperator $uploadFileSystem;
 
     protected function setUp(): void
     {
         $this->console = $this->createMock(Console::class);
         $this->exportDataService = $this->createMock(ExportDataService::class);
-        $this->ftpClient = $this->createMock(FtpClient::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+        $this->uploadFileSystem = $this->createMock(FilesystemOperator::class);
     }
 
-    private function createInstance(string $host, string $username, string $password): UploadStep
+    private function createInstance(): UploadStep
     {
-        $instance = new UploadStep(
+        return new UploadStep(
             $this->console,
             $this->exportDataService,
             $this->logger,
-            $host,
-            $username,
-            $password,
+            $this->uploadFileSystem,
         );
-
-        $this->assertInstanceOf(FtpClient::class, $this->extractProperty($instance, 'ftpClient'));
-        $this->injectProperty($instance, 'ftpClient', $this->ftpClient);
-
-        return $instance;
     }
 
     public function testMeta(): void
     {
-        $instance = $this->createInstance('abc', 'def', 'ghi');
+        $instance = $this->createInstance();
 
         $this->assertNotEquals('', $instance->getLabel());
         $this->assertSame(JobStatus::UPLOADING, $instance->getExportJobStatus());
     }
-
 
     /**
      * @throws ExportException
      */
     public function testRun(): void
     {
-        $ftpHost = 'abc';
-        $ftpUsername = 'def';
-        $ftpPassword = 'ghi';
-        $fileName = 'jkl/mno.zip';
-
+        $contents = 'abc';
         $exportData = $this->createMock(ExportData::class);
         $processStepData = new ProcessStepData();
         $processStepData->exportData = $exportData;
+
+        vfsStream::setup('root', null, [
+            'def.zip' => $contents,
+        ]);
+        $fileName = vfsStream::url('root/def.zip');
+        $expectedFileName = 'def.zip';
 
         $this->exportDataService->expects($this->once())
                                 ->method('persistExport')
                                 ->with($this->identicalTo($exportData))
                                 ->willReturn($fileName);
 
-        $this->ftpClient->expects($this->once())
-                        ->method('connect')
-                        ->with($this->identicalTo($ftpHost));
-        $this->ftpClient->expects($this->once())
-                        ->method('login')
-                        ->with($this->identicalTo($ftpUsername), $this->identicalTo($ftpPassword));
-        $this->ftpClient->expects($this->once())
-                        ->method('__call')
-                        ->with($this->identicalTo('pasv'), $this->identicalTo([true]));
-        $this->ftpClient->expects($this->once())
-                        ->method('putFromPath')
-                        ->with($this->identicalTo($fileName));
+        $this->uploadFileSystem->expects($this->once())
+                               ->method('write')
+                               ->with($this->identicalTo($expectedFileName), $this->identicalTo($contents));
 
-        $instance = $this->createInstance($ftpHost, $ftpUsername, $ftpPassword);
+        $instance = $this->createInstance();
         $instance->run($processStepData);
     }
 
@@ -114,37 +100,30 @@ class UploadStepTest extends TestCase
      */
     public function testRunWithException(): void
     {
-        $ftpHost = 'abc';
-        $ftpUsername = 'def';
-        $ftpPassword = 'ghi';
-        $fileName = 'jkl/mno.zip';
-
+        $contents = 'abc';
         $exportData = $this->createMock(ExportData::class);
         $processStepData = new ProcessStepData();
         $processStepData->exportData = $exportData;
+
+        vfsStream::setup('root', null, [
+            'def.zip' => $contents,
+        ]);
+        $fileName = vfsStream::url('root/def.zip');
+        $expectedFileName = 'def.zip';
 
         $this->exportDataService->expects($this->once())
                                 ->method('persistExport')
                                 ->with($this->identicalTo($exportData))
                                 ->willReturn($fileName);
 
-        $this->ftpClient->expects($this->once())
-                        ->method('connect')
-                        ->with($this->identicalTo($ftpHost));
-        $this->ftpClient->expects($this->once())
-                        ->method('login')
-                        ->with($this->identicalTo($ftpUsername), $this->identicalTo($ftpPassword));
-        $this->ftpClient->expects($this->once())
-                        ->method('__call')
-                        ->with($this->identicalTo('pasv'), $this->identicalTo([true]));
-        $this->ftpClient->expects($this->once())
-                        ->method('putFromPath')
-                        ->with($this->identicalTo($fileName))
-                        ->willThrowException($this->createMock(FtpException::class));
+        $this->uploadFileSystem->expects($this->once())
+                               ->method('write')
+                               ->with($this->identicalTo($expectedFileName), $this->identicalTo($contents))
+                               ->willThrowException($this->createMock(FilesystemException::class));
 
         $this->expectException(UploadFailedException::class);
 
-        $instance = $this->createInstance($ftpHost, $ftpUsername, $ftpPassword);
+        $instance = $this->createInstance();
         $instance->run($processStepData);
     }
 }
