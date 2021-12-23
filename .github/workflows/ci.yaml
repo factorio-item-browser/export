@@ -11,11 +11,9 @@ jobs:
     uses: factorio-item-browser/github-workflows/.github/workflows/ci-php-general.yaml@v1
     with:
       extensions: pdo
-      php-version: "8.0"
 
   call-workflow-ci-php-tests:
     name: Tests
     uses: factorio-item-browser/github-workflows/.github/workflows/ci-php-tests.yaml@v1
     with:
       extensions: pdo
-      php-versions: "8.0 8.1"
