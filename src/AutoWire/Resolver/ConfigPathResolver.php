@@ -18,7 +18,7 @@ class ConfigPathResolver extends ConfigResolver
 {
     public function resolve(ContainerInterface $container): string
     {
-        $directory = parent::resolve($container);
+        $directory = strval(parent::resolve($container));
         return (string) realpath($directory);
     }
 }

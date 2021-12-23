@@ -46,7 +46,7 @@ class ConstructorHandler implements SubscribingHandlerInterface
      */
     public function serialize(SerializationVisitorInterface $visitor, mixed $value): string
     {
-        return (string) $value;
+        return strval($value);
     }
 
     /**
@@ -57,7 +57,7 @@ class ConstructorHandler implements SubscribingHandlerInterface
      */
     public function deserialize(DeserializationVisitorInterface $visitor, mixed $data, array $type): mixed
     {
-        $class = $type['params'][0]['name'] ?? '';
-        return new $class((string) $data);
+        $class = $type['params'][0]['name'] ?? ''; // @phpstan-ignore-line
+        return new $class(strval($data));
     }
 }

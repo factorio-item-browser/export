@@ -101,7 +101,7 @@ class MachineMapperTest extends TestCase
     public function testConvertEnergyUsage(float $energyUsage, float $expectedUsage, string $expectedUnit): void
     {
         $mapper = new MachineMapper();
-        [$usage, $unit] = $this->invokeMethod($mapper, 'convertEnergyUsage', $energyUsage);
+        [$usage, $unit] = $this->invokeMethod($mapper, 'convertEnergyUsage', $energyUsage); // @phpstan-ignore-line
 
         $this->assertSame($expectedUsage, $usage);
         $this->assertSame($expectedUnit, $unit);

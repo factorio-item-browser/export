@@ -164,6 +164,7 @@ class RenderIconsStepTest extends TestCase
                  ->method('handleProcessFinish')
                  ->with($this->identicalTo($exportData), $this->identicalTo($process));
 
+        /** @var ProcessManagerInterface $result */
         $result = $this->invokeMethod($instance, 'createProcessManager', $exportData);
         $this->assertSame($parallelProcesses, $this->extractProperty($result, 'numberOfParallelProcesses'));
 

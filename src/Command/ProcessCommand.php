@@ -99,7 +99,7 @@ class ProcessCommand extends Command
         $request->limit = 1;
 
         try {
-            /* @var ListResponse $response */
+            /** @var ListResponse $response */
             $response = $this->combinationApiClient->sendRequest($request)->wait();
             return $response->jobs[0] ?? null;
         } catch (ClientException $e) {
@@ -154,7 +154,7 @@ class ProcessCommand extends Command
         $request->combinationId = $combinationId;
 
         try {
-            return $this->combinationApiClient->sendRequest($request)->wait();
+            return $this->combinationApiClient->sendRequest($request)->wait(); // @phpstan-ignore-line
         } catch (ClientException $e) {
             throw new InternalException('Failed to fetch combination details.', $e);
         }
@@ -210,6 +210,6 @@ class ProcessCommand extends Command
         $request->status = $status;
         $request->errorMessage = $errorMessage;
 
-        return $this->combinationApiClient->sendRequest($request)->wait();
+        return $this->combinationApiClient->sendRequest($request)->wait(); // @phpstan-ignore-line
     }
 }

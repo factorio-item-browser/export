@@ -38,7 +38,7 @@ abstract class SerializerTestCase extends TestCase
                   ]);
 
         $serializerFactory = new JmsSerializerFactory(ConfigKey::MAIN, ConfigKey::SERIALIZER);
-        return $serializerFactory($container, SerializerInterface::class);
+        return $serializerFactory($container, SerializerInterface::class); // @phpstan-ignore-line
     }
 
     /**

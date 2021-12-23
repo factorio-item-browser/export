@@ -15,22 +15,23 @@ use JMS\Serializer\SerializerInterface;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
+ *
+ * @extends AbstractSerializerDumpProcessor<Icon>
  */
-class IconDumpProcessor implements DumpProcessorInterface
+class IconDumpProcessor extends AbstractSerializerDumpProcessor
 {
-    public function __construct(
-        #[Alias(ServiceName::SERIALIZER)]
-        private readonly SerializerInterface $serializer
-    ) {
-    }
-
     public function getType(): string
     {
         return 'icon';
     }
 
-    public function process(string $serializedDump, Dump $dump): void
+    protected function getEntityClass(): string
     {
-        $dump->icons[] = $this->serializer->deserialize($serializedDump, Icon::class, 'json');
+        return Icon::class;
+    }
+
+    protected function addEntityToDump(object $entity, Dump $dump): void
+    {
+        $dump->icons[] = $entity;
     }
 }

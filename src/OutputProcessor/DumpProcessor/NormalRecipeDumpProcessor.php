@@ -15,22 +15,23 @@ use JMS\Serializer\SerializerInterface;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
+ *
+ * @extends AbstractSerializerDumpProcessor<Recipe>
  */
-class NormalRecipeDumpProcessor implements DumpProcessorInterface
+class NormalRecipeDumpProcessor extends AbstractSerializerDumpProcessor
 {
-    public function __construct(
-        #[Alias(ServiceName::SERIALIZER)]
-        private readonly SerializerInterface $serializer
-    ) {
-    }
-
     public function getType(): string
     {
         return 'normal-recipe';
     }
 
-    public function process(string $serializedDump, Dump $dump): void
+    protected function getEntityClass(): string
     {
-        $dump->normalRecipes[] = $this->serializer->deserialize($serializedDump, Recipe::class, 'json');
+        return Recipe::class;
+    }
+
+    protected function addEntityToDump(object $entity, Dump $dump): void
+    {
+        $dump->normalRecipes[] = $entity;
     }
 }

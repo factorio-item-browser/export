@@ -71,7 +71,9 @@ class ModFileService
         $contents = mb_convert_encoding($contents, 'UTF-8', $encoding);
 
         try {
-            return $this->serializer->deserialize($contents, InfoJson::class, 'json');
+            /** @var InfoJson $result */
+            $result = $this->serializer->deserialize($contents, InfoJson::class, 'json');
+            return $result;
         } catch (Exception $e) {
             throw new InvalidInfoJsonFileException($modName, $e);
         }

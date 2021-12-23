@@ -15,22 +15,23 @@ use JMS\Serializer\SerializerInterface;
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
+ *
+ * @extends AbstractSerializerDumpProcessor<Machine>
  */
-class MachineDumpProcessor implements DumpProcessorInterface
+class MachineDumpProcessor extends AbstractSerializerDumpProcessor
 {
-    public function __construct(
-        #[Alias(ServiceName::SERIALIZER)]
-        private readonly SerializerInterface $serializer
-    ) {
-    }
-
     public function getType(): string
     {
         return 'machine';
     }
 
-    public function process(string $serializedDump, Dump $dump): void
+    protected function getEntityClass(): string
     {
-        $dump->machines[] = $this->serializer->deserialize($serializedDump, Machine::class, 'json');
+        return Machine::class;
+    }
+
+    protected function addEntityToDump(object $entity, Dump $dump): void
+    {
+        $dump->machines[] = $entity;
     }
 }

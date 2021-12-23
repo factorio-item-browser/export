@@ -119,8 +119,8 @@ class ModDownloadProcessManagerTest extends TestCase
 
         $this->assertSame(42, $this->extractProperty($result1, 'numberOfParallelProcesses'));
 
-        $this->extractProperty($result1, 'processStartCallback')($process);
-        $this->extractProperty($result1, 'processFinishCallback')($process);
+        $this->extractProperty($result1, 'processStartCallback')($process); // @phpstan-ignore-line
+        $this->extractProperty($result1, 'processFinishCallback')($process); // @phpstan-ignore-line
     }
 
     /**
