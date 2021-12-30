@@ -2,16 +2,14 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export\Command\ProcessStep;
+namespace FactorioItemBrowser\Export\DataProcessor;
 
 use BluePsyduck\LaminasAutoWireFactory\Attribute\ReadConfig;
 use BluePsyduck\SymfonyProcessManager\ProcessManager;
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
-use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Output\ProgressBar;
-use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Process\RenderIconProcess;
 use FactorioItemBrowser\Export\Process\RenderIconProcessFactory;
 use FactorioItemBrowser\ExportData\ExportData;
@@ -19,53 +17,38 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * The step for rendering all the icons and thumbnails.
+ * The data processor rendering the icons.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
  */
-class RenderIconsStep implements ProcessStepInterface
+class IconRenderer implements DataProcessorInterface
 {
     protected OutputInterface $errorOutput;
     protected ProgressBar $progressBar;
 
     public function __construct(
-        protected readonly Console $console,
-        protected readonly LoggerInterface $logger,
-        protected readonly RenderIconProcessFactory $renderIconProcessFactory,
+        private readonly Console $console,
+        private readonly LoggerInterface $logger,
+        private readonly RenderIconProcessFactory $renderIconProcessFactory,
         #[ReadConfig(ConfigKey::MAIN, ConfigKey::PARALLEL_RENDERS)]
-        protected readonly int $numberOfParallelRenderProcesses
+        private readonly int $numberOfParallelRenderProcesses,
     ) {
     }
 
-    public function getLabel(): string
-    {
-        return 'Rendering the thumbnails and icons';
-    }
-
-    public function getExportJobStatus(): string
-    {
-        return JobStatus::PROCESSING;
-    }
-
-    public function run(ProcessStepData $processStepData): void
+    public function process(ExportData $exportData): void
     {
         $this->errorOutput = $this->console->createSection();
-        $this->progressBar = $this->console->createProgressBar('Icons');
-        $this->progressBar->setNumberOfSteps(count($processStepData->exportData->getIcons()));
+        $this->progressBar = $this->console->createProgressBar('Render icons');
+        $this->progressBar->setNumberOfSteps($exportData->getIcons()->count());
 
-        $processManager = $this->createProcessManager($processStepData->exportData);
-        foreach ($processStepData->exportData->getIcons() as $icon) {
+        $processManager = $this->createProcessManager($exportData);
+        foreach ($exportData->getIcons() as $icon) {
             $processManager->addProcess($this->renderIconProcessFactory->create($icon));
         }
         $processManager->waitForAllProcesses();
     }
 
-    /**
-     * Creates the process manager to use for the download processes.
-     * @param ExportData $exportData
-     * @return ProcessManagerInterface
-     */
     protected function createProcessManager(ExportData $exportData): ProcessManagerInterface
     {
         $result = new ProcessManager($this->numberOfParallelRenderProcesses);
@@ -78,20 +61,11 @@ class RenderIconsStep implements ProcessStepInterface
         return $result;
     }
 
-    /**
-     * Handles the start of a process.
-     * @param RenderIconProcess<string> $process
-     */
     protected function handleProcessStart(RenderIconProcess $process): void
     {
         $this->progressBar->start($process->getIcon()->id, '<fg=yellow>Rendering</> ' . $process->getIcon()->id);
     }
 
-    /**
-     * Handles the finishing of a process.
-     * @param ExportData $exportData
-     * @param RenderIconProcess<string> $process
-     */
     protected function handleProcessFinish(ExportData $exportData, RenderIconProcess $process): void
     {
         $this->progressBar->finish($process->getIcon()->id);

@@ -2,15 +2,12 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowserTest\Export\Command\ProcessStep;
+namespace FactorioItemBrowserTest\Export\DataProcessor;
 
 use BluePsyduck\SymfonyProcessManager\ProcessManagerInterface;
 use BluePsyduck\TestHelper\ReflectionTrait;
-use FactorioItemBrowser\CombinationApi\Client\Constant\JobStatus;
-use FactorioItemBrowser\Export\Command\ProcessStep\RenderIconsStep;
-use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\Export\DataProcessor\IconRenderer;
 use FactorioItemBrowser\Export\Output\Console;
-use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Output\ProgressBar;
 use FactorioItemBrowser\Export\Process\RenderIconProcess;
 use FactorioItemBrowser\Export\Process\RenderIconProcessFactory;
@@ -26,42 +23,43 @@ use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * The PHPUnit test of the RenderIconsStep class.
+ * The PHPUnit test of the IconRenderer class.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3
- * @covers \FactorioItemBrowser\Export\Command\ProcessStep\RenderIconsStep
+ * @covers \FactorioItemBrowser\Export\DataProcessor\IconRenderer
  */
-class RenderIconsStepTest extends TestCase
+class IconRendererTest extends TestCase
 {
     use ReflectionTrait;
 
     /** @var Console&MockObject */
     private Console $console;
-    /** @var OutputInterface&MockObject */
-    private OutputInterface $errorOutput;
     /** @var LoggerInterface&MockObject */
     private LoggerInterface $logger;
-    /** @var ProgressBar&MockObject */
-    private ProgressBar $progressBar;
     /** @var RenderIconProcessFactory&MockObject */
     private RenderIconProcessFactory $renderIconProcessFactory;
+    /** @var OutputInterface&MockObject */
+    private OutputInterface $errorOutput;
+    /** @var ProgressBar&MockObject */
+    private ProgressBar $progressBar;
+    private int $numberOfParallelRenderProcesses = 42;
 
     protected function setUp(): void
     {
         $this->console = $this->createMock(Console::class);
-        $this->errorOutput = $this->createMock(ConsoleSectionOutput::class);
         $this->logger = $this->createMock(LoggerInterface::class);
-        $this->progressBar = $this->createMock(ProgressBar::class);
         $this->renderIconProcessFactory = $this->createMock(RenderIconProcessFactory::class);
+        $this->errorOutput = $this->createMock(ConsoleSectionOutput::class);
+        $this->progressBar = $this->createMock(ProgressBar::class);
     }
 
     /**
-     * @param array<string> $methods
-     * @param int $numberOfParallelProcesses
-     * @return RenderIconsStep&MockObject
+     * @param array<string> $mockedMethods
+     * @return IconRenderer&MockObject
+     * @throws ReflectionException
      */
-    private function createInstance(int $numberOfParallelProcesses, array $methods = []): RenderIconsStep
+    private function createInstance(array $mockedMethods = []): IconRenderer
     {
         $this->console->expects($this->any())
                       ->method('createProgressBar')
@@ -70,14 +68,13 @@ class RenderIconsStepTest extends TestCase
                       ->method('createSection')
                       ->willReturn($this->errorOutput);
 
-        $instance = $this->getMockBuilder(RenderIconsStep::class)
-                         ->disableProxyingToOriginalMethods()
-                         ->onlyMethods($methods)
+        $instance = $this->getMockBuilder(IconRenderer::class)
+                         ->onlyMethods($mockedMethods)
                          ->setConstructorArgs([
                              $this->console,
                              $this->logger,
                              $this->renderIconProcessFactory,
-                             $numberOfParallelProcesses,
+                             $this->numberOfParallelRenderProcesses,
                          ])
                          ->getMock();
 
@@ -87,18 +84,11 @@ class RenderIconsStepTest extends TestCase
         return $instance;
     }
 
-    public function testMeta(): void
-    {
-        $instance = $this->createInstance(42);
-
-        $this->assertNotEquals('', $instance->getLabel());
-        $this->assertSame(JobStatus::PROCESSING, $instance->getExportJobStatus());
-    }
 
     /**
-     * @throws ExportException
+     * @throws ReflectionException
      */
-    public function testRun(): void
+    public function testProcess(): void
     {
         $icon1 = $this->createMock(Icon::class);
         $icon2 = $this->createMock(Icon::class);
@@ -109,9 +99,6 @@ class RenderIconsStepTest extends TestCase
         $exportData = new ExportData($this->createMock(Storage::class), 'foo');
         $exportData->getIcons()->add($icon1)
                                ->add($icon2);
-
-        $processStepData = new ProcessStepData();
-        $processStepData->exportData = $exportData;
 
         $processManager = $this->createMock(ProcessManagerInterface::class);
         $processManager->expects($this->exactly(2))
@@ -138,12 +125,12 @@ class RenderIconsStepTest extends TestCase
                                            $process2
                                        );
 
-        $instance = $this->createInstance(42, ['createProcessManager']);
+        $instance = $this->createInstance(['createProcessManager']);
         $instance->expects($this->once())
                  ->method('createProcessManager')
                  ->willReturn($processManager);
 
-        $instance->run($processStepData);
+        $instance->process($exportData);
     }
 
     /**
@@ -151,12 +138,10 @@ class RenderIconsStepTest extends TestCase
      */
     public function testCreateProcessManager(): void
     {
-        $parallelProcesses = 42;
-
         $exportData = $this->createMock(ExportData::class);
         $process = $this->createMock(RenderIconProcess::class);
 
-        $instance = $this->createInstance($parallelProcesses, ['handleProcessStart', 'handleProcessFinish']);
+        $instance = $this->createInstance(['handleProcessStart', 'handleProcessFinish']);
         $instance->expects($this->once())
                  ->method('handleProcessStart')
                  ->with($this->identicalTo($process));
@@ -166,7 +151,10 @@ class RenderIconsStepTest extends TestCase
 
         /** @var ProcessManagerInterface $result */
         $result = $this->invokeMethod($instance, 'createProcessManager', $exportData);
-        $this->assertSame($parallelProcesses, $this->extractProperty($result, 'numberOfParallelProcesses'));
+        $this->assertSame(
+            $this->numberOfParallelRenderProcesses,
+            $this->extractProperty($result, 'numberOfParallelProcesses'),
+        );
 
         $startCallback = $this->extractProperty($result, 'processStartCallback');
         $this->assertIsCallable($startCallback);
@@ -176,6 +164,7 @@ class RenderIconsStepTest extends TestCase
         $this->assertIsCallable($finishCallback);
         $finishCallback($process);
     }
+
 
     /**
      * @throws ReflectionException
@@ -196,7 +185,7 @@ class RenderIconsStepTest extends TestCase
                           ->method('start')
                           ->with($this->identicalTo($iconId), $this->stringContains($iconId));
 
-        $instance = $this->createInstance(42);
+        $instance = $this->createInstance();
         $this->invokeMethod($instance, 'handleProcessStart', $process);
     }
 
@@ -238,7 +227,7 @@ class RenderIconsStepTest extends TestCase
         $this->errorOutput->expects($this->never())
                           ->method('write');
 
-        $instance = $this->createInstance(42);
+        $instance = $this->createInstance();
         $this->invokeMethod($instance, 'handleProcessFinish', $exportData, $process);
     }
 
@@ -275,7 +264,7 @@ class RenderIconsStepTest extends TestCase
                           ->method('write')
                           ->with($this->identicalTo($errorOutput));
 
-        $instance = $this->createInstance(42);
+        $instance = $this->createInstance();
         $this->invokeMethod($instance, 'handleProcessFinish', $exportData, $process);
     }
 }

@@ -24,6 +24,7 @@ return [
             DataProcessor\Translator::class,
             DataProcessor\IconAssigner::class,
             DataProcessor\UnusedIconFilter::class,
+            DataProcessor\IconRenderer::class,
         ],
         ConfigKey::OUTPUT_PROCESSORS => [
             OutputProcessor\ConsoleOutputProcessor::class,
@@ -35,7 +36,6 @@ return [
             Command\ProcessStep\DownloadStep::class,
             Command\ProcessStep\FactorioStep::class,
             Command\ProcessStep\DataProcessorStep::class,
-            Command\ProcessStep\RenderIconsStep::class,
             Command\ProcessStep\UploadStep::class,
             Command\ProcessStep\DoneStep::class,
         ],

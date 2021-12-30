@@ -35,12 +35,12 @@ return [
             Command\ProcessStep\DoneStep::class => AutoWireFactory::class,
             Command\ProcessStep\DownloadStep::class => AutoWireFactory::class,
             Command\ProcessStep\FactorioStep::class => AutoWireFactory::class,
-            Command\ProcessStep\RenderIconsStep::class => AutoWireFactory::class,
             Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
             Command\UpdateFactorioCommand::class => AutoWireFactory::class,
 
             DataProcessor\ExpensiveRecipeFilter::class => AutoWireFactory::class,
             DataProcessor\IconAssigner::class => AutoWireFactory::class,
+            DataProcessor\IconRenderer::class => AutoWireFactory::class,
             DataProcessor\ModInfoAdder::class => AutoWireFactory::class,
             DataProcessor\ModThumbnailAdder::class => AutoWireFactory::class,
             DataProcessor\TranslationLoader::class => AutoWireFactory::class,
@@ -63,7 +63,6 @@ return [
             Process\RenderIconProcessFactory::class => AutoWireFactory::class,
 
             Serializer\Handler\ConstructorHandler::class => AutoWireFactory::class,
-            Serializer\Handler\RawHandler::class => AutoWireFactory::class,
 
             Service\FactorioDownloadService::class => AutoWireFactory::class,
             Service\FactorioExecutionService::class => AutoWireFactory::class,
