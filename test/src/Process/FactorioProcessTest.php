@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\Process;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\OutputProcessor\OutputProcessorInterface;
 use FactorioItemBrowser\Export\Process\FactorioProcess;
+use FactorioItemBrowser\ExportData\ExportData;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use Symfony\Component\Process\Process;
@@ -27,11 +27,11 @@ class FactorioProcessTest extends TestCase
     /**
      * @throws ReflectionException
      * @covers ::__construct
-     * @covers ::getDump
      */
     public function testConstruct(): void
     {
         $instanceDirectory = 'abc';
+        $exportData = $this->createMock(ExportData::class);
         $outputProcessors = [
             $this->createMock(OutputProcessorInterface::class),
             $this->createMock(OutputProcessorInterface::class),
@@ -44,13 +44,10 @@ class FactorioProcessTest extends TestCase
             '--mod-directory=abc/mods',
         ], null, null, null, null);
 
-        $process = new FactorioProcess($outputProcessors, $instanceDirectory);
+        $process = new FactorioProcess($outputProcessors, $exportData, $instanceDirectory);
 
         $this->assertSame($outputProcessors, $this->extractProperty($process, 'outputProcessors'));
         $this->assertEquals($expectedProcess, $this->extractProperty($process, 'process'));
-
-        // Asserted by type-hint
-        $process->getDump();
     }
 
     /**
@@ -63,6 +60,7 @@ class FactorioProcessTest extends TestCase
         $exitCode = 42;
 
         $process = $this->createMock(Process::class);
+        $exportData = $this->createMock(ExportData::class);
 
         $process->expects($this->once())
                 ->method('getExitCode')
@@ -71,16 +69,16 @@ class FactorioProcessTest extends TestCase
         $outputProcessor1 = $this->createMock(OutputProcessorInterface::class);
         $outputProcessor1->expects($this->once())
                          ->method('processExitCode')
-                         ->with($this->identicalTo($exitCode), $this->isInstanceOf(Dump::class));
+                         ->with($this->identicalTo($exitCode), $this->identicalTo($exportData));
 
         $outputProcessor2 = $this->createMock(OutputProcessorInterface::class);
         $outputProcessor2->expects($this->once())
                          ->method('processExitCode')
-                         ->with($this->identicalTo($exitCode), $this->isInstanceOf(Dump::class));
+                         ->with($this->identicalTo($exitCode), $this->identicalTo($exportData));
 
         $outputProcessors = [$outputProcessor1, $outputProcessor2];
 
-        $instance = new FactorioProcess($outputProcessors, 'abc');
+        $instance = new FactorioProcess($outputProcessors, $exportData, 'abc');
         $this->injectProperty($instance, 'process', $process);
 
         $process->expects($this->once())
@@ -99,6 +97,7 @@ class FactorioProcessTest extends TestCase
     {
         $type = Process::OUT;
         $output = "abc\n\ndef\n";
+        $exportData = $this->createMock(ExportData::class);
 
         $outputProcessor1 = $this->createMock(OutputProcessorInterface::class);
         $outputProcessor1->expects($this->exactly(2))
@@ -111,13 +110,13 @@ class FactorioProcessTest extends TestCase
         $outputProcessor2->expects($this->exactly(2))
                          ->method('processLine')
                          ->withConsecutive(
-                             [$this->identicalTo('abc')],
-                             [$this->identicalTo('def')],
+                             [$this->identicalTo('abc'), $this->identicalTo($exportData)],
+                             [$this->identicalTo('def'), $this->identicalTo($exportData)],
                          );
 
         $outputProcessors = [$outputProcessor1, $outputProcessor2];
 
-        $instance = new FactorioProcess($outputProcessors, 'abc');
+        $instance = new FactorioProcess($outputProcessors, $exportData, 'abc');
         $instance->handleOutput($type, $output);
     }
 }

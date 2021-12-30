@@ -43,7 +43,7 @@ class FactorioStep implements ProcessStepInterface
             $this->factorioExecutionService->prepare($combinationId, $modNames);
 
             $this->console->writeAction('Executing factorio');
-            $processStepData->dump = $this->factorioExecutionService->execute($combinationId);
+            $this->factorioExecutionService->execute($processStepData->exportData, $combinationId);
         } finally {
             $this->factorioExecutionService->cleanup($combinationId);
         }

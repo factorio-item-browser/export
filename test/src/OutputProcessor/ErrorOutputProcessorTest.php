@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace FactorioItemBrowserTest\Export\OutputProcessor;
 
 use BluePsyduck\TestHelper\ReflectionTrait;
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\FactorioExecutionException;
 use FactorioItemBrowser\Export\OutputProcessor\ErrorOutputProcessor;
+use FactorioItemBrowser\ExportData\ExportData;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 
@@ -92,11 +92,11 @@ EOT;
      */
     public function testProcessLine(array $lines, array $expectedLines): void
     {
-        $dump = $this->createMock(Dump::class);
+        $exportData = $this->createMock(ExportData::class);
 
         $processor = new ErrorOutputProcessor();
         foreach ($lines as $line) {
-            $processor->processLine($line, $dump);
+            $processor->processLine($line, $exportData);
         }
 
         $this->assertEquals($expectedLines, $this->extractProperty($processor, 'errorLines'));
@@ -111,7 +111,7 @@ EOT;
     {
         $exitCode = 42;
         $errorLines = ['abc', 'def'];
-        $dump = $this->createMock(Dump::class);
+        $exportData = $this->createMock(ExportData::class);
 
         $this->expectException(FactorioExecutionException::class);
         $this->expectExceptionCode($exitCode);
@@ -120,7 +120,7 @@ EOT;
         $processor = new ErrorOutputProcessor();
         $this->injectProperty($processor, 'errorLines', $errorLines);
 
-        $processor->processExitCode($exitCode, $dump);
+        $processor->processExitCode($exitCode, $exportData);
     }
 
     /**
@@ -132,12 +132,12 @@ EOT;
     {
         $exitCode = 0;
         $errorLines = ['abc', 'def'];
-        $dump = $this->createMock(Dump::class);
+        $exportData = $this->createMock(ExportData::class);
 
         $processor = new ErrorOutputProcessor();
         $this->injectProperty($processor, 'errorLines', $errorLines);
 
-        $processor->processExitCode($exitCode, $dump);
+        $processor->processExitCode($exitCode, $exportData);
         $this->addToAssertionCount(1);
     }
 }

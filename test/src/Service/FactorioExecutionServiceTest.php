@@ -7,7 +7,6 @@ namespace FactorioItemBrowserTest\Export\Service;
 use BluePsyduck\FactorioModPortalClient\Entity\Dependency;
 use BluePsyduck\FactorioModPortalClient\Entity\Version;
 use BluePsyduck\TestHelper\ReflectionTrait;
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Entity\ModList\Mod;
 use FactorioItemBrowser\Export\Entity\ModListJson;
@@ -16,8 +15,8 @@ use FactorioItemBrowser\Export\Process\FactorioProcess;
 use FactorioItemBrowser\Export\Process\FactorioProcessFactory;
 use FactorioItemBrowser\Export\Service\FactorioExecutionService;
 use FactorioItemBrowser\Export\Service\ModFileService;
+use FactorioItemBrowser\ExportData\ExportData;
 use JMS\Serializer\SerializerInterface;
-use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
@@ -312,24 +311,19 @@ class FactorioExecutionServiceTest extends TestCase
     public function testExecute(): void
     {
         $combinationId = 'abc';
-        $dump = $this->createMock(Dump::class);
+        $exportData = $this->createMock(ExportData::class);
 
         $process = $this->createMock(FactorioProcess::class);
         $process->expects($this->once())
                 ->method('run');
-        $process->expects($this->once())
-                ->method('getDump')
-                ->willReturn($dump);
 
         $this->factorioProcessFactory->expects($this->once())
                                      ->method('create')
-                                     ->with($this->identicalTo('bar/abc'))
+                                     ->with($this->identicalTo($exportData), $this->identicalTo('bar/abc'))
                                      ->willReturn($process);
 
         $instance = $this->createInstance();
-        $result = $instance->execute($combinationId);
-
-        $this->assertSame($dump, $result);
+        $instance->execute($exportData, $combinationId);
     }
 
     public function testCleanup(): void

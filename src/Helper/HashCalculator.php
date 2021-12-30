@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace FactorioItemBrowser\Export\Helper;
 
 use BluePsyduck\LaminasAutoWireFactory\Attribute\Alias;
-use FactorioItemBrowser\Export\Constant\ServiceName;
+use FactorioItemBrowser\ExportData\Constant\ServiceName;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use JMS\Serializer\SerializerInterface;
@@ -46,7 +46,6 @@ class HashCalculator
     public function hashRecipe(Recipe $recipe): string
     {
         $recipe = clone($recipe);
-        $recipe->name = '';
         $recipe->mode = '';
         $recipe->iconId = '';
 

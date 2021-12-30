@@ -83,13 +83,14 @@ class HashCalculatorTest extends TestCase
         $recipe = new Recipe();
         $recipe->name = 'abc';
         $recipe->mode = 'def';
-        $recipe->craftingCategory = 'ghi';
-        $recipe->craftingTime = 13.37;
+        $recipe->category = 'ghi';
+        $recipe->time = 13.37;
         $recipe->iconId = 'jkl';
 
         $expectedRecipe = new Recipe();
-        $expectedRecipe->craftingCategory = 'ghi';
-        $expectedRecipe->craftingTime = 13.37;
+        $expectedRecipe->name = 'abc';
+        $expectedRecipe->category = 'ghi';
+        $expectedRecipe->time = 13.37;
 
         $this->serializer->expects($this->once())
                          ->method('serialize')

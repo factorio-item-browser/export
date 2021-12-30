@@ -18,6 +18,11 @@ interface ConfigKey
     public const MAIN = 'export';
 
     /**
+     * The key holding the aliases of the data processors.
+     */
+    public const DATA_PROCESSORS = 'data-processors';
+
+    /**
      * The key holding the directories of the project.
      */
     public const DIRECTORIES = 'directories';
@@ -57,8 +62,10 @@ interface ConfigKey
      */
     public const DIRECTORY_TEMP = 'temp';
 
+    /**
+     * The key holding the aliases of the output processors.
+     */
     public const OUTPUT_PROCESSORS = 'output-processors';
-    public const OUTPUT_DUMP_PROCESSORS = 'output-dump-processors';
 
     /**
      * The key holding the number of parallel downloads to use.
@@ -69,11 +76,6 @@ interface ConfigKey
      * The key holding the number of parallel render processes to use.
      */
     public const PARALLEL_RENDERS = 'parallel-renders';
-
-    /**
-     * The key holding the parser classes.
-     */
-    public const PARSERS = 'parsers';
 
     /**
      * The key holding the step classes.

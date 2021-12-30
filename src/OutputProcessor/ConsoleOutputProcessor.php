@@ -6,7 +6,7 @@ namespace FactorioItemBrowser\Export\OutputProcessor;
 
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Output\ProcessOutput;
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The processor printing the output of the process to the console.
@@ -25,7 +25,7 @@ class ConsoleOutputProcessor implements OutputProcessorInterface
     ) {
     }
 
-    public function processLine(string $outputLine, Dump $dump): void
+    public function processLine(string $outputLine, ExportData $exportData): void
     {
         if (!str_contains($outputLine, self::IGNORED_PREFIX)) {
             if (!isset($this->processOutput)) {
@@ -36,7 +36,7 @@ class ConsoleOutputProcessor implements OutputProcessorInterface
         }
     }
 
-    public function processExitCode(int $exitCode, Dump $dump): void
+    public function processExitCode(int $exitCode, ExportData $exportData): void
     {
     }
 }

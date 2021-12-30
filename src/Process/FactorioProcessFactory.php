@@ -7,6 +7,7 @@ namespace FactorioItemBrowser\Export\Process;
 use BluePsyduck\LaminasAutoWireFactory\Attribute\InjectAliasArray;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\OutputProcessor\OutputProcessorInterface;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The factory for the FactorioProcess class.
@@ -25,8 +26,8 @@ class FactorioProcessFactory
     ) {
     }
 
-    public function create(string $instanceDirectory): FactorioProcess
+    public function create(ExportData $exportData, string $instanceDirectory): FactorioProcess
     {
-        return new FactorioProcess($this->outputProcessors, $instanceDirectory);
+        return new FactorioProcess($this->outputProcessors, $exportData, $instanceDirectory);
     }
 }

@@ -8,6 +8,7 @@ use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\OutputProcessor\OutputProcessorInterface;
 use FactorioItemBrowser\Export\Process\FactorioProcess;
 use FactorioItemBrowser\Export\Process\FactorioProcessFactory;
+use FactorioItemBrowser\ExportData\ExportData;
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
 
@@ -48,11 +49,12 @@ class FactorioProcessFactoryTest extends TestCase
             $this->createMock(OutputProcessorInterface::class),
         ];
         $instanceDirectory = 'abc';
+        $exportData = $this->createMock(ExportData::class);
 
-        $expectedResult = new FactorioProcess($outputProcessors, $instanceDirectory);
+        $expectedResult = new FactorioProcess($outputProcessors, $exportData, $instanceDirectory);
 
         $factory = new FactorioProcessFactory($outputProcessors);
-        $result = $factory->create($instanceDirectory);
+        $result = $factory->create($exportData, $instanceDirectory);
 
         $this->assertEquals($expectedResult, $result);
     }

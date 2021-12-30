@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export;
 
-use BluePsyduck\JmsSerializerFactory\Constant\ConfigKey as JmsConfigKey;
-use FactorioItemBrowser\Export\Constant\ConfigKey;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 

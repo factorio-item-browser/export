@@ -7,10 +7,10 @@ namespace FactorioItemBrowserTestSerializer\Export;
 use BluePsyduck\JmsSerializerFactory\JmsSerializerFactory;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Serializer\Handler\ConstructorHandler;
-use FactorioItemBrowser\Export\Serializer\Handler\RawHandler;
 use Interop\Container\ContainerInterface;
 use JMS\Serializer\SerializerInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerExceptionInterface;
 
 /**
  * The test case for the serializing and deserializing of objects.
@@ -20,11 +20,12 @@ use PHPUnit\Framework\TestCase;
  */
 abstract class SerializerTestCase extends TestCase
 {
+    private SerializerInterface $serializer;
+
     /**
-     * Creates and returns the serializer.
-     * @return SerializerInterface
+     * @throws ContainerExceptionInterface
      */
-    protected function createSerializer(): SerializerInterface
+    protected function setUp(): void
     {
         $config = require(__DIR__ . '/../../config/autoload/export.global.php');
 
@@ -34,23 +35,28 @@ abstract class SerializerTestCase extends TestCase
                   ->willReturnMap([
                       ['config', $config],
                       [ConstructorHandler::class, new ConstructorHandler()],
-                      [RawHandler::class, new RawHandler()],
                   ]);
 
         $serializerFactory = new JmsSerializerFactory(ConfigKey::MAIN, ConfigKey::SERIALIZER);
-        return $serializerFactory($container, SerializerInterface::class); // @phpstan-ignore-line
+        $this->serializer = $serializerFactory($container, SerializerInterface::class); // @phpstan-ignore-line
     }
 
-    /**
-     * Tests the deserializing.
-     */
+    public function testSerialize(): void
+    {
+        $object = $this->getObject();
+        $expectedData = $this->getData();
+
+        $result = $this->serializer->serialize($object, 'json');
+
+        $this->assertEquals($expectedData, json_decode($result, true));
+    }
+
     public function testDeserialize(): void
     {
         $data = $this->getData();
         $expectedObject = $this->getObject();
 
-        $serializer = $this->createSerializer();
-        $result = $serializer->deserialize((string) json_encode($data), get_class($expectedObject), 'json');
+        $result = $this->serializer->deserialize((string) json_encode($data), get_class($expectedObject), 'json');
 
         $this->assertEquals($expectedObject, $result);
     }

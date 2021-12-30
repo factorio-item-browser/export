@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\OutputProcessor;
 
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\FactorioExecutionException;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The output processor catching the last error from the output.
@@ -21,7 +21,7 @@ class ErrorOutputProcessor implements OutputProcessorInterface
     private array $errorLines = [];
     private bool $isCatchingError = false;
 
-    public function processLine(string $outputLine, Dump $dump): void
+    public function processLine(string $outputLine, ExportData $exportData): void
     {
         if (preg_match(self::REGEX_ERROR, $outputLine) > 0) {
             $this->errorLines[] = $outputLine;
@@ -31,7 +31,7 @@ class ErrorOutputProcessor implements OutputProcessorInterface
         }
     }
 
-    public function processExitCode(int $exitCode, Dump $dump): void
+    public function processExitCode(int $exitCode, ExportData $exportData): void
     {
         if ($exitCode !== 0) {
             throw new FactorioExecutionException($exitCode, implode(PHP_EOL, $this->errorLines));

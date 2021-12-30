@@ -21,7 +21,6 @@ use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Constant\CommandName;
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\InternalException;
 use FactorioItemBrowser\ExportData\ExportDataService;
@@ -138,7 +137,6 @@ class ProcessCommand extends Command
         $result->exportJob = $exportJob;
         $result->combination = $this->fetchCombination($exportJob->combinationId);
         $result->exportData = $this->exportDataService->createExport($exportJob->combinationId);
-        $result->dump = new Dump();
         return $result;
     }
 

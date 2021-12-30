@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowserTest\Export\OutputProcessor;
 
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Output\ProcessOutput;
 use FactorioItemBrowser\Export\OutputProcessor\ConsoleOutputProcessor;
+use FactorioItemBrowser\ExportData\ExportData;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,7 +25,7 @@ class ConsoleOutputProcessorTest extends TestCase
      */
     public function test(): void
     {
-        $dump = $this->createMock(Dump::class);
+        $exportData = $this->createMock(ExportData::class);
 
         $processOutput = $this->createMock(ProcessOutput::class);
         $processOutput->expects($this->exactly(2))
@@ -41,10 +41,10 @@ class ConsoleOutputProcessorTest extends TestCase
                 ->willReturn($processOutput);
 
         $instance = new ConsoleOutputProcessor($console);
-        $instance->processLine('abc', $dump);
-        $instance->processLine('>DUMP>fail', $dump);
-        $instance->processLine('def', $dump);
+        $instance->processLine('abc', $exportData);
+        $instance->processLine('>DUMP>fail', $exportData);
+        $instance->processLine('def', $exportData);
 
-        $instance->processExitCode(0, $dump);
+        $instance->processExitCode(0, $exportData);
     }
 }

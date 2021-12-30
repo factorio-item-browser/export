@@ -22,7 +22,6 @@ use FactorioItemBrowser\Export\Command\ProcessCommand;
 use FactorioItemBrowser\Export\Command\ProcessStep\ProcessStepInterface;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Constant\CommandName;
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\ProcessStepData;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Exception\InternalException;
@@ -306,7 +305,6 @@ class ProcessCommandTest extends TestCase
         $expectedResult->combination = $combination;
         $expectedResult->exportJob = $exportJob;
         $expectedResult->exportData = $exportData;
-        $expectedResult->dump = new Dump();
 
         $this->exportDataService->expects($this->once())
                                 ->method('createExport')

@@ -16,32 +16,25 @@ use FactorioItemBrowser\Export\Constant\ConfigKey;
 
 return [
     ConfigKey::MAIN => [
+        ConfigKey::DATA_PROCESSORS => [
+            DataProcessor\ModInfoAdder::class,
+            DataProcessor\ModThumbnailAdder::class,
+            DataProcessor\ExpensiveRecipeFilter::class,
+            DataProcessor\TranslationLoader::class,
+            DataProcessor\Translator::class,
+            DataProcessor\IconAssigner::class,
+            DataProcessor\UnusedIconFilter::class,
+        ],
         ConfigKey::OUTPUT_PROCESSORS => [
             OutputProcessor\ConsoleOutputProcessor::class,
             OutputProcessor\DumpOutputProcessor::class,
             OutputProcessor\ErrorOutputProcessor::class,
             OutputProcessor\ModNameOutputProcessor::class,
         ],
-        ConfigKey::OUTPUT_DUMP_PROCESSORS => [
-            OutputProcessor\DumpProcessor\ExpensiveRecipeDumpProcessor::class,
-            OutputProcessor\DumpProcessor\FluidDumpProcessor::class,
-            OutputProcessor\DumpProcessor\IconDumpProcessor::class,
-            OutputProcessor\DumpProcessor\ItemDumpProcessor::class,
-            OutputProcessor\DumpProcessor\MachineDumpProcessor::class,
-            OutputProcessor\DumpProcessor\NormalRecipeDumpProcessor::class,
-        ],
-        ConfigKey::PARSERS => [
-            Parser\IconParser::class,
-            Parser\ItemParser::class,
-            Parser\MachineParser::class,
-            Parser\ModParser::class,
-            Parser\RecipeParser::class,
-            Parser\TranslationParser::class,
-        ],
         ConfigKey::PROCESS_STEPS => [
             Command\ProcessStep\DownloadStep::class,
             Command\ProcessStep\FactorioStep::class,
-            Command\ProcessStep\ParserStep::class,
+            Command\ProcessStep\DataProcessorStep::class,
             Command\ProcessStep\RenderIconsStep::class,
             Command\ProcessStep\UploadStep::class,
             Command\ProcessStep\DoneStep::class,
@@ -51,7 +44,6 @@ return [
             JmsConfigKey::ADD_DEFAULT_HANDLERS => true,
             JmsConfigKey::HANDLERS => [
                 Serializer\Handler\ConstructorHandler::class,
-                Serializer\Handler\RawHandler::class,
             ],
         ],
     ],

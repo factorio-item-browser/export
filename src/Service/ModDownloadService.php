@@ -86,7 +86,7 @@ class ModDownloadService
         foreach ($modNames as $modName) {
             try {
                 $modVersions[$modName] = $this->modFileService->getInfo($modName)->version;
-            } catch (ExportException $e) {
+            } catch (ExportException) {
                 $modVersions[$modName] = null;
             }
         }

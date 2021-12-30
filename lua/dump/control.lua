@@ -3,39 +3,27 @@ local map = require("map")
 
 script.on_init(function()
     for _, item in pairs(game.item_prototypes) do
-        if item.valid then
-            dump.add("item", map.item(item))
-        end
+        dump.write("item", map.item(item))
+        dump.write("recipe", map.rocketLaunchRecipe(item))
     end
 
     for _, fluid in pairs(game.fluid_prototypes) do
-        if fluid.valid then
-            dump.add("fluid", map.fluid(fluid))
-        end
+        dump.write("item", map.fluid(fluid))
     end
 
-    for _, machine in pairs(game.entity_prototypes) do
-        if machine.valid and machine.crafting_categories then
-            -- Only allow the character called "character" and ignore all other pseudo-characters
-            if machine.type ~= "character" or machine.name == "character" then
-                dump.add("machine", map.machine(machine))
-            end
-        end
+    for _, entity in pairs(game.entity_prototypes) do
+        dump.write("machine", map.machine(entity))
+        dump.write("item", map.resource(entity))
+        dump.write("recipe", map.miningRecipe(entity))
     end
 
     game.difficulty_settings.recipe_difficulty = defines.difficulty_settings.recipe_difficulty.normal
     for _, recipe in pairs(game.recipe_prototypes) do
-        if recipe.valid then
-            dump.add("normal-recipe", map.recipe(recipe))
-        end
+        dump.write("recipe", map.recipe(recipe, "normal"))
     end
 
     game.difficulty_settings.recipe_difficulty = defines.difficulty_settings.recipe_difficulty.expensive
     for _, recipe in pairs(game.recipe_prototypes) do
-        if recipe.valid then
-            dump.add("expensive-recipe", map.recipe(recipe))
-        end
+        dump.write("recipe", map.recipe(recipe, "expensive"))
     end
-
-    dump.flush()
 end)

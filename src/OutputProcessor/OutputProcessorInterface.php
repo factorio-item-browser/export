@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\OutputProcessor;
 
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
+use FactorioItemBrowser\ExportData\ExportData;
 
 /**
  * The interface of the output processors.
@@ -18,16 +18,16 @@ interface OutputProcessorInterface
     /**
      * Processes a line from the output of the Factorio process.
      * @param string $outputLine
-     * @param Dump $dump
+     * @param ExportData $exportData
      * @throws ExportException
      */
-    public function processLine(string $outputLine, Dump $dump): void;
+    public function processLine(string $outputLine, ExportData $exportData): void;
 
     /**
      * Processes the exit code of the Factorio process.
      * @param int $exitCode
-     * @param Dump $dump
+     * @param ExportData $exportData
      * @throws ExportException
      */
-    public function processExitCode(int $exitCode, Dump $dump): void;
+    public function processExitCode(int $exitCode, ExportData $exportData): void;
 }

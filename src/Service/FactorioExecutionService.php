@@ -12,12 +12,12 @@ use FactorioItemBrowser\Common\Constant\Constant;
 use FactorioItemBrowser\Export\AutoWire\Attribute\ReadPathFromConfig;
 use FactorioItemBrowser\Export\Constant\ConfigKey;
 use FactorioItemBrowser\Export\Constant\ServiceName;
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Entity\InfoJson;
 use FactorioItemBrowser\Export\Entity\ModList\Mod;
 use FactorioItemBrowser\Export\Entity\ModListJson;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\Process\FactorioProcessFactory;
+use FactorioItemBrowser\ExportData\ExportData;
 use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -177,15 +177,16 @@ class FactorioExecutionService
 
     /**
      * Executes the already prepared instance for the combination.
+     * @param ExportData $exportData
      * @param string $combinationId
-     * @return Dump
+     * @return $this
      * @throws ExportException
      */
-    public function execute(string $combinationId): Dump
+    public function execute(ExportData $exportData, string $combinationId): self
     {
-        $process = $this->factorioProcessFactory->create("{$this->instancesDirectory}/{$combinationId}");
+        $process = $this->factorioProcessFactory->create($exportData, "{$this->instancesDirectory}/{$combinationId}");
         $process->run();
-        return $process->getDump();
+        return $this;
     }
 
     /**

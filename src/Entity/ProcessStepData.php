@@ -6,7 +6,6 @@ namespace FactorioItemBrowser\Export\Entity;
 
 use FactorioItemBrowser\CombinationApi\Client\Transfer\Combination;
 use FactorioItemBrowser\CombinationApi\Client\Transfer\Job;
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\ExportData\ExportData;
 
 /**
@@ -20,5 +19,4 @@ class ProcessStepData
     public Job $exportJob;
     public Combination $combination;
     public ExportData $exportData;
-    public Dump $dump;
 }

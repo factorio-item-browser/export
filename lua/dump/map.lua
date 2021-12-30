@@ -1,89 +1,126 @@
+local helper = require("helper")
 local map = {}
 
---- Maps a fluid prototype.
--- @param prototype table: The fluid prototype to map.
--- @return table: The mapped data.
-function map.fluid(prototype)
-    return {
-        name = prototype.name,
-        localised_name = prototype.localised_name,
-        localised_description = prototype.localised_description,
-    }
-end
-
 --- Maps an item prototype.
--- @param prototype table: The item prototype to map.
--- @return table: The mapped data.
+--- @param prototype table The item prototype to map.
+--- @return table|nil The mapped data.
 function map.item(prototype)
-    local item = {
-        name = prototype.name,
-        localised_name = prototype.localised_name,
-        localised_description = prototype.localised_description,
-        localised_entity_name = nil,
-        localised_entity_description = nil,
-    }
-    if prototype.place_result then
-        item.localised_entity_name = prototype.place_result.localised_name
-        item.localised_entity_description = prototype.place_result.localised_description
+    if not prototype.valid then
+        return nil
     end
 
-    return item
+    return {
+        type = "item",
+        name = prototype.name,
+        localisedName = prototype.localised_name,
+        localisedDescription = prototype.localised_description,
+    }
 end
 
---- Maps a machine prototype.
--- @param prototype table: The machine prototype to map.
--- @return table: The mapped data.
+--- Maps a fluid prototype.
+--- @param prototype table The fluid prototype to map.
+--- @return table|nil The mapped data.
+function map.fluid(prototype)
+    if not prototype.valid then
+        return nil
+    end
+
+    return {
+        type = "fluid",
+        name = prototype.name,
+        localisedName = prototype.localised_name,
+        localisedDescription = prototype.localised_description,
+    }
+end
+
+--- Maps an entity prototype to a resource.
+--- @param prototype table The entity prototype.
+--- @return table|nil The mapped data
+function map.resource(prototype)
+    if not prototype.valid or prototype.type ~= "resource" then
+        return nil
+    end
+
+    return {
+        type = "resource",
+        name = prototype.name,
+        localisedName = prototype.localised_name,
+        localisedDescription = prototype.localised_description,
+    }
+end
+
+
+--- Maps an entity prototype to a machine, including mining drills.
+--- @param prototype table The machine prototype to map.
+--- @return table|nil The mapped data.
 function map.machine(prototype)
+    if not prototype.valid or (not prototype.crafting_categories and not prototype.resource_categories) then
+        return nil
+    end
+
+    -- Only allow the character called "character" and ignore all other pseudo-characters
+    if prototype.type == "character" and prototype.name ~= "character" then
+        return nil
+    end
+
+    local energyUsage, energyUsageUnit = helper.convertEnergyUsage((prototype.energy_usage or 0) * 60)
     local machine = {
         name = prototype.name,
-        localised_name = prototype.localised_name,
-        localised_description = prototype.localised_description,
-        crafting_categories = {},
-        crafting_speed = prototype.crafting_speed,
-        item_slots = 0,
-        fluid_input_slots = 0,
-        fluid_output_slots = 0,
-        module_slots = prototype.module_inventory_size,
-        energy_usage = (prototype.energy_usage or 0) * 60,
+        localisedName = prototype.localised_name,
+        localisedDescription = prototype.localised_description,
+        craftingCategories = helper.extractCategories(prototype.crafting_categories),
+        resourceCategories = helper.extractCategories(prototype.resource_categories),
+        speed = prototype.crafting_speed or prototype.mining_speed,
+        numberOfItemSlots = 0,
+        numberOfFluidInputSlots = 0,
+        numberOfFluidOutputSlots = 0,
+        numberOfModuleSlots = prototype.module_inventory_size,
+        energyUsage = energyUsage,
+        energyUsageUnit = energyUsageUnit,
     }
-
-    for category, flag in pairs(prototype.crafting_categories) do
-        if flag then
-            table.insert(machine.crafting_categories, category)
-        end
-    end
 
     if prototype.type == "furnace" then
         -- Furnaces are forced to have exactly one ingredient slot, but it is not set in ingredient_count.
-        machine.item_slots = 1
+        machine.numberOfItemSlots = 1
     elseif not prototype.ingredient_count then
         -- Character entities do not specify an ingredient_count, but actually have unlimited ones.
-        machine.item_slots = 255
+        machine.numberOfItemSlots = 255
     else
-        machine.item_slots = prototype.ingredient_count
+        machine.numberOfItemSlots = prototype.ingredient_count
     end
 
     for _, fluidbox in pairs(prototype.fluidbox_prototypes) do
         if fluidbox.production_type == "input" then
-            machine.fluid_input_slots = machine.fluid_input_slots + 1
+            machine.numberOfFluidInputSlots = machine.numberOfFluidInputSlots + 1
         elseif fluidbox.production_type == "output" then
-            machine.fluid_output_slots = machine.fluid_output_slots + 1
+            machine.numberOfFluidOutputSlots = machine.numberOfFluidOutputSlots + 1
+        elseif fluidbox.production_type == "input-output" then
+            machine.numberOfFluidInputSlots = machine.numberOfFluidInputSlots + 1
+            machine.numberOfFluidOutputSlots = machine.numberOfFluidOutputSlots + 1
         end
     end
 
     return machine
 end
 
+
 --- Maps a recipe prototype.
--- @param prototype table: The recipe prototype to map.
--- @return table: The mapped data.
-function map.recipe(prototype)
+--- @param prototype table The recipe prototype to map.
+--- @param mode string The mode of the recipe.
+--- @return table|nil The mapped data.
+function map.recipe(prototype, mode)
+    if not prototype.valid then
+        return nil
+    end
+
     local recipe = {
+        type = "recipe",
         name = prototype.name,
-        localised_name = prototype.localised_name,
-        localised_description = prototype.localised_description,
-        crafting_time = prototype.energy,
-        crafting_category = prototype.category,
+        mode = mode,
+        localisedName = prototype.localised_name,
+        localisedDescription = prototype.localised_description,
+        time = prototype.energy,
+        category = prototype.category,
         ingredients = {},
         products = {},
     }
@@ -99,9 +136,80 @@ function map.recipe(prototype)
     return recipe
 end
 
+--- Maps an entity prototype to its mining recipe.
+--- @param prototype table The entity prototype.
+--- @return table|nil The mapped data.
+function map.miningRecipe(prototype)
+    if not prototype.valid or prototype.type ~= "resource" then
+        return nil
+    end
+
+    local recipe = {
+        type = "mining",
+        name = prototype.name,
+        mode = "normal",
+        localisedName = prototype.localised_name,
+        localisedDescription = prototype.localised_description,
+        category = prototype.resource_category,
+        ingredients = {
+            {
+                type = "resource",
+                name = prototype.name,
+                amount = 1.
+            },
+        },
+        products = {},
+    }
+
+    if prototype.mineable_properties.required_fluid and prototype.mineable_properties.fluid_amount > 0 then
+        table.insert(recipe.ingredients, {
+            type = "fluid",
+            name = prototype.mineable_properties.required_fluid,
+            amount = prototype.mineable_properties.fluid_amount,
+        })
+    end
+
+    for _, product in pairs(prototype.mineable_properties.products) do
+        table.insert(recipe.products, map.product(product))
+    end
+
+    return recipe
+end
+
+--- Maps an item prototype to its rocket launch recipe.
+--- @param prototype table The item prototype to map.
+--- @return table|nil The mapped data.
+function map.rocketLaunchRecipe(prototype)
+    if not prototype.valid or next(prototype.rocket_launch_products) == nil then
+        return nil
+    end
+
+    local recipe = {
+        type = "rocket-launch",
+        name = prototype.name,
+        mode = "normal", -- No expensive mode possible for rocket launch recipes
+        localisedName = prototype.localised_name,
+        localisedDescription = prototype.localised_description,
+        ingredients = {
+            {
+                type = "item",
+                name = prototype.name,
+                amount = 1.
+            },
+        },
+        products = {},
+     }
+
+     for _, product in pairs(prototype.rocket_launch_products) do
+        table.insert(recipe.products, map.product(product))
+     end
+
+     return recipe
+end
+
 --- Maps an ingredient of a recipe.
--- @param prototype table: The ingredient to map.
--- @return table: The mapped data.
+--- @param prototype table  The ingredient to map.
+--- @return table The mapped data.
 function map.ingredient(prototype)
     return {
         type = prototype.type,
@@ -111,35 +219,40 @@ function map.ingredient(prototype)
 end
 
 --- Maps an product of a recipe.
--- @param prototype table: The product to map.
--- @return table: The mapped data.
+--- @param prototype table The product to map.
+--- @return table The mapped data.
 function map.product(prototype)
     local product = {
         type = prototype.type,
         name = prototype.name,
-        amount_min = prototype.amount_min or 1.,
-        amount_max = prototype.amount_max or 1.,
+        amountMin = prototype.amount_min or 1.,
+        amountMax = prototype.amount_max or 1.,
         probability = prototype.probability or 1.,
     }
 
     if prototype.amount then
         -- amount is a simpler way of defining the minimum and maximum value.
-        product.amount_min = prototype.amount
-        product.amount_max = prototype.amount
+        product.amountMin = prototype.amount
+        product.amountMax = prototype.amount
     end
 
     return product
 end
 
+
 --- Maps an icon from the prototype.
--- @param prototype table: The prototype to map.
--- @return table or nil: The mapped data, if there was anything to map.
+--- @param prototype table The prototype to map.
+--- @return table|nil The mapped data, if there was anything to map.
 function map.icon(prototype)
     local icon = {
         type = prototype.type,
         name = prototype.name,
+        size = 64,
         layers = {},
     }
+    if (prototype.type == "technology") then
+        icon.size = 256
+    end
 
     local layered_icons
     if prototype.icons then
@@ -168,37 +281,35 @@ function map.icon(prototype)
 end
 
 --- Maps an icon layer from the prototype.
--- @param prototype table: The prototype to map.
--- @param first_layer_size int: The size of the first layer.
--- @param default_size int: The default size of the prototype.
--- @return table: The mapped data.
+--- @param prototype table The prototype to map.
+--- @param first_layer_size number The size of the first layer.
+--- @param default_size number The default size of the prototype.
+--- @return table The mapped data.
 function map.layer(prototype, first_layer_size, default_size)
     local size = prototype.icon_size or default_size
     local scale = prototype.scale or (32 / size)
     local ratio = first_layer_size / 32
 
     local layer = {
-        file = prototype.icon,
+        fileName = prototype.icon,
         size = size,
         scale = scale * ratio,
-        shift_x = nil,
-        shift_y = nil,
-        tint_red = nil,
-        tint_green = nil,
-        tint_blue = nil,
-        tint_alpha = nil,
     }
 
     if prototype.shift then
-        layer.shift_x = prototype.shift[1] * ratio
-        layer.shift_y = prototype.shift[2] * ratio
+        layer.offset = {
+            x = prototype.shift[1] * ratio,
+            y = prototype.shift[2] * ratio,
+        }
     end
 
     if prototype.tint then
-        layer.tint_red = prototype.tint.r or prototype.tint[1]
-        layer.tint_green = prototype.tint.g or prototype.tint[2]
-        layer.tint_blue = prototype.tint.b or prototype.tint[3]
-        layer.tint_alpha = prototype.tint.a or prototype.tint[4]
+        layer.tint = {
+            red = helper.convertColorValue(prototype.tint.r or prototype.tint[1]),
+            green = helper.convertColorValue(prototype.tint.g or prototype.tint[2]),
+            blue = helper.convertColorValue(prototype.tint.b or prototype.tint[3]),
+            alpha = helper.convertColorValue(prototype.tint.a or prototype.tint[4]),
+        }
     end
 
     return layer

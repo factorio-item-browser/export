@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\Process;
 
-use FactorioItemBrowser\Export\Entity\Dump\Dump;
 use FactorioItemBrowser\Export\Exception\ExportException;
 use FactorioItemBrowser\Export\OutputProcessor\OutputProcessorInterface;
+use FactorioItemBrowser\ExportData\ExportData;
 use Symfony\Component\Process\Process;
 
 /**
@@ -17,7 +17,6 @@ use Symfony\Component\Process\Process;
  */
 class FactorioProcess
 {
-    private readonly Dump $dump;
     /** @var Process<string>  */
     private Process $process;
 
@@ -26,10 +25,9 @@ class FactorioProcess
      */
     public function __construct(
         private readonly array $outputProcessors,
+        private readonly ExportData $exportData,
         string $instanceDirectory,
     ) {
-        $this->dump = new Dump();
-
         $this->process = new Process([
             $instanceDirectory . '/bin/x64/factorio',
             '--no-log-rotation',
@@ -48,7 +46,7 @@ class FactorioProcess
 
         $exitCode = (int) $this->process->getExitCode();
         foreach ($this->outputProcessors as $outputProcessor) {
-            $outputProcessor->processExitCode($exitCode, $this->dump);
+            $outputProcessor->processExitCode($exitCode, $this->exportData);
         }
     }
 
@@ -63,15 +61,10 @@ class FactorioProcess
             foreach (explode(PHP_EOL, $contents) as $content) {
                 if ($content !== "") {
                     foreach ($this->outputProcessors as $outputProcessor) {
-                        $outputProcessor->processLine($content, $this->dump);
+                        $outputProcessor->processLine($content, $this->exportData);
                     }
                 }
             }
         }
-    }
-
-    public function getDump(): Dump
-    {
-        return $this->dump;
     }
 }
