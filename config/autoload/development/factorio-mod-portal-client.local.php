@@ -9,12 +9,14 @@
 
 declare(strict_types=1);
 
-namespace FactorioItemBrowser\Export;
-
-use FactorioItemBrowser\ExportData\Constant\ConfigKey;
+use BluePsyduck\FactorioModPortalClient\Constant\ConfigKey;
 
 return [
     ConfigKey::MAIN => [
-        ConfigKey::WORKING_DIRECTORY => 'data/temp',
+        ConfigKey::OPTIONS => [
+            ConfigKey::OPTION_USERNAME => '',
+            ConfigKey::OPTION_TOKEN => '',
+            ConfigKey::OPTION_TIMEOUT => 60,
+        ],
     ],
 ];
