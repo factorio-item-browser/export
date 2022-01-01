@@ -11,6 +11,7 @@ use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\Machine;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
+use FactorioItemBrowser\ExportData\Entity\Technology;
 use FactorioItemBrowser\ExportData\ExportData;
 use JMS\Serializer\SerializerInterface;
 
@@ -51,6 +52,10 @@ class DumpOutputProcessor implements OutputProcessorInterface
 
                 case 'recipe':
                     $exportData->getRecipes()->add($this->createObject($data, Recipe::class));
+                    break;
+
+                case 'technology':
+                    $exportData->getTechnologies()->add($this->createObject($data, Technology::class));
                     break;
             }
         }

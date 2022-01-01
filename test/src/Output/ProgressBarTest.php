@@ -68,6 +68,7 @@ class ProgressBarTest extends TestCase
         $instance->start('jkl', 'oof');
         $result = $instance->update('ghi', 'baz');
         $this->assertSame($instance, $result);
+        $instance->step();
         $instance->finish('ghi');
         $instance->finish('jkl');
     }

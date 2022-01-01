@@ -239,6 +239,47 @@ function map.product(prototype)
     return product
 end
 
+--- Maps a technology prototype.
+--- @param prototype table The technology prototype to map.
+--- @param mode string The mode of the technology.
+--- @return table|nil The mapped data.
+function map.technology(prototype, mode)
+    if not prototype.valid then
+        return nil
+    end
+
+    local technology = {
+        name = prototype.name,
+        mode = mode,
+        localisedName = prototype.localised_name,
+        localisedDescription = prototype.localised_description,
+        prerequisites = {},
+        researchIngredients = {},
+        researchCount = prototype.research_unit_count,
+        researchTime = prototype.research_unit_energy / 60.,
+        unlockedRecipes = {},
+        level = prototype.level,
+        upgrade = prototype.upgrade,
+        maxLevel = prototype.max_level,
+        researchCountFormula = prototype.research_unit_count_formula,
+    }
+
+    for name in pairs(prototype.prerequisites) do
+        table.insert(technology.prerequisites, name)
+    end
+
+    for _, ingredient in pairs(prototype.research_unit_ingredients) do
+        table.insert(technology.researchIngredients, map.ingredient(ingredient))
+    end
+
+    for _, effect in pairs(prototype.effects) do
+        if effect.type == "unlock-recipe" then
+            table.insert(technology.unlockedRecipes, effect.recipe)
+        end
+    end
+
+    return technology
+end
 
 --- Maps an icon from the prototype.
 --- @param prototype table The prototype to map.

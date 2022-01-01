@@ -19,7 +19,7 @@ return [
         ConfigKey::DATA_PROCESSORS => [
             DataProcessor\ModInfoAdder::class,
             DataProcessor\ModThumbnailAdder::class,
-            DataProcessor\ExpensiveRecipeFilter::class,
+            DataProcessor\ExpensiveEntityFilter::class,
             DataProcessor\TranslationLoader::class,
             DataProcessor\Translator::class,
             DataProcessor\IconAssigner::class,

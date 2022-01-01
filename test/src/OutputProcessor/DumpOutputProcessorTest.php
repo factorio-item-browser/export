@@ -12,6 +12,7 @@ use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\Machine;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
+use FactorioItemBrowser\ExportData\Entity\Technology;
 use FactorioItemBrowser\ExportData\ExportData;
 use JMS\Serializer\SerializerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -62,6 +63,7 @@ class DumpOutputProcessorTest extends TestCase
             ['>DUMP>item>foo<', 'foo', Item::class, 'getItems'],
             ['>DUMP>machine>foo<', 'foo', Machine::class, 'getMachines'],
             ['>DUMP>recipe>foo<', 'foo', Recipe::class, 'getRecipes'],
+            ['>DUMP>technology>foo<', 'foo', Technology::class, 'getTechnologies'],
         ];
     }
 

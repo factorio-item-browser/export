@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace FactorioItemBrowser\Export\DataProcessor;
 
-use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\Entity\Item;
 use FactorioItemBrowser\ExportData\Entity\Machine;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
+use FactorioItemBrowser\ExportData\Entity\Technology;
 use FactorioItemBrowser\ExportData\ExportData;
+use FactorioItemBrowser\ExportData\Helper\HashCalculator;
 use Generator;
 
 /**
@@ -49,7 +50,8 @@ class IconAssigner implements DataProcessorInterface
         return $exportData->getItems()->count()
             + $exportData->getMods()->count()
             + $exportData->getMachines()->count()
-            + $exportData->getRecipes()->count();
+            + $exportData->getRecipes()->count()
+            + $exportData->getTechnologies()->count();
     }
 
     /**
@@ -62,6 +64,7 @@ class IconAssigner implements DataProcessorInterface
         yield from $exportData->getMachines();
         yield from $exportData->getMods();
         yield from $exportData->getRecipes();
+        yield from $exportData->getTechnologies();
     }
 
     protected function prepareIcons(ExportData $exportData): void
@@ -113,6 +116,10 @@ class IconAssigner implements DataProcessorInterface
                     $entity->iconId = $this->getIconId($firstProduct->type, $firstProduct->name);
                 }
                 break;
+
+            case Technology::class:
+                $entity->iconId = $this->getIconId('technology', $entity->name);
+                break;
         }
     }
 
@@ -124,7 +131,7 @@ class IconAssigner implements DataProcessorInterface
 
         $icon = $this->icons[$type][$name];
         if ($icon->id === '') {
-            $icon->id = $this->hashCalculator->hashIcon($icon);
+            $icon->id = $this->hashCalculator->hashEntity($icon);
         }
         return $icon->id;
     }

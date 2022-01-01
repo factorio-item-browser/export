@@ -999,12 +999,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/factorio-item-browser/export-data.git",
-                "reference": "31726d53fc672a9c9482a840d157f696ef33c070"
+                "reference": "0575d4ab647c46e1a96a9b390fffae4958a27d86"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/31726d53fc672a9c9482a840d157f696ef33c070",
-                "reference": "31726d53fc672a9c9482a840d157f696ef33c070",
+                "url": "https://api.github.com/repos/factorio-item-browser/export-data/zipball/0575d4ab647c46e1a96a9b390fffae4958a27d86",
+                "reference": "0575d4ab647c46e1a96a9b390fffae4958a27d86",
                 "shasum": ""
             },
             "require": {
@@ -1015,7 +1015,7 @@
                 "jms/serializer": "^3.2",
                 "laminas/laminas-servicemanager": "^3.0",
                 "php": "^8.1",
-                "symfony/yaml": "^6.0"
+                "ramsey/uuid": "^4.0"
             },
             "require-dev": {
                 "bluepsyduck/test-helper": "^1.0",
@@ -1053,7 +1053,7 @@
             "support": {
                 "source": "https://github.com/factorio-item-browser/export-data/tree/feature/use-data-for-dump"
             },
-            "time": "2021-12-29T09:55:22+00:00"
+            "time": "2022-01-01T10:49:34+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",

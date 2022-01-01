@@ -77,4 +77,14 @@ class ProgressBar
         $this->statusOutput->overwrite(array_values($this->lines));
         return $this;
     }
+
+    /**
+     * Advances the progress bar one step further.
+     * @return $this
+     */
+    public function step(): self
+    {
+        $this->progressBar->advance();
+        return $this;
+    }
 }

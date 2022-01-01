@@ -26,4 +26,14 @@ script.on_init(function()
     for _, recipe in pairs(game.recipe_prototypes) do
         dump.write("recipe", map.recipe(recipe, "expensive"))
     end
+
+    game.difficulty_settings.technology_difficulty = defines.difficulty_settings.technology_difficulty.normal
+    for _, technology in pairs(game.technology_prototypes) do
+        dump.write("technology", map.technology(technology, "normal"))
+    end
+
+    game.difficulty_settings.technology_difficulty = defines.difficulty_settings.technology_difficulty.expensive
+    for _, technology in pairs(game.technology_prototypes) do
+        dump.write("technology", map.technology(technology, "expensive"))
+    end
 end)

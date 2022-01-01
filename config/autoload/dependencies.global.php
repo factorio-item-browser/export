@@ -38,7 +38,7 @@ return [
             Command\ProcessStep\UploadStep::class => AutoWireFactory::class,
             Command\UpdateFactorioCommand::class => AutoWireFactory::class,
 
-            DataProcessor\ExpensiveRecipeFilter::class => AutoWireFactory::class,
+            DataProcessor\ExpensiveEntityFilter::class => AutoWireFactory::class,
             DataProcessor\IconAssigner::class => AutoWireFactory::class,
             DataProcessor\IconRenderer::class => AutoWireFactory::class,
             DataProcessor\ModInfoAdder::class => AutoWireFactory::class,
@@ -47,7 +47,6 @@ return [
             DataProcessor\Translator::class => AutoWireFactory::class,
             DataProcessor\UnusedIconFilter::class => AutoWireFactory::class,
 
-            Helper\HashCalculator::class => AutoWireFactory::class,
             Helper\ZipArchiveExtractor::class => AutoWireFactory::class,
 
             Output\Console::class => AutoWireFactory::class,

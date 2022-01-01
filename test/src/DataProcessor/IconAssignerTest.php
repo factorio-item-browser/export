@@ -7,7 +7,6 @@ namespace FactorioItemBrowserTest\Export\DataProcessor;
 use ArrayIterator;
 use BluePsyduck\TestHelper\ReflectionTrait;
 use FactorioItemBrowser\Export\DataProcessor\IconAssigner;
-use FactorioItemBrowser\Export\Helper\HashCalculator;
 use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Output\ProgressBar;
 use FactorioItemBrowser\ExportData\Collection\ChunkedCollection;
@@ -17,7 +16,9 @@ use FactorioItemBrowser\ExportData\Entity\Machine;
 use FactorioItemBrowser\ExportData\Entity\Mod;
 use FactorioItemBrowser\ExportData\Entity\Recipe;
 use FactorioItemBrowser\ExportData\Entity\Recipe\Product;
+use FactorioItemBrowser\ExportData\Entity\Technology;
 use FactorioItemBrowser\ExportData\ExportData;
+use FactorioItemBrowser\ExportData\Helper\HashCalculator;
 use FactorioItemBrowser\ExportData\Storage\Storage;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -62,7 +63,7 @@ class IconAssignerTest extends TestCase
 
     public function testProcess(): void
     {
-        $expectedCount = 8;
+        $expectedCount = 10;
 
         $item1 = $this->createMock(Item::class);
         $item2 = $this->createMock(Item::class);
@@ -72,6 +73,8 @@ class IconAssignerTest extends TestCase
         $mod2 = $this->createMock(Mod::class);
         $recipe1 = $this->createMock(Recipe::class);
         $recipe2 = $this->createMock(Recipe::class);
+        $technology1 = $this->createMock(Technology::class);
+        $technology2 = $this->createMock(Technology::class);
 
         $exportData = new ExportData($this->createMock(Storage::class), 'test');
         $exportData->getItems()->add($item1)
@@ -82,6 +85,8 @@ class IconAssignerTest extends TestCase
                               ->add($mod2);
         $exportData->getRecipes()->add($recipe1)
                                  ->add($recipe2);
+        $exportData->getTechnologies()->add($technology1)
+                                      ->add($technology2);
 
         $progressBar = $this->createMock(ProgressBar::class);
         $progressBar->expects($this->once())
@@ -99,7 +104,7 @@ class IconAssignerTest extends TestCase
         $instance->expects($this->once())
                  ->method('prepareIcons')
                  ->with($this->identicalTo($exportData));
-        $instance->expects($this->exactly(8))
+        $instance->expects($this->exactly(10))
                  ->method('processEntity')
                  ->withConsecutive(
                      [$this->identicalTo($item1)],
@@ -110,6 +115,8 @@ class IconAssignerTest extends TestCase
                      [$this->identicalTo($mod2)],
                      [$this->identicalTo($recipe1)],
                      [$this->identicalTo($recipe2)],
+                     [$this->identicalTo($technology1)],
+                     [$this->identicalTo($technology2)],
                  );
 
         $instance->process($exportData);
@@ -158,6 +165,12 @@ class IconAssignerTest extends TestCase
         $recipe2 = new Recipe();
         $recipe2->name = 'abc';
 
+        $technology = new Technology();
+        $technology->name = 'abc';
+        $expectedTechnology = new Technology();
+        $expectedTechnology->name = 'abc';
+        $expectedTechnology->iconId = 'foo';
+
         return [
             [$item, [['abc', 'def', 'foo']], $expectedItem],
             [$machine, [['machine', 'abc', 'foo']], $expectedMachine],
@@ -165,6 +178,7 @@ class IconAssignerTest extends TestCase
             [$recipe1, [['recipe', 'abc', 'foo']], $expectedRecipe1],
             [$recipe1, [['recipe', 'abc', ''], ['def', 'ghi', 'foo']], $expectedRecipe1],
             [$recipe2, [['recipe', 'abc', '']], $recipe2],
+            [$technology, [['technology', 'abc', 'foo']], $expectedTechnology],
         ];
     }
 
@@ -272,7 +286,7 @@ class IconAssignerTest extends TestCase
         ];
 
         $this->hashCalculator->expects($this->never())
-                             ->method('hashIcon');
+                             ->method('hashEntity');
 
         $instance = $this->createInstance();
         $this->injectProperty($instance, 'icons', $icons);
@@ -302,7 +316,7 @@ class IconAssignerTest extends TestCase
         ];
 
         $this->hashCalculator->expects($this->once())
-                             ->method('hashIcon')
+                             ->method('hashEntity')
                              ->with($this->identicalTo($icon))
                              ->willReturn($iconHash);
 
@@ -330,7 +344,7 @@ class IconAssignerTest extends TestCase
         ];
 
         $this->hashCalculator->expects($this->never())
-                             ->method('hashIcon');
+                             ->method('hashEntity');
 
         $instance = $this->createInstance();
         $this->injectProperty($instance, 'icons', $icons);

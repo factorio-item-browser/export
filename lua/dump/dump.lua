@@ -10,6 +10,7 @@ function dump.write(name, data)
     end
 
     print(string.format(">DUMP>%s>%s<", name, json.encode(data)))
+    log(string.format(">DUMP>%s>%s<", name, json.encode(data)))
 end
 
 return dump

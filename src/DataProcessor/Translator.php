@@ -45,7 +45,8 @@ class Translator implements DataProcessorInterface
         return $exportData->getItems()->count()
             + $exportData->getMachines()->count()
             + $exportData->getMods()->count()
-            + $exportData->getRecipes()->count();
+            + $exportData->getRecipes()->count()
+            + $exportData->getTechnologies()->count();
     }
 
     /**
@@ -58,6 +59,7 @@ class Translator implements DataProcessorInterface
         yield from $exportData->getMachines();
         yield from $exportData->getMods();
         yield from $exportData->getRecipes();
+        yield from $exportData->getTechnologies();
     }
 
     protected function translate(mixed $localisedString, DictionaryInterface $dictionary): void
