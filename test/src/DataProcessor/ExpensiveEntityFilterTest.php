@@ -17,7 +17,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The PHPUnit test of the ExpensiveRecipeFilter class.
+ * The PHPUnit test of the ExpensiveEntityFilter class.
  *
  * @author BluePsyduck <bluepsyduck@gmx.com>
  * @license http://opensource.org/licenses/GPL-3.0 GPL v3

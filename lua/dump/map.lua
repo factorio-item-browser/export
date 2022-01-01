@@ -259,7 +259,6 @@ function map.technology(prototype, mode)
         researchTime = prototype.research_unit_energy / 60.,
         unlockedRecipes = {},
         level = prototype.level,
-        upgrade = prototype.upgrade,
         maxLevel = prototype.max_level,
         researchCountFormula = prototype.research_unit_count_formula,
     }
