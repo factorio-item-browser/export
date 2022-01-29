@@ -18,6 +18,7 @@ use FactorioItemBrowser\ExportData\Storage\Storage;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\Uuid;
 use ReflectionException;
 use Symfony\Component\Console\Output\ConsoleSectionOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -90,15 +91,20 @@ class IconRendererTest extends TestCase
      */
     public function testProcess(): void
     {
-        $icon1 = $this->createMock(Icon::class);
-        $icon2 = $this->createMock(Icon::class);
+        $icon1 = new Icon();
+        $icon1->id = 'abc';
+        $icon2 = new Icon();
+        $icon2->id = 'def';
+        $icon3 = new Icon();
+        $icon3->id = 'abc';
 
         $process1 = $this->createMock(RenderIconProcess::class);
         $process2 = $this->createMock(RenderIconProcess::class);
 
         $exportData = new ExportData($this->createMock(Storage::class), 'foo');
         $exportData->getIcons()->add($icon1)
-                               ->add($icon2);
+                               ->add($icon2)
+                               ->add($icon3);
 
         $processManager = $this->createMock(ProcessManagerInterface::class);
         $processManager->expects($this->exactly(2))
@@ -117,7 +123,7 @@ class IconRendererTest extends TestCase
         $this->renderIconProcessFactory->expects($this->exactly(2))
                                        ->method('create')
                                        ->withConsecutive(
-                                           [$this->identicalTo($icon1)],
+                                           [$this->identicalTo($icon3)],
                                            [$this->identicalTo($icon2)]
                                        )
                                        ->willReturnOnConsecutiveCalls(

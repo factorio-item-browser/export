@@ -12,6 +12,7 @@ use FactorioItemBrowser\Export\Output\Console;
 use FactorioItemBrowser\Export\Output\ProgressBar;
 use FactorioItemBrowser\Export\Process\RenderIconProcess;
 use FactorioItemBrowser\Export\Process\RenderIconProcessFactory;
+use FactorioItemBrowser\ExportData\Entity\Icon;
 use FactorioItemBrowser\ExportData\ExportData;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -38,12 +39,18 @@ class IconRenderer implements DataProcessorInterface
 
     public function process(ExportData $exportData): void
     {
+        $icons = [];
+        foreach ($exportData->getIcons() as $icon) {
+            /* @var Icon $icon */
+            $icons[$icon->id] = $icon; // De-duplicate the icons.
+        }
+
         $this->errorOutput = $this->console->createSection();
         $this->progressBar = $this->console->createProgressBar('Render icons');
-        $this->progressBar->setNumberOfSteps($exportData->getIcons()->count());
+        $this->progressBar->setNumberOfSteps(count($icons));
 
         $processManager = $this->createProcessManager($exportData);
-        foreach ($exportData->getIcons() as $icon) {
+        foreach ($icons as $icon) {
             $processManager->addProcess($this->renderIconProcessFactory->create($icon));
         }
         $processManager->waitForAllProcesses();
